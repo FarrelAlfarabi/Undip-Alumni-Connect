@@ -25,7 +25,7 @@ create table if not exists alumni_profiles (
   major text not null,
   graduation_year integer not null,
   current_employer text,
-  current_role text,
+  "current_role" text,
   industry text,
   company text,
   verification_status text not null default 'unverified'
