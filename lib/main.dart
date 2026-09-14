@@ -31,10 +31,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Temporary landing page confirming Supabase config is wired up.
-/// Will be replaced by real screens once the Supabase project is confirmed.
+/// Temporary landing page confirming the app reaches the real Supabase
+/// database — not real UI. Directory/job board/messaging screens are later.
 class SupabaseStatusPage extends StatelessWidget {
   const SupabaseStatusPage({super.key});
+
+  Future<int> _fetchAlumniCount() {
+    return supabase.from('alumni_profiles').count(CountOption.exact);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,11 +49,31 @@ class SupabaseStatusPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('UNDIP Alumni Connect')),
       body: Center(
-        child: Text(
-          configured
-              ? 'Supabase config loaded ✓'
-              : 'Missing SUPABASE_URL / SUPABASE_ANON_KEY in .env',
-        ),
+        child: !configured
+            ? const Text('Missing SUPABASE_URL / SUPABASE_ANON_KEY in .env')
+            : FutureBuilder<int>(
+                future: _fetchAlumniCount(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+                  if (snapshot.hasError) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Supabase config loaded, but the query failed:\n'
+                        '${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  return Text(
+                    'Connected to Supabase ✓\n'
+                    '${snapshot.data} alumni_profiles rows found',
+                    textAlign: TextAlign.center,
+                  );
+                },
+              ),
       ),
     );
   }
