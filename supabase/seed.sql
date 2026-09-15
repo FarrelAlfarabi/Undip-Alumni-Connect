@@ -106,7 +106,7 @@ on conflict (nim) do update set email = excluded.email;
 insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('24020110130098', 'Gilang Ramadhan Wibowo', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'ILUNI UNDIP', 'Ketua Umum', 'Nonprofit / Alumni Association', 'ILUNI UNDIP', 'verified', 'free', 'gilang.modcart@gmail.com')
+  ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'ILUNI UNDIP', 'Ketua Umum', 'Nonprofit / Alumni Association', 'ILUNI UNDIP', 'verified', 'free', 'gilang.modcart@gmail.com')
 on conflict (nim) do update set email = excluded.email;
 
 -- Note: the non-matching signup path needs no seed data — any email that
