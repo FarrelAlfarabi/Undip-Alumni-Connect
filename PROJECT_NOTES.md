@@ -391,3 +391,13 @@ Updated `DEMO_SCRIPT.md`'s Alumni Directory section to point at the new tab inst
 **Verified:** `flutter analyze` clean, `dart format` clean. Not click-tested in a running browser — same gap as every UI change this project. User should confirm the tabs actually render and the Profile-card shortcut actually lands on Nearby before the demo.
 
 **Next step:** demo day.
+
+---
+
+## 2026-09-17 — Session 19: Removed the Nearby Alumni card from Profile
+
+User asked to remove the "Nearby Alumni" shortcut card from the Profile tab now that Nearby is a labeled tab inside the Alumni section (Session 18) — it was a redundant second entry point to the same place. Removed the card from `profile_detail_screen.dart`, and cleaned up the plumbing that only existed to support it: the `onOpenNearby` callback and its doc comment, and `HomeShell`'s `_alumniEpoch`/`_alumniInitialTab` state and `_openNearbyAlumni` method. Also dropped `AlumniScreen`'s now-unused `initialTabIndex` parameter rather than leave an inert API surface nothing calls. The Directory/Nearby tabs remain the only way into Nearby Alumni now.
+
+**Verified:** `flutter analyze` clean, `dart format` clean.
+
+**Next step:** demo day.

@@ -29,17 +29,12 @@ class ProfileDetailScreen extends StatefulWidget {
     required this.profile,
     required this.currentUser,
     this.showEditButton = true,
-    this.onOpenNearby,
   });
 
   /// The profile being displayed — own or someone else's.
   final Map<String, dynamic> profile;
   final bool showEditButton;
   final ValueNotifier<Map<String, dynamic>> currentUser;
-
-  /// Switches HomeShell to the Alumni tab's Nearby sub-tab. Only set (and
-  /// only shown) on the own-profile instance — see HomeShell.
-  final VoidCallback? onOpenNearby;
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
@@ -283,41 +278,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onPressed: _editProfile,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
-                    ),
-                    const SizedBox(height: 12),
-                    Card(
-                      elevation: 0,
-                      color: theme.colorScheme.secondaryContainer,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        leading: Icon(
-                          Icons.near_me_outlined,
-                          color: theme.colorScheme.onSecondaryContainer,
-                        ),
-                        title: Text(
-                          'Nearby Alumni',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSecondaryContainer,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          'See who\'s close by (demo)',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSecondaryContainer,
-                          ),
-                        ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: theme.colorScheme.onSecondaryContainer,
-                        ),
-                        onTap: widget.onOpenNearby,
-                      ),
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),

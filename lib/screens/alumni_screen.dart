@@ -10,17 +10,9 @@ import 'nearby_alumni_screen.dart';
 /// right where people already go to browse alumni is the most visible
 /// place it can live without its own bottom-nav slot.
 class AlumniScreen extends StatefulWidget {
-  const AlumniScreen({
-    super.key,
-    required this.currentUser,
-    this.initialTabIndex = 0,
-  });
+  const AlumniScreen({super.key, required this.currentUser});
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
-
-  /// 0 = Directory, 1 = Nearby. Lets the Profile tab's "Nearby Alumni"
-  /// shortcut land directly on the Nearby tab instead of Directory.
-  final int initialTabIndex;
 
   @override
   State<AlumniScreen> createState() => _AlumniScreenState();
@@ -33,11 +25,7 @@ class _AlumniScreenState extends State<AlumniScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: widget.initialTabIndex,
-    );
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override

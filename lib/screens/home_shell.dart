@@ -37,13 +37,6 @@ class _HomeShellState extends State<HomeShell> {
   int _jobsEpoch = 0;
   int _chatEpoch = 0;
 
-  // Bumped (alongside forcing Alumni tab + sub-tab 1) when the Profile
-  // tab's "Nearby Alumni" shortcut is tapped, so AlumniScreen is recreated
-  // with a fresh TabController defaulting to Nearby instead of wherever it
-  // was left.
-  int _alumniEpoch = 0;
-  int _alumniInitialTab = 0;
-
   @override
   void initState() {
     super.initState();
@@ -64,27 +57,11 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
-  void _openNearbyAlumni() {
-    setState(() {
-      _index = 1;
-      _alumniInitialTab = 1;
-      _alumniEpoch++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      ProfileDetailScreen(
-        profile: widget.profile,
-        currentUser: _currentUser,
-        onOpenNearby: _openNearbyAlumni,
-      ),
-      AlumniScreen(
-        key: ValueKey('alumni-$_alumniEpoch'),
-        currentUser: _currentUser,
-        initialTabIndex: _alumniInitialTab,
-      ),
+      ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser),
+      AlumniScreen(currentUser: _currentUser),
       JobBoardScreen(
         key: ValueKey('jobs-$_jobsEpoch'),
         currentUser: _currentUser,
