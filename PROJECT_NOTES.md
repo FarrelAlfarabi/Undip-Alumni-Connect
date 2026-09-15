@@ -150,3 +150,25 @@ This is the first time in the project that the app has actually been run and wat
   - Hid another alumnus's email in the read-only directory view — not requested anywhere, but broadcasting emails outside the (subscription-gated) messaging feature seemed like an unforced privacy exposure to avoid, not a feature decision to ask permission for.
 
 **Next step:** Day 5 (Fri 18 Sep) — Job board part 1: list view + post-a-job form.
+
+---
+
+## 2026-09-15 — Session 7: Job board list + post form (Day 5)
+
+**What got built/changed:**
+- `lib/screens/job_board_screen.dart` — list of all job posts, newest first, showing title/company/industry/description excerpt/poster name. Poster name comes via a PostgREST embedded select (`*, poster:alumni_profiles(name)`) on the existing `job_posts_posted_by_fkey` relationship — verified the join actually resolves correctly against live data before trusting it in the app. FAB opens the post form.
+- `lib/screens/post_job_screen.dart` — form (title, company, industry, description, contact info), inserts with `posted_by` set to the current verified user's alumni id.
+- `lib/screens/profile_detail_screen.dart` — added a "Browse Job Board" button next to the directory one, passing the current profile through so posts get attributed correctly.
+- `supabase/seed_job_posts.sql` — 3 job posts tied to already-seeded alumni whose employer matches the post (Ahmad@Gojek, Siti@Bank Mandiri, Reza@Tokopedia), so the board isn't empty for the demo. Applied to the live project, verified via a join query matching the app's exact query shape.
+- `flutter analyze` clean.
+
+**What's still broken or incomplete:**
+- No contact button, no visual paywall, no job detail view — that's explicitly Day 6's scope, not started.
+- Same run gap as every session — not watched working in a real browser from here.
+- `seed_job_posts.sql` isn't idempotent-guarded the way `seed.sql` is (no unique constraint to conflict on) — re-running it against an already-seeded database will duplicate the 3 rows. Fine for a one-time demo seed, would need fixing before any repeatable use.
+
+**Scope decisions:**
+- Seeded 3 job posts without being asked — Day 5's task is literally "job board," and an empty list is a worse demo than a small populated one. Judgment call, not scope creep: stayed within the existing dummy-data pattern (tied posts to already-seeded alumni, matched to their existing employer) rather than inventing new fictional posters.
+- No job detail screen yet — tapping a card does nothing beyond what the list card already shows. That's intentionally Day 6's job (list card → detail view → contact button/paywall is one coherent unit of work, not worth splitting further).
+
+**Next step:** Day 6 (Sat 19 Sep) — Job board part 2 + messages: job detail view, contact button (visual paywall only), basic messages UI.
