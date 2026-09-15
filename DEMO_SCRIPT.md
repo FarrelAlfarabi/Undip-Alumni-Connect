@@ -40,8 +40,8 @@ Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bott
 3. Show the three filter dropdowns — filter by **Faculty**, **Graduation Year**, **Industry**. Combine two filters to show it's a real AND filter, not just search.
 4. Tap any alumnus's row → their profile opens read-only. Point out: email is hidden here (only visible on your own profile) — browsing is free, but you don't get everyone's contact info for free, that's the subscription's job.
 5. At the bottom of another alumnus's profile: the **Subscribe to Message** button. Don't tap it yet — save the paywall moment for Jobs, it's the same mechanism and you only need to show it working once.
-6. Back out to Alumni Directory. Tap the compass icon (top right) → **Nearby Alumni**. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
-7. Back out to Profile.
+6. Back out to Alumni Directory, back out to Profile.
+7. On the Profile tab, tap the **Nearby Alumni** card. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
 
 ---
 
@@ -94,7 +94,7 @@ This is the most important part of the demo. Take it slow.
 - **No real NIM verification** — email exact-match stands in for it in this build.
 - **Known open items**, worth surfacing to Gilang directly rather than waiting to be asked:
   - Whether ILUNI actually has a usable path to NIM data at all is still unconfirmed (see Master Plan doc — this is the single biggest blocker to the *production* version, not the demo).
-  - Nearby Alumni (the location feature Gilang requested) isn't built — it has no safety design yet (opt-in, granularity, data retention all undecided) and isn't in this demo.
+  - Nearby Alumni is in this demo, but as a concept mockup only — simulated from each profile's city, not real GPS. Real location-sharing has no safety design yet (opt-in, granularity, data retention all undecided) and isn't something to promise a date for.
   - No real security hardening (RLS is off on the database) — fine for a closed demo, not fine to leave that way past this point.
 
 ---

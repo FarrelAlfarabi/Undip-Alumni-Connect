@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'chat_screen.dart';
+import 'nearby_alumni_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
 import 'verification_screen.dart';
@@ -278,6 +279,49 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onPressed: _editProfile,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      elevation: 0,
+                      color: theme.colorScheme.secondaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        leading: Icon(
+                          Icons.near_me_outlined,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                        title: Text(
+                          'Nearby Alumni',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSecondaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'See who\'s close by (demo)',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.chevron_right,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => NearbyAlumniScreen(
+                                currentUser: widget.currentUser,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
