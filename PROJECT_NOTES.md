@@ -285,3 +285,22 @@ User asked for a fresh pass over all code with bug fixes, then a business-point-
 **Still not verified by running** — same limitation as every session since Day 4. Everything above is by code reading and `flutter analyze`.
 
 **Next step:** someone runs `DEMO_SCRIPT.md` end to end in a browser before the 23rd.
+
+---
+
+## 2026-09-15 — Session 13: Branded welcome screen + pitch landing page
+
+**What got built:**
+- Published a pitch landing page (Claude Artifact, shared with the user separately, not part of this repo) — placeholder visual identity: indigo/brass palette drawn from Javanese batik (kawung motif, indigo-dyed cloth, brass prada gilding), Fraunces + IBM Plex Sans, content mirroring the real pitch deck and app structure. Explicitly labeled placeholder in its footer.
+- Carried that identity into the app itself: `lib/theme.dart` (custom ColorScheme, Fraunces/Plex TextTheme via new `google_fonts` dependency), `lib/kawung_mark.dart` (CustomPainter brand mark), `lib/screens/welcome_screen.dart` (new entry screen: mark, wordmark, the pitch deck's own headline, one CTA into the unchanged `VerificationScreen`, explicit demo/placeholder-branding footnote). `main.dart` now opens on `WelcomeScreen` with `AppTheme.light()` instead of the plain deepPurple Material default.
+- `flutter analyze` clean.
+
+**What's still broken or incomplete:**
+- `google_fonts` fetches font files over the network at first use — same requirement the app already has for Supabase, but worth knowing if testing somewhere with restricted egress.
+- Only `VerificationScreen`'s header icon and everything downstream (HomeShell, directory, jobs, etc.) still use the old deepPurple-seeded implicit styling in places — the new palette flows through `Theme.of(context)` app-wide via `AppTheme.light()`, but nothing was individually re-touched beyond the new welcome screen. Should look consistent since it's all theme-driven, not verified by running.
+- Same run gap as always.
+
+**Scope decisions:**
+- Interpreted "replacing the current connected to database screen" as the app's entry screen in general (that literal diagnostic screen was already removed in Session 10) — added a proper branded landing screen in front of the existing verification form rather than restyling the form itself, since a landing page's job is the CTA moment, not the form.
+
+**Next step:** demo day. No further build days in the current plan.
