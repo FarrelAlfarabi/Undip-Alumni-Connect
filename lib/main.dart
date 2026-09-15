@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'screens/verification_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
@@ -67,10 +69,26 @@ class SupabaseStatusPage extends StatelessWidget {
                       ),
                     );
                   }
-                  return Text(
-                    'Connected to Supabase ✓\n'
-                    '${snapshot.data} alumni_profiles rows found',
-                    textAlign: TextAlign.center,
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Connected to Supabase ✓\n'
+                        '${snapshot.data} alumni_profiles rows found',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const VerificationScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Verify Alumni Status'),
+                      ),
+                    ],
                   );
                 },
               ),
