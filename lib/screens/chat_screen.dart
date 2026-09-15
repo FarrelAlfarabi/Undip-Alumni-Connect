@@ -23,6 +23,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
 
   List<Map<String, dynamic>>? _messages;
   String? _loadError;
@@ -37,7 +38,18 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  // Jumps the thread to the newest message, like any normal messenger.
+  // Scheduled for after the frame that adds the new message, since the
+  // scroll extent isn't known until that layout pass completes.
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
   }
 
   // Keeps the current thread on screen while fetching, rather than
@@ -54,6 +66,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages = List<Map<String, dynamic>>.from(rows as List);
         _loadError = null;
       });
+      _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadError = e.toString());
@@ -152,14 +165,12 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
-    // reverse: true anchors the list to the bottom, so the newest message
-    // is always in view without manual scroll management.
     return ListView.builder(
-      reverse: true,
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: messages.length,
       itemBuilder: (context, i) {
-        final m = messages[messages.length - 1 - i];
+        final m = messages[i];
         final isMine = m['sender_id'] == widget.currentProfileId;
         return Align(
           alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
