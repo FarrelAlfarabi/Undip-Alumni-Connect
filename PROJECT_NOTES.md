@@ -197,3 +197,24 @@ User said to keep going through the remaining demo days without stopping for rev
 - Kept the paywall visually honest about being fake ("Demo only — no real payment is processed" printed on the button) rather than pretending it's real, in case this app is shown to anyone who might mistake it for actually charging money.
 
 **Next step:** Day 7 (Sun 20 Sep) — Announcements feed + start visual polish pass.
+
+---
+
+## 2026-09-15 — Session 9: Announcements + bottom-nav shell (Day 7)
+
+**What got built/changed:**
+- `lib/screens/announcements_screen.dart` — one-way broadcast feed, no posting UI. Source labeled "ILUNI UNDIP" in the UI since there's no admin user account in this demo.
+- `lib/screens/home_shell.dart` — the "visual polish" half of Day 7: a bottom-navigation shell (Profile / Alumni / Jobs / Chat / News) replacing the ad-hoc "Browse X" buttons that had piled up on the profile screen across Days 4-6. Mirrors the pitch deck's own approved mockups (Alumni/Jobs/Chat/News bottom nav), with a Profile tab added since there's no separate avatar entry point in this build. `verification_screen.dart` now lands in the shell instead of going straight to the profile screen.
+- `lib/screens/profile_detail_screen.dart` simplified: own-profile mode now shows only "Edit Employment Info" — directory/jobs/messages access moved to the bottom nav, so the three old buttons (and their imports) were removed as dead weight.
+- `supabase/seed_announcements.sql` — 3 announcements using the pitch deck's own News mockup copy. Applied and verified (count = 3).
+- `flutter analyze` clean.
+
+**What's still broken or incomplete:**
+- Same run gap as always.
+- IndexedStack in HomeShell builds and fetches all 5 tabs eagerly on load rather than lazily on first visit — fine at this data size, would be worth lazy-loading if this ever needed to scale.
+- "Visual polish pass" is scoped as "start" in the plan, not "finish" — this covered navigation consolidation only. Typography, color, spacing consistency, empty/error state polish across screens is still rough in places and is explicitly Day 8's job (finish polish pass, fix bugs).
+
+**Scope decisions:**
+- Interpreted "start visual polish pass" as the bottom-nav consolidation rather than surface-level styling tweaks, since it was the single highest-leverage thing to fix (redundant, growing button list on one screen) and it's something the project's own pitch deck had already specified visually — not a guess at what "polish" means, but implementing an already-approved design.
+
+**Next step:** Day 8 (Mon 21 Sep) — Finish polish pass, fix bugs from rushed builds.
