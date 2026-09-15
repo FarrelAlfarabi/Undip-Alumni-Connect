@@ -218,3 +218,29 @@ User said to keep going through the remaining demo days without stopping for rev
 - Interpreted "start visual polish pass" as the bottom-nav consolidation rather than surface-level styling tweaks, since it was the single highest-leverage thing to fix (redundant, growing button list on one screen) and it's something the project's own pitch deck had already specified visually — not a guess at what "polish" means, but implementing an already-approved design.
 
 **Next step:** Day 8 (Mon 21 Sep) — Finish polish pass, fix bugs from rushed builds.
+
+---
+
+## 2026-09-15 — Session 10: Real bug fixes (Day 8)
+
+Since this session can't click through the running app, "fix bugs" meant a careful hand-review of every screen's logic rather than eyeballing the UI. Found two real issues, fixed both.
+
+**What got built/changed:**
+1. **`lib/main.dart`** — the app opened on a developer diagnostic screen ("Connected to Supabase ✓ / N rows found") requiring a button tap to reach verification. Now opens directly on `VerificationScreen`. Removed the dead `SupabaseStatusPage` class.
+2. **The paywall's cross-screen consistency was actually broken.** Every screen that needed "is the current user subscribed" held its own snapshot `Map` of the logged-in user, captured whenever that screen was built. Subscribing via job A's detail view didn't unlock job B's contact button, and didn't update the messaging gate on a directory profile, and vice versa — because each screen's copy of `subscription_status` was frozen at the moment it was constructed. This is reproducible in an ordinary demo walkthrough, not a theoretical edge case, and it's a correctness bug in the app's main monetization mechanism per the Master Plan doc.
+   - Fixed by replacing the plain-Map "current user" parameter with a single `ValueNotifier<Map<String, dynamic>>` created once in `HomeShell` and passed **by reference** (not copied) to every tab and every screen pushed from them. A subscribe action anywhere writes into that one shared object; every gate (`job_detail_screen.dart`, the messaging button in `profile_detail_screen.dart`) reads or listens to the same instance via `ValueListenableBuilder`, so state is consistent everywhere immediately — including screens already open on the navigation stack, not just freshly opened ones.
+   - Plain user IDs (which never change) were left as ordinary strings — only the mutable `subscription_status` needed this treatment. Kept the fix scoped to what was actually broken rather than introducing a general state-management library.
+3. Small completeness addition alongside the fix: a "Subscribed" chip on the own-profile card — previously there was no UI signal anywhere that a user had subscribed except gated buttons quietly changing what they did.
+
+`flutter analyze` clean throughout the refactor (touched 7 files).
+
+**What's still broken or incomplete:**
+- Same run gap as always — this fix is logically verified (careful reading, consistent reference-passing pattern, clean analyze) but not watched running.
+- `HomeShell`'s `IndexedStack` still eagerly builds and fetches all 5 tabs on load — noted last session too, still fine at this data size.
+- Didn't do a line-by-line visual/spacing pass (typography, color consistency, empty-state wording) — treated "fix bugs" as the higher-priority half of Day 8 given no way to visually inspect spacing from here; correctness issues are worth more than polish issues when you can only verify one of them.
+
+**Scope decisions:**
+- Treated the paywall bug as squarely in scope for "fix bugs from rushed builds" rather than restraint-worthy scope creep — it's a real, reproducible defect in the single feature the whole business model depends on (per the Master Plan doc: "direct messaging — gated behind subscription — main monetization mechanism"). Fixing it was proportionate to its severity, not a nice-to-have.
+- Kept the fix minimal: a shared `ValueNotifier` for the one piece of state that's actually checked in multiple places, not a full app-wide state management rewrite.
+
+**Next step:** Day 9 (Tue 22 Sep) — Full walkthrough test, prepare demo script, fix critical bugs.
