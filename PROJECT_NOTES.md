@@ -267,3 +267,21 @@ Since this session can't click through the running app, "fix bugs" meant a caref
 - Wrote the demo script assuming the presenter (Farrel) hasn't personally re-tested every step either — spelled out fallback behavior and what to say if something breaks, rather than assuming a dry run happened.
 
 **Next step:** Day 10 (Wed 23 Sep) — Buffer + demo day. No more build days after this one in the current plan.
+
+---
+
+## 2026-09-15 — Session 12: Full code re-evaluation + business assessment
+
+User asked for a fresh pass over all code with bug fixes, then a business-point-of-view assessment (delivered in chat).
+
+**What got fixed (all real, all demo-visible):**
+- **Chat tab was permanently stale.** `MessagesListScreen` fetched once at shell load; `IndexedStack` keeps tabs alive, so a conversation started from the directory never showed on the Chat tab — the demo script's own step 6.4 would have failed live. `HomeShell` now recreates the Jobs and Chat tabs (via a bumped `ValueKey`) when they're re-selected, forcing a refetch.
+- **Chat thread flickered to a spinner on every send** and anchored the newest message at the bottom of a non-reversed list. Rewrote `ChatScreen` to hold messages in state (list stays on screen during refetch), `reverse: true` (newest always in view), plus a refresh action so the other participant's replies are visible.
+- **No sign-out.** Added a sign-out action on the own-profile AppBar (`pushAndRemoveUntil` back to verification), which also makes the "show both sides of a conversation" demo beat possible.
+- Removed the dead `supabase` global in `main.dart`; replaced the boilerplate README with real run/test-account/database instructions (`DEMO_SCRIPT.md` was pointing at it).
+
+**Reviewed and left alone (no bug found):** verification, profile setup, post-job, subscribe, job detail, directory filters (`DropdownButtonFormField.initialValue` is valid on this SDK and the option lists are de-duplicated, so no duplicate-value assertion risk), announcements, the shared `ValueNotifier` wiring from Session 10.
+
+**Still not verified by running** — same limitation as every session since Day 4. Everything above is by code reading and `flutter analyze`.
+
+**Next step:** someone runs `DEMO_SCRIPT.md` end to end in a browser before the 23rd.
