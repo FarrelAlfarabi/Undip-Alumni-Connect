@@ -304,3 +304,27 @@ User asked for a fresh pass over all code with bug fixes, then a business-point-
 - Interpreted "replacing the current connected to database screen" as the app's entry screen in general (that literal diagnostic screen was already removed in Session 10) — added a proper branded landing screen in front of the existing verification form rather than restyling the form itself, since a landing page's job is the CTA moment, not the form.
 
 **Next step:** demo day. No further build days in the current plan.
+
+---
+
+## 2026-09-15 — Session 14: Owner demo account + basic RLS + public deploy attempt
+
+User asked to (1) seed a dummy alumni account under their own real email with made-up profile details, and (2) deploy the app publicly on Vercel for the demo.
+
+**Seeded account:** `farrel.abi.saleh@gmail.com`, NIM `24010119130099`, "Farrel Alfarabi Saleh" — employer/role/industry are fabricated for the demo. Added to `supabase/seed.sql` and inserted live.
+
+**RLS — added, but scoped honestly:** Before deploying publicly, checked whether RLS could actually protect alumni data. It can't, on this codebase as it stands: `verification_screen.dart` never creates a real Supabase Auth session — "verification" is a plain email match, and every request (app or otherwise) hits Postgres as the same anon principal. RLS can't distinguish "the app" from "any visitor with the anon key." Flagged this to the user with the real tradeoff (cheap guardrails now vs. build real auth first vs. deploy fully open) — they chose cheap guardrails now.
+
+`supabase/migrations/20260915120000_add_basic_rls.sql` — enabled RLS on all 5 tables, applied live to project `kdmxgtwqqnlbgfcpdivp`:
+- No DELETE possible anywhere (app never deletes).
+- No INSERT on `alumni_profiles` (app only matches existing seeded rows).
+- UPDATE on `alumni_profiles` locked via trigger (`alumni_profiles_restrict_update`) to only the columns the app writes (`verification_status`, `subscription_status`, `current_employer`, `current_role`, `industry`, `company`) — name/email/nim/faculty/major/graduation_year can't be overwritten by a stray request.
+- `job_posts` / `conversations` / `messages`: select + insert open (matches the app's actual usage), no update/delete.
+- `announcements`: select only.
+- Closed a `get_advisors`-flagged hole: the trigger function was `SECURITY DEFINER` and, by Postgres default, directly callable as a PostgREST RPC by `anon`/`authenticated`/`public`. Revoked execute on it from all three.
+
+Verified every path by hand against the live project (`set role anon`): confirmed reads still work, confirmed the app's actual write paths (subscription update, profile-fields update, job post insert) still succeed, and confirmed delete / fake-profile insert / identity-column update are all rejected. `get_advisors` security check is clean after the revoke.
+
+**What this does NOT fix:** the alumni directory (names, emails, employers) and all messages remain fully world-readable to anyone with the anon key once this is public — that requires real authentication, which was explicitly deferred (see the RLS migration's own header comment for the reasoning).
+
+**Deploy status:** [fill in after the Vercel attempt below resolves].
