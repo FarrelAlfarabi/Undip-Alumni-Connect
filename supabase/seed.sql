@@ -98,7 +98,7 @@ values
 on conflict (nim) do update set email = excluded.email;
 
 -- ----------------------------------------------------------------------------
--- Demo account for Gilang (ILUNI UNDIP) — real email, made-up profile
+-- Demo account for Gilang (Ikafe) — real email, made-up profile
 -- details (employer/role/etc. are fabricated for the demo). Lets him log
 -- in as a seeded alumnus during the live demo if he wants to try it
 -- himself, rather than only watching over screen-share.
@@ -106,7 +106,7 @@ on conflict (nim) do update set email = excluded.email;
 insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'ILUNI UNDIP', 'Ketua Umum', 'Nonprofit / Alumni Association', 'ILUNI UNDIP', 'verified', 'free', 'gilang.modcart@gmail.com')
+  ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'gilang.modcart@gmail.com')
 on conflict (nim) do update set email = excluded.email;
 
 -- ----------------------------------------------------------------------------

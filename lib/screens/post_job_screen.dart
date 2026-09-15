@@ -20,6 +20,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
   final _industryController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _contactController = TextEditingController();
+  bool _notifyOnApply = true;
 
   bool _saving = false;
   String? _error;
@@ -50,6 +51,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
         'industry': _industryController.text.trim(),
         'description': _descriptionController.text.trim(),
         'contact_info': _contactController.text.trim(),
+        'notify_on_apply': _notifyOnApply,
       });
 
       if (!mounted) return;
@@ -130,6 +132,19 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       ),
                       validator: (v) =>
                           (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _notifyOnApply,
+                      onChanged: _saving
+                          ? null
+                          : (v) => setState(() => _notifyOnApply = v),
+                      title: const Text('Notify me when someone applies'),
+                      subtitle: const Text(
+                        'Demo scope: shown as an applicant count on this '
+                        'job, not a real push/email notification.',
+                      ),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),

@@ -81,7 +81,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Closed beta · seeded from ILUNI UNDIP\'s member base',
+                    'Closed beta · seeded from Ikafe\'s member base',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -90,7 +90,7 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 40),
                   Text(
                     'Demo build with dummy data. Placeholder visual '
-                    'identity — not UNDIP\'s or ILUNI\'s official branding.',
+                    'identity — not UNDIP\'s or Ikafe\'s official branding.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant.withValues(

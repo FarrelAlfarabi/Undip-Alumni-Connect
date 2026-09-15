@@ -1,7 +1,7 @@
 # UNDIP Alumni Connect — MVP demo
 
 Flutter + Supabase demo of a verified alumni directory with a job referral
-board, subscription-gated messaging, and an ILUNI announcements feed.
+board, subscription-gated messaging, and an Ikafe announcements feed.
 **Dummy data only.** No real alumni, no real payment, no real NIM
 verification — see `PROJECT_NOTES.md` for the running log of what exists
 and why, and `DEMO_SCRIPT.md` for the walkthrough used on demo day.

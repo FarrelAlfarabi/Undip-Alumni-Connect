@@ -1,4 +1,4 @@
-# Demo Script — UNDIP Alumni Connect (for Mas Gilang / ILUNI)
+# Demo Script — UNDIP Alumni Connect (for Mas Gilang / Ikafe)
 
 Written for the Sep 23 demo. Assumes the app is already running (see README/PROJECT_NOTES for how to launch it — Flutter web via `flutter run -d web-server` or `flutter build web` + a static server, with the real `.env` credentials in place).
 
@@ -19,7 +19,7 @@ Written for the Sep 23 demo. Assumes the app is already running (see README/PROJ
 
 1. Launch the app — it opens directly on the **Verify Your Alumni Status** screen.
 2. Enter `ahmad.ramadhan@example.com` → tap **Verify**.
-3. Narrate: *"This checks against ILUNI's alumni records. For the demo it's an exact-match against sample data — in production this becomes a real NIM cross-check against ILUNI's official graduate list."*
+3. Narrate: *"This checks against Ikafe's alumni records. For the demo it's an exact-match against sample data — in production this becomes a real NIM cross-check against Ikafe's official graduate list."*
 4. You land on the **Profile** tab automatically — Ahmad's academic info (NIM, faculty, major, graduation year) and employment info (employer, role, industry, company) are shown.
 5. Point out: academic fields came from verification and aren't editable. Employment fields are, via **Edit Employment Info**.
 
@@ -57,14 +57,17 @@ This is the most important part of the demo. Take it slow.
 6. You're returned to the job detail — contact info is now unlocked and visible.
 7. **Go back to the job list and open a *different* job.** Its contact info should also now show unlocked — this proves the subscription applies across the whole app, not just the one job you were looking at.
 8. Go to the **Profile** tab — a **Subscribed** badge now shows on the profile card, confirming the same state everywhere.
+9. (Optional, if time allows) With contact unlocked, the button on that job detail now says **Apply to this Job** instead — tap it, fill in the application form (name/email are prefilled, LinkedIn/portfolio/CV are optional), submit. *"Applying is a step further than just seeing contact info — it goes into a real applications table the poster can review."*
 
 ---
 
 ## 5. Post a Job
 
 1. Back on the **Jobs** tab, tap the **Post a Job** floating button.
-2. Fill in a quick example (e.g. Title: "Marketing Intern", Company: "ILUNI UNDIP", Industry: "Nonprofit", Description: one line, Contact: an email).
-3. Tap **Post Job** — it appears at the top of the list immediately (newest first).
+2. Fill in a quick example (e.g. Title: "Marketing Intern", Company: "Ikafe", Industry: "Nonprofit", Description: one line, Contact: an email).
+3. Point out the **"Notify me when someone applies"** toggle — on by default. *"In this demo that's an in-app applicant count on the job's own page, not a real push or email notification — that's a post-demo build item."*
+4. Tap **Post Job** — it appears at the top of the list immediately (newest first).
+5. (Optional) Open the job you just posted — as its owner you see an applicant-count banner instead of the Apply button, with a **View Applicants** link showing everyone who applied (name, contact, LinkedIn/Portfolio/CV chips).
 
 ---
 
@@ -83,17 +86,17 @@ This is the most important part of the demo. Take it slow.
 ## 7. Announcements
 
 1. Tap **News**.
-2. Three seeded ILUNI announcements are shown (Reuni Akbar, mentoring beasiswa, jadwal temu alumni per fakultas) — one-way broadcast, source labeled "ILUNI UNDIP", no comment/reply UI. Point out this needs no moderation from Farrel — ILUNI posts, alumni read.
+2. Three seeded Ikafe announcements are shown (Reuni Akbar, mentoring beasiswa, jadwal temu alumni per fakultas) — one-way broadcast, source labeled "Ikafe", no comment/reply UI. Point out this needs no moderation from Farrel — Ikafe posts, alumni read.
 
 ---
 
 ## 8. Closing points (say these explicitly, don't assume they're obvious)
 
-- Everything shown is **dummy data** — 24 seed alumni, 3 seed jobs, 3 seed announcements. No real ILUNI data is connected yet.
+- Everything shown is **dummy data** — 24 seed alumni, 3 seed jobs, 3 seed announcements. No real Ikafe data is connected yet.
 - **No real payment** — the subscribe button is a visual demo only.
 - **No real NIM verification** — email exact-match stands in for it in this build.
 - **Known open items**, worth surfacing to Gilang directly rather than waiting to be asked:
-  - Whether ILUNI actually has a usable path to NIM data at all is still unconfirmed (see Master Plan doc — this is the single biggest blocker to the *production* version, not the demo).
+  - Whether Ikafe actually has a usable path to NIM data at all is still unconfirmed (see Master Plan doc — this is the single biggest blocker to the *production* version, not the demo).
   - Nearby Alumni is in this demo, but as a concept mockup only — simulated from each profile's city, not real GPS. Real location-sharing has no safety design yet (opt-in, granularity, data retention all undecided) and isn't something to promise a date for.
   - No real security hardening (RLS is off on the database) — fine for a closed demo, not fine to leave that way past this point.
 

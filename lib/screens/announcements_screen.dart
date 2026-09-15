@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// ILUNI announcements feed (Day 7): one-way broadcast, no moderation, no
+/// Ikafe announcements feed (Day 7): one-way broadcast, no moderation, no
 /// posting UI in the app — these are seeded/admin content, not something an
 /// alumnus creates.
 class AnnouncementsScreen extends StatefulWidget {
@@ -98,7 +98,7 @@ class _AnnouncementCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'ILUNI UNDIP',
+                  'Ikafe',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,

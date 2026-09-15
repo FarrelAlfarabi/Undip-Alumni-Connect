@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Placeholder visual identity — indigo/brass, drawn from Javanese batik
 /// (kawung motif, indigo-dyed cloth, brass/gold prada gilding). Not UNDIP's
-/// or ILUNI's official branding; a working stand-in for the demo/pitch.
+/// or Ikafe's official branding; a working stand-in for the demo/pitch.
 /// Matches the pitch landing page's palette and type pairing.
 class AppTheme {
   AppTheme._();
