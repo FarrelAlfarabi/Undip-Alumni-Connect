@@ -54,3 +54,27 @@ Not a duplicate of the Requirements doc — just what happened, session by sessi
 - Quoted `current_role` rather than renaming the column, to keep it matching the name specified in the original schema requirements.
 
 **Next step:** Day 4+ work (directory, job board, messaging screens) per the daily plan — or, before that, get real device/browser verification that the app actually connects to Supabase from outside this container's restricted network.
+
+---
+
+## 2026-09-15 — Session 3: Verification method switched from NIM to email
+
+**Scope change:** post-Gilang meeting (14 Sep), the demo's verification method changed from NIM exact-match to email exact-match. `nim` stays on `alumni_profiles` as a real profile field for the full production spec — it's just no longer what the demo checks at signup.
+
+**What got built/changed:**
+- `supabase/migrations/20260915030000_add_email_verification.sql` — added `email text` to `alumni_profiles`, nullable at this point. Applied to the live project and verified via `list_tables` (column present, `nim` and all 24 rows untouched).
+- `supabase/seed.sql` — added an `email` value for each of the 24 existing rows (`firstname.lastname@example.com` pattern, derived from each row's name). Changed the insert's `ON CONFLICT (nim) DO NOTHING` to `DO UPDATE SET email = excluded.email` so the same script both seeds a fresh database and backfills email on the already-seeded live one. Replaced the "DEMO VERIFICATION TEST NIMs" comment block with a "DEMO VERIFICATION TEST EMAILS" block — same 5 rows (Ahmad, Siti, Bagas, Clara, Rizky), new key.
+- Ran the updated seed against the live project, then verified directly with a query: 24 rows, 24 non-null emails, 24 distinct emails — no duplicates, full backfill.
+- `supabase/migrations/20260915031500_enforce_email_constraints.sql` — added `NOT NULL` and `UNIQUE` on `email` now that every row actually has a value. Applied and verified directly (`information_schema.columns.is_nullable = 'NO'`, `pg_constraint` shows the unique constraint).
+- Confirmed `lib/main.dart`'s status page needs no changes: its query is a bare row count (`supabase.from('alumni_profiles').count(CountOption.exact)`) with no column references, so it's structurally unaffected by the new column. Re-verified the live count is still 24 and `flutter analyze` is still clean.
+
+**What's still broken or incomplete:**
+- Same end-to-end verification gap as Session 2 — this container still can't reach `supabase.co` directly, so nobody has run the actual app against the updated schema. Nothing in this session required touching that gap, but it's still open.
+- No auth/signup screen yet — this was explicitly schema/seed-only work. The email-verification UI itself is Day 2 (Tuesday) work, still ahead.
+- RLS is still disabled on all 5 tables — unchanged from Session 2, still an accepted demo-scope decision, still means the anon key can read/write everything.
+
+**Scope decisions:**
+- Couldn't add `email` as `NOT NULL UNIQUE` in a single migration as literally requested — the 24 existing rows had no email value, and Postgres rejects a NOT NULL constraint that the existing data would immediately violate. Split it: add nullable, backfill via seed.sql, then enforce the constraint in a second migration once every row had a real value. Flagged this explicitly rather than attempting the single-step version and having it fail silently or unexpectedly.
+- Generated emails as `firstname.lastname@example.com` using each row's first and last name token; checked all 24 are distinct before relying on the uniqueness constraint to hold.
+
+**Next step:** Day 2 (Tuesday) — build the actual signup/verification screen that does the email exact-match against `alumni_profiles`. Day 4+ still has directory, job board, and messaging UI.
