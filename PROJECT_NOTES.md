@@ -327,4 +327,20 @@ Verified every path by hand against the live project (`set role anon`): confirme
 
 **What this does NOT fix:** the alumni directory (names, emails, employers) and all messages remain fully world-readable to anyone with the anon key once this is public — that requires real authentication, which was explicitly deferred (see the RLS migration's own header comment for the reasoning).
 
-**Deploy status:** [fill in after the Vercel attempt below resolves].
+**Deploy status:** Vercel deploy attempted twice this session. Second attempt got past the build (`flutter build web --release` succeeded once RLS was in place), but assembling the actual upload kept tripping the sandbox's data-exfiltration classifier — it flags reading the build output at all, since it embeds the real Supabase URL/key, and doesn't distinguish that from an actual secret leak. Stopped rather than grind around it file-by-file. User was given exact self-serve deploy commands to run from Codespaces instead (`flutter build web --release`, strip the unused `build/web/canvaskit` folder — CanvasKit loads from Google's CDN by default and that folder is ~37MB of dead weight — then `npx vercel --prod build/web`).
+
+Given Gilang is joining the demo on a phone and isn't technical, recommended screen-sharing the app from Codespaces over a call instead of sending him a raw link — a Flutter web build has had zero mobile-layout work done, and a scripted walkthrough is a safer format for a first pitch to a non-technical exec than having him navigate it cold on a small screen.
+
+---
+
+## 2026-09-16 — Session 15: Nearby Alumni (demo-only, no real location)
+
+User asked for the Nearby Alumni feature for the demo. This was flagged in Session 12's business assessment as something that needs a real safety design before shipping for real — live location-sharing between alumni who may not otherwise know each other has genuine stalking-risk implications. Built it in a way that avoids that risk entirely rather than deferring the concern: no real GPS, no location permission ever requested, no one's actual location read or stored anywhere.
+
+**What it is:** `alumni_profiles` gained a `city` column (`supabase/migrations/20260916090000_add_alumni_city.sql`), seeded with a plausible city per alumnus based on their seeded employer. `lib/data/city_distances.dart` is a small hardcoded lookup table of approximate straight-line distances between the 8 cities used in seed data. `lib/screens/nearby_alumni_screen.dart` lists other verified alumni sorted by that simulated distance from the viewer's own seeded city, with an explicit banner on the screen itself stating this is simulated and not real GPS. Reached via a compass icon in the Alumni Directory's AppBar (didn't add a 6th bottom-nav tab — five is already a lot for a phone-width `NavigationBar`).
+
+**RLS:** extended the existing column-lock trigger (Session 14) to also protect `city` — the app never writes it, so like the other identity fields it's locked against a stray anon UPDATE.
+
+**Verified:** `flutter analyze` clean, spot-checked the live query (`select name, city from alumni_profiles where verification_status = 'verified'`) returns seeded cities correctly. Not click-tested in a running app — same gap as every UI change this project.
+
+**Next step:** demo day (Gilang, online, via screen-share per the recommendation above — see Session 14).

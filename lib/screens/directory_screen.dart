@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'nearby_alumni_screen.dart';
 import 'profile_detail_screen.dart';
 
 const _kAllFilter = 'All';
@@ -86,7 +87,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Alumni Directory')),
+      appBar: AppBar(
+        title: const Text('Alumni Directory'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.near_me_outlined),
+            tooltip: 'Nearby Alumni',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      NearbyAlumniScreen(currentUser: widget.currentUser),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,
         builder: (context, snapshot) {

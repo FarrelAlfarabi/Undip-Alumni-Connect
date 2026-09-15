@@ -99,3 +99,51 @@ on conflict (nim) do update set email = excluded.email;
 
 -- Note: the non-matching signup path needs no seed data — any email that
 -- isn't one of the 25 above already demonstrates "not found."
+
+-- ----------------------------------------------------------------------------
+-- Cities — powers the Nearby Alumni demo feature (see
+-- 20260916090000_add_alumni_city.sql for why this is simulated, not real
+-- GPS). Roughly matches each alumnus's seeded employer's real city.
+-- ----------------------------------------------------------------------------
+alter table alumni_profiles disable trigger alumni_profiles_restrict_update_trigger;
+
+update alumni_profiles set city = case email
+  when 'ahmad.ramadhan@example.com' then 'Jakarta'
+  when 'dewi.sari@example.com' then 'Jakarta'
+  when 'muhammad.hakim@example.com' then 'Semarang'
+  when 'siti.azizah@example.com' then 'Jakarta'
+  when 'fajar.nugroho@example.com' then 'Jakarta'
+  when 'ratna.dewi@example.com' then 'Jakarta'
+  when 'bagas.prasetyo@example.com' then 'Semarang'
+  when 'intan.permatasari@example.com' then 'Jakarta'
+  when 'clara.putri@example.com' then 'Semarang'
+  when 'yusuf.ardiansyah@example.com' then 'Semarang'
+  when 'rizky.yusuf@example.com' then 'Jakarta'
+  when 'anggita.wulandari@example.com' then 'Jakarta'
+  when 'reza.putra@example.com' then 'Jakarta'
+  when 'nadia.lestari@example.com' then 'Jakarta'
+  when 'andika.saputra@example.com' then 'Semarang'
+  when 'melati.ningrum@example.com' then 'Surabaya'
+  when 'bunga.ayu@example.com' then 'Jakarta'
+  when 'dimas.wicaksono@example.com' then 'Jakarta'
+  when 'kevin.halim@example.com' then 'Semarang'
+  when 'putri.maharani@example.com' then 'Jakarta'
+  when 'aditya.kurniawan@example.com' then 'Jakarta'
+  when 'sari.permata@example.com' then 'Jakarta'
+  when 'fahmi.alamsyah@example.com' then 'Semarang'
+  when 'vina.tan@example.com' then 'Jakarta'
+  when 'farrel.abi.saleh@gmail.com' then 'Yogyakarta'
+end
+where email in (
+  'ahmad.ramadhan@example.com','dewi.sari@example.com','muhammad.hakim@example.com',
+  'siti.azizah@example.com','fajar.nugroho@example.com','ratna.dewi@example.com',
+  'bagas.prasetyo@example.com','intan.permatasari@example.com','clara.putri@example.com',
+  'yusuf.ardiansyah@example.com','rizky.yusuf@example.com','anggita.wulandari@example.com',
+  'reza.putra@example.com','nadia.lestari@example.com','andika.saputra@example.com',
+  'melati.ningrum@example.com','bunga.ayu@example.com','dimas.wicaksono@example.com',
+  'kevin.halim@example.com','putri.maharani@example.com','aditya.kurniawan@example.com',
+  'sari.permata@example.com','fahmi.alamsyah@example.com','vina.tan@example.com',
+  'farrel.abi.saleh@gmail.com'
+);
+
+alter table alumni_profiles enable trigger alumni_profiles_restrict_update_trigger;
