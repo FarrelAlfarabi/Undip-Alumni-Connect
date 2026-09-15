@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'profile_detail_screen.dart';
+
 /// Demo email-verification screen (scope change 14 Sep: was NIM exact-match,
 /// now email exact-match — see PROJECT_NOTES.md Session 3).
 ///
@@ -8,7 +10,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// data in `alumni_profiles.email`. No real auth account is created, no
 /// OTP or confirmation email is sent — same dummy-data demo scope as the
 /// rest of the project. On a match, verification_status is set to
-/// 'verified' directly on the matched row.
+/// 'verified' directly on the matched row, then the user is taken straight
+/// to their profile (ProfileDetailScreen) — see PROJECT_NOTES.md Session 5.
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
 
@@ -16,14 +19,13 @@ class VerificationScreen extends StatefulWidget {
   State<VerificationScreen> createState() => _VerificationScreenState();
 }
 
-enum _VerificationState { idle, loading, verified, notFound, error }
+enum _VerificationState { idle, loading, notFound, error }
 
 class _VerificationScreenState extends State<VerificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
 
   _VerificationState _state = _VerificationState.idle;
-  Map<String, dynamic>? _matchedProfile;
   String? _errorMessage;
 
   @override
@@ -39,7 +41,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     setState(() {
       _state = _VerificationState.loading;
-      _matchedProfile = null;
       _errorMessage = null;
     });
 
@@ -64,10 +65,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
         match['verification_status'] = 'verified';
       }
 
-      setState(() {
-        _matchedProfile = match;
-        _state = _VerificationState.verified;
-      });
+      if (!mounted) return;
+      setState(() => _state = _VerificationState.idle);
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => ProfileDetailScreen(profile: match)),
+      );
     } catch (e) {
       setState(() {
         _state = _VerificationState.error;
@@ -79,7 +81,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
   void _reset() {
     setState(() {
       _state = _VerificationState.idle;
-      _matchedProfile = null;
       _errorMessage = null;
       _emailController.clear();
     });
@@ -119,8 +120,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   Widget _buildContent(ThemeData theme) {
     switch (_state) {
-      case _VerificationState.verified:
-        return _VerifiedResult(profile: _matchedProfile!, onDone: _reset);
       case _VerificationState.notFound:
         return _NotFoundResult(
           email: _emailController.text.trim(),
@@ -222,99 +221,6 @@ class _VerificationForm extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   )
                 : const Text('Verify'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VerifiedResult extends StatelessWidget {
-  const _VerifiedResult({required this.profile, required this.onDone});
-
-  final Map<String, dynamic> profile;
-  final VoidCallback onDone;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(
-            Icons.check_circle,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Verified',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Welcome back to UNDIP Alumni Connect.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                profile['name'] as String? ?? '',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              _detailRow(theme, Icons.school_outlined,
-                  '${profile['faculty']} — ${profile['major']}'),
-              _detailRow(theme, Icons.calendar_today_outlined,
-                  'Class of ${profile['graduation_year']}'),
-              if ((profile['current_employer'] as String?)?.isNotEmpty ==
-                  true)
-                _detailRow(
-                  theme,
-                  Icons.work_outline,
-                  '${profile['current_role'] ?? 'Alumni'} at '
-                  '${profile['current_employer']}',
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        OutlinedButton(
-          onPressed: onDone,
-          child: const Text('Verify another email'),
-        ),
-      ],
-    );
-  }
-
-  Widget _detailRow(ThemeData theme, IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(text, style: theme.textTheme.bodySmall),
           ),
         ],
       ),
