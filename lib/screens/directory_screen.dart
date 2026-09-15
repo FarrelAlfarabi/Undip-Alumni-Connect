@@ -10,11 +10,12 @@ const _kAllFilter = 'All';
 /// all verified alumni_profiles rows once and filters client-side — fine
 /// for ~24 seed rows, not meant to scale past the demo.
 class DirectoryScreen extends StatefulWidget {
-  const DirectoryScreen({super.key, required this.currentProfile});
+  const DirectoryScreen({super.key, required this.currentUser});
 
-  /// The verified alumnus browsing the directory — threaded through to
-  /// ProfileDetailScreen so it knows who'd be messaging whom.
-  final Map<String, dynamic> currentProfile;
+  /// The verified alumnus browsing the directory, as a shared notifier —
+  /// threaded through (same reference, not a copy) to ProfileDetailScreen
+  /// so a subscribe action anywhere stays visible everywhere.
+  final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
   State<DirectoryScreen> createState() => _DirectoryScreenState();
@@ -206,7 +207,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                   builder: (_) => ProfileDetailScreen(
                                     profile: p,
                                     showEditButton: false,
-                                    viewerProfile: widget.currentProfile,
+                                    currentUser: widget.currentUser,
                                   ),
                                 ),
                               );

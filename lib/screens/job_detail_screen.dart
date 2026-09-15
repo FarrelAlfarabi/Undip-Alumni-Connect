@@ -5,47 +5,34 @@ import 'subscribe_screen.dart';
 /// Job detail view + contact-poster visual paywall (Day 6, demo scope).
 /// Free users see the job in full but the poster's contact info is locked
 /// behind Subscribe. No real payment — see subscribe_screen.dart.
-class JobDetailScreen extends StatefulWidget {
+///
+/// [currentUser] is a shared notifier (see profile_detail_screen.dart's
+/// doc comment) so subscribing here, or from messaging, unlocks contact
+/// info on every job — not just the one open when the user subscribed.
+class JobDetailScreen extends StatelessWidget {
   const JobDetailScreen({
     super.key,
     required this.job,
-    required this.currentProfile,
+    required this.currentUser,
   });
 
   final Map<String, dynamic> job;
-  final Map<String, dynamic> currentProfile;
+  final ValueNotifier<Map<String, dynamic>> currentUser;
 
-  @override
-  State<JobDetailScreen> createState() => _JobDetailScreenState();
-}
-
-class _JobDetailScreenState extends State<JobDetailScreen> {
-  late Map<String, dynamic> _currentProfile;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentProfile = widget.currentProfile;
-  }
-
-  bool get _isSubscribed =>
-      _currentProfile['subscription_status'] == 'subscribed';
-
-  Future<void> _unlockContact() async {
+  Future<void> _unlockContact(BuildContext context) async {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
-        builder: (_) => SubscribeScreen(profile: _currentProfile),
+        builder: (_) => SubscribeScreen(profile: currentUser.value),
       ),
     );
     if (updated != null) {
-      setState(() => _currentProfile = updated);
+      currentUser.value = updated;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final job = widget.job;
     final poster = job['poster'] as Map<String, dynamic>?;
     final posterName = poster?['name'] as String? ?? 'Alumni';
 
@@ -90,53 +77,66 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: _isSubscribed
-                        ? Row(
-                            children: [
-                              Icon(
-                                Icons.mail_outline,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  job['contact_info'] as String? ??
-                                      'No contact info provided.',
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            children: [
-                              Icon(
-                                Icons.lock_outline,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Text(
-                                  'Contact: locked. Subscribe to see how to '
-                                  'reach the poster.',
-                                ),
-                              ),
-                            ],
+                  ValueListenableBuilder<Map<String, dynamic>>(
+                    valueListenable: currentUser,
+                    builder: (context, user, _) {
+                      final isSubscribed =
+                          user['subscription_status'] == 'subscribed';
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: isSubscribed
+                                ? Row(
+                                    children: [
+                                      Icon(
+                                        Icons.mail_outline,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          job['contact_info'] as String? ??
+                                              'No contact info provided.',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Icon(
+                                        Icons.lock_outline,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Text(
+                                          'Contact: locked. Subscribe to see '
+                                          'how to reach the poster.',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
+                          if (!isSubscribed) ...[
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: () => _unlockContact(context),
+                              icon: const Icon(Icons.lock_open_outlined),
+                              label: const Text('Subscribe to Contact'),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
-                  if (!_isSubscribed) ...[
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _unlockContact,
-                      icon: const Icon(Icons.lock_open_outlined),
-                      label: const Text('Subscribe to Contact'),
-                    ),
-                  ],
                 ],
               ),
             ),

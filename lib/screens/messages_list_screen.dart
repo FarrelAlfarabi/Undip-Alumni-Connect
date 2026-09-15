@@ -7,9 +7,12 @@ import 'chat_screen.dart';
 /// until they message someone from the directory — this screen doesn't
 /// start new conversations itself.
 class MessagesListScreen extends StatefulWidget {
-  const MessagesListScreen({super.key, required this.currentProfile});
+  const MessagesListScreen({super.key, required this.currentUser});
 
-  final Map<String, dynamic> currentProfile;
+  /// The logged-in user, as a shared notifier — only `.value['id']` is
+  /// read here (a stable value), see profile_detail_screen.dart's doc
+  /// comment for why this is a notifier rather than a plain map.
+  final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
   State<MessagesListScreen> createState() => _MessagesListScreenState();
@@ -25,7 +28,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchConversations() async {
-    final myId = widget.currentProfile['id'] as String;
+    final myId = widget.currentUser.value['id'] as String;
     final rows = await Supabase.instance.client
         .from('conversations')
         .select(
@@ -39,7 +42,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   }
 
   Map<String, dynamic> _otherParticipant(Map<String, dynamic> conversation) {
-    final myId = widget.currentProfile['id'] as String;
+    final myId = widget.currentUser.value['id'] as String;
     final p1 = conversation['p1'] as Map<String, dynamic>;
     final p2 = conversation['p2'] as Map<String, dynamic>;
     return p1['id'] == myId ? p2 : p1;
@@ -92,7 +95,8 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                     MaterialPageRoute(
                       builder: (_) => ChatScreen(
                         conversationId: c['id'] as String,
-                        currentProfileId: widget.currentProfile['id'] as String,
+                        currentProfileId:
+                            widget.currentUser.value['id'] as String,
                         otherName: other['name'] as String? ?? 'Alumni',
                       ),
                     ),

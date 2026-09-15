@@ -8,11 +8,13 @@ import 'post_job_screen.dart';
 /// browsing for everyone — the contact button / visual paywall lives on
 /// JobDetailScreen.
 class JobBoardScreen extends StatefulWidget {
-  const JobBoardScreen({super.key, required this.currentProfile});
+  const JobBoardScreen({super.key, required this.currentUser});
 
-  /// The verified alumnus currently using the app — needed so a posted job
-  /// records who posted it.
-  final Map<String, dynamic> currentProfile;
+  /// The verified alumnus currently using the app, as a shared notifier —
+  /// needed so a posted job records who posted it, and so the contact
+  /// paywall on JobDetailScreen reflects a subscribe action taken via any
+  /// other job or via messaging.
+  final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
   State<JobBoardScreen> createState() => _JobBoardScreenState();
@@ -39,7 +41,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) =>
-            PostJobScreen(posterId: widget.currentProfile['id'] as String),
+            PostJobScreen(posterId: widget.currentUser.value['id'] as String),
       ),
     );
     if (posted == true) {
@@ -95,7 +97,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                   MaterialPageRoute(
                     builder: (_) => JobDetailScreen(
                       job: jobs[i],
-                      currentProfile: widget.currentProfile,
+                      currentUser: widget.currentUser,
                     ),
                   ),
                 );

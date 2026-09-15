@@ -11,6 +11,11 @@ import 'profile_detail_screen.dart';
 /// (Alumni/Jobs/Chat/News), with a Profile tab added since this app has no
 /// separate top-bar avatar entry point. Lands on Profile right after
 /// verification, matching the app's prior entry flow.
+///
+/// Owns the single [ValueNotifier] that represents "the logged-in user"
+/// for the whole session and passes the same reference to every tab (see
+/// profile_detail_screen.dart's doc comment) — subscribing from any one
+/// screen updates every other screen's paywall/gate consistently.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.profile});
 
@@ -22,14 +27,27 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+  late final ValueNotifier<Map<String, dynamic>> _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = ValueNotifier(widget.profile);
+  }
+
+  @override
+  void dispose() {
+    _currentUser.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      ProfileDetailScreen(profile: widget.profile),
-      DirectoryScreen(currentProfile: widget.profile),
-      JobBoardScreen(currentProfile: widget.profile),
-      MessagesListScreen(currentProfile: widget.profile),
+      ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser),
+      DirectoryScreen(currentUser: _currentUser),
+      JobBoardScreen(currentUser: _currentUser),
+      MessagesListScreen(currentUser: _currentUser),
       const AnnouncementsScreen(),
     ];
 

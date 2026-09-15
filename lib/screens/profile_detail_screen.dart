@@ -13,21 +13,27 @@ import 'subscribe_screen.dart';
 /// flow — edit button shown; directory/jobs/messages/news are reached via
 /// HomeShell's bottom nav, not from here) or someone else's profile viewed
 /// from the directory (read-only, email hidden, subscription-gated
-/// "Message" button via [viewerProfile]).
+/// "Message" button).
+///
+/// [currentUser] is the logged-in user's profile as a shared
+/// [ValueNotifier], not a plain map — subscription_status is checked and
+/// mutated from several independent screens (job contact gate, messaging
+/// gate), and a plain map snapshot went stale across screens (subscribing
+/// via one job's detail view didn't unlock another job's contact info,
+/// since each screen held its own copy). Passing the same notifier
+/// reference everywhere means every screen reads the current value.
 class ProfileDetailScreen extends StatefulWidget {
   const ProfileDetailScreen({
     super.key,
     required this.profile,
+    required this.currentUser,
     this.showEditButton = true,
-    this.viewerProfile,
   });
 
+  /// The profile being displayed — own or someone else's.
   final Map<String, dynamic> profile;
   final bool showEditButton;
-
-  /// The logged-in user viewing someone else's profile. Only relevant when
-  /// [showEditButton] is false.
-  final Map<String, dynamic>? viewerProfile;
+  final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
@@ -35,15 +41,15 @@ class ProfileDetailScreen extends StatefulWidget {
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
-  Map<String, dynamic>? _viewerProfile;
   bool _messaging = false;
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
-    _viewerProfile = widget.viewerProfile;
   }
+
+  bool get _isOwnProfile => _profile['id'] == widget.currentUser.value['id'];
 
   Future<void> _editProfile() async {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
@@ -51,18 +57,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
     if (updated != null) {
       setState(() => _profile = updated);
+      if (_isOwnProfile) {
+        widget.currentUser.value = updated;
+      }
     }
   }
 
   Future<void> _messageThisAlumnus() async {
-    var viewer = _viewerProfile!;
+    var viewer = widget.currentUser.value;
 
     if (viewer['subscription_status'] != 'subscribed') {
       final updated = await Navigator.of(context).push<Map<String, dynamic>>(
         MaterialPageRoute(builder: (_) => SubscribeScreen(profile: viewer)),
       );
       if (updated == null) return;
-      setState(() => _viewerProfile = updated);
+      widget.currentUser.value = updated;
       viewer = updated;
     }
 
@@ -190,6 +199,35 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               ),
                             ],
                           ),
+                          if (widget.showEditButton) ...[
+                            const SizedBox(height: 12),
+                            ValueListenableBuilder<Map<String, dynamic>>(
+                              valueListenable: widget.currentUser,
+                              builder: (context, user, _) {
+                                if (user['subscription_status'] !=
+                                    'subscribed') {
+                                  return const SizedBox.shrink();
+                                }
+                                return Chip(
+                                  avatar: Icon(
+                                    Icons.workspace_premium_outlined,
+                                    size: 16,
+                                    color:
+                                        theme.colorScheme.onSecondaryContainer,
+                                  ),
+                                  label: const Text('Subscribed'),
+                                  backgroundColor:
+                                      theme.colorScheme.secondaryContainer,
+                                  labelStyle: TextStyle(
+                                    color:
+                                        theme.colorScheme.onSecondaryContainer,
+                                  ),
+                                  side: BorderSide.none,
+                                  visualDensity: VisualDensity.compact,
+                                );
+                              },
+                            ),
+                          ],
                           const Divider(height: 32),
                           _section(theme, 'Academic'),
                           _field(theme, 'NIM', _profile['nim']),
@@ -225,25 +263,29 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
                     ),
-                  ] else if (_viewerProfile != null &&
-                      _viewerProfile!['id'] != _profile['id']) ...[
+                  ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
-                    FilledButton.icon(
-                      onPressed: _messaging ? null : _messageThisAlumnus,
-                      icon: _messaging
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Icon(Icons.chat_bubble_outline),
-                      label: Text(
-                        _viewerProfile!['subscription_status'] == 'subscribed'
-                            ? 'Message'
-                            : 'Subscribe to Message',
-                      ),
+                    ValueListenableBuilder<Map<String, dynamic>>(
+                      valueListenable: widget.currentUser,
+                      builder: (context, user, _) {
+                        return FilledButton.icon(
+                          onPressed: _messaging ? null : _messageThisAlumnus,
+                          icon: _messaging
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Icon(Icons.chat_bubble_outline),
+                          label: Text(
+                            user['subscription_status'] == 'subscribed'
+                                ? 'Message'
+                                : 'Subscribe to Message',
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ],
