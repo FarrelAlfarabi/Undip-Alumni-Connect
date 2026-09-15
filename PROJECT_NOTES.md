@@ -356,3 +356,20 @@ Nearby Alumni's only entry point (a small icon in the Directory app bar) turned 
 **RLS trigger — real bug caught and fixed:** user asked to be able to edit anything freely from the Supabase dashboard, since the column-lock trigger from Session 14 fires for every role, including the dashboard's own connection, not just the public anon key. First attempt scoped the check to `current_user not in ('anon', 'authenticated')` but kept the function `SECURITY DEFINER` — inside a `SECURITY DEFINER` function, `current_user` reports the function's *owner*, not the actual caller, so that check was always true and silently disabled the anon restriction entirely. Caught this by re-running the same `set role anon` verification used in Session 14 rather than assuming the fix worked, confirmed the hole, and fixed it by switching to `SECURITY INVOKER` (`supabase/migrations/20260917080000_relax_rls_trigger_for_dashboard.sql`). Re-verified both directions afterward: anon still blocked on identity fields, dashboard-equivalent role edits freely. `get_advisors` security check clean.
 
 **Next step:** demo day.
+
+---
+
+## 2026-09-17 — Session 17: Chat order bug — root cause finally found
+
+User reported (with screenshots) that new chat messages kept appearing above old ones instead of below, even after Session 12's `reverse: true` fix. First attempt at a further fix (drop `reverse: true`, use a plain ascending list plus a `ScrollController` that jumps to `maxScrollExtent`) shipped and *still* didn't fix it, per a second screenshot — same symptom, newest message on top.
+
+Stopped guessing at the render logic and pulled the actual message rows for that conversation straight from the database, sorted `created_at asc`, and diffed that against what was on screen. The true chronological order and the rendered order were exact mirrors of each other. That pointed at the query, not the widget tree, so I checked the `postgrest` package source directly (`postgrest_transform_builder.dart`) instead of trusting memory: `order()`'s `ascending` parameter **defaults to `false`**, not `true`. Every unqualified `.order('created_at')` call was silently fetching newest-first, which is exactly backwards for a plain top-to-bottom message list — both the original code and Session 12's `reverse: true` "fix" were built on the wrong assumption about the default and never actually fixed anything.
+
+Fixed by making the sort direction explicit everywhere it was implicit:
+- `chat_screen.dart`: `.order('created_at', ascending: true)` — messages now genuinely read oldest to newest.
+- `directory_screen.dart` and `nearby_alumni_screen.dart`: `.order('name', ascending: true)` — these had the same unqualified `.order('name')` call, so the Alumni Directory and Nearby Alumni lists were almost certainly sorted Z→A this whole time, not A→Z. Nobody had flagged it, but it's the same bug class, so fixed on sight.
+- `job_board_screen.dart`, `messages_list_screen.dart`, `announcements_screen.dart` already passed `ascending: false` explicitly (newest-first is correct there) — untouched.
+
+Lesson for future debugging in this codebase: don't trust assumptions about a client library's default parameter values — check the installed package source directly (`/root/.pub-cache/hosted/pub.dev/postgrest-*/lib/src/postgrest_transform_builder.dart` in this environment) rather than iterating on the wrong layer of the stack.
+
+**Next step:** demo day. Recommend the user re-test the chat screen once this deploys to confirm the actual root cause fix, not just visually re-verify — the last two "fixes" both looked reasonable and both failed.

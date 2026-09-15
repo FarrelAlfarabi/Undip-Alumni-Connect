@@ -60,7 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
           .from('messages')
           .select()
           .eq('conversation_id', widget.conversationId)
-          .order('created_at');
+          .order('created_at', ascending: true);
       if (!mounted) return;
       setState(() {
         _messages = List<Map<String, dynamic>>.from(rows as List);

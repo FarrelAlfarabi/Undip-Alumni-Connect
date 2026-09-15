@@ -48,7 +48,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         .from('alumni_profiles')
         .select()
         .eq('verification_status', 'verified')
-        .order('name');
+        .order('name', ascending: true);
     return List<Map<String, dynamic>>.from(rows as List);
   }
 
