@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'directory_screen.dart';
+import 'job_board_screen.dart';
 import 'profile_setup_screen.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
@@ -150,6 +151,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       },
                       icon: const Icon(Icons.people_outline),
                       label: const Text('Browse Alumni Directory'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => JobBoardScreen(currentProfile: _profile),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.work_outline),
+                      label: const Text('Browse Job Board'),
                     ),
                   ],
                 ],
