@@ -97,6 +97,18 @@ values
   ('24010119130099', 'Farrel Alfarabi Saleh', 'Fakultas Teknik', 'Teknik Informatika', 2020, 'Bank Central Asia', 'Product Manager', 'Banking & Finance', 'Bank Central Asia', 'verified', 'free', 'farrel.abi.saleh@gmail.com')
 on conflict (nim) do update set email = excluded.email;
 
+-- ----------------------------------------------------------------------------
+-- Demo account for Gilang (ILUNI UNDIP) — real email, made-up profile
+-- details (employer/role/etc. are fabricated for the demo). Lets him log
+-- in as a seeded alumnus during the live demo if he wants to try it
+-- himself, rather than only watching over screen-share.
+-- ----------------------------------------------------------------------------
+insert into alumni_profiles
+  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+values
+  ('24020110130098', 'Gilang Ramadhan Wibowo', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'ILUNI UNDIP', 'Ketua Umum', 'Nonprofit / Alumni Association', 'ILUNI UNDIP', 'verified', 'free', 'gilang.modcart@gmail.com')
+on conflict (nim) do update set email = excluded.email;
+
 -- Note: the non-matching signup path needs no seed data — any email that
 -- isn't one of the 25 above already demonstrates "not found."
 
@@ -133,6 +145,7 @@ update alumni_profiles set city = case email
   when 'fahmi.alamsyah@example.com' then 'Semarang'
   when 'vina.tan@example.com' then 'Jakarta'
   when 'farrel.abi.saleh@gmail.com' then 'Yogyakarta'
+  when 'gilang.modcart@gmail.com' then 'Jakarta'
 end
 where email in (
   'ahmad.ramadhan@example.com','dewi.sari@example.com','muhammad.hakim@example.com',
@@ -143,7 +156,7 @@ where email in (
   'melati.ningrum@example.com','bunga.ayu@example.com','dimas.wicaksono@example.com',
   'kevin.halim@example.com','putri.maharani@example.com','aditya.kurniawan@example.com',
   'sari.permata@example.com','fahmi.alamsyah@example.com','vina.tan@example.com',
-  'farrel.abi.saleh@gmail.com'
+  'farrel.abi.saleh@gmail.com','gilang.modcart@gmail.com'
 );
 
 alter table alumni_profiles enable trigger alumni_profiles_restrict_update_trigger;
