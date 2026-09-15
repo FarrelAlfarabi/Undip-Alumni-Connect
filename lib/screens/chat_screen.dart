@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Basic messaging UI (Day 6, demo scope). One conversation, no realtime —
-/// sending a message re-fetches the list. Messaging is only reachable once
+/// the thread refetches after you send, and on the refresh button for
+/// seeing the other side's replies. Messaging is only reachable once
 /// subscribed (gated upstream in profile_detail_screen.dart).
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
@@ -21,14 +22,16 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late Future<List<Map<String, dynamic>>> _future;
   final _messageController = TextEditingController();
+
+  List<Map<String, dynamic>>? _messages;
+  String? _loadError;
   bool _sending = false;
 
   @override
   void initState() {
     super.initState();
-    _future = _fetchMessages();
+    _refresh();
   }
 
   @override
@@ -37,13 +40,24 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  Future<List<Map<String, dynamic>>> _fetchMessages() async {
-    final rows = await Supabase.instance.client
-        .from('messages')
-        .select()
-        .eq('conversation_id', widget.conversationId)
-        .order('created_at');
-    return List<Map<String, dynamic>>.from(rows as List);
+  // Keeps the current thread on screen while fetching, rather than
+  // swapping the whole list for a spinner every time a message is sent.
+  Future<void> _refresh() async {
+    try {
+      final rows = await Supabase.instance.client
+          .from('messages')
+          .select()
+          .eq('conversation_id', widget.conversationId)
+          .order('created_at');
+      if (!mounted) return;
+      setState(() {
+        _messages = List<Map<String, dynamic>>.from(rows as List);
+        _loadError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadError = e.toString());
+    }
   }
 
   Future<void> _send() async {
@@ -51,7 +65,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
 
     setState(() => _sending = true);
-
     try {
       await Supabase.instance.client.from('messages').insert({
         'conversation_id': widget.conversationId,
@@ -59,16 +72,14 @@ class _ChatScreenState extends State<ChatScreen> {
         'body': text,
       });
       _messageController.clear();
-      setState(() {
-        _future = _fetchMessages();
-        _sending = false;
-      });
+      await _refresh();
     } catch (e) {
-      setState(() => _sending = false);
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
+    } finally {
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -77,67 +88,19 @@ class _ChatScreenState extends State<ChatScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.otherName)),
+      appBar: AppBar(
+        title: Text(widget.otherName),
+        actions: [
+          IconButton(
+            onPressed: _refresh,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: _future,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Failed to load messages: ${snapshot.error}'),
-                  );
-                }
-
-                final messages = snapshot.data ?? [];
-                if (messages.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No messages yet. Say hello to ${widget.otherName}.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, i) {
-                    final m = messages[i];
-                    final isMine = m['sender_id'] == widget.currentProfileId;
-                    return Align(
-                      alignment: isMine
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isMine
-                              ? theme.colorScheme.primaryContainer
-                              : theme.colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(m['body'] as String? ?? ''),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: _buildThread(theme)),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -167,6 +130,55 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildThread(ThemeData theme) {
+    final messages = _messages;
+    if (messages == null) {
+      if (_loadError != null) {
+        return Center(child: Text('Failed to load messages: $_loadError'));
+      }
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (messages.isEmpty) {
+      return Center(
+        child: Text(
+          'No messages yet. Say hello to ${widget.otherName}.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+
+    // reverse: true anchors the list to the bottom, so the newest message
+    // is always in view without manual scroll management.
+    return ListView.builder(
+      reverse: true,
+      padding: const EdgeInsets.all(16),
+      itemCount: messages.length,
+      itemBuilder: (context, i) {
+        final m = messages[messages.length - 1 - i];
+        final isMine = m['sender_id'] == widget.currentProfileId;
+        return Align(
+          alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
+            ),
+            decoration: BoxDecoration(
+              color: isMine
+                  ? theme.colorScheme.primaryContainer
+                  : theme.colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(m['body'] as String? ?? ''),
+          ),
+        );
+      },
     );
   }
 }

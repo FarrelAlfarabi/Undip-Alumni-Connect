@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
+import 'verification_screen.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -126,6 +127,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.showEditButton ? 'My Profile' : 'Alumni Profile'),
+        actions: [
+          if (widget.showEditButton)
+            IconButton(
+              tooltip: 'Sign out',
+              icon: const Icon(Icons.logout),
+              onPressed: () {
+                // Back to verification with the whole shell torn down, so
+                // a second demo account starts from a clean state.
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const VerificationScreen()),
+                  (_) => false,
+                );
+              },
+            ),
+        ],
       ),
       body: SafeArea(
         child: Center(

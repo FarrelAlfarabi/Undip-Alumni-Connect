@@ -29,6 +29,14 @@ class _HomeShellState extends State<HomeShell> {
   int _index = 0;
   late final ValueNotifier<Map<String, dynamic>> _currentUser;
 
+  // Jobs and Chat show data that changes while the app is open (a job you
+  // just posted, a conversation you just started from the directory).
+  // IndexedStack keeps every tab alive, so those tabs would otherwise show
+  // whatever they fetched at launch forever. Bumping the key on re-select
+  // recreates the tab, which refetches.
+  int _jobsEpoch = 0;
+  int _chatEpoch = 0;
+
   @override
   void initState() {
     super.initState();
@@ -41,13 +49,27 @@ class _HomeShellState extends State<HomeShell> {
     super.dispose();
   }
 
+  void _select(int i) {
+    setState(() {
+      if (i == 2 && _index != 2) _jobsEpoch++;
+      if (i == 3 && _index != 3) _chatEpoch++;
+      _index = i;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = [
       ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser),
       DirectoryScreen(currentUser: _currentUser),
-      JobBoardScreen(currentUser: _currentUser),
-      MessagesListScreen(currentUser: _currentUser),
+      JobBoardScreen(
+        key: ValueKey('jobs-$_jobsEpoch'),
+        currentUser: _currentUser,
+      ),
+      MessagesListScreen(
+        key: ValueKey('chat-$_chatEpoch'),
+        currentUser: _currentUser,
+      ),
       const AnnouncementsScreen(),
     ];
 
@@ -55,7 +77,7 @@ class _HomeShellState extends State<HomeShell> {
       body: IndexedStack(index: _index, children: tabs),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: _select,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.person_outline),

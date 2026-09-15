@@ -73,7 +73,9 @@ This is the most important part of the demo. Take it slow.
 2. Since you're already subscribed (from step 4), the button now says **Message** instead of **Subscribe to Message** — tap it.
 3. A conversation opens. Type a message, send it — it appears immediately in the thread.
 4. Go to the **Chat** tab — the conversation you just started is listed there.
-5. Note: no realtime push yet (sending re-fetches the thread) — fine for a demo, call it out only if asked.
+5. Note: no realtime push yet — the thread refetches after you send, and the refresh icon in the chat's top bar pulls in the other side's replies. Fine for a demo, call it out only if asked.
+
+**Optional — show both sides of a conversation:** tap the sign-out icon (top right of the Profile tab), verify as the alumnus you messaged (e.g. `siti.azizah@example.com`), open **Chat** — the conversation is there from their side. Reply, sign out, come back as Ahmad, hit refresh in the thread.
 
 ---
 
