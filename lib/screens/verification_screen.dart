@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'profile_detail_screen.dart';
+import 'home_shell.dart';
 
 /// Demo email-verification screen (scope change 14 Sep: was NIM exact-match,
 /// now email exact-match — see PROJECT_NOTES.md Session 3).
@@ -10,8 +10,8 @@ import 'profile_detail_screen.dart';
 /// data in `alumni_profiles.email`. No real auth account is created, no
 /// OTP or confirmation email is sent — same dummy-data demo scope as the
 /// rest of the project. On a match, verification_status is set to
-/// 'verified' directly on the matched row, then the user is taken straight
-/// to their profile (ProfileDetailScreen) — see PROJECT_NOTES.md Session 5.
+/// 'verified' directly on the matched row, then the user lands in the app
+/// shell (HomeShell) — see PROJECT_NOTES.md Sessions 5 and 9.
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
 
@@ -68,7 +68,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       if (!mounted) return;
       setState(() => _state = _VerificationState.idle);
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => ProfileDetailScreen(profile: match)),
+        MaterialPageRoute(builder: (_) => HomeShell(profile: match)),
       );
     } catch (e) {
       setState(() {

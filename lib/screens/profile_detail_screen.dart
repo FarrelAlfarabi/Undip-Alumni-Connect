@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'chat_screen.dart';
-import 'directory_screen.dart';
-import 'job_board_screen.dart';
-import 'messages_list_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
 
@@ -13,9 +10,10 @@ import 'subscribe_screen.dart';
 /// editable here — only employment fields are, via ProfileSetupScreen.
 ///
 /// [showEditButton] controls whether this is "my profile" (verification
-/// flow — edit button + directory/job board/messages entry points shown)
-/// or someone else's profile viewed from the directory (read-only, email
-/// hidden, subscription-gated "Message" button via [viewerProfile]).
+/// flow — edit button shown; directory/jobs/messages/news are reached via
+/// HomeShell's bottom nav, not from here) or someone else's profile viewed
+/// from the directory (read-only, email hidden, subscription-gated
+/// "Message" button via [viewerProfile]).
 class ProfileDetailScreen extends StatefulWidget {
   const ProfileDetailScreen({
     super.key,
@@ -226,45 +224,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onPressed: _editProfile,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                DirectoryScreen(currentProfile: _profile),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.people_outline),
-                      label: const Text('Browse Alumni Directory'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                JobBoardScreen(currentProfile: _profile),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.work_outline),
-                      label: const Text('Browse Job Board'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                MessagesListScreen(currentProfile: _profile),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      label: const Text('Messages'),
                     ),
                   ] else if (_viewerProfile != null &&
                       _viewerProfile!['id'] != _profile['id']) ...[
