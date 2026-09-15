@@ -35,13 +35,13 @@ Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bott
 
 ## 3. Alumni Directory
 
-1. Tap **Alumni**.
+1. Tap **Alumni**. Note the two tabs under the header: **Directory** and **Nearby** — you land on Directory.
 2. Show the search box — type a company name, e.g. "Tokopedia" or "Gojek".
 3. Show the three filter dropdowns — filter by **Faculty**, **Graduation Year**, **Industry**. Combine two filters to show it's a real AND filter, not just search.
 4. Tap any alumnus's row → their profile opens read-only. Point out: email is hidden here (only visible on your own profile) — browsing is free, but you don't get everyone's contact info for free, that's the subscription's job.
 5. At the bottom of another alumnus's profile: the **Subscribe to Message** button. Don't tap it yet — save the paywall moment for Jobs, it's the same mechanism and you only need to show it working once.
-6. Back out to Alumni Directory, back out to Profile.
-7. On the Profile tab, tap the **Nearby Alumni** card. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
+6. Back out to the Directory tab, then tap the **Nearby** tab next to it. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
+7. Back out to Profile.
 
 ---
 

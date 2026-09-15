@@ -373,3 +373,21 @@ Fixed by making the sort direction explicit everywhere it was implicit:
 Lesson for future debugging in this codebase: don't trust assumptions about a client library's default parameter values — check the installed package source directly (`/root/.pub-cache/hosted/pub.dev/postgrest-*/lib/src/postgrest_transform_builder.dart` in this environment) rather than iterating on the wrong layer of the stack.
 
 **Next step:** demo day. Recommend the user re-test the chat screen once this deploys to confirm the actual root cause fix, not just visually re-verify — the last two "fixes" both looked reasonable and both failed.
+
+---
+
+## 2026-09-17 — Session 18: Nearby Alumni discoverability — real fix this time
+
+User flagged (with screenshots) that Nearby Alumni was still missable after Session 15/17's fixes: the compass icon in the Directory app bar has no label, and the Profile-tab card sits below the fold, requiring a scroll to even see it exists.
+
+Restructured instead of just re-styling the same entry points: `lib/screens/alumni_screen.dart` is a new screen that owns the Alumni tab's AppBar and a `TabBar` with two labeled tabs, **Directory** and **Nearby**, right under the header. `DirectoryScreen` and `NearbyAlumniScreen` lost their own `Scaffold`/`AppBar` (they're always embedded as tab bodies now — noted in both files' doc comments) and `AlumniScreen` composes them. `HomeShell`'s Alumni bottom-nav destination now opens `AlumniScreen` instead of `DirectoryScreen` directly.
+
+The Directory app bar's compass icon is gone — redundant now that Nearby is a labeled sibling tab one tap away, and a second, differently-styled entry point for the same destination was more confusing than helpful. The Profile-tab card stays as a shortcut, but now calls a new `onOpenNearby` callback (threaded from `HomeShell`) instead of pushing its own route: tapping it switches the bottom nav to Alumni *and* lands directly on the Nearby sub-tab, via an epoch-bump pattern (`_alumniEpoch`/`_alumniInitialTab`) matching the existing Jobs/Chat refetch-on-reselect pattern already in `HomeShell`.
+
+Hit a real bracket-mismatch bug while stripping the `Scaffold` wrapper out of `NearbyAlumniScreen` (a stray leftover closing paren from the old `body: Column(...)` nesting) — caught it via `flutter analyze`'s exact line/column error rather than guessing, fixed by deleting the one stray line, then verified analyze was clean before moving on.
+
+Updated `DEMO_SCRIPT.md`'s Alumni Directory section to point at the new tab instead of the old compass icon.
+
+**Verified:** `flutter analyze` clean, `dart format` clean. Not click-tested in a running browser — same gap as every UI change this project. User should confirm the tabs actually render and the Profile-card shortcut actually lands on Nearby before the demo.
+
+**Next step:** demo day.

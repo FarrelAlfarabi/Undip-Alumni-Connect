@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'alumni_screen.dart';
 import 'announcements_screen.dart';
-import 'directory_screen.dart';
 import 'job_board_screen.dart';
 import 'messages_list_screen.dart';
 import 'profile_detail_screen.dart';
@@ -37,6 +37,13 @@ class _HomeShellState extends State<HomeShell> {
   int _jobsEpoch = 0;
   int _chatEpoch = 0;
 
+  // Bumped (alongside forcing Alumni tab + sub-tab 1) when the Profile
+  // tab's "Nearby Alumni" shortcut is tapped, so AlumniScreen is recreated
+  // with a fresh TabController defaulting to Nearby instead of wherever it
+  // was left.
+  int _alumniEpoch = 0;
+  int _alumniInitialTab = 0;
+
   @override
   void initState() {
     super.initState();
@@ -57,11 +64,27 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
+  void _openNearbyAlumni() {
+    setState(() {
+      _index = 1;
+      _alumniInitialTab = 1;
+      _alumniEpoch++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser),
-      DirectoryScreen(currentUser: _currentUser),
+      ProfileDetailScreen(
+        profile: widget.profile,
+        currentUser: _currentUser,
+        onOpenNearby: _openNearbyAlumni,
+      ),
+      AlumniScreen(
+        key: ValueKey('alumni-$_alumniEpoch'),
+        currentUser: _currentUser,
+        initialTabIndex: _alumniInitialTab,
+      ),
       JobBoardScreen(
         key: ValueKey('jobs-$_jobsEpoch'),
         currentUser: _currentUser,

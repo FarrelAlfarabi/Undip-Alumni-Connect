@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'chat_screen.dart';
-import 'nearby_alumni_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
 import 'verification_screen.dart';
@@ -30,12 +29,17 @@ class ProfileDetailScreen extends StatefulWidget {
     required this.profile,
     required this.currentUser,
     this.showEditButton = true,
+    this.onOpenNearby,
   });
 
   /// The profile being displayed — own or someone else's.
   final Map<String, dynamic> profile;
   final bool showEditButton;
   final ValueNotifier<Map<String, dynamic>> currentUser;
+
+  /// Switches HomeShell to the Alumni tab's Nearby sub-tab. Only set (and
+  /// only shown) on the own-profile instance — see HomeShell.
+  final VoidCallback? onOpenNearby;
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
@@ -312,15 +316,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           Icons.chevron_right,
                           color: theme.colorScheme.onSecondaryContainer,
                         ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => NearbyAlumniScreen(
-                                currentUser: widget.currentUser,
-                              ),
-                            ),
-                          );
-                        },
+                        onTap: widget.onOpenNearby,
                       ),
                     ),
                   ] else if (!_isOwnProfile) ...[

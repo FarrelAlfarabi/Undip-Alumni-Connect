@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'nearby_alumni_screen.dart';
 import 'profile_detail_screen.dart';
 
 const _kAllFilter = 'All';
@@ -10,6 +9,9 @@ const _kAllFilter = 'All';
 /// industry, plus free-text search on name/company. Demo scope: fetches
 /// all verified alumni_profiles rows once and filters client-side — fine
 /// for ~24 seed rows, not meant to scale past the demo.
+///
+/// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) —
+/// see alumni_screen.dart.
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({super.key, required this.currentUser});
 
@@ -86,157 +88,135 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Alumni Directory'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.near_me_outlined),
-            tooltip: 'Nearby Alumni',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      NearbyAlumniScreen(currentUser: widget.currentUser),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text('Failed to load directory: ${snapshot.error}'),
-              ),
-            );
-          }
-
-          final all = snapshot.data ?? [];
-          final filtered = _applyFilters(all);
-          final faculties = _distinctSorted(all, 'faculty');
-          final years = [
-            _kAllFilter,
-            ...all
-                .map((p) => p['graduation_year']?.toString())
-                .whereType<String>()
-                .toSet()
-                .toList()
-              ..sort((a, b) => b.compareTo(a)),
-          ];
-          final industries = _distinctSorted(all, 'industry');
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Search by name or company...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _FilterDropdown(
-                        label: 'Faculty',
-                        value: _faculty,
-                        options: faculties,
-                        onChanged: (v) => setState(() => _faculty = v),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _FilterDropdown(
-                        label: 'Year',
-                        value: _year,
-                        options: years,
-                        onChanged: (v) => setState(() => _year = v),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _FilterDropdown(
-                        label: 'Industry',
-                        value: _industry,
-                        options: industries,
-                        onChanged: (v) => setState(() => _industry = v),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: filtered.isEmpty
-                    ? const Center(
-                        child: Text('No alumni match these filters.'),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) {
-                          final p = filtered[i];
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                              child: Text(
-                                (p['name'] as String? ?? '?')
-                                    .trim()
-                                    .split(RegExp(r'\s+'))
-                                    .map((w) => w.isNotEmpty ? w[0] : '')
-                                    .take(2)
-                                    .join()
-                                    .toUpperCase(),
-                              ),
-                            ),
-                            title: Text(p['name'] as String? ?? ''),
-                            subtitle: Text(
-                              [
-                                if ((p['current_role'] as String?)
-                                        ?.isNotEmpty ==
-                                    true)
-                                  '${p['current_role']}'
-                                      '${(p['current_employer'] as String?)?.isNotEmpty == true ? ' @ ${p['current_employer']}' : ''}',
-                                '${p['faculty']} · Class of ${p['graduation_year']}',
-                              ].join('\n'),
-                            ),
-                            isThreeLine: true,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ProfileDetailScreen(
-                                    profile: p,
-                                    showEditButton: false,
-                                    currentUser: widget.currentUser,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('Failed to load directory: ${snapshot.error}'),
+            ),
           );
-        },
-      ),
+        }
+
+        final all = snapshot.data ?? [];
+        final filtered = _applyFilters(all);
+        final faculties = _distinctSorted(all, 'faculty');
+        final years = [
+          _kAllFilter,
+          ...all
+              .map((p) => p['graduation_year']?.toString())
+              .whereType<String>()
+              .toSet()
+              .toList()
+            ..sort((a, b) => b.compareTo(a)),
+        ];
+        final industries = _distinctSorted(all, 'industry');
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search by name or company...',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _FilterDropdown(
+                      label: 'Faculty',
+                      value: _faculty,
+                      options: faculties,
+                      onChanged: (v) => setState(() => _faculty = v),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FilterDropdown(
+                      label: 'Year',
+                      value: _year,
+                      options: years,
+                      onChanged: (v) => setState(() => _year = v),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _FilterDropdown(
+                      label: 'Industry',
+                      value: _industry,
+                      options: industries,
+                      onChanged: (v) => setState(() => _industry = v),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: filtered.isEmpty
+                  ? const Center(child: Text('No alumni match these filters.'))
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        final p = filtered[i];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            child: Text(
+                              (p['name'] as String? ?? '?')
+                                  .trim()
+                                  .split(RegExp(r'\s+'))
+                                  .map((w) => w.isNotEmpty ? w[0] : '')
+                                  .take(2)
+                                  .join()
+                                  .toUpperCase(),
+                            ),
+                          ),
+                          title: Text(p['name'] as String? ?? ''),
+                          subtitle: Text(
+                            [
+                              if ((p['current_role'] as String?)?.isNotEmpty ==
+                                  true)
+                                '${p['current_role']}'
+                                    '${(p['current_employer'] as String?)?.isNotEmpty == true ? ' @ ${p['current_employer']}' : ''}',
+                              '${p['faculty']} · Class of ${p['graduation_year']}',
+                            ].join('\n'),
+                          ),
+                          isThreeLine: true,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ProfileDetailScreen(
+                                  profile: p,
+                                  showEditButton: false,
+                                  currentUser: widget.currentUser,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
