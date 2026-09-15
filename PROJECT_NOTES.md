@@ -244,3 +244,26 @@ Since this session can't click through the running app, "fix bugs" meant a caref
 - Kept the fix minimal: a shared `ValueNotifier` for the one piece of state that's actually checked in multiple places, not a full app-wide state management rewrite.
 
 **Next step:** Day 9 (Tue 22 Sep) — Full walkthrough test, prepare demo script, fix critical bugs.
+
+---
+
+## 2026-09-15 — Session 11: Demo script + a critical data bug (Day 9)
+
+"Full walkthrough test" means clicking through the running app — this container still can't do that (no route to `supabase.co`), so the walkthrough was done by tracing every screen's logic against the actual live data, step by step, as if following the demo script by hand.
+
+**What got built/changed:**
+- **Found and fixed a real demo-breaking bug**: all 5 documented "DEMO VERIFICATION TEST EMAILS" — the exact accounts every prior session's notes and the seed file itself tell you to use — were seeded `subscription_status = 'subscribed'`. Following the documented flow with any of them would never show the paywall at all, meaning the app's main monetization mechanism (per the Master Plan doc) was invisible in the one script anyone would actually follow. This wasn't caught earlier because nothing before this session had traced the *specific* combination of "which account does the script say to use" against "what does that account's data actually make possible."
+  - Fixed live: flipped all 5 to `free` (verified after: 1 subscribed / 23 free). `bunga.ayu@example.com` — not one of the 5 documented accounts — deliberately left subscribed as an optional "already subscribed" reference.
+  - Updated `supabase/seed.sql` to match, so a fresh install seeds correctly from now on.
+- **`DEMO_SCRIPT.md`** — the actual deliverable for Sep 23: which email to use and why, the order to show features in, explicit talking points for what's real vs. mocked (say this out loud, don't let it go unsaid), the known open items worth surfacing proactively (ILUNI NIM data access, Nearby Alumni safety design, RLS), and a "something breaks live" fallback section.
+- No code changes this session — `flutter analyze` clean, `dart format` reported nothing to change. This session's walkthrough surfaced a data/content problem, not a logic bug.
+
+**What's still broken or incomplete:**
+- Still no way to actually watch this run from this container — the walkthrough and the demo script are both grounded in reading the code and querying live data, not in having pressed the buttons.
+- Didn't independently re-verify the whole golden path from zero (fresh browser, no cached state) — traced it by reading, which is a real check but not the same as a live run.
+
+**Scope decisions:**
+- Treated the pre-subscribed test accounts as a critical bug worth fixing now rather than just noting for later — it directly undermines the single most important thing the demo needs to show, and Day 9 exists specifically to catch exactly this kind of issue before the 23rd.
+- Wrote the demo script assuming the presenter (Farrel) hasn't personally re-tested every step either — spelled out fallback behavior and what to say if something breaks, rather than assuming a dry run happened.
+
+**Next step:** Day 10 (Wed 23 Sep) — Buffer + demo day. No more build days after this one in the current plan.
