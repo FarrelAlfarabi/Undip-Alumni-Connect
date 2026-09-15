@@ -128,3 +128,25 @@ This is the first time in the project that the app has actually been run and wat
 - Did not touch Nearby Alumni — no build day assigned to it anywhere, and its safety design is explicitly listed as unresolved. Not building a feature with a known stalking/harassment risk pattern without that being settled first.
 
 **Next step:** Day 4 (Thu 17 Sep) — Directory: list view, search/filter by faculty, year, industry.
+
+---
+
+## 2026-09-15 — Session 6: Alumni directory (Day 4)
+
+**What got built/changed:**
+- `lib/screens/directory_screen.dart` — list of all verified alumni, with a free-text search (name/company) and three filter dropdowns (faculty, graduation year, industry). Fetches all verified rows once, filters client-side — fine at ~24 demo rows. Tapping a row opens `ProfileDetailScreen` in read-only mode.
+- `lib/screens/profile_detail_screen.dart` — added a `showEditButton` param (default true). Own profile (via verification) is unchanged, plus a new "Browse Alumni Directory" button as the entry point. Someone else's profile viewed from the directory: title changes to "Alumni Profile", email is hidden, edit/directory buttons don't show.
+- Verified live data before trusting the dropdown logic: 24 verified rows, no nulls in faculty/industry/graduation_year, 12 faculties, 13 industries, 12 distinct years.
+- `flutter analyze` clean.
+
+**What's still broken or incomplete:**
+- Same run gap as every session — not watched working in a real browser/device from here.
+- Directory is read-only browsing only — no way yet to message an alumnus or see their contact info beyond what's already visible (that's Day 5's job board + messaging paywall).
+- No pagination or performance consideration — deliberately, since it's 24 rows and this is demo scope, not production scope.
+
+**Scope decisions:**
+- Made two calls without stopping to ask, since Day 4's shape was already well-specified everywhere (Notion, Requirements doc, Master Plan doc all agree on list + filter by faculty/year/industry) — unlike Day 2/3 which had genuine open questions:
+  - Client-side filtering over a live query per keystroke.
+  - Hid another alumnus's email in the read-only directory view — not requested anywhere, but broadcasting emails outside the (subscription-gated) messaging feature seemed like an unforced privacy exposure to avoid, not a feature decision to ask permission for.
+
+**Next step:** Day 5 (Fri 18 Sep) — Job board part 1: list view + post-a-job form.
