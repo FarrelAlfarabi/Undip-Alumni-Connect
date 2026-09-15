@@ -104,3 +104,27 @@ This is the first time in the project that the app has actually been run and wat
 - Kept the "on match, set verified" write logic even though it's a no-op against current seed data — it's correct behavior for any row that isn't pre-verified, and cheap to keep.
 
 **Next step:** Decide the real navigation/entry flow (should verification be the home screen?), then continue toward Day 4+ (directory, job board, messaging UI).
+
+---
+
+## 2026-09-15 — Session 5: Profile screens (Day 3), found the Master Plan doc
+
+**Found a "Master Plan" reference doc** in the Google Drive `UNDIP Alumni App` folder (not previously known to this session — surfaced when the user asked to check it), compiled from the Requirements doc, Business Proposal, Investor Financial Plan, and Family Loan Proposal, plus both Notion pages. Confirmed the Day 3 task (Wed 16 Sep: "Profile: setup screen + detail view") matches Notion exactly. The doc also carries a full risk register (18 items) covering things well outside this session's coding scope — most notably: whether Gilang or ILUNI has *any* real path to NIM data at all is unconfirmed (escalated past "needs a signature" — Gilang confirmed he personally has no access), and the Nearby Alumni feature (added 14 Sep) has no safety design and was never screened against the project's own core-wedge test. Both are business/product decisions, explicitly not acted on here — flagged to the user, not resolved.
+
+**What got built/changed:**
+- `lib/screens/profile_detail_screen.dart` — read-only view of the verified alumnus's full profile: academic fields (NIM, faculty, major, graduation year — read-only, came from verification) and employment fields (employer, role, industry, company). "Edit Employment Info" button opens the setup screen.
+- `lib/screens/profile_setup_screen.dart` — form to edit only the employment fields (current_employer, current_role, industry, company). Identity fields are intentionally not editable here — confirmed with the user before building, since the seed data already had every field populated and "what's editable" wasn't decided anywhere. Saves via `alumni_profiles` update + `select().single()`, pops back to the detail screen with the fresh row.
+- `lib/screens/verification_screen.dart` — changed from showing an inline "verified" result card to auto-navigating (`pushReplacement`) straight to `ProfileDetailScreen` on a successful match. Removed the now-dead `_VerifiedResult` widget. Also confirmed with the user before building (vs. keeping a button on the old inline card).
+- Validated the update+select-single query pattern directly against the live Supabase project before trusting it in the app. Hit the same `current_role` reserved-word issue as Session 3, but only in my hand-written raw SQL — confirmed it doesn't affect the app's own `.update({'current_role': ...})` call, since PostgREST quotes identifiers itself.
+- `flutter analyze` clean.
+
+**What's still broken or incomplete:**
+- Same end-to-end run gap as always — this container can't reach `supabase.co` directly, so the new screens haven't been watched running in a real browser/device. The write path was validated at the SQL level, not through the actual Flutter UI.
+- Two Notion databases (project's *MVP Task List* and Command Center *Tasks*) both list the same 10 tasks per the Master Plan doc — only one is being tracked from this session. The other may be going stale.
+- Business risks surfaced by the Master Plan doc (ILUNI data access, Nearby Alumni safety design, go/no-go criteria for demo day) remain completely unaddressed — intentionally, since they're outside this session's scope, but they don't go away by not being mentioned again.
+
+**Scope decisions:**
+- Asked the user before deciding which profile fields are editable and how navigation flows from verification to profile — both were genuinely undecided in every source (Notion, Requirements doc, Master Plan doc all just say "profile setup screen" with no field-level detail).
+- Did not touch Nearby Alumni — no build day assigned to it anywhere, and its safety design is explicitly listed as unresolved. Not building a feature with a known stalking/harassment risk pattern without that being settled first.
+
+**Next step:** Day 4 (Thu 17 Sep) — Directory: list view, search/filter by faculty, year, industry.
