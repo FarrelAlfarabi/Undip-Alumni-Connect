@@ -41,6 +41,25 @@ Apply in order against a fresh project: migrations, then `seed.sql`, then
 `seed_job_posts.sql` and `seed_announcements.sql` (those two are not
 idempotent — run them once).
 
-Row Level Security is **off** on every table. That is a deliberate
-demo-scope decision and means the anon key can read and write everything.
-Do not reuse this project or key for anything beyond the demo.
+Row Level Security is on, but only as vandalism guardrails (no delete
+anywhere, no fake profiles, profile edits locked to the columns the app
+actually writes) — see `supabase/migrations/20260915120000_add_basic_rls.sql`.
+There is no real login in this app (verification is a plain email match,
+not a Supabase Auth session), so RLS cannot hide alumni data from anyone
+holding the anon key; the whole directory and all messages are still
+world-readable. Do not reuse this project or key for anything beyond the
+demo.
+
+## Deploying to Vercel
+
+The Vercel project is connected to this repo's `claude/eloquent-maxwell-pzaky1`
+branch and auto-deploys on push (check Vercel project Settings → Git if
+this changes). Vercel has no Flutter SDK by default, so
+`vercel.json` points it at `scripts/vercel-build.sh`, which fetches
+Flutter fresh on each build and runs the normal release build.
+
+One manual step: `SUPABASE_URL` and `SUPABASE_ANON_KEY` are gitignored
+(same as local dev) and must be set once as **Vercel project Environment
+Variables** (Settings → Environment Variables, both Production and
+Preview) — use the same values as your local `.env`. The build fails
+loudly with a clear error if these aren't set.
