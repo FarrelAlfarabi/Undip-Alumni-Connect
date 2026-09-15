@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'job_detail_screen.dart';
 import 'post_job_screen.dart';
 
-/// Job board list view (Day 5). Free browsing for everyone — the contact
-/// button / visual paywall and job detail view are Day 6, not this screen.
+/// Job board list view (Day 5) + navigation to job detail (Day 6). Free
+/// browsing for everyone — the contact button / visual paywall lives on
+/// JobDetailScreen.
 class JobBoardScreen extends StatefulWidget {
   const JobBoardScreen({super.key, required this.currentProfile});
 
@@ -36,7 +38,8 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   Future<void> _postJob() async {
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => PostJobScreen(posterId: widget.currentProfile['id'] as String),
+        builder: (_) =>
+            PostJobScreen(posterId: widget.currentProfile['id'] as String),
       ),
     );
     if (posted == true) {
@@ -85,7 +88,19 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
             itemCount: jobs.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => _JobCard(job: jobs[i]),
+            itemBuilder: (context, i) => _JobCard(
+              job: jobs[i],
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => JobDetailScreen(
+                      job: jobs[i],
+                      currentProfile: widget.currentProfile,
+                    ),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),
@@ -94,9 +109,10 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
 }
 
 class _JobCard extends StatelessWidget {
-  const _JobCard({required this.job});
+  const _JobCard({required this.job, required this.onTap});
 
   final Map<String, dynamic> job;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -110,45 +126,49 @@ class _JobCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              job['title'] as String? ?? '',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                job['title'] as String? ?? '',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              [
-                job['company'] as String? ?? '',
-                if ((job['industry'] as String?)?.isNotEmpty == true)
-                  job['industry'] as String,
-              ].join(' · '),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              const SizedBox(height: 2),
+              Text(
+                [
+                  job['company'] as String? ?? '',
+                  if ((job['industry'] as String?)?.isNotEmpty == true)
+                    job['industry'] as String,
+                ].join(' · '),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            if ((job['description'] as String?)?.isNotEmpty == true) ...[
+              if ((job['description'] as String?)?.isNotEmpty == true) ...[
+                const SizedBox(height: 10),
+                Text(
+                  job['description'] as String,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
               const SizedBox(height: 10),
               Text(
-                job['description'] as String,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
+                'Posted by $posterName',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
-            const SizedBox(height: 10),
-            Text(
-              'Posted by $posterName',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

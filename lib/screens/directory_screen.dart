@@ -10,7 +10,11 @@ const _kAllFilter = 'All';
 /// all verified alumni_profiles rows once and filters client-side — fine
 /// for ~24 seed rows, not meant to scale past the demo.
 class DirectoryScreen extends StatefulWidget {
-  const DirectoryScreen({super.key});
+  const DirectoryScreen({super.key, required this.currentProfile});
+
+  /// The verified alumnus browsing the directory — threaded through to
+  /// ProfileDetailScreen so it knows who'd be messaging whom.
+  final Map<String, dynamic> currentProfile;
 
   @override
   State<DirectoryScreen> createState() => _DirectoryScreenState();
@@ -51,8 +55,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return all.where((p) {
       if (_faculty != _kAllFilter && p['faculty'] != _faculty) return false;
-      if (_year != _kAllFilter &&
-          p['graduation_year']?.toString() != _year) {
+      if (_year != _kAllFilter && p['graduation_year']?.toString() != _year) {
         return false;
       }
       if (_industry != _kAllFilter && p['industry'] != _industry) {
@@ -67,15 +70,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }).toList();
   }
 
-  List<String> _distinctSorted(
-      List<Map<String, dynamic>> all, String field) {
-    final values = all
-        .map((p) => p[field]?.toString())
-        .whereType<String>()
-        .where((v) => v.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+  List<String> _distinctSorted(List<Map<String, dynamic>> all, String field) {
+    final values =
+        all
+            .map((p) => p[field]?.toString())
+            .whereType<String>()
+            .where((v) => v.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
     return [_kAllFilter, ...values];
   }
 
@@ -101,12 +104,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           final all = snapshot.data ?? [];
           final filtered = _applyFilters(all);
           final faculties = _distinctSorted(all, 'faculty');
-          final years = [_kAllFilter, ...all
-              .map((p) => p['graduation_year']?.toString())
-              .whereType<String>()
-              .toSet()
-              .toList()
-            ..sort((a, b) => b.compareTo(a))];
+          final years = [
+            _kAllFilter,
+            ...all
+                .map((p) => p['graduation_year']?.toString())
+                .whereType<String>()
+                .toSet()
+                .toList()
+              ..sort((a, b) => b.compareTo(a)),
+          ];
           final industries = _distinctSorted(all, 'industry');
 
           return Column(
@@ -158,7 +164,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
               Expanded(
                 child: filtered.isEmpty
-                    ? const Center(child: Text('No alumni match these filters.'))
+                    ? const Center(
+                        child: Text('No alumni match these filters.'),
+                      )
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: filtered.length,
@@ -167,8 +175,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           final p = filtered[i];
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primaryContainer,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
                               child: Text(
                                 (p['name'] as String? ?? '?')
                                     .trim()
@@ -197,6 +206,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                   builder: (_) => ProfileDetailScreen(
                                     profile: p,
                                     showEditButton: false,
+                                    viewerProfile: widget.currentProfile,
                                   ),
                                 ),
                               );
@@ -238,10 +248,12 @@ class _FilterDropdown extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       ),
       items: options
-          .map((o) => DropdownMenuItem(
-                value: o,
-                child: Text(o, overflow: TextOverflow.ellipsis),
-              ))
+          .map(
+            (o) => DropdownMenuItem(
+              value: o,
+              child: Text(o, overflow: TextOverflow.ellipsis),
+            ),
+          )
           .toList(),
       onChanged: (v) {
         if (v != null) onChanged(v);

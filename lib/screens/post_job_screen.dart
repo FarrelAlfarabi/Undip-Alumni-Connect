@@ -135,8 +135,9 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       const SizedBox(height: 16),
                       Text(
                         'Post failed: $_error',
-                        style:
-                            TextStyle(color: Theme.of(context).colorScheme.error),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -149,7 +150,9 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
                             )
                           : const Text('Post Job'),
                     ),

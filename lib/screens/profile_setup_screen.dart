@@ -26,13 +26,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   void initState() {
     super.initState();
     _employerController = TextEditingController(
-        text: widget.profile['current_employer'] as String? ?? '');
+      text: widget.profile['current_employer'] as String? ?? '',
+    );
     _roleController = TextEditingController(
-        text: widget.profile['current_role'] as String? ?? '');
-    _industryController =
-        TextEditingController(text: widget.profile['industry'] as String? ?? '');
-    _companyController =
-        TextEditingController(text: widget.profile['company'] as String? ?? '');
+      text: widget.profile['current_role'] as String? ?? '',
+    );
+    _industryController = TextEditingController(
+      text: widget.profile['industry'] as String? ?? '',
+    );
+    _companyController = TextEditingController(
+      text: widget.profile['company'] as String? ?? '',
+    );
   }
 
   @override
@@ -125,7 +129,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Save failed: $_error',
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 24),
