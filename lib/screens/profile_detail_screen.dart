@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 
+import 'directory_screen.dart';
 import 'profile_setup_screen.dart';
 
-/// Read-only view of the verified alumnus's profile. Identity fields (name,
-/// NIM, faculty, major, graduation year) came from verification and aren't
+/// Read-only view of an alumnus's profile. Identity fields (name, NIM,
+/// faculty, major, graduation year) came from verification and aren't
 /// editable here — only employment fields are, via ProfileSetupScreen.
+///
+/// [showEditButton] controls whether this is "my profile" (verification
+/// flow — edit button + directory entry point shown) or someone else's
+/// profile viewed from the directory (read-only, email hidden).
 class ProfileDetailScreen extends StatefulWidget {
-  const ProfileDetailScreen({super.key, required this.profile});
+  const ProfileDetailScreen({
+    super.key,
+    required this.profile,
+    this.showEditButton = true,
+  });
 
   final Map<String, dynamic> profile;
+  final bool showEditButton;
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
@@ -37,7 +47,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Profile')),
+      appBar: AppBar(
+        title: Text(widget.showEditButton ? 'My Profile' : 'Alumni Profile'),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -88,12 +100,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    Text(
-                                      _profile['email'] as String? ?? '',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
+                                    if (widget.showEditButton)
+                                      Text(
+                                        _profile['email'] as String? ?? '',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -119,12 +132,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: _editProfile,
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Edit Employment Info'),
-                  ),
+                  if (widget.showEditButton) ...[
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      onPressed: _editProfile,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Edit Employment Info'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DirectoryScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.people_outline),
+                      label: const Text('Browse Alumni Directory'),
+                    ),
+                  ],
                 ],
               ),
             ),
