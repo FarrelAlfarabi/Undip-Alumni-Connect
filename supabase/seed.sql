@@ -109,6 +109,15 @@ values
   ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'ILUNI UNDIP', 'Ketua Umum', 'Nonprofit / Alumni Association', 'ILUNI UNDIP', 'verified', 'free', 'gilang.modcart@gmail.com')
 on conflict (nim) do update set email = excluded.email;
 
+-- ----------------------------------------------------------------------------
+-- Demo account for Maria — real email, made-up profile details.
+-- ----------------------------------------------------------------------------
+insert into alumni_profiles
+  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+values
+  ('24050112130097', 'Maria Graffeliesta', 'Fakultas Ilmu Budaya', 'Sastra Inggris', 2018, 'Traveloka', 'Marketing Specialist', 'Technology', 'Traveloka', 'verified', 'free', 'maria.graffeliesta@gmail.com')
+on conflict (nim) do update set email = excluded.email, name = excluded.name;
+
 -- Note: the non-matching signup path needs no seed data — any email that
 -- isn't one of the 25 above already demonstrates "not found."
 
@@ -146,6 +155,7 @@ update alumni_profiles set city = case email
   when 'vina.tan@example.com' then 'Jakarta'
   when 'farrel.abi.saleh@gmail.com' then 'Yogyakarta'
   when 'gilang.modcart@gmail.com' then 'Jakarta'
+  when 'maria.graffeliesta@gmail.com' then 'Jakarta'
 end
 where email in (
   'ahmad.ramadhan@example.com','dewi.sari@example.com','muhammad.hakim@example.com',
@@ -156,7 +166,7 @@ where email in (
   'melati.ningrum@example.com','bunga.ayu@example.com','dimas.wicaksono@example.com',
   'kevin.halim@example.com','putri.maharani@example.com','aditya.kurniawan@example.com',
   'sari.permata@example.com','fahmi.alamsyah@example.com','vina.tan@example.com',
-  'farrel.abi.saleh@gmail.com','gilang.modcart@gmail.com'
+  'farrel.abi.saleh@gmail.com','gilang.modcart@gmail.com','maria.graffeliesta@gmail.com'
 );
 
 alter table alumni_profiles enable trigger alumni_profiles_restrict_update_trigger;
