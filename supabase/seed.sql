@@ -20,6 +20,13 @@
 -- Any email not in this table will exact-match-fail, demonstrating the
 -- unverified/rejected path. Same 5 rows as the old NIM test list.
 --
+-- All 5 seed as subscription_status = 'free' on purpose (fixed 15 Sep,
+-- Day 9 walkthrough — they were originally seeded 'subscribed', which
+-- meant following this exact demo script never showed the paywall at
+-- all). Use one of these to demo the locked → Subscribe → unlocked flow
+-- live. bunga.ayu@example.com is left 'subscribed' if you want to show
+-- what an already-subscribed profile looks like without subscribing live.
+--
 --   ahmad.ramadhan@example.com   Ahmad Fauzan Ramadhan   (Teknik Informatika, 2023)
 --   siti.azizah@example.com      Siti Nur Azizah         (Manajemen, 2022)
 --   bagas.prasetyo@example.com   Bagas Dwi Prasetyo      (Ilmu Hukum, 2021)
@@ -31,25 +38,25 @@ insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
   -- Fakultas Teknik
-  ('24010119130001', 'Ahmad Fauzan Ramadhan', 'Fakultas Teknik', 'Teknik Informatika', 2023, 'Gojek', 'Software Engineer', 'Technology', 'Gojek', 'verified', 'subscribed', 'ahmad.ramadhan@example.com'),
+  ('24010119130001', 'Ahmad Fauzan Ramadhan', 'Fakultas Teknik', 'Teknik Informatika', 2023, 'Gojek', 'Software Engineer', 'Technology', 'Gojek', 'verified', 'free', 'ahmad.ramadhan@example.com'),
   ('24010118130006', 'Dewi Kartika Sari', 'Fakultas Teknik', 'Teknik Sipil', 2022, 'PT Wijaya Karya', 'Site Engineer', 'Construction', 'PT Wijaya Karya', 'verified', 'free', 'dewi.sari@example.com'),
   ('24010117130007', 'Muhammad Iqbal Hakim', 'Fakultas Teknik', 'Teknik Elektro', 2021, 'PLN', 'Electrical Engineer', 'Energy', 'PLN', 'verified', 'free', 'muhammad.hakim@example.com'),
 
   -- Fakultas Ekonomika dan Bisnis
-  ('24020118130002', 'Siti Nur Azizah', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2022, 'Bank Mandiri', 'Relationship Manager', 'Banking & Finance', 'Bank Mandiri', 'verified', 'subscribed', 'siti.azizah@example.com'),
+  ('24020118130002', 'Siti Nur Azizah', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2022, 'Bank Mandiri', 'Relationship Manager', 'Banking & Finance', 'Bank Mandiri', 'verified', 'free', 'siti.azizah@example.com'),
   ('24020117130008', 'Fajar Nugroho', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2021, 'Deloitte Indonesia', 'Audit Associate', 'Consulting', 'Deloitte Indonesia', 'verified', 'free', 'fajar.nugroho@example.com'),
   ('24020116130009', 'Ratna Puspita Dewi', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2020, 'Bank Indonesia', 'Economist', 'Banking & Finance', 'Bank Indonesia', 'verified', 'free', 'ratna.dewi@example.com'),
 
   -- Fakultas Hukum
-  ('24030117130003', 'Bagas Dwi Prasetyo', 'Fakultas Hukum', 'Ilmu Hukum', 2021, 'Hutama & Rekan Law Firm', 'Junior Associate', 'Legal Services', 'Hutama & Rekan Law Firm', 'verified', 'subscribed', 'bagas.prasetyo@example.com'),
+  ('24030117130003', 'Bagas Dwi Prasetyo', 'Fakultas Hukum', 'Ilmu Hukum', 2021, 'Hutama & Rekan Law Firm', 'Junior Associate', 'Legal Services', 'Hutama & Rekan Law Firm', 'verified', 'free', 'bagas.prasetyo@example.com'),
   ('24030116130010', 'Intan Permatasari', 'Fakultas Hukum', 'Ilmu Hukum', 2020, 'Kementerian Hukum dan HAM', 'Legal Analyst', 'Government', 'Kementerian Hukum dan HAM', 'verified', 'free', 'intan.permatasari@example.com'),
 
   -- Fakultas Kedokteran
-  ('24040116130004', 'Clara Amelia Putri', 'Fakultas Kedokteran', 'Pendidikan Dokter', 2020, 'RSUP Dr. Kariadi', 'General Practitioner', 'Healthcare', 'RSUP Dr. Kariadi', 'verified', 'subscribed', 'clara.putri@example.com'),
+  ('24040116130004', 'Clara Amelia Putri', 'Fakultas Kedokteran', 'Pendidikan Dokter', 2020, 'RSUP Dr. Kariadi', 'General Practitioner', 'Healthcare', 'RSUP Dr. Kariadi', 'verified', 'free', 'clara.putri@example.com'),
   ('24040115130011', 'Yusuf Ardiansyah', 'Fakultas Kedokteran', 'Pendidikan Dokter', 2019, 'RS Telogorejo', 'Resident Physician', 'Healthcare', 'RS Telogorejo', 'verified', 'free', 'yusuf.ardiansyah@example.com'),
 
   -- Fakultas Ilmu Budaya
-  ('24050115130005', 'Rizky Maulana Yusuf', 'Fakultas Ilmu Budaya', 'Ilmu Komunikasi', 2019, 'Kompas Gramedia', 'Content Producer', 'Media', 'Kompas Gramedia', 'verified', 'subscribed', 'rizky.yusuf@example.com'),
+  ('24050115130005', 'Rizky Maulana Yusuf', 'Fakultas Ilmu Budaya', 'Ilmu Komunikasi', 2019, 'Kompas Gramedia', 'Content Producer', 'Media', 'Kompas Gramedia', 'verified', 'free', 'rizky.yusuf@example.com'),
   ('24050114130012', 'Anggita Sekar Wulandari', 'Fakultas Ilmu Budaya', 'Sastra Inggris', 2018, 'British Council Indonesia', 'Program Officer', 'Education', 'British Council Indonesia', 'verified', 'free', 'anggita.wulandari@example.com'),
 
   -- Fakultas Sains dan Matematika
