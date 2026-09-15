@@ -172,3 +172,28 @@ This is the first time in the project that the app has actually been run and wat
 - No job detail screen yet — tapping a card does nothing beyond what the list card already shows. That's intentionally Day 6's job (list card → detail view → contact button/paywall is one coherent unit of work, not worth splitting further).
 
 **Next step:** Day 6 (Sat 19 Sep) — Job board part 2 + messages: job detail view, contact button (visual paywall only), basic messages UI.
+
+---
+
+## 2026-09-15 — Session 8: Job detail + paywall + messaging (Day 6)
+
+User said to keep going through the remaining demo days without stopping for review between each — reviewing everything at the end instead. Sessions 8+ proceed on that basis: still one commit + one PROJECT_NOTES entry per day, still validating against live data before trusting new query patterns, just no per-day pause for sign-off.
+
+**What got built/changed:**
+- `lib/screens/subscribe_screen.dart` — shared demo-only paywall (no real payment; flips `subscription_status` to `'subscribed'` directly). Matches the pitch deck's pricing copy.
+- `lib/screens/job_detail_screen.dart` — full job view; contact info shown if subscribed, locked behind "Subscribe to Contact" otherwise. `job_board_screen.dart` now navigates here on tap.
+- `lib/screens/messages_list_screen.dart` + `chat_screen.dart` — basic messaging: conversation list (dual-FK embedded select on `conversations`) and a simple send/receive thread. No realtime.
+- `lib/screens/profile_detail_screen.dart` — viewing another alumnus shows a subscription-gated "Message" button (find-or-create conversation, open chat); own profile gets a "Messages" entry point. `directory_screen.dart` now threads the viewer's profile through so the gate has someone to check.
+- Validated the two new query patterns against live data before trusting them: OR-based find-existing-conversation lookup (works from either participant's side) and the dual-FK embedded select shape. Inserted test rows, verified, deleted them — not left as seed data.
+- `flutter analyze` clean. Ran `dart format lib/` — reflowed two previously-committed files cosmetically only (checked via `git diff --stat` before staging).
+
+**What's still broken or incomplete:**
+- Same run gap as always — none of this has been watched working in a real browser.
+- Messaging has no realtime — sending a message re-fetches the whole thread rather than pushing an update. Fine for a demo, not how you'd want it in production.
+- The "Message" and job "Subscribe to Contact" buttons both independently call the same subscribe flow but don't share any subscription-status caching — if a user subscribes via one path, screens they already have open (like a stale directory list) won't reflect it until reopened. Not a correctness bug, just no cross-screen state sync (there's no app-wide state management yet at all).
+
+**Scope decisions:**
+- Built the full day's scope (detail view + paywall + messaging) as one unit rather than splitting further — they're genuinely one coherent flow (see a job → get gated → subscribe → get access), and the plan doc groups them as a single day for the same reason.
+- Kept the paywall visually honest about being fake ("Demo only — no real payment is processed" printed on the button) rather than pretending it's real, in case this app is shown to anyone who might mistake it for actually charging money.
+
+**Next step:** Day 7 (Sun 20 Sep) — Announcements feed + start visual polish pass.
