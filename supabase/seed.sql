@@ -86,5 +86,16 @@ values
   ('24120108130024', 'Vina Angelina Tan', 'Sekolah Vokasi', 'Manajemen Perkantoran', 2012, 'Astra International', 'Executive Assistant', 'Manufacturing', 'Astra International', 'verified', 'free', 'vina.tan@example.com')
 on conflict (nim) do update set email = excluded.email;
 
+-- ----------------------------------------------------------------------------
+-- Demo account for the project owner — real email, made-up profile details
+-- (employer/role/etc. are fabricated for the demo, not real information).
+-- Use this email to log in as "yourself" when demoing.
+-- ----------------------------------------------------------------------------
+insert into alumni_profiles
+  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+values
+  ('24010119130099', 'Farrel Alfarabi Saleh', 'Fakultas Teknik', 'Teknik Informatika', 2020, 'Bank Central Asia', 'Product Manager', 'Banking & Finance', 'Bank Central Asia', 'verified', 'free', 'farrel.abi.saleh@gmail.com')
+on conflict (nim) do update set email = excluded.email;
+
 -- Note: the non-matching signup path needs no seed data — any email that
--- isn't one of the 24 above already demonstrates "not found."
+-- isn't one of the 25 above already demonstrates "not found."
