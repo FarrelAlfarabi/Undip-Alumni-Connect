@@ -50,14 +50,15 @@ Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bott
 This is the most important part of the demo. Take it slow.
 
 1. Tap **Jobs**. Three seeded postings are visible: Product Manager @ Gojek, Business Analyst @ Bank Mandiri, Backend Engineer @ Tokopedia.
-2. Tap into any job's card → full detail view opens.
-3. Point at the **Contact: locked** section: *"Anyone can browse and read the full posting for free. Contacting the poster is the paid action — this is the app's main monetization mechanism."*
-4. Tap **Subscribe to Contact** → the paywall screen appears, showing the pricing (Rp 25.000/month or Rp 250.000/year — say clearly these numbers are a placeholder, not finalized).
-5. Tap **Subscribe Now (Demo)** — note out loud: *"This is a demo button, no real payment happens. In production this becomes Midtrans or Xendit."*
-6. You're returned to the job detail — contact info is now unlocked and visible.
-7. **Go back to the job list and open a *different* job.** Its contact info should also now show unlocked — this proves the subscription applies across the whole app, not just the one job you were looking at.
-8. Go to the **Profile** tab — a **Subscribed** badge now shows on the profile card, confirming the same state everywhere.
-9. (Optional, if time allows) With contact unlocked, the button on that job detail now says **Apply to this Job** instead — tap it, fill in the application form (name/email are prefilled, LinkedIn/portfolio/CV are optional), submit. *"Applying is a step further than just seeing contact info — it goes into a real applications table the poster can review."*
+2. (Optional) Show search + filters: type part of a title/company/description into the search box, or use the **Industry**/**Company** dropdowns — the list narrows live.
+3. Tap into any job's card → full detail view opens.
+4. Point at the **Contact: locked** section: *"Anyone can browse and read the full posting for free. Contacting the poster is the paid action — this is the app's main monetization mechanism."*
+5. Tap **Subscribe to Contact** → the paywall screen appears, showing the pricing (Rp 25.000/month or Rp 250.000/year — say clearly these numbers are a placeholder, not finalized).
+6. Tap **Subscribe Now (Demo)** — note out loud: *"This is a demo button, no real payment happens. In production this becomes Midtrans or Xendit."*
+7. You're returned to the job detail — contact info is now unlocked and visible.
+8. **Go back to the job list and open a *different* job.** Its contact info should also now show unlocked — this proves the subscription applies across the whole app, not just the one job you were looking at.
+9. Go to the **Profile** tab — a **Subscribed** badge now shows on the profile card, confirming the same state everywhere.
+10. (Optional, if time allows) With contact unlocked, the button on that job detail now says **Apply to this Job** instead — tap it, fill in the application form (name/email are prefilled, LinkedIn/portfolio/CV are optional), submit. *"Applying is a step further than just seeing contact info — it goes into a real applications table the poster can review."*
 
 ---
 
@@ -77,7 +78,8 @@ This is the most important part of the demo. Take it slow.
 2. Since you're already subscribed (from step 4), the button now says **Message** instead of **Subscribe to Message** — tap it.
 3. A conversation opens. Type a message, send it — it appears immediately in the thread.
 4. Go to the **Chat** tab — the conversation you just started is listed there.
-5. Note: no realtime push yet — the thread refetches after you send, and the refresh icon in the chat's top bar pulls in the other side's replies. Fine for a demo, call it out only if asked.
+5. (Optional, once you have 2+ conversations) Show search + filter: type part of a name into the search box, or use the **Faculty** dropdown — narrows the conversation list live.
+6. Note: no realtime push yet — the thread refetches after you send, and the refresh icon in the chat's top bar pulls in the other side's replies. Fine for a demo, call it out only if asked.
 
 **Optional — show both sides of a conversation:** tap the sign-out icon (top right of the Profile tab), verify as the alumnus you messaged (e.g. `siti.azizah@example.com`), open **Chat** — the conversation is there from their side. Reply, sign out, come back as Ahmad, hit refresh in the thread.
 

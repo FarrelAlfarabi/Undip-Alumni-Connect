@@ -425,3 +425,18 @@ Documentation: rewrote the Master Plan (Google Drive, v1.3) and both Notion page
 **Verified:** `flutter analyze` clean, `dart format` clean (reformatted 3 files across the session). Live-tested the new RLS policies against Supabase directly (`set role anon` insert into `job_applications`, cleaned up the test row afterward) — `get_advisors` security check clean. Not click-tested in a running browser — same gap as every UI change this project; the CV-picker flow in particular is worth a real click-through before the demo, since file_picker's behavior on web (the Vercel deploy target) can differ from what the source reading confirmed for the general API shape.
 
 **Next step:** demo day. Recommend clicking through the new Apply → View Applicants flow once, and confirming the CV attach step actually works in a browser (Vercel/web target), before relying on it live.
+
+---
+
+## 2026-09-15 — Session 21: Search + filters on Job Board and Messages, network-policy limit found
+
+User asked to also click-test the previous session's build before deploying. Attempted a real Playwright/Chromium click-through of the built web app — got as far as the verification form (screenshot-confirmed the Ikafe rename renders correctly), then hit a hard wall: this sandbox's outbound network policy blocks `CONNECT` to `kdmxgtwqqnlbgfcpdivp.supabase.co` outright (confirmed via a direct `curl` returning `403` on the tunnel, independent of the browser). The Supabase MCP tools reach the project through a separate server-side channel that this restriction doesn't apply to, but nothing running inside this session — browser or app — can. Flagged this plainly rather than claiming a click-through that didn't actually complete; a real interactive test needs to happen from an environment with normal egress (the user's own machine, or wherever this project's network policy allows it).
+
+**What got built this session:** search + filters on Job Board and Messages, following the same client-side pattern as the Alumni Directory (Session 6) — extracted the directory's `_FilterDropdown` widget and its `_kAllFilter`/distinct-values helper into a shared `lib/widgets/filter_dropdown.dart` (`FilterDropdown`, `kAllFilter`, `distinctSortedValues`) now that a third screen needed the same UI, and pointed `directory_screen.dart` at the shared version instead of its own copy.
+
+- `job_board_screen.dart`: a search field (title/company/description) plus Industry and Company filter dropdowns, all client-side over the already-fetched job list.
+- `messages_list_screen.dart`: a search field (by the other participant's name) plus a Faculty filter dropdown. Needed the conversation query to select `faculty` alongside `id, name` for both joined participants (`p1`/`p2`) to have something to filter and show — added a one-line faculty subtitle to each conversation row as a side effect, since the data was now being fetched anyway.
+
+**Verified:** `flutter analyze` clean, `dart format` clean (reformatted the two touched screens).
+
+**Next step:** demo day. The Job Board and Messages search/filter UI has the same not-click-tested caveat as everything else this session — see the network-policy limitation above.

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
-
-const _kAllFilter = 'All';
 
 /// Searchable alumni directory: filter by faculty, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
@@ -28,9 +27,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   late Future<List<Map<String, dynamic>>> _future;
 
   final _searchController = TextEditingController();
-  String _faculty = _kAllFilter;
-  String _year = _kAllFilter;
-  String _industry = _kAllFilter;
+  String _faculty = kAllFilter;
+  String _year = kAllFilter;
+  String _industry = kAllFilter;
 
   @override
   void initState() {
@@ -58,11 +57,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final query = _searchController.text.trim().toLowerCase();
 
     return all.where((p) {
-      if (_faculty != _kAllFilter && p['faculty'] != _faculty) return false;
-      if (_year != _kAllFilter && p['graduation_year']?.toString() != _year) {
+      if (_faculty != kAllFilter && p['faculty'] != _faculty) return false;
+      if (_year != kAllFilter && p['graduation_year']?.toString() != _year) {
         return false;
       }
-      if (_industry != _kAllFilter && p['industry'] != _industry) {
+      if (_industry != kAllFilter && p['industry'] != _industry) {
         return false;
       }
       if (query.isNotEmpty) {
@@ -72,18 +71,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
       return true;
     }).toList();
-  }
-
-  List<String> _distinctSorted(List<Map<String, dynamic>> all, String field) {
-    final values =
-        all
-            .map((p) => p[field]?.toString())
-            .whereType<String>()
-            .where((v) => v.isNotEmpty)
-            .toSet()
-            .toList()
-          ..sort();
-    return [_kAllFilter, ...values];
   }
 
   @override
@@ -105,9 +92,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
         final all = snapshot.data ?? [];
         final filtered = _applyFilters(all);
-        final faculties = _distinctSorted(all, 'faculty');
+        final faculties = distinctSortedValues(all, 'faculty');
         final years = [
-          _kAllFilter,
+          kAllFilter,
           ...all
               .map((p) => p['graduation_year']?.toString())
               .whereType<String>()
@@ -115,7 +102,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               .toList()
             ..sort((a, b) => b.compareTo(a)),
         ];
-        final industries = _distinctSorted(all, 'industry');
+        final industries = distinctSortedValues(all, 'industry');
 
         return Column(
           children: [
@@ -136,7 +123,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _FilterDropdown(
+                    child: FilterDropdown(
                       label: 'Faculty',
                       value: _faculty,
                       options: faculties,
@@ -145,7 +132,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _FilterDropdown(
+                    child: FilterDropdown(
                       label: 'Year',
                       value: _year,
                       options: years,
@@ -154,7 +141,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _FilterDropdown(
+                    child: FilterDropdown(
                       label: 'Industry',
                       value: _industry,
                       options: industries,
@@ -216,45 +203,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
           ],
         );
-      },
-    );
-  }
-}
-
-class _FilterDropdown extends StatelessWidget {
-  const _FilterDropdown({
-    required this.label,
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String value;
-  final List<String> options;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      ),
-      items: options
-          .map(
-            (o) => DropdownMenuItem(
-              value: o,
-              child: Text(o, overflow: TextOverflow.ellipsis),
-            ),
-          )
-          .toList(),
-      onChanged: (v) {
-        if (v != null) onChanged(v);
       },
     );
   }

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/filter_dropdown.dart';
 import 'chat_screen.dart';
 
 /// List of the current user's conversations (Day 6, demo scope). Empty
 /// until they message someone from the directory — this screen doesn't
 /// start new conversations itself.
+///
+/// Search + filter (added later) follow the same client-side pattern as
+/// the Alumni Directory and Job Board — fine for a handful of demo
+/// conversations, not meant to scale past the demo.
 class MessagesListScreen extends StatefulWidget {
   const MessagesListScreen({super.key, required this.currentUser});
 
@@ -21,10 +26,20 @@ class MessagesListScreen extends StatefulWidget {
 class _MessagesListScreenState extends State<MessagesListScreen> {
   late Future<List<Map<String, dynamic>>> _future;
 
+  final _searchController = TextEditingController();
+  String _faculty = kAllFilter;
+
   @override
   void initState() {
     super.initState();
     _future = _fetchConversations();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<List<Map<String, dynamic>>> _fetchConversations() async {
@@ -33,8 +48,8 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         .from('conversations')
         .select(
           '*, '
-          'p1:alumni_profiles!conversations_participant_one_fkey(id, name), '
-          'p2:alumni_profiles!conversations_participant_two_fkey(id, name)',
+          'p1:alumni_profiles!conversations_participant_one_fkey(id, name, faculty), '
+          'p2:alumni_profiles!conversations_participant_two_fkey(id, name, faculty)',
         )
         .or('participant_one.eq.$myId,participant_two.eq.$myId')
         .order('created_at', ascending: false);
@@ -46,6 +61,24 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
     final p1 = conversation['p1'] as Map<String, dynamic>;
     final p2 = conversation['p2'] as Map<String, dynamic>;
     return p1['id'] == myId ? p2 : p1;
+  }
+
+  List<Map<String, dynamic>> _applyFilters(
+    List<Map<String, dynamic>> conversations,
+  ) {
+    final query = _searchController.text.trim().toLowerCase();
+
+    return conversations.where((c) {
+      final other = _otherParticipant(c);
+      if (_faculty != kAllFilter && other['faculty'] != _faculty) {
+        return false;
+      }
+      if (query.isNotEmpty) {
+        final name = (other['name'] as String? ?? '').toLowerCase();
+        if (!name.contains(query)) return false;
+      }
+      return true;
+    }).toList();
   }
 
   @override
@@ -67,8 +100,8 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             );
           }
 
-          final conversations = snapshot.data ?? [];
-          if (conversations.isEmpty) {
+          final all = snapshot.data ?? [];
+          if (all.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
@@ -81,29 +114,75 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             );
           }
 
-          return ListView.separated(
-            itemCount: conversations.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final c = conversations[i];
-              final other = _otherParticipant(c);
-              return ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-                title: Text(other['name'] as String? ?? 'Alumni'),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        conversationId: c['id'] as String,
-                        currentProfileId:
-                            widget.currentUser.value['id'] as String,
-                        otherName: other['name'] as String? ?? 'Alumni',
+          final conversations = _applyFilters(all);
+          final faculties = distinctSortedValues(
+            all.map(_otherParticipant).toList(),
+            'faculty',
+          );
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by name...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: FilterDropdown(
+                  label: 'Faculty',
+                  value: _faculty,
+                  options: faculties,
+                  onChanged: (v) => setState(() => _faculty = v),
+                ),
+              ),
+              Expanded(
+                child: conversations.isEmpty
+                    ? const Center(
+                        child: Text('No conversations match these filters.'),
+                      )
+                    : ListView.separated(
+                        itemCount: conversations.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, i) {
+                          final c = conversations[i];
+                          final other = _otherParticipant(c);
+                          return ListTile(
+                            leading: const CircleAvatar(
+                              child: Icon(Icons.person_outline),
+                            ),
+                            title: Text(other['name'] as String? ?? 'Alumni'),
+                            subtitle:
+                                (other['faculty'] as String?)?.isNotEmpty ==
+                                    true
+                                ? Text(other['faculty'] as String)
+                                : null,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChatScreen(
+                                    conversationId: c['id'] as String,
+                                    currentProfileId:
+                                        widget.currentUser.value['id']
+                                            as String,
+                                    otherName:
+                                        other['name'] as String? ?? 'Alumni',
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
-              );
-            },
+              ),
+            ],
           );
         },
       ),

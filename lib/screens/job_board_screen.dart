@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
 import 'post_job_screen.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
 /// browsing for everyone — the contact button / visual paywall lives on
 /// JobDetailScreen.
+///
+/// Search + filters (added later) follow the same client-side pattern as
+/// the Alumni Directory (directory_screen.dart) — fine for a handful of
+/// seed jobs, not meant to scale past the demo.
 class JobBoardScreen extends StatefulWidget {
   const JobBoardScreen({super.key, required this.currentUser});
 
@@ -23,10 +28,21 @@ class JobBoardScreen extends StatefulWidget {
 class _JobBoardScreenState extends State<JobBoardScreen> {
   late Future<List<Map<String, dynamic>>> _future;
 
+  final _searchController = TextEditingController();
+  String _industry = kAllFilter;
+  String _company = kAllFilter;
+
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<List<Map<String, dynamic>>> _fetchJobs() async {
@@ -35,6 +51,28 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
         .select('*, poster:alumni_profiles(name)')
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {
+    final query = _searchController.text.trim().toLowerCase();
+
+    return all.where((j) {
+      if (_industry != kAllFilter && j['industry'] != _industry) {
+        return false;
+      }
+      if (_company != kAllFilter && j['company'] != _company) return false;
+      if (query.isNotEmpty) {
+        final title = (j['title'] as String? ?? '').toLowerCase();
+        final company = (j['company'] as String? ?? '').toLowerCase();
+        final description = (j['description'] as String? ?? '').toLowerCase();
+        if (!title.contains(query) &&
+            !company.contains(query) &&
+            !description.contains(query)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
   }
 
   Future<void> _postJob() async {
@@ -73,8 +111,8 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             );
           }
 
-          final jobs = snapshot.data ?? [];
-          if (jobs.isEmpty) {
+          final all = snapshot.data ?? [];
+          if (all.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
@@ -86,23 +124,71 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-            itemCount: jobs.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => _JobCard(
-              job: jobs[i],
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => JobDetailScreen(
-                      job: jobs[i],
-                      currentUser: widget.currentUser,
-                    ),
+          final jobs = _applyFilters(all);
+          final industries = distinctSortedValues(all, 'industry');
+          final companies = distinctSortedValues(all, 'company');
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by title, company, or description...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                    isDense: true,
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: FilterDropdown(
+                        label: 'Industry',
+                        value: _industry,
+                        options: industries,
+                        onChanged: (v) => setState(() => _industry = v),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilterDropdown(
+                        label: 'Company',
+                        value: _company,
+                        options: companies,
+                        onChanged: (v) => setState(() => _company = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: jobs.isEmpty
+                    ? const Center(child: Text('No jobs match these filters.'))
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                        itemCount: jobs.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _JobCard(
+                          job: jobs[i],
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => JobDetailScreen(
+                                  job: jobs[i],
+                                  currentUser: widget.currentUser,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
           );
         },
       ),
