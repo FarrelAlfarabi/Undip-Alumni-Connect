@@ -344,3 +344,15 @@ User asked for the Nearby Alumni feature for the demo. This was flagged in Sessi
 **Verified:** `flutter analyze` clean, spot-checked the live query (`select name, city from alumni_profiles where verification_status = 'verified'`) returns seeded cities correctly. Not click-tested in a running app — same gap as every UI change this project.
 
 **Next step:** demo day (Gilang, online, via screen-share per the recommendation above — see Session 14).
+
+---
+
+## 2026-09-17 — Session 16: Vercel actually building + dashboard edit access
+
+Deployed via GitHub → Vercel auto-deploy this session (`vercel.json` + `scripts/vercel-build.sh`, added after discovering the auto-imported project had no Flutter build step at all and was likely serving raw source). Added demo accounts for both the project owner and Gilang (`gilang.modcart@gmail.com`) with fabricated profile details, same pattern as before — see the seed.sql history for both.
+
+Nearby Alumni's only entry point (a small icon in the Directory app bar) turned out to be too easy to miss — added a clearly labeled card on the Profile tab as the primary way in.
+
+**RLS trigger — real bug caught and fixed:** user asked to be able to edit anything freely from the Supabase dashboard, since the column-lock trigger from Session 14 fires for every role, including the dashboard's own connection, not just the public anon key. First attempt scoped the check to `current_user not in ('anon', 'authenticated')` but kept the function `SECURITY DEFINER` — inside a `SECURITY DEFINER` function, `current_user` reports the function's *owner*, not the actual caller, so that check was always true and silently disabled the anon restriction entirely. Caught this by re-running the same `set role anon` verification used in Session 14 rather than assuming the fix worked, confirmed the hole, and fixed it by switching to `SECURITY INVOKER` (`supabase/migrations/20260917080000_relax_rls_trigger_for_dashboard.sql`). Re-verified both directions afterward: anon still blocked on identity fields, dashboard-equivalent role edits freely. `get_advisors` security check clean.
+
+**Next step:** demo day.
