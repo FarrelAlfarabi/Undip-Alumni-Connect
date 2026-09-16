@@ -52,7 +52,7 @@ demo.
 
 ## Deploying to Vercel
 
-The Vercel project is connected to this repo's `claude/eloquent-maxwell-pzaky1`
+The Vercel project is connected to this repo's `main`
 branch and auto-deploys on push (check Vercel project Settings → Git if
 this changes). Vercel has no Flutter SDK by default, so
 `vercel.json` points it at `scripts/vercel-build.sh`, which fetches
