@@ -81,6 +81,16 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
     }).toList();
   }
 
+  bool get _hasActiveFilters =>
+      _searchController.text.isNotEmpty || _faculty != kAllFilter;
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _faculty = kAllFilter;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,23 +134,25 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: TextField(
+                child: ClearableSearchField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Search by name...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
+                  hintText: 'Search by name...',
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: FilterDropdown(
                   label: 'Faculty',
                   value: _faculty,
                   options: faculties,
                   onChanged: (v) => setState(() => _faculty = v),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                child: ClearFiltersButton(
+                  active: _hasActiveFilters,
+                  onPressed: _clearFilters,
                 ),
               ),
               Expanded(

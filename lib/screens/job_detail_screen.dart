@@ -36,6 +36,7 @@ class JobDetailScreen extends StatefulWidget {
 
 class _JobDetailScreenState extends State<JobDetailScreen> {
   Future<int>? _applicantCountFuture;
+  Future<bool>? _hasAppliedFuture;
 
   bool get _isOwnJob =>
       widget.job['posted_by'] == widget.currentUser.value['id'];
@@ -45,6 +46,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     super.initState();
     if (_isOwnJob) {
       _applicantCountFuture = _fetchApplicantCount();
+    } else {
+      _hasAppliedFuture = _fetchHasApplied();
     }
   }
 
@@ -54,6 +57,18 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         .select('id')
         .eq('job_post_id', widget.job['id']);
     return (rows as List).length;
+  }
+
+  // Checked so the applicant can't submit a duplicate application by
+  // accident — there's no unique constraint at the database level (see
+  // the job_applications migration), so this is purely a UI guard.
+  Future<bool> _fetchHasApplied() async {
+    final rows = await Supabase.instance.client
+        .from('job_applications')
+        .select('id')
+        .eq('job_post_id', widget.job['id'])
+        .eq('applicant_id', widget.currentUser.value['id']);
+    return (rows as List).isNotEmpty;
   }
 
   Future<void> _unlockContact(BuildContext context) async {
@@ -76,10 +91,13 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         ),
       ),
     );
-    if (applied == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Application submitted.')));
+    if (applied == true) {
+      setState(() => _hasAppliedFuture = Future.value(true));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Application submitted.')));
+      }
     }
   }
 
@@ -253,10 +271,25 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                 label: const Text('Subscribe to Contact'),
                               )
                             else
-                              FilledButton.icon(
-                                onPressed: () => _apply(context),
-                                icon: const Icon(Icons.send_outlined),
-                                label: const Text('Apply to this Job'),
+                              FutureBuilder<bool>(
+                                future: _hasAppliedFuture,
+                                builder: (context, snapshot) {
+                                  final hasApplied = snapshot.data ?? false;
+                                  if (hasApplied) {
+                                    return FilledButton.icon(
+                                      onPressed: null,
+                                      icon: const Icon(
+                                        Icons.check_circle_outline,
+                                      ),
+                                      label: const Text('Applied'),
+                                    );
+                                  }
+                                  return FilledButton.icon(
+                                    onPressed: () => _apply(context),
+                                    icon: const Icon(Icons.send_outlined),
+                                    label: const Text('Apply to this Job'),
+                                  );
+                                },
                               ),
                           ],
                         );

@@ -73,6 +73,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }).toList();
   }
 
+  bool get _hasActiveFilters =>
+      _searchController.text.isNotEmpty ||
+      _faculty != kAllFilter ||
+      _year != kAllFilter ||
+      _industry != kAllFilter;
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _faculty = kAllFilter;
+      _year = kAllFilter;
+      _industry = kAllFilter;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -108,18 +123,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: TextField(
+              child: ClearableSearchField(
                 controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search by name or company...',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
+                hintText: 'Search by name or company...',
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 children: [
                   Expanded(
@@ -149,6 +159,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: ClearFiltersButton(
+                active: _hasActiveFilters,
+                onPressed: _clearFilters,
               ),
             ),
             Expanded(

@@ -75,6 +75,19 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     }).toList();
   }
 
+  bool get _hasActiveFilters =>
+      _searchController.text.isNotEmpty ||
+      _industry != kAllFilter ||
+      _company != kAllFilter;
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _industry = kAllFilter;
+      _company = kAllFilter;
+    });
+  }
+
   Future<void> _postJob() async {
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -132,18 +145,13 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: TextField(
+                child: ClearableSearchField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Search by title, company, or description...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
+                  hintText: 'Search by title, company, or description...',
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Row(
                   children: [
                     Expanded(
@@ -164,6 +172,13 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                child: ClearFiltersButton(
+                  active: _hasActiveFilters,
+                  onPressed: _clearFilters,
                 ),
               ),
               Expanded(
