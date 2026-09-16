@@ -93,11 +93,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     );
     if (applied == true) {
       setState(() => _hasAppliedFuture = Future.value(true));
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Application submitted.')));
-      }
     }
   }
 

@@ -4,10 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
 
-/// Searchable alumni directory: filter by faculty, graduation year, and
+/// Searchable alumni directory: filter by major, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
 /// all verified alumni_profiles rows once and filters client-side — fine
 /// for ~24 seed rows, not meant to scale past the demo.
+///
+/// Faculty is not a filter here: this app is scoped to a single faculty
+/// (Fakultas Ekonomika dan Bisnis / Ikafe), not campus-wide UNDIP, so
+/// "faculty" carries no useful signal — major is the meaningful axis.
 ///
 /// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) —
 /// see alumni_screen.dart.
@@ -27,7 +31,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   late Future<List<Map<String, dynamic>>> _future;
 
   final _searchController = TextEditingController();
-  String _faculty = kAllFilter;
+  String _major = kAllFilter;
   String _year = kAllFilter;
   String _industry = kAllFilter;
 
@@ -57,7 +61,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final query = _searchController.text.trim().toLowerCase();
 
     return all.where((p) {
-      if (_faculty != kAllFilter && p['faculty'] != _faculty) return false;
+      if (_major != kAllFilter && p['major'] != _major) return false;
       if (_year != kAllFilter && p['graduation_year']?.toString() != _year) {
         return false;
       }
@@ -75,14 +79,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   bool get _hasActiveFilters =>
       _searchController.text.isNotEmpty ||
-      _faculty != kAllFilter ||
+      _major != kAllFilter ||
       _year != kAllFilter ||
       _industry != kAllFilter;
 
   void _clearFilters() {
     setState(() {
       _searchController.clear();
-      _faculty = kAllFilter;
+      _major = kAllFilter;
       _year = kAllFilter;
       _industry = kAllFilter;
     });
@@ -107,7 +111,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
         final all = snapshot.data ?? [];
         final filtered = _applyFilters(all);
-        final faculties = distinctSortedValues(all, 'faculty');
+        final majors = distinctSortedValues(all, 'major');
         final years = [
           kAllFilter,
           ...all
@@ -134,10 +138,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 children: [
                   Expanded(
                     child: FilterDropdown(
-                      label: 'Faculty',
-                      value: _faculty,
-                      options: faculties,
-                      onChanged: (v) => setState(() => _faculty = v),
+                      label: 'Major',
+                      value: _major,
+                      options: majors,
+                      onChanged: (v) => setState(() => _major = v),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -199,7 +203,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                   true)
                                 '${p['current_role']}'
                                     '${(p['current_employer'] as String?)?.isNotEmpty == true ? ' @ ${p['current_employer']}' : ''}',
-                              '${p['faculty']} · Class of ${p['graduation_year']}',
+                              '${p['major']} · Class of ${p['graduation_year']}',
                             ].join('\n'),
                           ),
                           isThreeLine: true,

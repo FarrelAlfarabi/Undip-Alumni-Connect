@@ -3,9 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Job application form (added 17 Sep 2026, Master Plan §3.4 item 7).
-/// Collects a CV upload plus LinkedIn/portfolio links, on top of the
-/// contact info the app already gates behind subscription — an
-/// application is a step further than "here's how to reach the poster."
+///
+/// Redone 18 Sep 2026 per Mas Gilang's feedback: the flow now matches
+/// LinkedIn's "Easy Apply" — Details, then a read-only Review step the
+/// applicant must explicitly confirm, then an on-screen Done step that
+/// states the application will be reviewed. There's no more
+/// submit-and-pop-back-to-a-snackbar; the confirmation lives on its own
+/// screen so it can't be missed.
+///
+/// The poster can mark CV / LinkedIn / portfolio / cover note as required
+/// per job post (see post_job_screen.dart, job_posts.require_*) — the
+/// Details step won't let the applicant continue to Review until those
+/// are filled in.
 ///
 /// Gated behind subscription, same mechanism as messaging and contacting
 /// a job poster (see job_detail_screen.dart) — applying is at least as
@@ -19,6 +28,8 @@ class ApplyJobScreen extends StatefulWidget {
   @override
   State<ApplyJobScreen> createState() => _ApplyJobScreenState();
 }
+
+enum _ApplyStep { details, review, done }
 
 class _ApplyJobScreenState extends State<ApplyJobScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -36,6 +47,12 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
   PlatformFile? _cvFile;
   bool _submitting = false;
   String? _error;
+  _ApplyStep _step = _ApplyStep.details;
+
+  bool get _requireCv => widget.job['require_cv'] == true;
+  bool get _requireLinkedin => widget.job['require_linkedin'] == true;
+  bool get _requirePortfolio => widget.job['require_portfolio'] == true;
+  bool get _requireCoverNote => widget.job['require_cover_note'] == true;
 
   @override
   void dispose() {
@@ -57,9 +74,19 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     setState(() => _cvFile = file);
   }
 
-  Future<void> _submit() async {
+  void _goToReview() {
     if (!_formKey.currentState!.validate()) return;
+    if (_requireCv && _cvFile == null) {
+      setState(() => _error = 'This job requires a CV to be attached.');
+      return;
+    }
+    setState(() {
+      _error = null;
+      _step = _ApplyStep.review;
+    });
+  }
 
+  Future<void> _confirmAndSubmit() async {
     setState(() {
       _submitting = true;
       _error = null;
@@ -90,7 +117,10 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
       });
 
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      setState(() {
+        _submitting = false;
+        _step = _ApplyStep.done;
+      });
     } catch (e) {
       setState(() {
         _submitting = false;
@@ -101,11 +131,16 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Apply — ${widget.job['title'] as String? ?? ''}'),
+        automaticallyImplyLeading: _step != _ApplyStep.done,
+        leading: _step == _ApplyStep.review
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() => _step = _ApplyStep.details),
+              )
+            : null,
       ),
       body: SafeArea(
         child: Center(
@@ -113,119 +148,323 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      widget.job['company'] as String? ?? '',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _nameController,
-                      enabled: !_submitting,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _emailController,
-                      enabled: !_submitting,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _phoneController,
-                      enabled: !_submitting,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone (optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _linkedinController,
-                      enabled: !_submitting,
-                      decoration: const InputDecoration(
-                        labelText: 'LinkedIn URL (optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _portfolioController,
-                      enabled: !_submitting,
-                      decoration: const InputDecoration(
-                        labelText: 'Portfolio / other link (optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _noteController,
-                      enabled: !_submitting,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Cover note (optional)',
-                        border: OutlineInputBorder(),
-                        alignLabelWithHint: true,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _submitting ? null : _pickCv,
-                      icon: const Icon(Icons.attach_file),
-                      label: Text(
-                        _cvFile == null
-                            ? 'Attach CV (optional, PDF/DOC)'
-                            : _cvFile!.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        'Application failed: $_error',
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _submitting ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: _submitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Text('Submit Application'),
-                    ),
-                  ],
-                ),
-              ),
+              child: switch (_step) {
+                _ApplyStep.details => _buildDetailsStep(context),
+                _ApplyStep.review => _buildReviewStep(context),
+                _ApplyStep.done => _buildDoneStep(context),
+              },
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsStep(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _StepHeader(step: 1, total: 3, label: 'Details'),
+          const SizedBox(height: 16),
+          Text(
+            widget.job['company'] as String? ?? '',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: 'Full Name',
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Required' : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Required' : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Phone (optional)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _linkedinController,
+            decoration: InputDecoration(
+              labelText: _requireLinkedin
+                  ? 'LinkedIn URL (required by this job)'
+                  : 'LinkedIn URL (optional)',
+              border: const OutlineInputBorder(),
+            ),
+            validator: (v) =>
+                (_requireLinkedin && (v == null || v.trim().isEmpty))
+                ? 'Required by this job'
+                : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _portfolioController,
+            decoration: InputDecoration(
+              labelText: _requirePortfolio
+                  ? 'Portfolio / other link (required by this job)'
+                  : 'Portfolio / other link (optional)',
+              border: const OutlineInputBorder(),
+            ),
+            validator: (v) =>
+                (_requirePortfolio && (v == null || v.trim().isEmpty))
+                ? 'Required by this job'
+                : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _noteController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: _requireCoverNote
+                  ? 'Cover note (required by this job)'
+                  : 'Cover note (optional)',
+              border: const OutlineInputBorder(),
+              alignLabelWithHint: true,
+            ),
+            validator: (v) =>
+                (_requireCoverNote && (v == null || v.trim().isEmpty))
+                ? 'Required by this job'
+                : null,
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: _pickCv,
+            icon: const Icon(Icons.attach_file),
+            label: Text(
+              _cvFile == null
+                  ? (_requireCv
+                        ? 'Attach CV (required by this job)'
+                        : 'Attach CV (optional, PDF/DOC)')
+                  : _cvFile!.name,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 16),
+            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _goToReview,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: const Text('Review Application'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewStep(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _StepHeader(step: 2, total: 3, label: 'Review'),
+        const SizedBox(height: 16),
+        Text(
+          'Review your application before submitting to '
+          '${widget.job['company'] as String? ?? 'the poster'}.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ReviewRow(label: 'Full Name', value: _nameController.text),
+                _ReviewRow(label: 'Email', value: _emailController.text),
+                _ReviewRow(
+                  label: 'Phone',
+                  value: _phoneController.text,
+                  emptyText: 'Not provided',
+                ),
+                _ReviewRow(
+                  label: 'LinkedIn URL',
+                  value: _linkedinController.text,
+                  emptyText: 'Not provided',
+                ),
+                _ReviewRow(
+                  label: 'Portfolio / other link',
+                  value: _portfolioController.text,
+                  emptyText: 'Not provided',
+                ),
+                _ReviewRow(
+                  label: 'Cover note',
+                  value: _noteController.text,
+                  emptyText: 'Not provided',
+                ),
+                _ReviewRow(
+                  label: 'CV',
+                  value: _cvFile?.name ?? '',
+                  emptyText: 'Not attached',
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 16),
+          Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+        ],
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: _submitting ? null : _confirmAndSubmit,
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: _submitting
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : const Text('Confirm & Submit'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: _submitting
+              ? null
+              : () => setState(() => _step = _ApplyStep.details),
+          child: const Text('Back to Edit'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDoneStep(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _StepHeader(step: 3, total: 3, label: 'Done'),
+        const SizedBox(height: 32),
+        Icon(Icons.check_circle, size: 72, color: theme.colorScheme.primary),
+        const SizedBox(height: 20),
+        Text(
+          'Application submitted',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Your application for "${widget.job['title'] as String? ?? ''}" '
+          'at ${widget.job['company'] as String? ?? ''} has been sent to '
+          'the poster and will be reviewed. You can check its status any '
+          'time from this job.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 32),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: const Text('Back to Job'),
+        ),
+      ],
+    );
+  }
+}
+
+class _StepHeader extends StatelessWidget {
+  const _StepHeader({
+    required this.step,
+    required this.total,
+    required this.label,
+  });
+
+  final int step;
+  final int total;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Text(
+          'Step $step of $total',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text('· $label', style: theme.textTheme.labelMedium),
+      ],
+    );
+  }
+}
+
+class _ReviewRow extends StatelessWidget {
+  const _ReviewRow({required this.label, required this.value, this.emptyText});
+
+  final String label;
+  final String value;
+  final String? emptyText;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final display = value.trim().isEmpty ? (emptyText ?? '') : value.trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            display,
+            style: value.trim().isEmpty
+                ? theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  )
+                : theme.textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }

@@ -21,6 +21,10 @@ class _PostJobScreenState extends State<PostJobScreen> {
   final _descriptionController = TextEditingController();
   final _contactController = TextEditingController();
   bool _notifyOnApply = true;
+  bool _requireCv = false;
+  bool _requireLinkedin = false;
+  bool _requirePortfolio = false;
+  bool _requireCoverNote = false;
 
   bool _saving = false;
   String? _error;
@@ -52,6 +56,10 @@ class _PostJobScreenState extends State<PostJobScreen> {
         'description': _descriptionController.text.trim(),
         'contact_info': _contactController.text.trim(),
         'notify_on_apply': _notifyOnApply,
+        'require_cv': _requireCv,
+        'require_linkedin': _requireLinkedin,
+        'require_portfolio': _requirePortfolio,
+        'require_cover_note': _requireCoverNote,
       });
 
       if (!mounted) return;
@@ -145,6 +153,46 @@ class _PostJobScreenState extends State<PostJobScreen> {
                         'Demo scope: shown as an applicant count on this '
                         'job, not a real push/email notification.',
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Require applicants to provide',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _requireCv,
+                      onChanged: _saving
+                          ? null
+                          : (v) => setState(() => _requireCv = v ?? false),
+                      title: const Text('CV'),
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _requireLinkedin,
+                      onChanged: _saving
+                          ? null
+                          : (v) =>
+                                setState(() => _requireLinkedin = v ?? false),
+                      title: const Text('LinkedIn URL'),
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _requirePortfolio,
+                      onChanged: _saving
+                          ? null
+                          : (v) =>
+                                setState(() => _requirePortfolio = v ?? false),
+                      title: const Text('Portfolio / other link'),
+                    ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _requireCoverNote,
+                      onChanged: _saving
+                          ? null
+                          : (v) =>
+                                setState(() => _requireCoverNote = v ?? false),
+                      title: const Text('Cover note'),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),

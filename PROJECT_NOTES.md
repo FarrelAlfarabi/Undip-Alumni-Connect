@@ -3,6 +3,17 @@
 Running session log for the UNDIP Alumni Connect MVP demo build.
 Not a duplicate of the Requirements doc — just what happened, session by session.
 
+**Scope: faculty-wide, not campus-wide.** This app is being built for Ikafe
+(Ikatan Alumni Fakultas Ekonomika dan Bisnis — the Faculty of Economics and
+Business alumni association), not for all of UNDIP. Every feature — the
+alumni directory, job board, messaging, nearby-alumni map — is scoped to
+that one faculty's alumni only. This is why the Directory filters by
+**Major** (e.g. Manajemen, Akuntansi) rather than by Faculty (added 18 Sep
+2026, Session 26): filtering by faculty is meaningless when the whole app
+is already one faculty. Keep this in mind for any future feature — don't
+build campus-wide assumptions (e.g. a faculty picker, cross-faculty
+directory search) into the data model or UI.
+
 ---
 
 ## 2026-09-14 — Session 1: Project setup
@@ -508,3 +519,69 @@ User asked for testing + an expert UX pass on recent UI changes. Read through ev
 **Verified:** `flutter analyze` clean, `dart format` clean, `flutter build web --release` succeeds, plus the semantics-tree behavioral check above (a first for this project — actual interaction verification, not just static layout or hand-traced math).
 
 **Next step:** demo day. Recommend clicking through: apply to a job, back out, confirm the button now reads "Applied" and can't be tapped again; and on Directory/Job Board/Messages, set a filter or type a search term and confirm "Clear filters" appears and actually resets everything in one tap.
+
+## 2026-09-18 — Session 26: Directory Faculty→Major, scope note, LinkedIn-style apply flow
+
+Two requests: (1) since the app is scoped to one faculty (Ikafe/Fakultas
+Ekonomika dan Bisnis, not all of UNDIP — see the scope note at the top of
+this file), the Directory's "Faculty" filter was meaningless and has been
+replaced with **Major**; (2) direct feedback from Mas Gilang: the apply-job
+flow didn't match his expectation of a LinkedIn-style Easy Apply — fill in
+details, review, explicitly confirm submit, and get an on-screen
+notification that the application will be reviewed. While rebuilding that
+flow, also added the ability for a job poster to mark specific application
+fields as mandatory, since a free-form multi-step form without any
+required-field control was an obvious next gap.
+
+**Fix 1 — Directory: Faculty filter/display → Major.** `directory_screen.dart`:
+filter state, dropdown label, `distinctSortedValues` key, the filter-match
+check, and the list subtitle all moved from `faculty`/`'Faculty'` to
+`major`/`'Major'`. No migration needed — `alumni_profiles.major` already
+existed and is fully seeded. Scoped narrowly to Directory only, as asked —
+Messages' own Faculty filter (`messages_list_screen.dart`) and the Faculty
+field shown on `profile_detail_screen.dart` were left as-is, since they
+weren't part of this request and aren't filters that stop making sense the
+way Directory's did.
+
+**Fix 2 — job posters can require specific application fields.** New
+migration `20260918090000_add_job_application_requirements.sql`: four
+boolean columns on `job_posts` (`require_cv`, `require_linkedin`,
+`require_portfolio`, `require_cover_note`), default `false` so existing
+posts are unaffected. Applied live via the Supabase MCP tool.
+`post_job_screen.dart` gained a "Require applicants to provide" checklist
+under the existing notify-on-apply switch. `apply_job_screen.dart`'s
+Details step now reads those flags off the job and enforces them via the
+form's own `validator`s (plus a manual check for the CV attachment, since
+file pickers don't validate through `FormState`) — the applicant can't
+reach Review until whatever the poster required is filled in.
+
+**Fix 3 — apply_job_screen.dart rebuilt as a 3-step flow.** Was a single
+page with one "Submit Application" button that popped straight back to the
+job with a snackbar. Now: **Details** (the same fields as before, plus the
+required-field enforcement above) → **Review** (read-only summary of every
+field, including "Not provided"/"Not attached" for empty optional ones) →
+**Done** (an explicit confirmation screen: "Application submitted" with a
+sentence stating it's been sent to the poster and will be reviewed). The
+network call (CV upload + `job_applications` insert) now happens on
+"Confirm & Submit" from the Review step, not immediately on Details submit
+— matches Gilang's literal ask ("harus ngisi sesuatu sampe step done &
+confirm to submit & ada notifikasi bakal di review"). `job_detail_screen.dart`'s
+`_apply()` no longer shows a SnackBar after returning — the Done step
+itself is now the confirmation, so the old snackbar was redundant and
+would have been a second, weaker echo of the same message.
+
+**Verified:** `flutter analyze` clean, `dart format` clean,
+`flutter build web --release --dart-define-from-file=.env` succeeds.
+Migration applied and confirmed live on the `undip-alumni-connect-demo`
+project (`kdmxgtwqqnlbgfcpdivp`). Did not re-run the semantics-tree DOM
+click-test harness from Session 25 for this change — the multi-step logic
+here is plain Dart state transitions and form validators, not new
+geometry/rendering, so a careful read of the diff was judged sufficient
+given the same sandbox network limitations noted in every session since 21.
+
+**Next step:** demo day — walk through posting a job with 1-2 required
+fields checked, then applying to it as a different user: confirm Details
+won't let you continue to Review without those fields, Review shows
+exactly what was entered, and Done clearly states the application will be
+reviewed. Also confirm Directory's Major filter and dropdown populate
+correctly against the live seed data.

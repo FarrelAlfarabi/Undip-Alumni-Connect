@@ -37,7 +37,7 @@ Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bott
 
 1. Tap **Alumni**. Note the two tabs under the header: **Directory** and **Nearby** — you land on Directory.
 2. Show the search box — type a company name, e.g. "Tokopedia" or "Gojek".
-3. Show the three filter dropdowns — filter by **Faculty**, **Graduation Year**, **Industry**. Combine two filters to show it's a real AND filter, not just search.
+3. Show the three filter dropdowns — filter by **Major**, **Graduation Year**, **Industry**. Combine two filters to show it's a real AND filter, not just search. *"This app is scoped to one faculty — Ikafe — so filtering by faculty wouldn't mean anything; major is the useful axis here."*
 4. Tap any alumnus's row → their profile opens read-only. Point out: email is hidden here (only visible on your own profile) — browsing is free, but you don't get everyone's contact info for free, that's the subscription's job.
 5. At the bottom of another alumnus's profile: the **Subscribe to Message** button. Don't tap it yet — save the paywall moment for Jobs, it's the same mechanism and you only need to show it working once.
 6. Back out to the Directory tab, then tap the **Nearby** tab next to it. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
@@ -61,7 +61,7 @@ This is the most important part of the demo. Take it slow.
 7. You're returned to the job detail — contact info is now unlocked and visible.
 8. **Go back to the job list and open a *different* job.** Its contact info should also now show unlocked — this proves the subscription applies across the whole app, not just the one job you were looking at.
 9. Go to the **Profile** tab — a **Subscribed** badge now shows on the profile card, confirming the same state everywhere.
-10. (Optional, if time allows) With contact unlocked, the button on that job detail now says **Apply to this Job** instead — tap it, fill in the application form (name/email are prefilled, LinkedIn/portfolio/CV are optional), submit. *"Applying is a step further than just seeing contact info — it goes into a real applications table the poster can review."*
+10. (Optional, if time allows) With contact unlocked, the button on that job detail now says **Apply to this Job** instead — tap it. This opens a 3-step flow, like LinkedIn's Easy Apply: **Details** (name/email prefilled; LinkedIn/portfolio/CV/cover note are optional unless the poster marked them required — required ones are clearly labeled) → **Review** (a read-only summary of everything you entered) → **Confirm & Submit** → **Done**, an explicit on-screen confirmation that the application was sent and will be reviewed. *"Applying is a step further than just seeing contact info — it goes into a real applications table the poster can review, and the applicant gets a clear confirmation it was received, not just a toast that disappears."*
 
 ---
 
@@ -70,8 +70,9 @@ This is the most important part of the demo. Take it slow.
 1. Back on the **Jobs** tab, tap the **Post a Job** floating button.
 2. Fill in a quick example (e.g. Title: "Marketing Intern", Company: "Ikafe", Industry: "Nonprofit", Description: one line, Contact: an email).
 3. Point out the **"Notify me when someone applies"** toggle — on by default. *"In this demo that's an in-app applicant count on the job's own page, not a real push or email notification — that's a post-demo build item."*
-4. Tap **Post Job** — it appears at the top of the list immediately (newest first).
-5. (Optional) Open the job you just posted — as its owner you see an applicant-count banner instead of the Apply button, with a **View Applicants** link showing everyone who applied (name, contact, LinkedIn/Portfolio/CV chips).
+4. Point out the **"Require applicants to provide"** checklist below it (CV, LinkedIn URL, Portfolio, Cover note) — check one or two. *"The poster decides which parts of the application are mandatory — an applicant can't submit without them."*
+5. Tap **Post Job** — it appears at the top of the list immediately (newest first).
+6. (Optional) Open the job you just posted — as its owner you see an applicant-count banner instead of the Apply button, with a **View Applicants** link showing everyone who applied (name, contact, LinkedIn/Portfolio/CV chips).
 
 ---
 
