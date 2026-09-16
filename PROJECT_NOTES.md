@@ -440,3 +440,21 @@ User asked to also click-test the previous session's build before deploying. Att
 **Verified:** `flutter analyze` clean, `dart format` clean (reformatted the two touched screens).
 
 **Next step:** demo day. The Job Board and Messages search/filter UI has the same not-click-tested caveat as everything else this session — see the network-policy limitation above.
+
+---
+
+## 2026-09-16 — Session 22: Demo version of the nearby-alumni map + group networking (point 3)
+
+User asked to build a demo version of Master Plan §3.4 item 6's note: show a map of nearby alumni instead of just a distance list, and make it easy to network with a group of nearby people instead of messaging them one by one. This session also moved the project's default working branch to `main` (previous sessions used `claude/eloquent-maxwell-pzaky1`, now merged) — from this session on, work happens directly on `main`.
+
+**The "map" — a radar view, not a real map.** `lib/widgets/nearby_radar_map.dart` draws a radar-style visualization: "You" at the center, and every city with other alumni shown as a bubble whose distance from center is proportional to that city's simulated distance (`lib/data/city_distances.dart`, same static lookup table as before — no real GPS, same safety reasoning as the original Nearby Alumni feature, restated in this file's doc comment too). Bubble size scales with how many alumni are in that city. Angle around the circle is a fixed, deterministic spread across the cities present, not a real compass bearing — it exists only so bubbles don't overlap and stay in the same place across rebuilds. `nearby_alumni_screen.dart` gained a List/Map `SegmentedButton` toggle; the original list view is untouched and still the default.
+
+**Networking a whole city group at once.** Tapping a city bubble opens a bottom sheet (`_CityClusterSheet` in `nearby_alumni_screen.dart`) with two actions instead of requiring one-by-one messaging:
+1. **Open [City] Group Chat** — a real, working in-app group chat. New table `city_chat_messages` (`supabase/migrations/20260917110000_add_city_group_chat.sql`): messages tagged with a city string, no separate "group" entity or membership list, any verified alumnus can read/post. Same RLS "guardrail not access control" pattern as the rest of the schema (open select/insert, no update/delete) — documented in the migration's own comments, applied live and verified with a `set role anon` insert/select/cleanup, `get_advisors` clean. New screen `lib/screens/city_group_chat_screen.dart`, adapted from the existing 1:1 `chat_screen.dart` but showing the sender's name on each message since there are multiple senders.
+2. **Invite via WhatsApp** — opens `https://wa.me/?text=...` (via `url_launcher`, already a dependency) with a prefilled invite message. WhatsApp has no API to auto-create a group from a link, so this is honestly an invite/share action the user sends manually, not automated group creation — the button label and the Master Plan's own wording were both written to not overclaim this.
+
+This gives two concrete, working alternatives to "chat them one by one": the in-app group chat is the real functional demo of the idea; the WhatsApp button is the "or something else" the user asked to be suggested, built as a genuine working action rather than a mockup.
+
+**Verified:** `flutter analyze` clean, `dart format` clean, `flutter build web --release` succeeds. Traced the radar-map geometry by hand (angle/radius math for the single-cluster case, the km==0 "same city" case, and the clamp on dot size) rather than running it, since this container still can't reach `supabase.co` to click through a real session — same limitation flagged in Session 21. Bumped the "same city" cluster's radius slightly (0.18 → 0.24 of max radius) after tracing through the numbers, so it doesn't crowd the "You" marker at center.
+
+**Next step:** demo day. Recommend clicking through Map view → tap a city bubble → both buttons (group chat send/receive, WhatsApp invite opening the share sheet) before relying on this live — this is new, geometry-heavy UI that hasn't been watched rendering in a real browser.

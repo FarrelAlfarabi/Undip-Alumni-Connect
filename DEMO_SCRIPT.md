@@ -41,7 +41,9 @@ Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bott
 4. Tap any alumnus's row → their profile opens read-only. Point out: email is hidden here (only visible on your own profile) — browsing is free, but you don't get everyone's contact info for free, that's the subscription's job.
 5. At the bottom of another alumnus's profile: the **Subscribe to Message** button. Don't tap it yet — save the paywall moment for Jobs, it's the same mechanism and you only need to show it working once.
 6. Back out to the Directory tab, then tap the **Nearby** tab next to it. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
-7. Back out to Profile.
+7. Tap the **Map** toggle (next to List) — a radar view centered on you, with a bubble per city showing how many alumni are there. *"Distance from center is simulated the same way as the list — still no real GPS."*
+8. Tap a city bubble → a sheet opens with who's there and two networking actions: **Open [City] Group Chat** (a real in-app group chat, not gated behind subscription) and **Invite via WhatsApp** (opens WhatsApp with a prefilled invite message you'd send yourself — WhatsApp has no way to auto-create a group from a link, say this plainly if asked). *"This is the answer to 'don't make me message 20 people one by one' — a whole city's alumni in one place."*
+9. Back out to Profile.
 
 ---
 
@@ -99,7 +101,7 @@ This is the most important part of the demo. Take it slow.
 - **No real NIM verification** — email exact-match stands in for it in this build.
 - **Known open items**, worth surfacing to Gilang directly rather than waiting to be asked:
   - Whether Ikafe actually has a usable path to NIM data at all is still unconfirmed (see Master Plan doc — this is the single biggest blocker to the *production* version, not the demo).
-  - Nearby Alumni is in this demo, but as a concept mockup only — simulated from each profile's city, not real GPS. Real location-sharing has no safety design yet (opt-in, granularity, data retention all undecided) and isn't something to promise a date for.
+  - Nearby Alumni (list, map, and group chat/WhatsApp invite) is in this demo, but as a concept mockup only — simulated from each profile's city, not real GPS. Real location-sharing has no safety design yet (opt-in, granularity, data retention all undecided) and isn't something to promise a date for.
   - No real security hardening (RLS is off on the database) — fine for a closed demo, not fine to leave that way past this point.
 
 ---
