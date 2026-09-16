@@ -3,9 +3,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/city_distances.dart';
-import '../widgets/nearby_radar_map.dart';
+import '../widgets/nearby_map_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
+
+/// One city's worth of nearby alumni, grouped for the map's networking
+/// chips and the sheet they open (_CityClusterSheet).
+class _CityCluster {
+  const _CityCluster({
+    required this.city,
+    required this.km,
+    required this.alumni,
+  });
+
+  final String city;
+  final int km;
+  final List<Map<String, dynamic>> alumni;
+}
 
 /// "Nearby Alumni" — demo-only proximity feature.
 ///
@@ -18,11 +32,15 @@ import 'profile_detail_screen.dart';
 /// them) that weren't designed for and are explicitly out of scope for
 /// this demo. This screen exists to show the concept, not to ship it.
 ///
-/// The Map tab (added 17 Sep 2026, Master Plan §3.4 item 6) is a radar-
-/// style visualization grouped by city, not a real map — see
-/// nearby_radar_map.dart's doc comment. Tapping a city cluster opens
-/// networking actions (city group chat, WhatsApp invite) instead of
-/// requiring one-by-one messaging — see _CityClusterSheet below.
+/// The Map tab (added 17 Sep 2026, Master Plan §3.4 item 6; restyled to
+/// look like Google Maps with a per-person marker shortly after) plots
+/// each alumnus individually at their city's real-world coordinates —
+/// see nearby_map_view.dart's doc comment for why this still isn't a
+/// real map integration (no SDK, no API key, no tiles) and still never
+/// touches real GPS. Below the map, a row of per-city chips opens
+/// networking actions (city group chat, WhatsApp invite) for that whole
+/// city's alumni at once instead of requiring one-by-one messaging — see
+/// _CityClusterSheet below.
 ///
 /// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) —
 /// see alumni_screen.dart.
@@ -54,12 +72,24 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     return List<Map<String, dynamic>>.from(rows as List);
   }
 
-  void _openClusterSheet(CityCluster cluster) {
+  void _openClusterSheet(_CityCluster cluster) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) =>
           _CityClusterSheet(cluster: cluster, currentUser: widget.currentUser),
+    );
+  }
+
+  void _openProfile(Map<String, dynamic> profile) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfileDetailScreen(
+          profile: profile,
+          currentUser: widget.currentUser,
+          showEditButton: false,
+        ),
+      ),
     );
   }
 
@@ -109,7 +139,7 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                 ButtonSegment(
                   value: true,
                   label: Text('Map'),
-                  icon: Icon(Icons.radar),
+                  icon: Icon(Icons.map_outlined),
                 ),
               ],
               selected: {_showMap},
@@ -179,34 +209,58 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                 }
                 final clusters = byCity.entries
                     .map(
-                      (e) => CityCluster(
+                      (e) => _CityCluster(
                         city: e.key,
                         km: kmByCity[e.key]!,
                         alumni: e.value,
                       ),
                     )
                     .toList();
+                final pins = withDistance
+                    .map((e) => AlumniPin(profile: e.profile, km: e.km!))
+                    .toList();
 
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      NearbyRadarMap(
+                      NearbyMapView(
                         myCity: myCity,
-                        clusters: clusters,
-                        onClusterTap: _openClusterSheet,
+                        pins: pins,
+                        onPinTap: (pin) => _openProfile(pin.profile),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Pinch or drag to explore. Tap a marker to view '
+                        'that alumnus, or hover for a quick preview.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Network with a whole city at once',
+                        style: theme.textTheme.labelLarge,
                       ),
                       const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'Tap a city cluster to see who\'s there and '
-                          'network with the whole group at once.',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final cluster in clusters)
+                            ActionChip(
+                              avatar: const Icon(
+                                Icons.groups_outlined,
+                                size: 18,
+                              ),
+                              label: Text(
+                                '${cluster.city} (${cluster.alumni.length})',
+                              ),
+                              onPressed: () => _openClusterSheet(cluster),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -269,8 +323,8 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
   }
 }
 
-/// Bottom sheet for a tapped city cluster on the radar map: who's there,
-/// plus two networking actions in place of messaging each person one by
+/// Bottom sheet for a tapped city chip below the map: who's there, plus
+/// two networking actions in place of messaging each person one by
 /// one — an in-app group chat (real, functional) and a WhatsApp invite
 /// share (opens WhatsApp with a prefilled message the user sends
 /// manually; WhatsApp has no API to auto-create a group, so this is
@@ -278,7 +332,7 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
 class _CityClusterSheet extends StatelessWidget {
   const _CityClusterSheet({required this.cluster, required this.currentUser});
 
-  final CityCluster cluster;
+  final _CityCluster cluster;
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   Future<void> _inviteViaWhatsApp(BuildContext context) async {
