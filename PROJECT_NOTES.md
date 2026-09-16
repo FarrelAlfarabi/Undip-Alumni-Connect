@@ -291,7 +291,7 @@ User asked for a fresh pass over all code with bug fixes, then a business-point-
 ## 2026-09-15 — Session 13: Branded welcome screen + pitch landing page
 
 **What got built:**
-- Published a pitch landing page (Claude Artifact, shared with the user separately, not part of this repo) — placeholder visual identity: indigo/brass palette drawn from Javanese batik (kawung motif, indigo-dyed cloth, brass prada gilding), Fraunces + IBM Plex Sans, content mirroring the real pitch deck and app structure. Explicitly labeled placeholder in its footer.
+- Published a pitch landing page (a shared web page generated separately, not part of this repo) — placeholder visual identity: indigo/brass palette drawn from Javanese batik (kawung motif, indigo-dyed cloth, brass prada gilding), Fraunces + IBM Plex Sans, content mirroring the real pitch deck and app structure. Explicitly labeled placeholder in its footer.
 - Carried that identity into the app itself: `lib/theme.dart` (custom ColorScheme, Fraunces/Plex TextTheme via new `google_fonts` dependency), `lib/kawung_mark.dart` (CustomPainter brand mark), `lib/screens/welcome_screen.dart` (new entry screen: mark, wordmark, the pitch deck's own headline, one CTA into the unchanged `VerificationScreen`, explicit demo/placeholder-branding footnote). `main.dart` now opens on `WelcomeScreen` with `AppTheme.light()` instead of the plain deepPurple Material default.
 - `flutter analyze` clean.
 

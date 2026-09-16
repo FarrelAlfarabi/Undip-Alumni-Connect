@@ -53,5 +53,5 @@ app.*.map.json
 !.env.example
 *.secrets.dart
 
-# Claude Code — personal local settings (permission overrides etc.), not shared
+# AI coding tool — personal local settings (permission overrides etc.), not shared
 .claude/settings.local.json
