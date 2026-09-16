@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
+import 'notifications_screen.dart';
 import 'post_job_screen.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
@@ -31,12 +32,38 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   final _searchController = TextEditingController();
   String _industry = kAllFilter;
   String _company = kAllFilter;
+  Future<int>? _unreadNotificationsFuture;
 
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
+    _unreadNotificationsFuture = _fetchUnreadNotificationCount();
     _searchController.addListener(() => setState(() {}));
+  }
+
+  Future<int> _fetchUnreadNotificationCount() async {
+    final rows = await Supabase.instance.client
+        .from('notifications')
+        .select('id')
+        .eq('recipient_id', widget.currentUser.value['id'])
+        .filter('read_at', 'is', null);
+    return (rows as List).length;
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(
+          currentUserId: widget.currentUser.value['id'] as String,
+        ),
+      ),
+    );
+    if (mounted) {
+      setState(
+        () => _unreadNotificationsFuture = _fetchUnreadNotificationCount(),
+      );
+    }
   }
 
   @override
@@ -103,7 +130,26 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Job Board')),
+      appBar: AppBar(
+        title: const Text('Job Board'),
+        actions: [
+          FutureBuilder<int>(
+            future: _unreadNotificationsFuture,
+            builder: (context, snapshot) {
+              final unread = snapshot.data ?? 0;
+              return IconButton(
+                onPressed: _openNotifications,
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text('$unread'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+                tooltip: 'Notifications',
+              );
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _postJob,
         icon: const Icon(Icons.add),
