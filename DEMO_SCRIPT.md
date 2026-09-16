@@ -8,7 +8,7 @@ Written for the Sep 23 demo. Assumes the app is already running (see README/PROJ
 
 ## 0. Before you start
 
-- Confirm you're on branch `claude/eloquent-maxwell-pzaky1` and have pulled the latest.
+- Confirm you're on branch `main` and have pulled the latest.
 - Confirm `.env` has the real Supabase URL/anon key (ask if you don't have them).
 - Have this test email ready: **`ahmad.ramadhan@example.com`** — seeded as `free`, not subscribed, so the paywall demo works live. Don't use `bunga.ayu@example.com` for the main walkthrough; she's pre-subscribed and would skip the paywall moment.
 - Optional second test email if you want to show the "no match" rejection path: anything not in the seed data, e.g. `notreal@example.com`.

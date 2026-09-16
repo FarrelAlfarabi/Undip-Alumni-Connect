@@ -106,7 +106,7 @@ on conflict (nim) do update set email = excluded.email;
 insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'gilang.modcart@gmail.com')
+  ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'gwprawirasani@gmail.com')
 on conflict (nim) do update set email = excluded.email;
 
 -- ----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ update alumni_profiles set city = case email
   when 'fahmi.alamsyah@example.com' then 'Semarang'
   when 'vina.tan@example.com' then 'Jakarta'
   when 'farrel.abi.saleh@gmail.com' then 'Yogyakarta'
-  when 'gilang.modcart@gmail.com' then 'Jakarta'
+  when 'gwprawirasani@gmail.com' then 'Jakarta'
   when 'maria.graffeliesta@gmail.com' then 'Jakarta'
 end
 where email in (
@@ -166,7 +166,7 @@ where email in (
   'melati.ningrum@example.com','bunga.ayu@example.com','dimas.wicaksono@example.com',
   'kevin.halim@example.com','putri.maharani@example.com','aditya.kurniawan@example.com',
   'sari.permata@example.com','fahmi.alamsyah@example.com','vina.tan@example.com',
-  'farrel.abi.saleh@gmail.com','gilang.modcart@gmail.com','maria.graffeliesta@gmail.com'
+  'farrel.abi.saleh@gmail.com','gwprawirasani@gmail.com','maria.graffeliesta@gmail.com'
 );
 
 alter table alumni_profiles enable trigger alumni_profiles_restrict_update_trigger;
