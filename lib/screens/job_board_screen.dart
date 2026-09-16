@@ -56,6 +56,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       MaterialPageRoute(
         builder: (_) => NotificationsScreen(
           currentUserId: widget.currentUser.value['id'] as String,
+          currentUserEmail: widget.currentUser.value['email'] as String,
         ),
       ),
     );

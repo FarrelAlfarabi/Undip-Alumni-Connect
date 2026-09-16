@@ -585,3 +585,49 @@ won't let you continue to Review without those fields, Review shows
 exactly what was entered, and Done clearly states the application will be
 reviewed. Also confirm Directory's Major filter and dropdown populate
 correctly against the live seed data.
+
+## 2026-09-16 — Session 27: In-app notifications + simulated email for job applications
+
+Two more requests: real notification for job applicants (both in-app and
+email), and later, on the email half specifically, to simulate rather than
+wire a real provider for now.
+
+**In-app notifications (real, not simulated).** New `notifications` table;
+a trigger (`notify_poster_on_application`, fires on `job_applications`
+insert, respects each job's `notify_on_apply` toggle) writes a row for the
+poster server-side, so it can't be skipped by a client bug. Job Board's
+AppBar now has a bell icon with an unread-count badge ->
+`notifications_screen.dart` lists them, tapping marks read and opens that
+job's applicant list.
+
+**Email — asked for Resend, then asked to simulate first.** Real sending
+needs a transactional email provider (an account + API key), which is a
+real external decision — I asked which approach to take and the answer
+was Resend to start, then corrected to "simulate first" before any key was
+provided. Built accordingly: the same trigger also writes to a new
+`email_log` table (recipient email, subject, body) recording exactly what
+email would have been sent, without sending anything. A mail icon on
+Notifications opens `email_log_screen.dart`, which lists the logged
+emails for the current user with an explicit "this demo doesn't send real
+email yet" banner — so the behavior is demonstrable and inspectable, not
+silently missing. Swapping in Resend (or another provider) later is a
+matter of calling out to it with the same recipient/subject/body content
+already being computed here — no rework of the trigger's logic, just
+adding a real send alongside the log write.
+
+**Verified:** `flutter analyze` clean, `dart format` clean,
+`flutter build web --release --dart-define-from-file=.env` succeeds.
+Both migrations applied live and smoke-tested via a throwaway
+`set role anon` insert into `job_applications`, confirming both the
+`notifications` and `email_log` rows were created with the right content,
+then cleaned up. `get_advisors(security)` clean after explicitly revoking
+`anon`/`authenticated` execute on the trigger function (PostgREST
+auto-exposes public-schema functions as RPC endpoints; Postgres would
+refuse to run a trigger function outside trigger context anyway, but
+there's no reason to leave it callable).
+
+**Next step:** when ready to send real email, get a Resend API key from
+the user, deploy a Supabase Edge Function that sends via Resend using the
+same recipient/subject/body already computed in `notify_poster_on_application`,
+and either call it from the trigger (needs `pg_net` or an HTTP-capable
+extension) or from the client right after the `job_applications` insert.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'email_log_screen.dart';
 import 'job_applicants_screen.dart';
 
 /// In-app notification list (added 18 Sep 2026). A row here is created
@@ -9,10 +10,19 @@ import 'job_applicants_screen.dart';
 /// 20260918100000_add_notifications.sql) — not written by the app, so it
 /// can't be skipped by a client bug. Tapping a notification marks it
 /// read and opens that job's applicant list.
+///
+/// The same trigger also logs the email that would be sent (real
+/// sending needs a transactional provider this demo doesn't have yet)
+/// — see the mail icon in the AppBar, which opens email_log_screen.dart.
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key, required this.currentUserId});
+  const NotificationsScreen({
+    super.key,
+    required this.currentUserId,
+    required this.currentUserEmail,
+  });
 
   final String currentUserId;
+  final String currentUserEmail;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -72,7 +82,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    EmailLogScreen(recipientEmail: widget.currentUserEmail),
+              ),
+            ),
+            icon: const Icon(Icons.mail_outline),
+            tooltip: 'Emails (simulated)',
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,
         builder: (context, snapshot) {
