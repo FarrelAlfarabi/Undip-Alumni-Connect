@@ -676,3 +676,49 @@ independently verified against a real phone's back gesture this session
 News/Alumni returns to Profile instead of exiting or landing on Welcome,
 and back from the apply flow's Review step returns to Details (not a
 blank re-opened form).
+
+## 2026-09-17 — Session 29: Removed the confusing back arrow on bottom-nav tab roots
+
+Follow-up to Session 28's back-button fix. User sent a screenshot of the
+Chat tab (`MessagesListScreen`) showing a back arrow in the top-left of
+its own AppBar, and asked for the phone's back button and that on-screen
+arrow to behave consistently, "like most apps."
+
+Root cause was different from Session 28's: Flutter's AppBar
+auto-generates a back arrow whenever `Navigator.canPop(context)` is true
+for the enclosing route — which was true for every bottom-nav tab's own
+AppBar (`JobBoardScreen`, `MessagesListScreen`, `AnnouncementsScreen`,
+`AlumniScreen`, and `ProfileDetailScreen` used as the Profile tab), since
+`HomeShell`'s own route can structurally still be popped (it sits above
+`WelcomeScreen`). That's a route-stack-depth check, unrelated to Session
+28's `PopScope`, which only gates whether a pop attempt succeeds — so the
+arrow kept showing even after that fix. No real app puts a back arrow on
+a bottom-nav tab's root screen; tapping it would technically still work
+correctly (routed through the same `PopScope`), but its presence at all
+was the actual bug the screenshot was flagging.
+
+Fixed by setting `automaticallyImplyLeading: false` on all five tab-root
+AppBars. `ProfileDetailScreen` is reused both as the Profile tab (own
+profile) and as a pushed detail screen (someone else's profile from the
+Directory) — so its fix is conditional: `automaticallyImplyLeading:
+!widget.showEditButton`, keeping the back arrow only where it's a real
+pushed screen with a real previous route to return to.
+
+**Verified properly, not just by re-reading the diff.** Built a throwaway
+`lib/_debug_home_shell.dart` (not committed) rendering `HomeShell` with a
+fake profile, bypassing the verification flow this sandbox still can't
+complete (no `supabase.co` access). Served it locally and, via the
+Flutter web semantics-tree DOM technique (Session 25), tapped through all
+five bottom-nav destinations by coordinate (label-based Playwright
+locators didn't match `NavigationDestination`'s semantics shape) and
+confirmed zero elements with a "back"-labeled `aria-label` or text on any
+of them — Profile, Alumni, Jobs, Chat, News all render clean. Debug file
+and build output deleted afterward.
+
+**Verified:** `flutter analyze` clean, `dart format` clean,
+`flutter build web --release --dart-define-from-file=.env` succeeds,
+plus the semantics-tree check above.
+
+**Next step:** demo day — on a real phone, confirm no tab shows a stray
+back arrow, and that a pushed detail screen (e.g. Directory → another
+alumnus's profile) still shows one and works normally.

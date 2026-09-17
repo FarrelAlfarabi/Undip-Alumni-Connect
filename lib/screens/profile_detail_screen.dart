@@ -127,6 +127,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.showEditButton ? 'My Profile' : 'Alumni Profile'),
+        // Own profile is the Profile tab's root (HomeShell index 0) — no
+        // back arrow, matching every other bottom-nav tab. Someone else's
+        // profile is a real pushed screen (from the Directory, a job
+        // poster's name, etc.), where a back arrow is correct.
+        automaticallyImplyLeading: !widget.showEditButton,
         actions: [
           if (widget.showEditButton)
             IconButton(

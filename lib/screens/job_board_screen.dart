@@ -133,6 +133,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Job Board'),
+        automaticallyImplyLeading: false,
         actions: [
           FutureBuilder<int>(
             future: _unreadNotificationsFuture,

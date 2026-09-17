@@ -39,6 +39,7 @@ class _AlumniScreenState extends State<AlumniScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alumni'),
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
