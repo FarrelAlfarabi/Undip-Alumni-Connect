@@ -57,6 +57,19 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
+  // The phone/browser back button used to pop HomeShell's own route
+  // straight through to WelcomeScreen (and one more back from there
+  // exits) no matter which bottom-nav tab was showing — so browsing
+  // Jobs/Chat/News/Alumni and hitting back could unexpectedly dump you
+  // out of the app in far fewer presses than felt right. Now back only
+  // pops the route (and can eventually exit) once you're already on the
+  // Profile tab; from any other tab it first brings you back to Profile,
+  // matching how a bottom-nav app's back button is expected to behave.
+  void _handlePop(bool didPop) {
+    if (didPop) return;
+    setState(() => _index = 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = [
@@ -73,38 +86,42 @@ class _HomeShellState extends State<HomeShell> {
       const AnnouncementsScreen(),
     ];
 
-    return Scaffold(
-      body: IndexedStack(index: _index, children: tabs),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: _select,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'Alumni',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.work_outline),
-            selectedIcon: Icon(Icons.work),
-            label: 'Jobs',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'Chat',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.campaign_outlined),
-            selectedIcon: Icon(Icons.campaign),
-            label: 'News',
-          ),
-        ],
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
+      child: Scaffold(
+        body: IndexedStack(index: _index, children: tabs),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: _select,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.people_outline),
+              selectedIcon: Icon(Icons.people),
+              label: 'Alumni',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.work_outline),
+              selectedIcon: Icon(Icons.work),
+              label: 'Jobs',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.chat_bubble_outline),
+              selectedIcon: Icon(Icons.chat_bubble),
+              label: 'Chat',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.campaign_outlined),
+              selectedIcon: Icon(Icons.campaign),
+              label: 'News',
+            ),
+          ],
+        ),
       ),
     );
   }

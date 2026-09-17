@@ -631,3 +631,48 @@ the user, deploy a Supabase Edge Function that sends via Resend using the
 same recipient/subject/body already computed in `notify_poster_on_application`,
 and either call it from the trigger (needs `pg_net` or an HTTP-capable
 extension) or from the client right after the `job_applications` insert.
+
+## 2026-09-17 — Session 28: Fixed phone back-button unexpectedly exiting the app
+
+User reported the phone's back button "sometimes closes the app." Root
+cause: `HomeShell` (the bottom-nav shell) is reached via
+`Navigator.pushReplacement` from `verification_screen.dart`, so its own
+Navigator stack is just `[WelcomeScreen, HomeShell]` regardless of which
+bottom-nav tab (Profile/Alumni/Jobs/Chat/News) is showing — the tabs
+themselves aren't separate routes (`IndexedStack`, not per-tab
+Navigators). Pressing back while browsing any non-Profile tab popped
+`HomeShell`'s whole route straight to `WelcomeScreen` in a single press,
+and a second press from there exits — far fewer presses than the bottom
+nav visually suggests, and jarring since `WelcomeScreen` looks like being
+signed out.
+
+Fixed with `PopScope` in `home_shell.dart`: back only pops the route
+(eventually exiting) once already on the Profile tab; from any other tab
+it switches to Profile first, matching standard bottom-nav back-button
+behavior.
+
+Found and fixed the same class of bug in the new multi-step
+`apply_job_screen.dart` (Session 26) while in there: the AppBar's leading
+back arrow on the Review step steps back to Details, but the phone's
+hardware/browser back button bypassed it entirely and popped the whole
+screen — losing the filled-in form instead of just backing up a step.
+Worse, from the Done step, hardware back popped without the `pop(true)`
+the explicit "Back to Job" button sends, so `job_detail_screen.dart`
+wouldn't know the application had actually gone through until a manual
+refresh. Added a matching `PopScope` there routing hardware/browser back
+through the same step transitions the on-screen buttons use. Caught a
+real switch-fallthrough bug while writing this fix (the Review case fell
+through into Done's `pop(true)` because Dart doesn't require `break`
+before another case starts, only before a case genuinely branches at the
+end) — `flutter analyze`/`build` didn't catch it since it's valid Dart,
+was found by re-reading the logic and fixed before pushing.
+
+**Verified:** `flutter analyze` clean, `dart format` clean,
+`flutter build web --release --dart-define-from-file=.env` succeeds. Not
+independently verified against a real phone's back gesture this session
+(this sandbox can't drive one) — worth confirming on-device.
+
+**Next step:** demo day — on a real phone, confirm back from Jobs/Chat/
+News/Alumni returns to Profile instead of exiting or landing on Welcome,
+and back from the apply flow's Review step returns to Details (not a
+blank re-opened form).

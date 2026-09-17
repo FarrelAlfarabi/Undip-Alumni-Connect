@@ -129,30 +129,55 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     }
   }
 
+  // The phone/browser back button bypasses the AppBar's leading arrow
+  // entirely, so without this it would pop the whole screen straight
+  // from Review (losing the filled-in Details instead of just backing
+  // up a step) and, worse, from Done without the `pop(true)` the
+  // explicit "Back to Job" button sends — leaving job_detail_screen.dart
+  // unaware the application actually went through. Route hardware/
+  // browser back through the same step transitions the on-screen
+  // buttons use.
+  void _handlePop(bool didPop) {
+    if (didPop) return;
+    switch (_step) {
+      case _ApplyStep.details:
+        break; // canPop is already true for this step; unreachable.
+      case _ApplyStep.review:
+        setState(() => _step = _ApplyStep.details);
+        break;
+      case _ApplyStep.done:
+        Navigator.of(context).pop(true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Apply — ${widget.job['title'] as String? ?? ''}'),
-        automaticallyImplyLeading: _step != _ApplyStep.done,
-        leading: _step == _ApplyStep.review
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => setState(() => _step = _ApplyStep.details),
-              )
-            : null,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: switch (_step) {
-                _ApplyStep.details => _buildDetailsStep(context),
-                _ApplyStep.review => _buildReviewStep(context),
-                _ApplyStep.done => _buildDoneStep(context),
-              },
+    return PopScope(
+      canPop: _step == _ApplyStep.details,
+      onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Apply — ${widget.job['title'] as String? ?? ''}'),
+          automaticallyImplyLeading: _step != _ApplyStep.done,
+          leading: _step == _ApplyStep.review
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => setState(() => _step = _ApplyStep.details),
+                )
+              : null,
+        ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: switch (_step) {
+                  _ApplyStep.details => _buildDetailsStep(context),
+                  _ApplyStep.review => _buildReviewStep(context),
+                  _ApplyStep.done => _buildDoneStep(context),
+                },
+              ),
             ),
           ),
         ),
