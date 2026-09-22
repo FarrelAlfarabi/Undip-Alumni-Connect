@@ -137,9 +137,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             IconButton(
               tooltip: 'Sign out',
               icon: const Icon(Icons.logout),
-              onPressed: () {
-                // Back to verification with the whole shell torn down, so
-                // a second demo account starts from a clean state.
+              onPressed: () async {
+                // Ends the real Supabase Auth session (not just a local
+                // navigation reset), so a second demo account starts from
+                // a genuinely clean, unauthenticated state.
+                await Supabase.instance.client.auth.signOut();
+                if (!context.mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const VerificationScreen()),
                   (_) => false,
