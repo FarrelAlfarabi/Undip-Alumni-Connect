@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'verification_screen.dart';
@@ -111,7 +112,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               "We couldn't find your profile to save to — it may have "
               'changed since you signed in. Please sign out and verify '
               'again. [debug: id=${widget.profile['id']} '
-              'nim=${widget.profile['nim']}]';
+              'nim=${widget.profile['nim']} '
+              'url=${dotenv.env['SUPABASE_URL']}]';
         });
         return;
       }
