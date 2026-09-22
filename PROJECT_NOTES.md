@@ -722,3 +722,194 @@ plus the semantics-tree check above.
 **Next step:** demo day — on a real phone, confirm no tab shows a stray
 back arrow, and that a pushed detail screen (e.g. Directory → another
 alumnus's profile) still shows one and works normally.
+
+---
+
+## 2026-09-22 — Session 30: Post-demo production hardening (branch: `feature/production-hardening`)
+
+Branched off `main` (confirmed via `git branch` — `main` is the demo
+branch every prior session built on) for post-demo work. The demo build
+on `main` is untouched by this branch. Four stages, each committed
+separately per the plan, all against the same live project
+(`kdmxgtwqqnlbgfcpdivp`) — no new external accounts needed.
+
+**Stage 1 — Real Supabase Auth.** Replaced `verification_screen.dart`'s
+plain email exact-match (which never created a session — flagged as a
+real security gap in every RLS-related entry since Session 14) with a
+real email OTP flow: `signInWithOtp`/`verifyOTP` (chose OTP-code entry
+over magic links — a magic-link redirect needs per-platform deep-link
+setup on web/Android/iOS that this sandbox can't configure or test,
+while a 6-digit code fits the existing single-field-form UX with the
+least added complexity, per the task's own instruction to pick
+whichever is simplest). The email-exists check against
+`alumni_profiles` still runs *before* sending the OTP, so a stranger's
+email never gets a real auth account created just by trying — only
+already-seeded alumni emails trigger a signup.
+
+New `claim_alumni_profile()` RPC (`SECURITY DEFINER`, `authenticated`
+only) links the resulting `auth.users` row to its matching
+`alumni_profiles` row by email and sets `verification_status =
+'verified'` on first link. It has to be `SECURITY DEFINER` because
+`alumni_profiles.user_id` starts `NULL` for every seeded row (it's
+existed since the very first schema migration, apparently anticipating
+this — see `20260914050000_initial_schema.sql`), so the very first
+link can never satisfy a plain `auth.uid() = user_id` RLS check. The
+function does its own precise check internally instead (only the
+row matching the caller's own authenticated email, only while
+unclaimed) — `get_advisors` correctly flags it as a signed-in-callable
+`SECURITY DEFINER` function, which is expected and reviewed, not an
+oversight.
+
+`main.dart` now restores an existing session on relaunch (a small
+`_SessionGate` checks `auth.currentSession`, fetches the linked profile,
+and lands straight in `HomeShell` — or falls back to `WelcomeScreen`,
+signing out first if a session somehow has no linked profile) instead
+of always starting cold at verification. Sign-out
+(`profile_detail_screen.dart`) now actually calls `auth.signOut()`
+before resetting navigation, rather than only resetting local
+navigation state.
+
+Every other screen's `currentUser`/`.value['id']` plumbing (the shared
+`ValueNotifier<Map>` pattern from Session 10) needed no changes: once a
+real session exists, `supabase_flutter` automatically attaches the
+user's JWT to every request, so ownership checks that used to rely on
+"whatever the client claims" now get enforced server-side by RLS
+(Stage 2) regardless of what the client sends.
+
+**Stage 2 — Real RLS.** Rewrote policies on the four tables named in
+the plan (`alumni_profiles`, `job_posts`, `conversations`, `messages`)
+to check `auth.uid()` instead of `using (true)`:
+- `alumni_profiles`: select stays open (directory browsing, plus the
+  pre-login "does this email exist" check both need it) — only the
+  plan's own explicit exception. Update scoped to `auth.uid() =
+  user_id`.
+- `job_posts`: select stays open (public job board — nothing in the
+  plan asked to lock this down, and job postings are meant to be
+  publicly discoverable). Insert requires `posted_by` to be the
+  caller's own linked profile.
+- `conversations`: no longer world-readable/insertable — only a real
+  participant can see or create one. (Not explicitly named in the plan,
+  but a conversation row reveals who's messaging whom, and the
+  messages requirement below can't mean anything if anyone can still
+  list every conversation.)
+- `messages`: the plan's headline ask — select requires the caller to
+  be a real participant of that message's conversation; insert
+  requires `sender_id` to be the caller's own profile *and* that
+  profile to actually be a participant of the target conversation
+  (blocks both "read someone else's DMs" and "send as someone else").
+
+**Tested and verified live**, not just reasoned about: inserted three
+synthetic `auth.users` rows and temporarily linked them to three seeded
+alumni (`ahmad`/`siti`/`bagas`), created a real conversation + message
+between two of them, then ran `set role authenticated; set
+request.jwt.claim.sub = '<uid>'` role-simulation SQL directly against
+the live project (same technique Session 14 used for `anon`) to check:
+a real participant reads their own conversation's messages (1 row); a
+third, non-participant alumnus reads 0 rows for that same conversation
+and cannot insert into it; a fully anonymous (`anon` role, no session)
+request reads 0 messages anywhere; a real participant cannot insert a
+message with another participant's `sender_id` (blocked). All five
+checks passed exactly as expected. Everything (test conversation,
+test message, the three synthetic `auth.users` rows, the `user_id`
+links) was cleaned up afterward and confirmed back to the pre-test
+baseline (27 alumni / 0 linked, 6 conversations, 11 messages).
+
+**Standing requirement, going forward, per this session's own
+instructions — record it so it isn't dropped next time:** after
+*any* RLS or auth change, explicitly verify the Supabase dashboard
+(Table Editor / SQL Editor) still has full read/write access before
+calling the change done. Verified this time: queried as `postgres`
+(the role the MCP tool and dashboard connect as) after the rewrite and
+confirmed unrestricted access to all three affected tables (27/6/11
+rows visible, matching the live totals) — RLS only restricts `anon`
+and `authenticated`, dashboard/service-role access was never touched.
+
+**Known gap, deliberately out of this migration's scope:**
+`notifications`, `job_applications`, `city_chat_messages`, and
+`email_log` still use the old open guardrail-only policies (anyone
+authenticated can read/write across users) — the plan named exactly
+four tables to rewrite, and widening it wasn't asked for. Worth a
+follow-up pass, since `job_applications` in particular carries real
+applicant PII (name, email, phone, CV path) that's currently readable
+by any authenticated user, not just the poster.
+
+**Stage 3 — Realtime messaging.** `chat_screen.dart` now subscribes to
+Postgres Changes on `messages` (filtered to the open
+`conversation_id`) instead of only refetching after you send — the
+other participant's replies now appear live. Sending still appends the
+new row locally right away (optimistic) rather than waiting on the
+realtime round-trip; the realtime callback dedupes by message `id` so
+the sender never sees their own message twice. The manual refresh
+button stays as a fallback. Enabled `messages` for Realtime
+(`alter publication supabase_realtime add table messages`, `replica
+identity full`) — confirmed live via `pg_publication_tables`. Realtime
+Postgres Changes enforces each table's own RLS `SELECT` policy per
+subscriber, so this channel automatically inherits Stage 2's
+participant-only restriction with no separate authorization code.
+
+**Stage 4 — small fixes, batched.**
+- `seed_job_posts.sql` idempotency: `job_posts` has no natural business
+  key the way `alumni_profiles.nim` does, so rather than constrain real
+  job postings, added a nullable `unique` `seed_key` column that only
+  the seed script ever sets. Switched to `ON CONFLICT (seed_key) DO
+  UPDATE`, matching `seed.sql`'s own pattern. Backfilled `seed_key` on
+  the three already-live demo rows so a re-run updates them in place
+  instead of duplicating (verified: re-running would now touch exactly
+  those three rows, confirmed by matching each `seed_key` to its live
+  row before backfilling).
+- `HomeShell`'s bottom-nav tabs (flagged as eager since Session 9, still
+  open as of Session 10) now lazy-build on first visit — an unvisited
+  tab renders a cheap placeholder instead of the real screen, so its
+  fetch doesn't fire until it's actually opened. A visited tab still
+  stays alive afterward via `IndexedStack`, unchanged from the existing
+  "keep state across tab switches" design (Sessions 9–12).
+
+**What's verified vs. not:**
+- Verified: `flutter analyze` clean, `dart format` clean (installed
+  Flutter 3.47.5 fresh into this container, same as every session that
+  needed it). All Stage 2 RLS behavior verified live via role
+  simulation as described above, including the explicit
+  can't-read-another-user's-messages requirement. Dashboard/service-role
+  access re-confirmed unrestricted after the RLS rewrite. Realtime
+  publication membership confirmed live via `pg_publication_tables`.
+  `get_advisors(security)` shows exactly one expected, reviewed warning
+  (the `claim_alumni_profile` `SECURITY DEFINER` note above) and
+  nothing else.
+- **Not verified — same structural gap as every session since Day 2:**
+  this container still can't reach `supabase.co` directly and has no
+  email inbox to receive a real OTP code, so the actual end-to-end
+  signup/login flow (enter email → receive real email → enter real
+  code → land in `HomeShell`) has not been watched running in a real
+  browser or device. The code path was verified as far as this sandbox
+  can reach: the RPC and RLS logic directly against the live database,
+  and the Dart code via `flutter analyze`/`format` (no `.env` present
+  in this container, so `flutter build web` wasn't attempted either).
+  Also not exercised live: the realtime chat subscription's actual
+  behavior in a running browser (two tabs, one sends, the other sees it
+  push in) — the subscription code follows the documented
+  `onPostgresChanges` API exactly (checked against the installed
+  `realtime_client` package source, not memory), but needs a real
+  click-through to confirm.
+
+**Scope decisions:**
+- Chose OTP-code entry over magic links for the reason above (deep-link
+  platform setup this sandbox can't do or verify), rather than defer
+  the auth method choice back to the user — the task explicitly said
+  to pick whichever fits with the least added complexity.
+- Extended RLS to `conversations` (select + insert) even though only
+  `alumni_profiles`/`job_posts`/`conversations`/`messages` were named
+  as a set and only messages got an explicit behavioral spec — locking
+  conversations down was necessary for the messages requirement to mean
+  anything (otherwise anyone could still list every conversation's
+  participant pairs even with messages themselves protected).
+  `job_posts` and `alumni_profiles` selects were kept open per the
+  plan's own explicit carve-out.
+- Left `notifications`/`job_applications`/`city_chat_messages`/`email_log`
+  on the old open policies rather than widening this migration's scope
+  — flagged above as a real, worth-fixing gap instead.
+
+**Next step:** get real device/browser verification of the OTP signup
+flow and the realtime chat subscription before relying on either live.
+Then, when ready: a follow-up RLS pass on the four tables flagged above
+as a known gap, and start on `feature/ai-job-description` (needs a
+Gemini API key set as a Supabase secret first — see that branch).
