@@ -37,6 +37,11 @@ class _HomeShellState extends State<HomeShell> {
   int _jobsEpoch = 0;
   int _chatEpoch = 0;
 
+  // Lazy-load: a tab's real screen (and its fetch) is only built once it's
+  // been visited at least once, rather than every tab fetching eagerly at
+  // launch (Profile is the entry tab, so it starts already visited).
+  final Set<int> _visited = {0};
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +59,7 @@ class _HomeShellState extends State<HomeShell> {
       if (i == 2 && _index != 2) _jobsEpoch++;
       if (i == 3 && _index != 3) _chatEpoch++;
       _index = i;
+      _visited.add(i);
     });
   }
 
@@ -72,18 +78,37 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Unvisited tabs get a cheap placeholder instead of the real screen, so
+    // their fetches don't fire until the tab is actually opened. Once
+    // visited, a tab's real screen stays in place (IndexedStack keeps it
+    // alive), matching the existing "keep state alive across tabs" design.
     final tabs = [
-      ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser),
-      AlumniScreen(currentUser: _currentUser),
-      JobBoardScreen(
-        key: ValueKey('jobs-$_jobsEpoch'),
-        currentUser: _currentUser,
-      ),
-      MessagesListScreen(
-        key: ValueKey('chat-$_chatEpoch'),
-        currentUser: _currentUser,
-      ),
-      const AnnouncementsScreen(),
+      if (_visited.contains(0))
+        ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser)
+      else
+        const SizedBox.shrink(),
+      if (_visited.contains(1))
+        AlumniScreen(currentUser: _currentUser)
+      else
+        const SizedBox.shrink(),
+      if (_visited.contains(2))
+        JobBoardScreen(
+          key: ValueKey('jobs-$_jobsEpoch'),
+          currentUser: _currentUser,
+        )
+      else
+        const SizedBox.shrink(),
+      if (_visited.contains(3))
+        MessagesListScreen(
+          key: ValueKey('chat-$_chatEpoch'),
+          currentUser: _currentUser,
+        )
+      else
+        const SizedBox.shrink(),
+      if (_visited.contains(4))
+        const AnnouncementsScreen()
+      else
+        const SizedBox.shrink(),
     ];
 
     return PopScope(

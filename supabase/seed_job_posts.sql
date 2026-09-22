@@ -6,14 +6,20 @@
 -- seeded employer (Ahmad @ Gojek, Siti @ Bank Mandiri, Reza @ Tokopedia).
 --
 -- Depends on supabase/seed.sql having run first (needs those alumni rows
--- to exist). Not idempotent-guarded by a unique key the way seed.sql is —
--- re-running this will insert duplicates. Safe to run once against a
--- freshly seeded database.
+-- to exist).
+--
+-- Idempotent (fixed post-demo, matching seed.sql's own pattern): each row
+-- carries a fixed seed_key, and ON CONFLICT (seed_key) DO UPDATE means
+-- re-running this script against an already-seeded database updates the
+-- three demo rows in place instead of duplicating them. seed_key is a
+-- seed-script-only column (nullable, unique) — real job posts created
+-- through the app never set it, so this doesn't constrain real posting.
 -- ============================================================================
 
-insert into job_posts (posted_by, title, company, industry, description, contact_info)
+insert into job_posts (seed_key, posted_by, title, company, industry, description, contact_info)
 values
   (
+    'demo-pm-gojek',
     (select id from alumni_profiles where email = 'ahmad.ramadhan@example.com'),
     'Product Manager',
     'Gojek',
@@ -22,6 +28,7 @@ values
     'ahmad.ramadhan@example.com'
   ),
   (
+    'demo-ba-mandiri',
     (select id from alumni_profiles where email = 'siti.azizah@example.com'),
     'Business Analyst',
     'Bank Mandiri',
@@ -30,10 +37,18 @@ values
     'siti.azizah@example.com'
   ),
   (
+    'demo-be-tokopedia',
     (select id from alumni_profiles where email = 'reza.putra@example.com'),
     'Backend Engineer',
     'Tokopedia',
     'Technology',
     'Backend Engineer for our logistics platform team. Go or Java experience a plus.',
     'reza.putra@example.com'
-  );
+  )
+on conflict (seed_key) do update set
+  posted_by = excluded.posted_by,
+  title = excluded.title,
+  company = excluded.company,
+  industry = excluded.industry,
+  description = excluded.description,
+  contact_info = excluded.contact_info;
