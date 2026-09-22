@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Basic messaging UI (Day 6, demo scope). One conversation, no realtime —
-/// the thread refetches after you send, and on the refresh button for
-/// seeing the other side's replies. Messaging is only reachable once
-/// subscribed (gated upstream in profile_detail_screen.dart).
+/// Messaging UI with real Supabase Realtime (production-hardening stage 3
+/// — see PROJECT_NOTES.md). A Postgres Changes subscription scoped to this
+/// conversation pushes new messages as they're inserted, so the other
+/// participant's replies show up without tapping refresh. Realtime
+/// respects the messages table's RLS SELECT policy per subscriber, so this
+/// subscription can only ever receive rows the signed-in user is already
+/// allowed to read (a real participant of this conversation).
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,
@@ -28,18 +31,50 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Map<String, dynamic>>? _messages;
   String? _loadError;
   bool _sending = false;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    _subscribeToNewMessages();
   }
 
   @override
   void dispose() {
+    if (_channel != null) {
+      Supabase.instance.client.removeChannel(_channel!);
+    }
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _subscribeToNewMessages() {
+    _channel = Supabase.instance.client
+        .channel('messages:conversation_id=eq.${widget.conversationId}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'conversation_id',
+            value: widget.conversationId,
+          ),
+          callback: (payload) => _addMessage(payload.newRecord),
+        )
+        .subscribe();
+  }
+
+  void _addMessage(Map<String, dynamic> row) {
+    if (!mounted) return;
+    setState(() {
+      final existing = _messages ??= [];
+      if (existing.any((m) => m['id'] == row['id'])) return;
+      existing.add(row);
+    });
+    _scrollToBottom();
   }
 
   // Jumps the thread to the newest message, like any normal messenger.
@@ -52,8 +87,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // Keeps the current thread on screen while fetching, rather than
-  // swapping the whole list for a spinner every time a message is sent.
   Future<void> _refresh() async {
     try {
       final rows = await Supabase.instance.client
@@ -79,13 +112,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _sending = true);
     try {
-      await Supabase.instance.client.from('messages').insert({
-        'conversation_id': widget.conversationId,
-        'sender_id': widget.currentProfileId,
-        'body': text,
-      });
+      final row = await Supabase.instance.client
+          .from('messages')
+          .insert({
+            'conversation_id': widget.conversationId,
+            'sender_id': widget.currentProfileId,
+            'body': text,
+          })
+          .select()
+          .single();
       _messageController.clear();
-      await _refresh();
+      _addMessage(row);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
