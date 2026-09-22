@@ -722,3 +722,56 @@ plus the semantics-tree check above.
 **Next step:** demo day — on a real phone, confirm no tab shows a stray
 back arrow, and that a pushed detail screen (e.g. Directory → another
 alumnus's profile) still shows one and works normally.
+
+## 2026-09-22 — Session 30: Fixed "Save failed" on Edit Employment Info
+
+User sent a screenshot: editing Current Employer/Role/Industry/Company
+and hitting Save showed a raw `PostgrestException(... code: PGRST116 ...
+The result contains 0 rows)` error, and asked for the fix on both `main`
+and the `demo` branch.
+
+**Root cause.** `profile_setup_screen.dart`'s `_save()` did
+`.update({...}).eq('id', widget.profile['id']).select().single()`.
+`.single()` throws exactly this error whenever the update's `WHERE id =
+...` matches zero rows. Verified directly against the live database
+(`kdmxgtwqqnlbgfcpdivp`) that this has nothing to do with RLS or the
+identity-lock trigger — the same update, run as `anon`, succeeds and
+returns a row immediately when given a current, valid id. The real cause
+is that this project's data has been reset/reseeded multiple times this
+week (Sessions 26-27 changed faculty/major for every row via
+`ON CONFLICT ... DO UPDATE`, which preserves ids — but an earlier
+full reset/reseed, or a delete-and-reinsert, would hand every row a
+freshly generated `id`), while a phone's browser session that was
+already open from before that reset kept holding the *old* `id` in its
+in-memory profile map. Saving with a stale id then legitimately matches
+zero rows.
+
+**Fix.** `_updateById()` now uses `.select()` (a list) instead of
+`.select().single()`, so a zero-row result is a plain empty list rather
+than a thrown exception. On that empty result, `_save()` re-looks-up the
+row by `nim` (a stable natural key that a reset doesn't change) and
+retries the update once with whatever id that row currently has — this
+transparently recovers from exactly the stale-id scenario above without
+the user noticing anything went wrong. Only if that retry also comes up
+empty (profile genuinely gone) does the UI show a friendly explanation
+plus a "Sign Out & Verify Again" button (reusing the same
+`pushAndRemoveUntil(VerificationScreen)` pattern `profile_detail_screen.dart`
+already uses for sign-out) instead of a raw exception string. Any other
+exception (network error, etc.) now shows a generic friendly message
+instead of the raw `.toString()` of the exception.
+
+**Applied to both branches.** `demo` was an exact mirror of `main` at
+this point (no divergent commits), so the fix was made once on `main`
+and fast-forward-merged into `demo` rather than duplicated.
+
+**Verified:** `flutter analyze` clean, `dart format` clean,
+`flutter build web --release --dart-define-from-file=.env` succeeds.
+Confirmed the root-cause diagnosis directly against the live database
+(a raw `anon`-role update against the affected row's current id
+succeeded, proving RLS/trigger weren't at fault) rather than guessing
+from the error text alone.
+
+**Next step:** demo day — if Save ever shows "couldn't find your
+profile" again, that's the recovery path's genuine last-resort case
+(the NIM lookup also came up empty), not a new bug — sign out and
+verify again with the same email.
