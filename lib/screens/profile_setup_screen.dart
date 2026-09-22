@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'verification_screen.dart';
@@ -105,15 +104,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         setState(() {
           _saving = false;
           _profileNotFound = true;
-          // TEMPORARY debug detail appended while tracking down why this
-          // path is being hit for a profile that exists in the database
-          // — remove once diagnosed (see PROJECT_NOTES.md Session 30).
           _error =
               "We couldn't find your profile to save to — it may have "
               'changed since you signed in. Please sign out and verify '
-              'again. [debug: id=${widget.profile['id']} '
-              'nim=${widget.profile['nim']} '
-              'url=${dotenv.env['SUPABASE_URL']}]';
+              'again.';
         });
         return;
       }
@@ -124,11 +118,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        // TEMPORARY: includes the raw exception while tracking down the
-        // 0-rows issue — remove once diagnosed (PROJECT_NOTES.md Session 30).
-        _error =
-            'Something went wrong saving your changes. Please try again. '
-            '[debug: $e]';
+        _error = 'Something went wrong saving your changes. Please try again.';
       });
     }
   }

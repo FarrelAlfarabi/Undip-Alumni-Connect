@@ -775,3 +775,54 @@ from the error text alone.
 profile" again, that's the recovery path's genuine last-resort case
 (the NIM lookup also came up empty), not a new bug — sign out and
 verify again with the same email.
+
+## 2026-09-22 — Session 30 continued: real root cause was a cross-branch RLS collision
+
+Followed up the "Save failed" report with the user directly, since the
+retry-by-nim fix from earlier in this session didn't actually resolve it
+live — kept hitting the "couldn't find your profile" last-resort path
+even though the profile provably existed. Added temporary debug output
+to the error message itself (the exact id/nim, then the runtime
+SUPABASE_URL, then would've shown the raw exception) and had the user
+retry live on production, since this sandbox can't reach supabase.co to
+reproduce directly. Confirmed id, nim, and Supabase URL were all exactly
+right — ruling out a stale-id issue or wrong project entirely.
+
+**Real cause: `feature/production-hardening` (a separate branch, real
+Supabase Auth + a full RLS rewrite) had its migration applied directly to
+this same live database** (`kdmxgtwqqnlbgfcpdivp`), not just committed to
+that branch. Queried `pg_policies` directly and found `alumni_profiles`'s
+UPDATE policy, `job_posts`' INSERT policy, and `conversations`/`messages`'
+SELECT + INSERT policies had all been replaced with `authenticated`-only,
+`auth.uid() = user_id` versions. `main`/`demo`'s app code has never had a
+real Supabase Auth session (documented since Session 2 — the "log in" is
+a plain email match, not real auth) and only ever queries as `anon`, which
+now matched zero permissive policies on those operations. RLS filters
+silently rather than raising, so this showed up as empty results/"0
+rows" everywhere it touched, not as errors — Edit Employment Info was
+just the one the user happened to hit first; Post a Job and Messaging
+(insert conversation/message) were equally broken.
+
+**Fix:** `20260922120000_restore_anon_write_access.sql` adds back
+`anon`-open policies for exactly those four operations, under new names,
+*alongside* the authenticated-only ones rather than replacing them —
+Postgres ORs permissive policies together, so this restores what
+`main`/`demo` need right now without undoing the hardening branch's own
+policies for whenever it actually ships real auth. Verified live via a
+`set local role anon` UPDATE against the real profile row, which now
+succeeds and returns the row.
+
+Removed the temporary debug output from `profile_setup_screen.dart`
+afterward — the retry-by-nim recovery logic and friendly error message
+from earlier in this session stay (still correct behavior for a
+genuinely stale id), they just weren't what was firing here.
+
+**Flagged to the user:** whatever process applied `production-hardening`'s
+migration to this shared database should coordinate through
+`main`/`demo`'s own migration files from now on, or use a separate
+Supabase project for that branch's work — this collision cost real
+debugging time and will recur on the next RLS change otherwise.
+
+**Verified:** `flutter analyze` clean, `dart format` clean,
+`flutter build web --release --dart-define-from-file=.env` succeeds,
+plus the live `set local role anon` UPDATE test above.
