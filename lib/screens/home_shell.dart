@@ -1,43 +1,59 @@
 import 'package:flutter/material.dart';
 
-import 'alumni_screen.dart';
-import 'announcements_screen.dart';
-import 'job_board_screen.dart';
-import 'marketplace_screen.dart';
-import 'messages_list_screen.dart';
-import 'profile_detail_screen.dart';
+import '../data/home_repository.dart';
+import '../data/marketplace_repository.dart';
+import 'home_pages.dart';
+import 'home_screen.dart';
 
-/// App shell with bottom navigation (Day 7 polish pass): Profile, Alumni
-/// directory, Jobs, Chat, News — mirrors the pitch deck's bottom nav
-/// (Alumni/Jobs/Chat/News), with a Profile tab added since this app has no
-/// separate top-bar avatar entry point. Lands on Profile right after
-/// verification, matching the app's prior entry flow.
+/// App shell with a 4-item bottom navigation: Home, Directory, Chat,
+/// Profile. Lands on Home after verification. Jobs, News, Marketplace and
+/// Nearby Alumni are opened from the Home hub (tiles, banners, "See all
+/// announcements") as pushed screens with a back arrow.
 ///
 /// Owns the single [ValueNotifier] that represents "the logged-in user"
 /// for the whole session and passes the same reference to every tab (see
 /// profile_detail_screen.dart's doc comment) — subscribing from any one
 /// screen updates every other screen's paywall/gate consistently.
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.profile});
+  const HomeShell({
+    super.key,
+    required this.profile,
+    this.pages = const HomePages(),
+    this.homeApi,
+    this.marketplaceRepository,
+    this.autoAdvance = const Duration(seconds: 5),
+  });
 
   final Map<String, dynamic> profile;
+
+  /// Injectable for tests; defaults to the real screens.
+  final HomePages pages;
+  final HomeApi? homeApi;
+  final MarketplaceRepository? marketplaceRepository;
+  final Duration autoAdvance;
+
+  static const homeTab = 0;
+  static const directoryTab = 1;
+  static const chatTab = 2;
+  static const profileTab = 3;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  int _index = HomeShell.homeTab;
   late final ValueNotifier<Map<String, dynamic>> _currentUser;
 
-  // Jobs and Chat show data that changes while the app is open (a job you
-  // just posted, a conversation you just started from the directory).
-  // IndexedStack keeps every tab alive, so those tabs would otherwise show
-  // whatever they fetched at launch forever. Bumping the key on re-select
-  // recreates the tab, which refetches.
-  int _jobsEpoch = 0;
+  // Home (latest jobs/listings/news) and Chat show data that changes while
+  // the app is open (a conversation you just started from the directory, a
+  // job someone just posted). IndexedStack keeps every tab alive, so those
+  // tabs would otherwise show whatever they fetched at launch forever.
+  // Bumping the key on re-select recreates the tab, which refetches. Jobs
+  // and Marketplace are now pushed from Home, so they are built fresh (and
+  // refetch) every time they are opened.
+  int _homeEpoch = 0;
   int _chatEpoch = 0;
-  int _marketEpoch = 0;
 
   @override
   void initState() {
@@ -53,48 +69,42 @@ class _HomeShellState extends State<HomeShell> {
 
   void _select(int i) {
     setState(() {
-      if (i == 2 && _index != 2) _jobsEpoch++;
-      if (i == 3 && _index != 3) _chatEpoch++;
-      if (i == 5 && _index != 5) _marketEpoch++;
+      if (i == HomeShell.homeTab && _index != HomeShell.homeTab) _homeEpoch++;
+      if (i == HomeShell.chatTab && _index != HomeShell.chatTab) _chatEpoch++;
       _index = i;
     });
   }
 
-  // The phone/browser back button used to pop HomeShell's own route
-  // straight through to WelcomeScreen (and one more back from there
-  // exits) no matter which bottom-nav tab was showing — so browsing
-  // Jobs/Chat/News/Alumni and hitting back could unexpectedly dump you
-  // out of the app in far fewer presses than felt right. Now back only
-  // pops the route (and can eventually exit) once you're already on the
-  // Profile tab; from any other tab it first brings you back to Profile,
-  // matching how a bottom-nav app's back button is expected to behave.
+  // Back from any tab first brings you back to the first tab (Home), and
+  // only from Home does the route pop (and the app eventually exit).
   void _handlePop(bool didPop) {
     if (didPop) return;
-    setState(() => _index = 0);
+    _select(HomeShell.homeTab);
   }
 
   @override
   Widget build(BuildContext context) {
+    final pages = widget.pages;
     final tabs = [
-      ProfileDetailScreen(profile: widget.profile, currentUser: _currentUser),
-      AlumniScreen(currentUser: _currentUser),
-      JobBoardScreen(
-        key: ValueKey('jobs-$_jobsEpoch'),
+      HomeScreen(
+        key: ValueKey('home-$_homeEpoch'),
         currentUser: _currentUser,
+        onOpenDirectory: () => _select(HomeShell.directoryTab),
+        pages: pages,
+        api: widget.homeApi,
+        marketplaceRepository: widget.marketplaceRepository,
+        autoAdvance: widget.autoAdvance,
       ),
-      MessagesListScreen(
+      pages.directory(_currentUser),
+      KeyedSubtree(
         key: ValueKey('chat-$_chatEpoch'),
-        currentUser: _currentUser,
+        child: pages.chat(_currentUser),
       ),
-      const AnnouncementsScreen(),
-      MarketplaceScreen(
-        key: ValueKey('market-$_marketEpoch'),
-        currentUser: _currentUser,
-      ),
+      pages.profile(widget.profile, _currentUser),
     ];
 
     return PopScope(
-      canPop: _index == 0,
+      canPop: _index == HomeShell.homeTab,
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         body: IndexedStack(index: _index, children: tabs),
@@ -103,19 +113,14 @@ class _HomeShellState extends State<HomeShell> {
           onDestinationSelected: _select,
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile',
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
             ),
             NavigationDestination(
               icon: Icon(Icons.people_outline),
               selectedIcon: Icon(Icons.people),
-              label: 'Alumni',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.work_outline),
-              selectedIcon: Icon(Icons.work),
-              label: 'Jobs',
+              label: 'Directory',
             ),
             NavigationDestination(
               icon: Icon(Icons.chat_bubble_outline),
@@ -123,14 +128,9 @@ class _HomeShellState extends State<HomeShell> {
               label: 'Chat',
             ),
             NavigationDestination(
-              icon: Icon(Icons.campaign_outlined),
-              selectedIcon: Icon(Icons.campaign),
-              label: 'News',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.storefront_outlined),
-              selectedIcon: Icon(Icons.storefront),
-              label: 'Market',
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
         ),

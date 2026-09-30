@@ -61,3 +61,69 @@ None. `grep` finds no test referencing `HomeShell`, `WelcomeScreen`, `Navigation
 None needed. Everything in Stages 1 to 5 is possible on this repo.
 
 ---
+
+## Stage 1: Home hub
+
+**Status: DONE**
+
+### What changed
+- New: `lib/screens/home_screen.dart` (greeting, banners, tiles, Latest strip), `lib/screens/home_pages.dart` (builders for every page the shell/hub opens; defaults are the real screens, tests pass fakes), `lib/data/home_repository.dart` (`HomeApi` seam: latest announcements and jobs), `lib/widgets/banner_carousel.dart` (carousel + welcome card), `lib/widgets/announcement_card.dart` (extracted from the News screen), `lib/screens/announcement_detail_screen.dart`.
+- Changed: `home_shell.dart` (4 tabs: Home, Directory, Chat, Profile), `announcements_screen.dart`, `alumni_screen.dart`, `job_board_screen.dart`, `marketplace_screen.dart` (each got a `showBack` flag, default false, so pushed-from-Home copies get a back arrow and tab roots look exactly as before; `AlumniScreen` also got `initialTab`).
+- Tests: `test/home_screen_test.dart`, `test/home_shell_test.dart`, `test/support/fake_home.dart` (30 new tests).
+
+### Behaviour
+- Greeting uses the first word of `name`.
+- Banners: latest 5 announcements as text cards (title, 2-line excerpt, date). Auto-advance every 5 s (pauses while a finger is down), swipe, dots, tap opens the full announcement. 0 announcements: a static "Welcome to Lingkaran" card. Loading spinner and an error card with "Try again" (no raw error text shown). "See all announcements" is always visible and opens the News screen.
+- Tiles: Jobs, Marketplace, Nearby Alumni are pushed screens; Directory switches to the Directory bottom tab (see D-3).
+- Latest: 3 newest jobs (same `job_posts` query shape as the Job Board, `limit 3`) and 3 newest approved listings (`MarketplaceRepository.fetchApproved`, sorted newest first, first 3). Each opens the existing detail screen. Empty and error states are separate per strip. No fee or commission wording.
+- Back: from Directory, Chat or Profile back returns to Home; from Home it leaves the shell (same rule as before, first tab is now Home).
+- Kept: shared `_currentUser` notifier (test proves every page gets the same instance); epoch refetch for Chat (test), and for Home. Jobs and Marketplace are built fresh on every open, so they refetch every time.
+
+### Regression guard (reachability)
+Test group "reachability" in `test/home_shell_test.dart` plus the checklist below.
+
+| Screen | How to reach it now | Covered by |
+|---|---|---|
+| Profile (+ Edit info, Subscribe, sign out) | Bottom nav: Profile | test (nav), unchanged code |
+| Alumni Directory | Bottom nav: Directory, or Home tile Directory | test |
+| Nearby Alumni | Directory tab inner "Nearby" tab, or Home tile Nearby Alumni | test (tile), default-wiring test |
+| City chat | From Nearby (unchanged code in `nearby_alumni_screen.dart`) | unchanged, no widget test (needs Supabase) |
+| Jobs (+ detail, apply, post, applicants, notifications, email log) | Home tile Jobs, or a job in the Latest strip | test (tile), default-wiring test |
+| Chat | Bottom nav: Chat | test |
+| News | Home "See all announcements", or a banner | test |
+| Market (+ detail, form) | Home tile Marketplace, or a listing in the Latest strip | test |
+| My listings, Admin queue | From the Marketplace screen (unchanged) | existing marketplace tests |
+
+Nothing became unreachable. Unchanged sub-flows (city chat, my listings, admin queue, job apply) are reached from screens whose code I did not change except for the back-arrow flag, and I did not test city chat with a widget test because it needs a live Supabase client.
+
+### Checks run
+- `flutter analyze`: no issues.
+- `flutter test`: 110 tests, all pass (80 before, 30 new).
+- `flutter build web --release`: succeeds.
+- Bugs the tests caught while building: `setState(() => _x = future)` returned a Future in three retry handlers (Flutter asserts). Fixed by using block bodies.
+
+### Could not test
+- Real network data (no Supabase project, by rule). The Supabase queries are the same shape as the ones the Job Board and News screens already use; `.limit()` is the only addition.
+- Auto-advance timing on a real device; tested with fake time only.
+- Dark theme: the app has only a light theme (`AppTheme.light()`).
+
+### Assumptions
+- Item price in the marketplace strip row is shown (it is the item's price, not a fee); see D-5.
+
+### Surprises and risks
+- The News and Jobs screens hard-coded "no back arrow" (built as tab roots). I added `showBack` rather than wrapping them, to avoid double app bars.
+- The Home tab now sits before Profile, so a returning user lands on Home instead of Profile. This is what the prompt asked for.
+
+---
+
+## Decisions log
+- **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
+- **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
+- **D-3 (Bottom nav set and where Nearby lives).** I built the proposed 4 items: Home, Directory, Chat, Profile. The "Directory" tab still shows the existing `AlumniScreen` (Directory and Nearby inner tabs), so Nearby stays reachable there as well as from the Home tile. The Home Directory tile switches the tab instead of pushing a second copy. Rejected: a 5th "Jobs" tab (the prompt wanted a slimmer nav); a separate Nearby-only screen (would duplicate the existing one).
+- **D-4 (Showing back arrows).** Rejected wrapping screens in a new host scaffold (double app bar). Chose a `showBack` flag (default false) on Jobs, Marketplace, Announcements and Alumni; defaults keep old tab-root behaviour.
+- **D-5 (Price in the Latest strip).** The strip row shows category, city and the item price. The prompt says the strip shows "no fees or fee wording"; I read that as the platform fee or commission, not the item price. Tell me if you want the price removed.
+- **D-6 (Testing seam).** `HomePages` (builders) and `HomeApi` are injected so the shell and hub can be tested without Supabase. The alternative (initialising a fake Supabase client in tests) is heavier and slower.
+- **D-7 (Grid shape).** 2x2 tiles with icon and label side by side, not 4 across, so "Marketplace" and "Nearby Alumni" never overflow at 320 px wide.
+- **D-8 (Epoch keys).** Kept for Chat and Home. Jobs and Market no longer need them because they are pushed fresh each time.
+- **D-9 (Auto-advance).** 5 seconds, paused while a finger is down.
+- **D-10 (Local Flutter SDK).** Installed Flutter 3.47.5 outside the repo (`/opt/fl`) so checks are real. Created a local `.env` from `.env.example` (placeholders only, gitignored) because tests and analyze need the asset to exist.

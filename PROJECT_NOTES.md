@@ -836,3 +836,35 @@ plus the live `set local role anon` UPDATE test above.
 **Changed:** app title, Welcome screen wordmark, web page title / PWA manifest, Android label, iOS display name, Subscribe screen price + copy (now mentions applying and the marketplace), README and DEMO_SCRIPT wording. **Not renamed:** repo, Dart package (`undip_alumni_connect`), Android/iOS bundle ids, Vercel project and URL.
 
 **Still open in the master plan (not code):** master plan v1.3 needs updating for the name, annual-only pricing and the Rp 99.000 figure; the "first 3 months free" decision (17 Sep) is not reflected in the app or the deck; the marketplace is not in the plan or the deck's free/paid table.
+
+## 2026-09-30 — Marketplace demo, stages 1 to 5 (backfilled)
+
+Backfilled on 2026-09-30 from the git log of `claude/beautiful-cori-mntun6` and `README.md` (Marketplace section) because the marketplace work shipped without session entries. Nothing here was re-run except the baseline checks below.
+
+**What was built (commits `3add5fa`, `ecacab0`, `5434789`, `825e5a5`, `508e489`, `01f6da7`):**
+- Stage 1: data layer. Tables `marketplace_listings`, `marketplace_reports`, `marketplace_admins`, RLS, `SECURITY DEFINER` functions, a public `marketplace` storage bucket, a seed (12 listings, 1 admin), models, `MarketplaceRepository` behind a `MarketplaceApi` seam, and tests against a fake.
+- Stage 2: browse and detail screens, the Market tab.
+- Stage 3: create/edit form, photo upload, subscriber gate, My listings.
+- Stage 4: admin review queue (approve/reject with reason), report sheet, report counts.
+- Stage 5: polish, regression guards, README section, a click-test checklist (`MARKETPLACE_CHECKLIST.md`), and a tested rollback script (`supabase/rollback_marketplace.sql`).
+
+**Decisions recorded in the README:** demo only, no real payments, no fees; posting is for subscribers; new or edited listings are `pending` until an admin approves; the seed makes `farrel.abi.saleh@gmail.com` the demo admin; do not apply the marketplace migrations to the shared live project (use a separate project or branch database).
+
+**Known gaps (from the README):** no real auth, so profile ids sent by the app are not authenticated; `marketplace_is_admin(id)` can be used to test admin ids; `subscription_status` is client-settable; contact info on approved listings is readable with the anon key; the image bucket accepts uploads from anyone with the anon key.
+
+**Verified on 2026-09-30 (this session):** `flutter analyze` clean, 80 tests pass, `flutter build web --release` succeeds on the marketplace branch before any hub change.
+**Not verified:** that the marketplace migrations were ever applied to a real Supabase project or how the demo behaves against one. The commit messages do not say. Marked unverified.
+**Still open:** everything under Known gaps.
+
+## 2026-09-30 — Home hub, Stage 0: recon
+
+Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was not installed in the session, so I installed Flutter 3.47.5 outside the repo to run real checks. Baseline: analyze clean, 80 tests pass, web build ok. No existing test touches `HomeShell`, `WelcomeScreen` or the tab indexes. **Open:** nothing new.
+
+## 2026-09-30 — Home hub, Stage 1: dashboard home and 4-tab navigation
+
+**Done:** new Home tab (greeting, announcement banner carousel, quick-action tiles, Latest strip) and a 4-item bottom nav (Home, Directory, Chat, Profile). Jobs, News, Marketplace and Nearby now open from Home as pushed screens with a back arrow. Back from any tab returns to Home. Shared `currentUser` notifier and the Chat epoch refetch kept.
+**Decided:** Nearby stays reachable both from the Directory tab and from a Home tile; the Directory tile switches tabs. A `showBack` flag on four screens instead of wrapper scaffolds. Item price is shown in the marketplace row (not a fee). See `docs/hub/STAGE_REPORTS.md` D-3 to D-9.
+**Verified:** analyze clean, 110 tests pass (30 new), web build ok. The tests caught a real bug (`setState` given a Future in three retry handlers), fixed.
+**Not verified:** real Supabase data, timing on a real device, city chat via widget test (needs a live client).
+**Open:** the click-test on a real device is Stage 4.
+

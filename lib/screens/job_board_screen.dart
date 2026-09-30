@@ -14,7 +14,14 @@ import 'post_job_screen.dart';
 /// the Alumni Directory (directory_screen.dart) — fine for a handful of
 /// seed jobs, not meant to scale past the demo.
 class JobBoardScreen extends StatefulWidget {
-  const JobBoardScreen({super.key, required this.currentUser});
+  const JobBoardScreen({
+    super.key,
+    required this.currentUser,
+    this.showBack = false,
+  });
+
+  /// True when pushed from the Home hub (shows a back arrow).
+  final bool showBack;
 
   /// The verified alumnus currently using the app, as a shared notifier —
   /// needed so a posted job records who posted it, and so the contact
@@ -133,7 +140,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Job Board'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.showBack,
         actions: [
           FutureBuilder<int>(
             future: _unreadNotificationsFuture,
