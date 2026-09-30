@@ -116,6 +116,32 @@ Nothing became unreachable. Unchanged sub-flows (city chat, my listings, admin q
 
 ---
 
+## Stage 2: Upcoming Preview tiles
+
+**Status: DONE**
+
+### What changed
+- New `lib/widgets/upcoming_section.dart` (section, tiles, badge, info sheet); added below the Latest strip in `home_screen.dart`.
+- `home_screen.dart`: swapped the lazy `ListView` for a `SingleChildScrollView` + `Column`, because the sections are a short fixed set and the lazy list did not build off-screen sections (found by the new tests).
+- Tests: `test/upcoming_preview_test.dart` (4 tests).
+
+### Behaviour
+- Three muted tiles: Events, Mentoring, Business directory. Each has a "Preview" badge.
+- Tap opens a bottom sheet: name, one-line description, badge, "This feature is a preview and is not available yet.", and a Close button. No route is pushed.
+- No dates, no promises, no money features (no donations, crowdfunding, merchandise, scholarship), no new tables, no tap tracking.
+
+### Checks run
+- `flutter analyze`: no issues. `flutter test`: 114 pass (4 new). `flutter build web --release`: succeeds.
+- Tests cover: badge on each tile, sheet opens with the right name and notice, nothing navigates, banned words absent from the section text, no overflow at 320 px.
+
+### Could not test
+- Look and feel of "muted" on a real screen (checked by code only: reduced-alpha surface and grey text).
+
+### Optional idea (NOT built): "notify me" interest counter
+Would need a table like `feature_interest(feature, profile_id, created_at)` and a write path. Because there is no real auth, anyone could inflate counts by spamming with fake profile ids, so the numbers would be unreliable. It also touches the "no tracking" rule. If you want a demand signal, a cheaper way is asking in the WhatsApp group. Not built, as instructed.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -127,3 +153,6 @@ Nothing became unreachable. Unchanged sub-flows (city chat, my listings, admin q
 - **D-8 (Epoch keys).** Kept for Chat and Home. Jobs and Market no longer need them because they are pushed fresh each time.
 - **D-9 (Auto-advance).** 5 seconds, paused while a finger is down.
 - **D-10 (Local Flutter SDK).** Installed Flutter 3.47.5 outside the repo (`/opt/fl`) so checks are real. Created a local `.env` from `.env.example` (placeholders only, gitignored) because tests and analyze need the asset to exist.
+- **D-11 (Preview copy).** Descriptions: Events "Sports, reunions and sharing sessions with fellow alumni."; Mentoring "Connect with alumni for career guidance."; Business directory "Find businesses run by alumni." One sentence each, no dates or promises. Rejected: "Coming soon" wording (it is a promise).
+- **D-12 (Tile layout).** A vertical list of three rows, not a 3-across grid, so names never overflow at 320 px.
+- **D-13 (Home scroll view).** Replaced `ListView` with `SingleChildScrollView` + `Column` (all sections built, pull-to-refresh still works).

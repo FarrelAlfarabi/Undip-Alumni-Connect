@@ -5,6 +5,7 @@ import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 
 /// First name for the greeting: the first word of `name`, or null.
@@ -100,76 +101,83 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refresh,
-          child: ListView(
+          // A short fixed set of sections, so a plain scroll view (built in
+          // full) rather than a lazy ListView.
+          child: SingleChildScrollView(
             key: const Key('home-list'),
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            children: [
-              Text(
-                first == null ? 'Hello' : 'Hello, $first',
-                key: const Key('home-greeting'),
-                style: theme.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'What would you like to do today?',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  first == null ? 'Hello' : 'Hello, $first',
+                  key: const Key('home-greeting'),
+                  style: theme.textTheme.headlineSmall,
                 ),
-              ),
-              const SizedBox(height: 16),
-              _bannerSection(theme),
-              const SizedBox(height: 20),
-              _QuickActions(
-                onJobs: () => _push(widget.pages.jobs(_user)),
-                onMarketplace: () => _push(widget.pages.marketplace(_user)),
-                onDirectory: widget.onOpenDirectory,
-                onNearby: () => _push(widget.pages.nearby(_user)),
-              ),
-              const SizedBox(height: 24),
-              _sectionTitle(theme, 'Latest'),
-              const SizedBox(height: 8),
-              _LatestBlock<Map<String, dynamic>>(
-                key: const Key('latest-jobs'),
-                heading: 'New jobs',
-                future: _jobs,
-                emptyIcon: Icons.work_outline,
-                emptyText:
-                    'No jobs posted yet. New openings will show up here.',
-                onRetry: () =>
-                    setState(() => _jobs = _api.latestJobs(kHomeLatestLimit)),
-                tileBuilder: (job) => _LatestTile(
-                  icon: Icons.work_outline,
-                  title: job['title'] as String? ?? '',
-                  subtitle: [
-                    job['company'] as String? ?? '',
-                    if ((job['industry'] as String?)?.isNotEmpty == true)
-                      job['industry'] as String,
-                  ].where((s) => s.isNotEmpty).join(' · '),
-                  onTap: () => _push(widget.pages.jobDetail(job, _user)),
+                const SizedBox(height: 2),
+                Text(
+                  'What would you like to do today?',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              _LatestBlock<MarketplaceListing>(
-                key: const Key('latest-listings'),
-                heading: 'New in the marketplace',
-                future: _listings,
-                emptyIcon: Icons.storefront_outlined,
-                emptyText:
-                    'No listings yet. Approved listings will show up here.',
-                onRetry: () => setState(() {
-                  _listings = _fetchListings();
-                }),
-                tileBuilder: (l) => _LatestTile(
-                  icon: Icons.storefront_outlined,
-                  title: l.title,
-                  subtitle:
-                      '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
-                  onTap: () =>
-                      _push(widget.pages.listingDetail(l, _market, _user)),
+                const SizedBox(height: 16),
+                _bannerSection(theme),
+                const SizedBox(height: 20),
+                _QuickActions(
+                  onJobs: () => _push(widget.pages.jobs(_user)),
+                  onMarketplace: () => _push(widget.pages.marketplace(_user)),
+                  onDirectory: widget.onOpenDirectory,
+                  onNearby: () => _push(widget.pages.nearby(_user)),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                _sectionTitle(theme, 'Latest'),
+                const SizedBox(height: 8),
+                _LatestBlock<Map<String, dynamic>>(
+                  key: const Key('latest-jobs'),
+                  heading: 'New jobs',
+                  future: _jobs,
+                  emptyIcon: Icons.work_outline,
+                  emptyText:
+                      'No jobs posted yet. New openings will show up here.',
+                  onRetry: () =>
+                      setState(() => _jobs = _api.latestJobs(kHomeLatestLimit)),
+                  tileBuilder: (job) => _LatestTile(
+                    icon: Icons.work_outline,
+                    title: job['title'] as String? ?? '',
+                    subtitle: [
+                      job['company'] as String? ?? '',
+                      if ((job['industry'] as String?)?.isNotEmpty == true)
+                        job['industry'] as String,
+                    ].where((s) => s.isNotEmpty).join(' · '),
+                    onTap: () => _push(widget.pages.jobDetail(job, _user)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _LatestBlock<MarketplaceListing>(
+                  key: const Key('latest-listings'),
+                  heading: 'New in the marketplace',
+                  future: _listings,
+                  emptyIcon: Icons.storefront_outlined,
+                  emptyText:
+                      'No listings yet. Approved listings will show up here.',
+                  onRetry: () => setState(() {
+                    _listings = _fetchListings();
+                  }),
+                  tileBuilder: (l) => _LatestTile(
+                    icon: Icons.storefront_outlined,
+                    title: l.title,
+                    subtitle:
+                        '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
+                    onTap: () =>
+                        _push(widget.pages.listingDetail(l, _market, _user)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const UpcomingSection(),
+              ],
+            ),
           ),
         ),
       ),

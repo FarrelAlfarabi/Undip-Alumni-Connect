@@ -868,3 +868,11 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** real Supabase data, timing on a real device, city chat via widget test (needs a live client).
 **Open:** the click-test on a real device is Stage 4.
 
+## 2026-09-30 — Home hub, Stage 2: Upcoming Preview tiles
+
+**Done:** an "Upcoming" section at the bottom of Home with three muted, non-functional tiles (Events, Mentoring, Business directory), each with a "Preview" badge. Tapping opens a small sheet saying the feature is a preview and not available yet.
+**Decided:** no dates, no "coming soon" wording, no money features, no tracking. A "notify me" counter is described in the report but not built (unreliable without real auth). Home now uses a plain scroll view so every section is built.
+**Verified:** analyze clean, 114 tests pass (4 new), web build ok.
+**Not verified:** the look on a real device.
+**Open:** nothing.
+
