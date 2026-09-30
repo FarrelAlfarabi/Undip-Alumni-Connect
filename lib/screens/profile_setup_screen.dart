@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../lock/session.dart';
 import 'verification_screen.dart';
 
 /// Lets the verified alumnus update their employment info. Identity fields
@@ -124,10 +125,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   void _signOut() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const VerificationScreen()),
-      (_) => false,
-    );
+    signOutTo(context, const VerificationScreen());
   }
 
   @override

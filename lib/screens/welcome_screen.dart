@@ -8,7 +8,11 @@ import 'verification_screen.dart';
 /// bare card. Matches the pitch landing page's identity (kawung mark,
 /// indigo/brass palette, Fraunces + IBM Plex Sans).
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.notice});
+
+  /// Short message shown above the heading, e.g. after a failed sign-in on
+  /// this device.
+  final String? notice;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +29,25 @@ class WelcomeScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  if (notice != null) ...[
+                    Container(
+                      key: const Key('welcome-notice'),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        notice!,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   const SizedBox(height: 12),
                   const KawungMark(size: 48),
                   const SizedBox(height: 20),

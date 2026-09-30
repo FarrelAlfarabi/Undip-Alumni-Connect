@@ -142,6 +142,60 @@ Would need a table like `feature_interest(feature, profile_id, created_at)` and 
 
 ---
 
+## Stage 3: Returning-user lock screen
+
+**Status: DONE** (verified by tests with fakes and by the web build; NOT run on a real Android or iOS device, see "Could not test")
+
+### Honesty rule (also in README)
+Verification is still an email match with no real auth. Anyone who knows a valid alumni email can still verify as that person, on any device. This lock is a **device-level convenience lock, not real security**. It does not protect data in the database. The README and the PIN setup screen both say so.
+
+### What changed
+- New `lib/lock/`: `lock_config.dart` (all numbers), `pin_hasher.dart`, `masking.dart`, `lock_store.dart` (secure storage seam), `biometrics.dart` (provider seam), `lock_service.dart`, `pin_pad.dart`, `lock_screen.dart`, `pin_setup_screen.dart`, `app_entry.dart` (first screen), `lock_overlay.dart` (relock after background), `session.dart` (enter app, sign out).
+- Changed: `main.dart` (home is `AppEntry`, `LockOverlay` wraps the app), `welcome_screen.dart` (optional `notice`), `verification_screen.dart` (remember, offer PIN; DB match moved to an injectable `verifyEmail`, same logic), `profile_detail_screen.dart` and `profile_setup_screen.dart` (sign out now clears local data first, then goes to Verification as before).
+- Platform files: Android `MainActivity` now extends `FlutterFragmentActivity`, `USE_BIOMETRIC` permission, `LaunchTheme` parent is an AppCompat theme (needed by `local_auth`); iOS `NSFaceIDUsageDescription`.
+- README: new section (behaviour, honesty rule, web decision, known gaps).
+- Tests: `test/lock/*` and `test/support/fake_lock.dart` (63 new tests).
+
+### Behaviour
+- After a successful verification the device stores: profile id, display name, masked email (`a***@example.com`). Nothing else. No full email, no full profile, no OTP (there is none).
+- Then a PIN setup screen (enter twice; easy PINs like 111111 or 123456 are refused). If the device has biometrics, a second step offers to turn them on; turning on needs one successful biometric check. "Skip for now" is always there.
+- App start: remembered person -> lock screen (dark indigo, kawung mark, initials avatar, "Welcome back, <first name>", masked email, 6-digit pad, fingerprint key if enabled, "Forgot PIN? Verify again", "Not you? Switch account"). No remembered person -> Welcome, as before.
+- Correct PIN or biometric -> fetch profile by id -> HomeShell. Profile missing, not verified, or fetch fails -> clear local data, Welcome with a short message (no raw error).
+- Wrong PINs: remaining attempts shown; from the 3rd wrong try a 10 second wait (pad disabled, countdown, attempts in the wait are not counted); 5th wrong PIN wipes local data and returns to Welcome with a message. Counters are stored, so restarting the app does not reset them.
+- Biometrics: optional, prompts on show and via the key; failure, cancel or unavailable shows "Use your PIN instead." and the PIN pad works; biometric failures do not use up PIN attempts.
+- Relock: after more than `kLockAfterBackground` (5 minutes, one named constant) in the background, a lock screen covers the app (the app stays alive underneath, hidden). Only when a person is signed in and a PIN exists.
+- Skipped PIN: next launch shows the lock screen with a "Continue" button that goes to Verification.
+- "Forgot PIN", "Not you? Switch account" and Profile > Sign out clear local data only. Nothing is sent to the server.
+- Web: no lock at all (see D-14).
+
+### Packages added (rule 5)
+| Package | Version | Why |
+|---|---|---|
+| `flutter_secure_storage` | ^11.2.0 | PIN hash and remembered-person record in Keychain / Keystore-backed storage |
+| `local_auth` | ^3.0.2 | Optional fingerprint / face |
+| `crypto` | ^3.0.7 | HMAC-SHA256 for PBKDF2. Already in `pubspec.lock` as a transitive dependency; now a direct one |
+`intl` also appeared in the lock file as a transitive dependency of `local_auth`. `shared_preferences` was not needed. No other package added.
+
+### PIN hashing
+PBKDF2-HMAC-SHA256, 16-byte random salt (`Random.secure`), 60,000 iterations (measured about 0.44 s on this machine in JIT; run in a background isolate on device via `compute`), constant-time compare. The stored string carries its own iteration count. Checked against RFC 6070-style published vectors (1, 2 and 4096 iterations). Limit: a 6-digit PIN has 1,000,000 values, so an attacker who can read the secure storage of a rooted device can still brute-force it offline. The 5-attempt wipe only limits guessing through the app.
+
+### Checks run
+- `flutter analyze`: no issues. `flutter test`: 173 pass (63 new). `flutter build web --release`: succeeds.
+- Covered: PBKDF2 vectors; hash correct/wrong/malformed; salt differs; masking never reveals the full address; remembered store holds only 3 values and no full email; PIN store never contains the PIN; lockout at 5 (data wiped), delay after 3rd, wait not counted, counter survives restart, reset on new PIN; remembered person shows lock screen while new user shows Welcome; web (disabled) shows Welcome; unreadable storage behaves like a new user; unlock enters the app; missing/unverified/failed profile clears data and shows Welcome + notice; biometric success / failure / cancel / retry / not available; switch account and forgot PIN clear data; skipped PIN shows Continue; setup (match, mismatch, weak PIN, skip, biometric on/off); post-verification flow; background timeout with a fake clock (4 min no lock, 6 min lock, no PIN, not signed in, web, switch account on relock).
+- Bug found by a test: `AppEntry` did not pass the injected clock to the lock screen, so the delay countdown used real time. Fixed.
+
+### Could not test
+- Anything on a real Android or iOS device: Keystore/Keychain behaviour, the real biometric prompt, the Android theme and activity changes, the Face ID string. No Android SDK or iOS toolchain here, so `flutter build apk` and `ios` were not run. The plugin setup follows the plugin READMEs.
+- Real Supabase profile fetch (default fetcher is the same query the marketplace repository already uses: `alumni_profiles` by id).
+- Whether the OS delivers `paused` then `resumed` in the way the relock logic expects on every device (tested with simulated lifecycle events only).
+
+### Surprises and risks
+- With no real auth, "remember this person" is a weak idea by itself: the remembered id is just a profile id. Anyone who can type the right email gets in without a PIN. Said in README and the setup screen.
+- The seed makes a real-looking personal email the demo admin (see Stage 5).
+- The verification screen still shows raw exception text on error (`e.toString()`); left as is here, audited in Stage 5.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -156,3 +210,14 @@ Would need a table like `feature_interest(feature, profile_id, created_at)` and 
 - **D-11 (Preview copy).** Descriptions: Events "Sports, reunions and sharing sessions with fellow alumni."; Mentoring "Connect with alumni for career guidance."; Business directory "Find businesses run by alumni." One sentence each, no dates or promises. Rejected: "Coming soon" wording (it is a promise).
 - **D-12 (Tile layout).** A vertical list of three rows, not a 3-across grid, so names never overflow at 320 px.
 - **D-13 (Home scroll view).** Replaced `ListView` with `SingleChildScrollView` + `Column` (all sections built, pull-to-refresh still works).
+- **D-14 (Web: no lock).** On web, nothing is remembered and no lock is shown; every visit starts at Welcome. Why: browsers have no real secure storage (the plugin's web mode keeps its key next to the data in localStorage) and this setup has no biometrics on web. A remembered profile id plus a PIN hash in localStorage would look like protection but let anyone with the browser profile skip verification and guess a 1,000,000-value PIN offline in moments. Rejected: PIN-only on web (false sense of security, same reason); remembering the profile without a PIN on web (removes the only thing the lock does).
+- **D-15 (What is stored).** Profile id, display name, masked email, PIN hash, wrong-try counter, wait-until time, biometric flag, all in secure storage under `lingkaran.lock.v1.*`. The masked email is computed before storing, so the full address never touches the device store. `shared_preferences` not used.
+- **D-16 (Delay length).** 10 seconds from the 3rd wrong try on (the 3rd and 4th). One constant, `kWrongPinDelay`.
+- **D-17 (PBKDF2 cost).** 60,000 iterations in pure Dart on a background isolate. Higher would slow unlock on cheap phones; it cannot make a 6-digit PIN strong anyway. Stored with the hash so it can be raised later.
+- **D-18 (Forgot PIN / Switch account destination).** Both go to Welcome ("normal first-time flow"). In-app Sign out keeps its old destination (Verification) but now also clears the local data.
+- **D-19 (No-PIN variant).** A remembered person without a PIN sees the lock screen with "Continue" (to Verification) and no pad, as specified. Relock-after-background is skipped when there is no PIN.
+- **D-20 (Relock design).** An overlay above the Navigator (`MaterialApp.builder`) hides the app with `Offstage` instead of pushing a route, so open screens and scroll positions survive. Rejected: pushing a lock route (breaks back stack and dialogs).
+- **D-21 (Biometrics scope).** `biometricOnly: true`, so the phone's own PIN or pattern is not accepted; our PIN is the only fallback. Biometrics can only be turned on after a PIN exists.
+- **D-22 (Weak PIN list).** Refuse all-same-digit PINs and 123456, 654321, 012345, 123123. A device lock, not a password policy.
+- **D-23 (Failed profile fetch clears data).** As the prompt says, a failed fetch (including a plain network error) clears local data and shows Welcome. This is harsh on a flaky connection; the alternative (retry, keep data) contradicts the prompt. Flagged for your review.
+- **D-24 (Testing seams).** `LockStore`, `BiometricProvider`, clock, `ProfileFetcher`, `EmailVerifier` and `HomeBuilder` are injected so tests run without plugins or Supabase.

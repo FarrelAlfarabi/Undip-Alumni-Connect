@@ -876,3 +876,12 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** the look on a real device.
 **Open:** nothing.
 
+## 2026-09-30 — Home hub, Stage 3: returning-user lock screen
+
+**Done:** a device lock for people already verified on this phone. After verification the app remembers the profile id, a display name and a masked email hint (secure storage only), then offers a 6-digit PIN and optional fingerprint or face. Next launch shows a lock screen; new users still see Welcome then Verification. 5 wrong PINs wipe the local data; a wait starts after the 3rd wrong try; the lock shows again after 5 minutes in the background. Switch account, Forgot PIN and Sign out clear local data only.
+**Decided:** no lock on web (no real secure storage, so it would only look safe); PBKDF2-HMAC-SHA256 with 60,000 iterations; a failed profile fetch clears local data (as the prompt says). Packages added: `flutter_secure_storage`, `local_auth`, `crypto` (already transitive). Full list of choices in `docs/hub/STAGE_REPORTS.md` D-14 to D-24.
+**Honest limit:** this is a convenience lock, not security. Verification is an email match with no real auth; anyone with a valid alumni email can still verify as that person.
+**Verified:** analyze clean, 173 tests pass (63 new), web build ok.
+**Not verified:** anything on a real Android or iOS device (Keystore/Keychain, the biometric prompt, the Android activity/theme changes, the Face ID string); the real profile fetch.
+**Open:** on-device test; decide whether a network error should really clear local data (D-23).
+

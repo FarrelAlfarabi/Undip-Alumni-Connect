@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
@@ -139,11 +140,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               icon: const Icon(Icons.logout),
               onPressed: () {
                 // Back to verification with the whole shell torn down, so
-                // a second demo account starts from a clean state.
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const VerificationScreen()),
-                  (_) => false,
-                );
+                // a second demo account starts from a clean state. Also
+                // forgets this device's remembered person and PIN (local
+                // only).
+                signOutTo(context, const VerificationScreen());
               },
             ),
         ],

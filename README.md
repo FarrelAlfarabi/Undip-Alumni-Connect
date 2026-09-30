@@ -109,6 +109,64 @@ request reaches Postgres as `anon` and RLS cannot know who is calling.
 - Real enforcement needs real Supabase Auth (`auth.uid()`), which is a
   separate piece of work.
 
+## Home hub, Preview tiles and the lock screen
+
+**Home hub.** After verification the app lands on a Home tab: a greeting, a
+banner carousel of the latest Ikafe announcements (text cards, auto-advance,
+swipe, tap for the full text), quick tiles (Jobs, Marketplace, Directory,
+Nearby Alumni), a "Latest" strip (3 newest jobs, 3 newest approved
+marketplace listings) and an Upcoming section. The bottom navigation is
+Home, Directory, Chat, Profile. Jobs, News ("See all announcements"),
+Marketplace and Nearby open from Home with a back arrow. The Marketplace
+"Demo only, no real payments" notice still shows on every marketplace screen.
+
+**Upcoming Preview tiles.** Events, Mentoring and Business directory are
+non-functional tiles marked "Preview". Tapping one only opens an info sheet.
+No data, no dates, no tracking, no money features.
+
+**Lock screen (Android and iOS only).** After the first successful
+verification the app remembers, on that device only, the profile id, a
+display name and a masked email hint (`f***@gmail.com`), all in the
+platform secure storage (Keychain / Keystore). It then offers a 6-digit PIN
+(and fingerprint or face, if the device has it). On the next launch a
+remembered person sees a lock screen instead of the Welcome screen; new users
+see Welcome and Verification as before.
+
+- The PIN is stored only as a salted PBKDF2-HMAC-SHA256 hash, never as text
+  and never in logs.
+- 5 wrong PINs wipe the local unlock data and require full verification; a
+  cool-down starts after the 3rd wrong try; remaining attempts are shown.
+- Biometrics are optional and never the only way in; if the prompt fails
+  or is cancelled, the PIN pad is the fallback.
+- The lock screen shows again after the app has been in the background for
+  more than 5 minutes (`kLockAfterBackground` in `lib/lock/lock_config.dart`).
+- "Forgot PIN? Verify again", "Not you? Switch account" and Profile > Sign
+  out clear the local data only. Nothing is deleted on the server.
+- If the PIN step is skipped, the next launch shows a "Continue" button that
+  runs verification again.
+- **Web has no lock screen.** Browsers have no real secure storage and no
+  biometrics API here, so a remembered id and PIN hash would sit in
+  localStorage where a PIN of 1,000,000 possibilities can be guessed offline
+  in moments. A lock that looks safe but is not is worse than none, so on web
+  every visit starts at Welcome, as before.
+
+**Honesty rule: this is a device convenience lock, not real security.**
+Verification is still an email match with no real login (no OTP, no Supabase
+Auth session). Anyone who knows a valid alumni email can still verify as that
+person, on any device, and the PIN does not stop that. The lock only saves the
+owner from re-verifying on every launch and keeps a casual bystander out of an
+unlocked phone. It does not protect the data in the database.
+
+**Known gaps.** Not tested on a real Android or iOS device (only in
+widget tests with fakes and on the web build). Android needs
+`FlutterFragmentActivity`, the `USE_BIOMETRIC` permission and an AppCompat
+launch theme, and iOS needs `NSFaceIDUsageDescription`; these are set but
+have not been built for either platform here. A PIN of 6 digits can be
+guessed offline by someone who can read the secure storage of a rooted
+device; the 5-attempt wipe only limits guessing through the app. The app
+switcher may show a screenshot of the last screen (there is no privacy
+screen).
+
 ## Deploying to Vercel
 
 The Vercel project is connected to this repo's `claude/eloquent-maxwell-pzaky1`
