@@ -231,6 +231,36 @@ PBKDF2-HMAC-SHA256, 16-byte random salt (`Random.secure`), 60,000 iterations (me
 
 ---
 
+## Stage 5A: Security audit (report only)
+
+**Status: DONE**
+
+### What changed
+- New `SECURITY_AUDIT.md` (verdict, 25 findings, A01 to A10 walk-through with the table and function access matrices, personal-data inventory, what I could not check, fix order).
+- New proof tests, kept apart from app code: `supabase/tests/security_audit/{probes.sql,run_audit.sh}` (38 probes on a throwaway local Postgres, synthetic `example.com` fixtures only, no seed files loaded, so no real person's data is used) and `test/security_audit/proof_weaknesses_test.dart` (4 tests). No application code was changed in Part A.
+
+### Result in one line
+Not safe to load real data. 5 Critical, 6 High, 9 Medium, 5 Low. The Critical and most High items need real Supabase Auth.
+
+### Checks run
+- `bash supabase/tests/security_audit/run_audit.sh pre`: all 32 weakness probes show the weakness, all 6 controls stay blocked (so the harness can tell the difference).
+- `bash supabase/tests/run_local.sh`: passes (existing marketplace SQL checks).
+- `flutter analyze` clean, `flutter test` all pass (proof tests included).
+- pub.dev advisory list checked for all 121 locked packages: `http` and `shared_preferences_android` have advisories, both fixed below the locked versions.
+
+### Could not test
+See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real deployed key, other branches' history, real devices, PostgREST).
+
+### Assumptions
+- The live database matches the migrations in the repo. It may not (Session 30 changed policies by hand).
+- Whether the seed's admin exists on the deployed database is unknown.
+
+### Surprises
+- The admin's email is a real-looking personal address in a public repo and it is the demo admin. Combined with SA-03, anyone can open the admin queue by typing it into Verification.
+- Three real-looking people (names and emails) are in `seed.sql`, a fourth email is in `PROJECT_NOTES.md`.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -256,3 +286,7 @@ PBKDF2-HMAC-SHA256, 16-byte random salt (`Random.secure`), 60,000 iterations (me
 - **D-22 (Weak PIN list).** Refuse all-same-digit PINs and 123456, 654321, 012345, 123123. A device lock, not a password policy.
 - **D-23 (Failed profile fetch clears data).** As the prompt says, a failed fetch (including a plain network error) clears local data and shows Welcome. This is harsh on a flaky connection; the alternative (retry, keep data) contradicts the prompt. Flagged for your review.
 - **D-24 (Testing seams).** `LockStore`, `BiometricProvider`, clock, `ProfileFetcher`, `EmailVerifier` and `HomeBuilder` are injected so tests run without plugins or Supabase.
+- **D-25 (Audit fixtures).** The audit does not load `seed.sql` or `seed_marketplace.sql`, so the local database holds only synthetic `example.com` people. Rejected: reusing the seed admin (a real person's address) for the admin-takeover proof.
+- **D-26 (Proof test style).** Proof tests assert the weakness is present (they pass today) and are flipped in Part B, so the same check fails before a fix and passes after. Rejected: tests that fail today (would break every CI run for findings that cannot be fixed without auth).
+- **D-27 (Real emails in the report).** The report masks real-looking addresses (`f***@gmail.com`) and gives file and line instead of the value.
+- **D-28 (pub.dev lookup).** I queried pub.dev's public advisory endpoint for the locked packages. It is a public read-only list, not a probe of a system under test, but it is an outside call, so it is logged here.

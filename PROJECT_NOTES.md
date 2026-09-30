@@ -893,3 +893,12 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** anything on a real phone.
 **Open:** run the click-test; decide whether "One payment covers a full year" should be softer on the demo Subscribe screen.
 
+## 2026-09-30 — Home hub, Stage 5A: security audit (report only)
+
+**Done:** audited the repo (policies, functions, seeds, Dart, config, git history of this clone) and wrote `SECURITY_AUDIT.md`. Added proof tests: 38 SQL probes on a throwaway local Postgres (`supabase/tests/security_audit/run_audit.sh pre`) and 4 Dart tests in `test/security_audit/`. No application code changed.
+**Found:** 5 Critical, 6 High, 9 Medium, 5 Low. Worst: email is the only login and all emails are world-readable, so anyone can act as anyone; every DM, job application and CV is world-readable; the admin's profile id (and email, in the public repo) is public so anyone can act as admin; real people's names and emails are in the public seeds.
+**Verdict:** NOT safe to load real alumni data.
+**Verified:** the probes run and match (32 weaknesses shown, 6 controls blocked); advisories for locked packages do not affect the locked versions.
+**Not verified:** the live Supabase project, the deployed Vercel site, the real deployed key, other branches' history, real devices.
+**Open:** Part B fixes what can be fixed without real Supabase Auth; the rest needs the auth project.
+
