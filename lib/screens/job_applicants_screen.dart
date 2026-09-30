@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../util/friendly_error.dart';
+import '../widgets/safe_link_chip.dart';
 
 /// Applicant list for a job post you own (added 17 Sep 2026, Master Plan
 /// §3.4 item 7). Demo-scope stand-in for "notify the poster": there's no
@@ -57,7 +59,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Failed to load applicants: ${snapshot.error}'),
+                child: Text(friendlyLoadError('applicants', snapshot.error)),
               ),
             );
           }
@@ -125,20 +127,20 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                         children: [
                           if ((a['linkedin_url'] as String?)?.isNotEmpty ==
                               true)
-                            _LinkChip(
+                            SafeLinkChip(
                               icon: Icons.link,
                               label: 'LinkedIn',
                               url: a['linkedin_url'] as String,
                             ),
                           if ((a['portfolio_url'] as String?)?.isNotEmpty ==
                               true)
-                            _LinkChip(
+                            SafeLinkChip(
                               icon: Icons.public,
                               label: 'Portfolio',
                               url: a['portfolio_url'] as String,
                             ),
                           if (cvUrl != null)
-                            _LinkChip(
+                            SafeLinkChip(
                               icon: Icons.description_outlined,
                               label: 'CV',
                               url: cvUrl,
@@ -153,23 +155,6 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
           );
         },
       ),
-    );
-  }
-}
-
-class _LinkChip extends StatelessWidget {
-  const _LinkChip({required this.icon, required this.label, required this.url});
-
-  final IconData icon;
-  final String label;
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return ActionChip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      onPressed: () => launchUrl(Uri.parse(url)),
     );
   }
 }

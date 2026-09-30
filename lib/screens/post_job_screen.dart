@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../util/friendly_error.dart';
+
 /// Post-a-job form (Day 5). No visual paywall here — anyone verified can
 /// post. Contact-button gating is Day 6's job, on the (not yet built) job
 /// detail view.
@@ -67,7 +69,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
     } catch (e) {
       setState(() {
         _saving = false;
-        _error = e.toString();
+        _error = friendlyError(e);
       });
     }
   }
@@ -197,7 +199,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     if (_error != null) ...[
                       const SizedBox(height: 16),
                       Text(
-                        'Post failed: $_error',
+                        'Post failed. $_error',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                         ),

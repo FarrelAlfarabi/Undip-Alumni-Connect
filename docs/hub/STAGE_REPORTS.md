@@ -272,6 +272,17 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 
 ---
 
+## Stage 5B-2: Input safety in the app (SA-13, SA-14)
+
+**Status: DONE**
+- New `lib/util/friendly_error.dart` (safe messages; the exception text is never shown), `lib/util/safe_url.dart` (`parseHttpUrl`, `validateHttpUrl`, `openHttpUrl`: only http and https, real host, no embedded credentials, max 500 chars, bare `linkedin.com/in/x` becomes https), `lib/widgets/safe_link_chip.dart`.
+- Replaced raw error text on 16 screens (verification, apply, post job, subscribe, both chats, open-conversation, and eight "Failed to load ..." screens).
+- Job applicant links (LinkedIn, portfolio, CV) open through `SafeLinkChip`; an unsafe link shows "This link isn't valid or can't be opened." and opens nothing. The apply form now validates the two link fields and stores the normalised URL. The marketplace shop link uses the same parser (the database already required http/https; this is defence in depth).
+- Tests: `test/security_fixes/input_safety_test.dart` (22 tests). Run before the screen changes: the verification screen test, the "no raw error in any screen" source scan, the "no raw `launchUrl(Uri.parse(...))`" scan and the apply-form test failed; they pass now. The Stage 5A Dart proof tests for SA-13 and SA-14 were removed (the weakness they proved is gone).
+- Checks: analyze clean, 219 tests pass, web build ok.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -303,3 +314,5 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 - **D-28 (pub.dev lookup).** I queried pub.dev's public advisory endpoint for the locked packages. It is a public read-only list, not a probe of a system under test, but it is an outside call, so it is logged here.
 - **D-29 (CSP shape).** `style-src` keeps `'unsafe-inline'` because Flutter web injects inline styles; scripts have no `'unsafe-inline'` and no `'unsafe-eval'` (only `'wasm-unsafe-eval'` for CanvasKit). `img-src` allows any `https:` because marketplace photos can come from any host (seed uses an image service). Rejected: a hash-based or nonce CSP (Flutter's bootstrap is generated at build time; higher risk of breaking the deploy).
 - **D-30 (Key check accepts both key formats).** New `sb_publishable_` keys and legacy anon JWTs are both accepted; anything else fails the build.
+- **D-31 (Bare links).** A link typed without a scheme (`linkedin.com/in/x`) is accepted and stored as `https://...`. Rejected: refusing it (LinkedIn users usually paste it that way). A value with any scheme other than http or https is refused.
+- **D-32 (Error text).** All user-visible errors are generic or network-only messages. Nothing logs the original error anywhere the user can see. Rejected: keeping the detail behind a "show details" toggle (still leaks through screenshots and support requests).

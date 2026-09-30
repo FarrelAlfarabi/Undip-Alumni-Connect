@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
+import '../util/friendly_error.dart';
 
 /// Searchable alumni directory: filter by major, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
@@ -104,7 +105,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Text('Failed to load directory: ${snapshot.error}'),
+              child: Text(friendlyLoadError('the directory', snapshot.error)),
             ),
           );
         }

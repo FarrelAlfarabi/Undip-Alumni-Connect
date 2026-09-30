@@ -5,6 +5,7 @@ import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
 import 'notifications_screen.dart';
 import 'post_job_screen.dart';
+import '../util/friendly_error.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
 /// browsing for everyone — the contact button / visual paywall lives on
@@ -174,7 +175,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Failed to load job board: ${snapshot.error}'),
+                child: Text(friendlyLoadError('the job board', snapshot.error)),
               ),
             );
           }

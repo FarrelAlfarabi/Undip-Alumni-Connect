@@ -1,10 +1,10 @@
-# Security audit proof tests (Stage 5A)
+# Security audit proof tests
 
-These tests **demonstrate weaknesses** found in `SECURITY_AUDIT.md`. Each one
-passes today because the weakness is present. They run against fakes and local
-files only, never against a live project. In Part B a fix flips the assertion
-(see `test/security_fixes/`), so the same check fails before the fix and
-passes after it.
+Stage 5A proved each finding it could with a test that **passes only while the
+weakness is present**. When Part B fixed a weakness, its proof was removed and
+replaced by a test in `test/security_fixes/` that fails without the fix.
 
-The database-side proofs live in `supabase/tests/security_audit/` (run
-`bash supabase/tests/security_audit/run_audit.sh pre`).
+- Dart-layer proofs (SA-12, SA-13, SA-14, SA-19): all fixed, so none remain here.
+- Database-side proofs: `supabase/tests/security_audit/run_audit.sh pre` (before
+  the hardening migration) and `... post` (after it). They run only against a
+  throwaway local Postgres, never a live project.

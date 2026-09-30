@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/announcement_card.dart';
+import '../util/friendly_error.dart';
 
 /// Ikafe announcements feed (Day 7): one-way broadcast, no moderation, no
 /// posting UI in the app — these are seeded/admin content, not something an
@@ -50,7 +51,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Failed to load announcements: ${snapshot.error}'),
+                child: Text(friendlyLoadError('announcements', snapshot.error)),
               ),
             );
           }

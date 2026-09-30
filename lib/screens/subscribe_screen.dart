@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../util/friendly_error.dart';
+
 /// Visual-only subscription paywall (demo scope). No real payment — tapping
 /// "Subscribe" just flips alumni_profiles.subscription_status to
 /// 'subscribed' directly. Shared by the job-contact gate and the messaging
@@ -38,7 +40,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
     } catch (e) {
       setState(() {
         _saving = false;
-        _error = e.toString();
+        _error = friendlyError(e);
       });
     }
   }
@@ -118,7 +120,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                       if (_error != null) ...[
                         const SizedBox(height: 16),
                         Text(
-                          'Failed: $_error',
+                          _error!,
                           style: TextStyle(color: theme.colorScheme.error),
                         ),
                       ],

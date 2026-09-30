@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../util/friendly_error.dart';
+
 /// Basic messaging UI (Day 6, demo scope). One conversation, no realtime —
 /// the thread refetches after you send, and on the refresh button for
 /// seeing the other side's replies. Messaging is only reachable once
@@ -69,7 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loadError = e.toString());
+      setState(() => _loadError = friendlyError(e));
     }
   }
 
@@ -89,7 +91,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to send: $e')));
+            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -150,7 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final messages = _messages;
     if (messages == null) {
       if (_loadError != null) {
-        return Center(child: Text('Failed to load messages: $_loadError'));
+        return Center(child: Text(_loadError!));
       }
       return const Center(child: CircularProgressIndicator());
     }

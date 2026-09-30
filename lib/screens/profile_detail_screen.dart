@@ -6,6 +6,7 @@ import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
 import 'verification_screen.dart';
+import '../util/friendly_error.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -112,9 +113,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open conversation: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
       }
     } finally {
       if (mounted) setState(() => _messaging = false);

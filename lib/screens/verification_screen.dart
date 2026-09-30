@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../lock/lock_service.dart';
 import '../lock/pin_setup_screen.dart';
 import '../lock/session.dart';
+import '../util/friendly_error.dart';
 
 /// Looks up the alumni profile whose email matches and marks it verified.
 /// Returns null when there is no match.
@@ -97,7 +98,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     } catch (e) {
       setState(() {
         _state = _VerificationState.error;
-        _errorMessage = e.toString();
+        _errorMessage = friendlyError(e);
       });
     }
   }
