@@ -1,4 +1,6 @@
-# UNDIP Alumni Connect — MVP demo
+# Lingkaran — MVP demo
+
+(Formerly "UNDIP Alumni Connect"; the repo, Dart package and Vercel project keep the old name.)
 
 Flutter + Supabase demo of a verified alumni directory with a job referral
 board, subscription-gated messaging, and an Ikafe announcements feed.

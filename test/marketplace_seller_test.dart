@@ -320,7 +320,7 @@ void main() {
         await tester.tap(find.widgetWithText(FilledButton, 'Subscribe'));
         await tester.pumpAndSettle();
         expect(find.text('Subscribe Now (Demo)'), findsOneWidget);
-        expect(find.text('Rp 25.000/month'), findsOneWidget);
+        expect(find.text('Rp 99.000/year'), findsOneWidget);
       },
     );
 

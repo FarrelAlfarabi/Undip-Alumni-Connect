@@ -1,11 +1,11 @@
 {
-    "name": "undip_alumni_connect",
-    "short_name": "undip_alumni_connect",
+    "name": "Lingkaran",
+    "short_name": "Lingkaran",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Lingkaran: a verified UNDIP alumni network.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
