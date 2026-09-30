@@ -1,6 +1,6 @@
-# UNDIP Alumni Connect: Product and Build Plan (public excerpt)
+# Lingkaran (UNDIP Alumni Connect): Product and Build Plan (public excerpt)
 
-**Version:** 1.7, 30 September 2026
+**Version:** 1.8, 30 September 2026
 **Status:** Public, redacted excerpt of an internal planning document. Business terms, finances, legal and partner details are intentionally left out. Dummy data only; no real payments.
 
 ## 1. What this is
@@ -23,7 +23,7 @@ The core idea is a verified alumni directory connected to an alumni job referral
 
 | Feature | Notes |
 |---|---|
-| Marketplace (demo first) | Alumni to alumni. Listings appear only after admin approval. Each listing links to the seller's online shop and/or shows contact info. Subscribers post; everyone browses. Demo only: no checkout, no payments. |
+| Marketplace (demo built, on a feature branch, not merged) | Alumni to alumni. Listings appear only after admin approval. Each listing links to the seller's online shop and/or shows contact info. Subscribers post; everyone browses. Demo only: no checkout, no payments. |
 | Home hub | Dashboard home with a banner carousel (from announcements), quick-action tiles (Jobs, Marketplace, Directory, Nearby Alumni) and a "latest" strip. Bottom navigation reduced to about four items. Also shows non-functional "Preview" tiles (Events, Mentoring, Business directory) for upcoming features. |
 | Returning-user lock screen | Users already verified on a device see "Welcome back", a 6-digit PIN pad and optional biometrics instead of the full login. PIN stored only as a salted hash in secure storage; 5 wrong attempts forces full verification. On the demo auth model this is a convenience lock, not server-side security. |
 | AI job-description drafting | Suggests a job description when posting a job. Called through a server function so no API key is in the app. Must never block posting if it fails. |
@@ -43,7 +43,8 @@ The core idea is a verified alumni directory connected to an alumni job referral
 - Staged work, one commit per stage, manual review between stages.
 - Feature branches; changes to the shared live database are never applied from a feature branch. Demos run against a separate database.
 - Each stage runs static analysis, tests, database-rule checks and a web build; failures are fixed and re-run before a commit.
-- Marketplace demo stages: recon, data layer, browse and detail, home hub, returning-user lock screen, create and subscriber gate, admin approval and reporting, polish and regression.
+- Marketplace demo: built in stages (data layer, browse and detail, create and subscriber gate, admin approval and reporting, polish and regression).
+- Next: home hub, Preview tiles and returning-user lock screen, in staged prompts.
 
 ## 6. Known technical gaps
 
