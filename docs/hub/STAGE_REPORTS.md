@@ -279,7 +279,7 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 - Replaced raw error text on 16 screens (verification, apply, post job, subscribe, both chats, open-conversation, and eight "Failed to load ..." screens).
 - Job applicant links (LinkedIn, portfolio, CV) open through `SafeLinkChip`; an unsafe link shows "This link isn't valid or can't be opened." and opens nothing. The apply form now validates the two link fields and stores the normalised URL. The marketplace shop link uses the same parser (the database already required http/https; this is defence in depth).
 - Tests: `test/security_fixes/input_safety_test.dart` (22 tests). Run before the screen changes: the verification screen test, the "no raw error in any screen" source scan, the "no raw `launchUrl(Uri.parse(...))`" scan and the apply-form test failed; they pass now. The Stage 5A Dart proof tests for SA-13 and SA-14 were removed (the weakness they proved is gone).
-- Checks: analyze clean, 219 tests pass, web build ok.
+- Checks: analyze clean, 218 tests pass (after removing the two flipped proof tests), web build ok.
 
 ---
 
@@ -339,6 +339,16 @@ Reasoning to verify on a real Supabase database, because the local stub does not
 
 ### Could not test
 - pgcrypto on a real Supabase project (the migration creates the extension in the `extensions` schema, which is where Supabase installs it).
+
+---
+
+## Stage 5B-5: Final gate
+
+**Status: DONE**
+- Android `allowBackup="false"` (SA-22), with `test/security_fixes/android_backup_test.dart`.
+- `SECURITY_AUDIT.md` updated: a verdict box after Part B, section 8 (status of every finding), section 9 (the real-auth project: scope, estimate, decisions needed first), section 10 (manual steps for you).
+- Final re-run: `flutter analyze` clean; `flutter test` 230 pass; `flutter build web --release` ok; `bash supabase/tests/run_local.sh` passes; `run_audit.sh pre` passes (32 weaknesses shown, controls hold); `run_audit.sh post` passes (13 fixed, 19 still present, rollback check ok).
+- **Verdict: still NOT safe to load real alumni data.** 4 Critical and 5 High findings remain open; they need real Supabase Auth or an owner decision.
 
 ---
 

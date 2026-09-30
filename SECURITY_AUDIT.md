@@ -1,8 +1,10 @@
 # Lingkaran security audit (OWASP-style)
 
-Branch `feature/home-hub`. Audited on 2026-09-30. **Part A (this file's first
-version): report only, no fixes.** Part B updates the "Fix status" section at
-the bottom.
+Branch `feature/home-hub`. Audited on 2026-09-30. **Part A** (sections 1 to 7)
+is the original report and was written before any fix. **Part B** fixed what
+can be fixed without real Supabase Auth; its result is in sections 8 to 10 and
+in the "After Part B" verdict below. Sections 1 to 7 are kept as written so you
+can see what was found.
 
 How I checked: read every migration, seed, Dart screen and config in the repo;
 ran the SQL on a throwaway local Postgres (`supabase/tests/security_audit/run_audit.sh`,
@@ -15,7 +17,13 @@ Labels: **Confirmed by test**, **Confirmed by reading code**, **Suspected (not v
 
 ---
 
-## 1. Verdict
+## After Part B (final gate, same day)
+
+- **Safe to load real alumni data now: STILL NO.** 4 Critical (SA-01, SA-02, SA-03, SA-05) and 5 High (SA-06, SA-07, SA-08, SA-09, and the read side of SA-10) findings are open. All of them need real Supabase Auth, an owner decision, or both.
+- **Fixed:** SA-04 (admin takeover, by a server-checked passphrase), SA-12, SA-13, SA-14, SA-16, SA-18, SA-19, SA-22 (backup part). **Partly fixed:** SA-10, SA-11, SA-15, SA-20, SA-24. Details in section 8.
+- **Nothing was applied to any live project.** The database fixes are two new migration files with a tested rollback. Do not say "safe" until the auth project (section 9) is done or you accept the risk in writing.
+
+## 1. Verdict (Part A, original)
 
 - **Safe to load real alumni data today: NO.** Anyone with the public anon key can read every alumnus's email and NIM, every private message and every job application, and can act as any user or as the marketplace admin.
 - **Top three risks:** (1) email is the only login and every email is world-readable, so anyone can become anyone (SA-03); (2) private messages, applications and CVs are readable by everyone (SA-01, SA-02, SA-11); (3) the admin's profile id is public, so anyone can act as admin (SA-04).
@@ -194,3 +202,88 @@ Who can read = as `anon` today. "User can delete?" = through the app.
 4. **Admin takeover mitigation** (SA-04): a server-checked admin passphrase in the marketplace admin functions (stops "admin id is enough"). Not a substitute for auth.
 5. **Repo hygiene** (SA-08): owner decision on replacing real emails in seeds (changing them and re-running the seed on the live DB would change live logins, so I do not do it unasked).
 6. **Real Supabase Auth project** (SA-01 to SA-07, SA-09, SA-10 reads, SA-17): separate, larger. Needs: email OTP flow, a `user_id` link for every profile, rewrite of every policy and function around `auth.uid()`, a data migration for existing users, an account-deletion flow, a consent step, a payment webhook for subscriptions.
+
+---
+
+## 8. Fix status after Part B
+
+"Fixed" means: a test failed before the change and passes after. Database items were tested on the local stub only (`bash supabase/tests/security_audit/run_audit.sh pre` versus `post`, plus `bash supabase/tests/run_local.sh`); they are not applied to any live project.
+
+| ID | Result | What was done, and what is left |
+|---|---|---|
+| SA-01 | **Open** | Needs auth (participants-only policies). |
+| SA-02 | **Open** (reads) | Applications still world-readable. CV file listing closed and CV size/type limited (see SA-11). Needs auth. |
+| SA-03 | **Open** | Needs auth (email OTP) and hiding `email`/`nim` from other users. |
+| SA-04 | **Fixed for admin actions** | Admin functions now need a passphrase checked against a bcrypt hash (`20260930100100_security_admin_key.sql`); the app asks for it. Left: the admin id is still readable and `marketplace_is_admin(id)` still confirms it (P16, P17); it is a shared secret, not real auth. Nobody is admin until the owner runs `marketplace_set_admin_key`. |
+| SA-05 | **Open** | Needs auth: actor from `auth.uid()`. |
+| SA-06 | **Open** | Needs a server-side payment path (webhook + service role). |
+| SA-07 | **Open** | Needs auth. |
+| SA-08 | **Open** | Owner decision: replace real emails in seeds/notes (changing the seed and re-running it on the live DB changes live logins). Removing them from git history needs a rewrite of history, which I did not do. |
+| SA-09 | **Open** | No account deletion or consent capture; both need auth to be safe (otherwise anyone could delete anyone). |
+| SA-10 | **Partly fixed** | Direct insert into `notifications` and `email_log` removed; notifications can only change `read_at` (`20260930100000_security_hardening.sql`). Reads are still open (needs auth). |
+| SA-11 | **Partly fixed** | Listing closed, 5 MB limit, pdf/doc/docx only, matching app checks. CVs are still public by exact URL (private bucket needs signed URLs, which need a session). |
+| SA-12 | **Fixed** | Security headers in `vercel.json`. Verified in Chromium against a local build. The CDN path (CanvasKit from gstatic) could not be loaded from this sandbox: check the Vercel preview. |
+| SA-13 | **Fixed** | 16 screens show safe messages only. |
+| SA-14 | **Fixed** | http/https-only link opening and validation. |
+| SA-15 | **Partly fixed** | Length limits added (new and changed rows). No rate limits: they mean little while ids can be rotated (needs auth). |
+| SA-16 | **Fixed** | `image_url` must be https (new and changed rows). |
+| SA-17 | **Open** | Needs auth. |
+| SA-18 | **Fixed** | `reviewed_by`, `reviewed_at` recorded. |
+| SA-19 | **Fixed** (repo side) | Build refuses non-publishable keys and non-https URLs. The deployed key itself is still unchecked. |
+| SA-20 | **Partly fixed** | Listing closed. MIME sniffing not addressed (Supabase checks the declared type). |
+| SA-21 | **Accepted** | Inherent to a 6-digit PIN. |
+| SA-22 | **Partly fixed** | `allowBackup="false"`. No privacy screen in the app switcher. |
+| SA-23 | **Open (accepted)** | The project ref is in public notes. |
+| SA-24 | **Partly fixed** | Rollback file for the security migrations (tested twice on a fresh database) and the local test now re-runs all `2026093*` migrations in order. Still applied by hand. Warning: re-running only the original marketplace migrations brings back the old id-only admin functions. |
+| SA-25 | **Checked** | No advisory affects the locked versions. No upgrades made. |
+
+### Final re-run of the checklist
+- A01: closed for notifications insert/update, CV and photo listing, admin actions. Open for every read of personal data and every impersonation write (auth).
+- A02: unchanged; backup off on Android.
+- A03: links and image URLs fixed; CV type checked in app and bucket.
+- A04: flags still client-settable (SA-06); length limits added; no rate limits.
+- A05: headers, key check, no raw errors.
+- A06: unchanged, no advisories affect locked versions.
+- A07: admin needs a passphrase; user "login" is still an email match.
+- A08: rollback added; still manual.
+- A09: raw errors gone; admin decisions traced; no PII logging added.
+- A10: none.
+
+Proof status: the SQL probes now show 13 weaknesses fixed (P06, P07, P09, P18, P19, P24, P25, P27, P28, P29, P30, P31, P36) and 19 still present; controls C1 to C7 hold.
+
+---
+
+## 9. The real Supabase Auth project (not started)
+
+This is the only thing that removes the Critical findings. It is a separate, larger piece of work; I did not start it.
+
+**What it involves**
+1. Email OTP (or magic link) sign-in with Supabase Auth. First sign-in "claims" the alumni profile whose email matches, once, by a SECURITY DEFINER function that sets `alumni_profiles.user_id = auth.uid()`.
+2. Rewrite every policy and function around `auth.uid()`: profiles (a view without `email`/`nim` for other users; update only your own row), messages and conversations (participants only), applications (applicant and job poster only), notifications (recipient only), city chat (signed-in only), marketplace functions (actor from `auth.uid()`, admins by role), drop the simulated email log or restrict it to the recipient.
+3. Storage: private buckets, paths prefixed by the user id, signed URLs.
+4. Subscription changed only server-side (payment webhook with the service role).
+5. App: OTP screens replace Verification; remove every client-supplied id; the lock screen becomes a local unlock of a real session.
+6. Account deletion and a consent step with a stored timestamp (UU PDP).
+7. Rollout: a separate production Supabase project, data migration for existing users, invite or claim flow.
+
+**Estimate (one developer):** 3 to 5 weeks. Design and decisions 3 to 4 days; database rewrite with local tests about 1 week; app changes about 1 week; migration, rollout and QA about 1 week; buffer for OTP email delivery and store review.
+
+**Decide first**
+- Who sends the OTP email (Supabase's default sender is rate-limited; you need your own SMTP and a sender domain).
+- What to do with alumni whose listed email is dead or shared.
+- Payment provider for subscriptions (Midtrans or Xendit) and who holds the merchant account.
+- Whether the simulated email inbox and city chat stay, and who may read them.
+- Who the admins are and how they sign in.
+- Consent wording and retention period (get a lawyer's read for UU PDP).
+- A separate production project, and whether the current open demo stays online.
+
+---
+
+## 10. Manual steps for you (owner), in order
+
+1. Apply the two `2026093010*` migrations on a **separate** project or a Supabase branch database first, never straight on the shared one. Check a CV upload, a listing photo, and opening a notification.
+2. Run `select marketplace_set_admin_key('<admin profile uuid>', '<16+ character passphrase>');` in the SQL editor.
+3. Deploy a Vercel preview and check the app loads with the new headers (CanvasKit comes from the Google CDN). If the Supabase project uses a custom domain, add it to `connect-src` in `vercel.json`.
+4. Check that `SUPABASE_ANON_KEY` on Vercel is the publishable/anon key (the build now refuses anything else).
+5. Decide on SA-08 (real emails in the public repo).
+
