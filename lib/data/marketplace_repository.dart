@@ -42,6 +42,9 @@ abstract class MarketplaceApi {
   /// Full alumni_profiles row (what ProfileDetailScreen expects), or null.
   Future<Map<String, dynamic>?> selectProfile(String id);
 
+  /// id + name for the given profile ids.
+  Future<List<Map<String, dynamic>>> selectProfileNames(List<String> ids);
+
   /// Uploads to the `marketplace` bucket and returns the public URL.
   Future<String> uploadImage(String path, Uint8List bytes, String contentType);
 }
@@ -86,6 +89,18 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> selectProfileNames(
+    List<String> ids,
+  ) async {
+    if (ids.isEmpty) return [];
+    final rows = await _client
+        .from('alumni_profiles')
+        .select('id, name, faculty, major, graduation_year, city')
+        .inFilter('id', ids);
+    return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  @override
   Future<String> uploadImage(
     String path,
     Uint8List bytes,
@@ -117,6 +132,61 @@ class MarketplaceRepository {
   Future<List<MarketplaceListing>> fetchApproved() async {
     final rows = await _guard(() => _api.selectApprovedListings());
     return rows.map(MarketplaceListing.fromMap).toList();
+  }
+
+  // ---- admin (demo): see the auth caveat above; admin ids are not
+  // authenticated either.
+
+  Future<bool> isAdmin(String profileId) async {
+    final result = await _guard(
+      () => _api.rpc('marketplace_is_admin', {'p_profile': profileId}),
+    );
+    return result == true;
+  }
+
+  /// Pending listings, oldest first, with seller info attached.
+  Future<List<MarketplaceListing>> fetchPending(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('marketplace_admin_pending', {'p_admin': adminId}),
+    );
+    final listings = _listings(rows);
+    if (listings.isEmpty) return listings;
+    final sellers = await _guard(
+      () => _api.selectProfileNames(
+        {for (final l in listings) l.sellerId}.toList(),
+      ),
+    );
+    final byId = {
+      for (final m in sellers) m['id'] as String: MarketplaceSeller.fromMap(m),
+    };
+    return [for (final l in listings) l.withSeller(byId[l.sellerId])];
+  }
+
+  /// Approves, or rejects with a required [reason].
+  Future<MarketplaceListing> review({
+    required String adminId,
+    required String listingId,
+    required bool approve,
+    String? reason,
+  }) async {
+    final row = await _guard(
+      () => _api.rpc('marketplace_review_listing', {
+        'p_admin': adminId,
+        'p_listing': listingId,
+        'p_decision': approve ? 'approved' : 'rejected',
+        'p_reason': approve ? null : reason?.trim(),
+      }),
+    );
+    return MarketplaceListing.fromMap(_single(row));
+  }
+
+  Future<List<ReportCount>> fetchReportCounts(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('marketplace_report_counts', {'p_admin': adminId}),
+    );
+    return (rows as List)
+        .map((r) => ReportCount.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
   }
 
   /// Uploads a listing photo and returns its public URL. The file name is

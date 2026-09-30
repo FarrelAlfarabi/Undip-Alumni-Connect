@@ -55,6 +55,7 @@ class FakeApi implements MarketplaceApi {
   /// Per-function result, wins over [rpcResult].
   final rpcResults = <String, dynamic>{};
   final uploads = <String>[];
+  List<Map<String, dynamic>> profileNames = [];
   Object? throwOnCall;
 
   @override
@@ -83,6 +84,14 @@ class FakeApi implements MarketplaceApi {
   Future<Map<String, dynamic>?> selectProfile(String id) async {
     calls.add('profile');
     return profile;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> selectProfileNames(
+    List<String> ids,
+  ) async {
+    calls.add('names');
+    return profileNames;
   }
 
   @override

@@ -6,6 +6,7 @@ import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
+import 'marketplace_report_sheet.dart';
 import 'profile_detail_screen.dart';
 
 typedef UrlOpener = Future<bool> Function(Uri uri);
@@ -31,8 +32,7 @@ class MarketplaceDetailScreen extends StatefulWidget {
   final ValueNotifier<Map<String, dynamic>> currentUser;
   final UrlOpener openUrl;
 
-  /// Wired to the report sheet in a later stage. Null shows a placeholder
-  /// message instead.
+  /// Overrides the default report sheet (used by tests).
   final VoidCallback? onReport;
 
   @override
@@ -100,8 +100,11 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
       widget.onReport!();
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reporting is not available yet.')),
+    showReportSheet(
+      context,
+      repository: widget.repository,
+      listingId: _l.id,
+      reporterId: widget.currentUser.value['id'] as String,
     );
   }
 

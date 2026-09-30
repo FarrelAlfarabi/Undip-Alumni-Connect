@@ -10,6 +10,12 @@ String marketplaceErrorMessage(Object error) {
         return 'You can only change your own listings.';
       case MarketplaceErrorCode.notFound:
         return 'This listing no longer exists.';
+      case MarketplaceErrorCode.notAdmin:
+        return 'Only admins can do this.';
+      case MarketplaceErrorCode.reasonRequired:
+        return 'Give a reason for rejecting.';
+      case MarketplaceErrorCode.duplicateReport:
+        return 'You already reported this listing.';
       case MarketplaceErrorCode.invalidState:
         return 'This listing cannot be changed in its current state.';
       default:
@@ -29,3 +35,6 @@ const kEditedApprovedMessage =
 
 const kEditedMessage =
     'Changes saved. Your listing will appear once an admin approves it.';
+
+const kReportSentMessage =
+    'Thanks, your report was sent. An admin will take a look.';

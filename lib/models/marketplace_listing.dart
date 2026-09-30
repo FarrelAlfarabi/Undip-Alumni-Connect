@@ -95,6 +95,27 @@ class MarketplaceListing {
   /// Only present when the query joined alumni_profiles (browse/detail).
   final MarketplaceSeller? seller;
 
+  MarketplaceListing withSeller(MarketplaceSeller? seller) {
+    return MarketplaceListing(
+      id: id,
+      sellerId: sellerId,
+      title: title,
+      description: description,
+      priceIdr: priceIdr,
+      category: category,
+      city: city,
+      imageUrl: imageUrl,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      shopUrl: shopUrl,
+      contactInfo: contactInfo,
+      rejectedReason: rejectedReason,
+      approvedAt: approvedAt,
+      seller: seller,
+    );
+  }
+
   factory MarketplaceListing.fromMap(Map<String, dynamic> map) {
     final sellerMap = map['seller'];
     return MarketplaceListing(
@@ -145,4 +166,25 @@ class MarketplaceListingInput {
   final String? contactInfo;
 }
 
-enum ReportReason { spam, prohibited, misleading, other }
+enum ReportReason {
+  spam('Spam'),
+  prohibited('Prohibited item'),
+  misleading('Misleading'),
+  other('Other');
+
+  const ReportReason(this.label);
+  final String label;
+}
+
+/// Admin view: how many reports a listing has received.
+class ReportCount {
+  const ReportCount({required this.listingId, required this.count});
+
+  final String listingId;
+  final int count;
+
+  factory ReportCount.fromMap(Map<String, dynamic> map) => ReportCount(
+    listingId: map['listing_id'] as String,
+    count: (map['report_count'] as num).toInt(),
+  );
+}
