@@ -1,6 +1,6 @@
 # UNDIP Alumni Connect: Product and Build Plan (public excerpt)
 
-**Version:** 1.6, 30 September 2026
+**Version:** 1.7, 30 September 2026
 **Status:** Public, redacted excerpt of an internal planning document. Business terms, finances, legal and partner details are intentionally left out. Dummy data only; no real payments.
 
 ## 1. What this is
@@ -24,7 +24,7 @@ The core idea is a verified alumni directory connected to an alumni job referral
 | Feature | Notes |
 |---|---|
 | Marketplace (demo first) | Alumni to alumni. Listings appear only after admin approval. Each listing links to the seller's online shop and/or shows contact info. Subscribers post; everyone browses. Demo only: no checkout, no payments. |
-| Home hub | Dashboard home with a banner carousel (from announcements), quick-action tiles (Jobs, Marketplace, Directory, Nearby Alumni) and a "latest" strip. Bottom navigation reduced to about four items. |
+| Home hub | Dashboard home with a banner carousel (from announcements), quick-action tiles (Jobs, Marketplace, Directory, Nearby Alumni) and a "latest" strip. Bottom navigation reduced to about four items. Also shows non-functional "Preview" tiles (Events, Mentoring, Business directory) for upcoming features. |
 | Returning-user lock screen | Users already verified on a device see "Welcome back", a 6-digit PIN pad and optional biometrics instead of the full login. PIN stored only as a salted hash in secure storage; 5 wrong attempts forces full verification. On the demo auth model this is a convenience lock, not server-side security. |
 | AI job-description drafting | Suggests a job description when posting a job. Called through a server function so no API key is in the app. Must never block posting if it fails. |
 | Real verification and payments | Not started; depend on external data access and provider decisions. |
