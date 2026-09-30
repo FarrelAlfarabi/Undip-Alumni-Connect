@@ -6,6 +6,9 @@ import 'lock_store.dart';
 import 'masking.dart';
 import 'pin_hasher.dart';
 
+/// True only in a web preview build (see [LockService.shared]).
+const bool kWebLockTest = bool.fromEnvironment('WEB_LOCK_TEST');
+
 /// What we remember about the verified person on this device. Deliberately
 /// small: an id, a display name and a masked email hint. Never the full
 /// profile and never the full email.
@@ -64,9 +67,13 @@ class LockService {
   }) : _hasher = hasher ?? PinHasher(),
        _now = clock ?? DateTime.now;
 
-  /// The real service the app uses. On web it is disabled (see README).
+  /// The real service the app uses. On web it is disabled (see README),
+  /// except in a PREVIEW build made with `--dart-define=WEB_LOCK_TEST=true`
+  /// (scripts/vercel-build.sh does that for Vercel previews only) so the lock
+  /// flow can be tried in a browser. Web storage is not real secure storage:
+  /// this is for testing the flow, never for production.
   static LockService? _shared;
-  static LockService get shared => _shared ??= kIsWeb
+  static LockService get shared => _shared ??= (kIsWeb && !kWebLockTest)
       ? LockService(
           store: MemoryLockStore(),
           biometrics: const NoBiometrics(),
@@ -74,7 +81,7 @@ class LockService {
         )
       : LockService(
           store: const SecureLockStore(),
-          biometrics: LocalAuthBiometrics(),
+          biometrics: kIsWeb ? const NoBiometrics() : LocalAuthBiometrics(),
         );
 
   @visibleForTesting

@@ -34,7 +34,13 @@ SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 EOF
 
 flutter pub get
-flutter build web --release
+# Vercel PREVIEW builds turn the lock screen on for web so it can be tried in
+# a browser. Production builds never do (web has no real secure storage).
+EXTRA_DEFINES=""
+if [ "${VERCEL_ENV:-}" = "preview" ]; then
+  EXTRA_DEFINES="--dart-define=WEB_LOCK_TEST=true"
+fi
+flutter build web --release $EXTRA_DEFINES
 
 # CanvasKit loads from Google's CDN by default (see flutter_bootstrap.js'
 # buildConfig) — the bundled canvaskit/ folder is an unused local fallback

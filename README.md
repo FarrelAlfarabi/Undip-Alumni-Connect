@@ -154,7 +154,7 @@ see Welcome and Verification as before.
   out clear the local data only. Nothing is deleted on the server.
 - If the PIN step is skipped, the next launch shows a "Continue" button that
   runs verification again.
-- **Web has no lock screen.** Browsers have no real secure storage and no
+- **Web has no lock screen in production** (Vercel *preview* builds turn it on for testing only, via `--dart-define=WEB_LOCK_TEST=true` in `scripts/vercel-build.sh`; that is not real protection). Browsers have no real secure storage and no
   biometrics API here, so a remembered id and PIN hash would sit in
   localStorage where a PIN of 1,000,000 possibilities can be guessed offline
   in moments. A lock that looks safe but is not is worse than none, so on web
