@@ -261,6 +261,17 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 
 ---
 
+## Stage 5B-1: Web hardening (SA-12, SA-19)
+
+**Status: DONE**
+- `vercel.json`: catch-all `headers` rule with `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera, microphone, geolocation, payment, usb off), `Strict-Transport-Security`.
+- `scripts/check_supabase_env.sh` (new) and `scripts/vercel-build.sh`: the build refuses unless `SUPABASE_URL` is https and the key is `sb_publishable_...` or a JWT with role `anon`. `service_role`, `sb_secret_...`, unknown or malformed keys stop the build with a message that never prints the key.
+- Tests: `test/security_fixes/web_hardening_test.dart` (11 tests). Written first and run before the fix: the header tests and the accept tests failed (no headers, no script); they pass now. The proof tests for SA-12 and SA-19 were removed from `test/security_audit/` because the fix replaces them.
+- Real browser check: served a local release build with the exact headers from `vercel.json` in Chromium. The Welcome screen renders and there were no CSP violations. The only failures were the Google Fonts downloads, which fail the same way with no headers because this sandbox cannot validate Google's certificate.
+- Not tested: the CDN path (CanvasKit from `www.gstatic.com`, which is what Vercel's build uses): the sandbox cannot reach it. It is allowed in `script-src` and `connect-src`; test the deployed preview before promoting. If the Supabase project ever moves to a custom domain, `connect-src` must be updated.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -290,3 +301,5 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 - **D-26 (Proof test style).** Proof tests assert the weakness is present (they pass today) and are flipped in Part B, so the same check fails before a fix and passes after. Rejected: tests that fail today (would break every CI run for findings that cannot be fixed without auth).
 - **D-27 (Real emails in the report).** The report masks real-looking addresses (`f***@gmail.com`) and gives file and line instead of the value.
 - **D-28 (pub.dev lookup).** I queried pub.dev's public advisory endpoint for the locked packages. It is a public read-only list, not a probe of a system under test, but it is an outside call, so it is logged here.
+- **D-29 (CSP shape).** `style-src` keeps `'unsafe-inline'` because Flutter web injects inline styles; scripts have no `'unsafe-inline'` and no `'unsafe-eval'` (only `'wasm-unsafe-eval'` for CanvasKit). `img-src` allows any `https:` because marketplace photos can come from any host (seed uses an image service). Rejected: a hash-based or nonce CSP (Flutter's bootstrap is generated at build time; higher risk of breaking the deploy).
+- **D-30 (Key check accepts both key formats).** New `sb_publishable_` keys and legacy anon JWTs are both accepted; anything else fails the build.

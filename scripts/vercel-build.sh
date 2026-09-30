@@ -19,6 +19,10 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
   exit 1
 fi
 
+# Refuse to build with anything but a publishable key (it is bundled into the
+# public web build). See scripts/check_supabase_env.sh.
+bash "$(dirname "$0")/check_supabase_env.sh"
+
 if [ ! -d flutter ]; then
   git clone https://github.com/flutter/flutter.git --depth 1 -b stable
 fi

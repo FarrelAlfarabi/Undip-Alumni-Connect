@@ -30,22 +30,6 @@ void main() {
     expect(find.textContaining('supabase.co'), findsOneWidget);
   });
 
-  /// SA-12: the Vercel config sets no security headers (no CSP, no
-  /// frame-ancestors / X-Frame-Options, no Referrer-Policy, no nosniff).
-  test('SA-12 proof: vercel.json has no security headers', () {
-    final text = File('vercel.json').readAsStringSync();
-    expect(text.contains('headers'), isFalse);
-    expect(text.contains('Content-Security-Policy'), isFalse);
-  });
-
-  /// SA-19: the build script writes whatever is in SUPABASE_ANON_KEY into the
-  /// bundled `.env` asset with no check that it is a publishable key, so a
-  /// service-role key pasted there would be shipped to every visitor.
-  test('SA-19 proof: the build script never checks the key type', () {
-    final text = File('scripts/vercel-build.sh').readAsStringSync();
-    expect(text.contains('service_role'), isFalse);
-  });
-
   /// SA-14: applicant-supplied links are opened without any scheme check.
   test('SA-14 proof: job_applicants_screen opens raw Uri.parse(url)', () {
     final text = File('lib/screens/job_applicants_screen.dart')
