@@ -131,10 +131,19 @@ select audit.rec('P30', (select file_size_limit is null and allowed_mime_types i
 select audit.rec('P31', audit.n($q$select * from storage.objects where bucket_id = 'marketplace'$q$) > 0, 'anon can list every file in the marketplace bucket');
 
 -- ------------------------------------------------------- A09 audit trail ---
-select audit.rec('P36', not exists (
-  select 1 from information_schema.columns
-  where table_name = 'marketplace_listings' and column_name = 'reviewed_by'
-), 'admin decisions record no reviewer');
+-- A legitimate review (as the database owner, using whichever signature this
+-- schema version has) must leave a reviewer behind.
+insert into marketplace_listings (id, seller_id, title, description, price_idr, category, city, image_url, contact_info, status) values
+ ('11111111-0000-4000-8000-000000000003','aaaaaaaa-0000-4000-8000-000000000001','Review Me','Fixture',3000,'Other','Jakarta','https://img.example.com/c.jpg','wa 0800-0000-0003','pending');
+do $$
+begin
+  if to_regprocedure('marketplace_review_listing(uuid,uuid,text,text,text)') is not null then
+    perform marketplace_review_listing('cccccccc-0000-4000-8000-000000000003', '11111111-0000-4000-8000-000000000003', 'approved', null, 'audit-passphrase-1234');
+  else
+    perform marketplace_review_listing('cccccccc-0000-4000-8000-000000000003', '11111111-0000-4000-8000-000000000003', 'approved');
+  end if;
+end $$;
+select audit.rec('P36', coalesce((select to_jsonb(l)->>'reviewed_by' from marketplace_listings l where id = '11111111-0000-4000-8000-000000000003') is null, true), 'admin decisions record no reviewer');
 
 -- ---------------------------------------------------------- controls (C*) ---
 select audit.rec('C1', audit.try($q$delete from messages where id in (select id from messages limit 1)$q$) = 'ok:1', 'control: anon deletes a message (must be blocked)');

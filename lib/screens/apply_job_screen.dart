@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
+import '../util/cv_upload.dart';
 import '../util/safe_url.dart';
 
 /// Job application form (added 17 Sep 2026, Master Plan §3.4 item 7).
@@ -78,7 +79,20 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
       allowedExtensions: ['pdf', 'doc', 'docx'],
     );
     if (file == null) return;
-    setState(() => _cvFile = file);
+    if (cvContentType(file.name) == null ||
+        await file.xFile.length() > kMaxCvBytes) {
+      if (!mounted) return;
+      setState(
+        () => _error = cvContentType(file.name) == null
+            ? 'Please choose a PDF, DOC or DOCX file.'
+            : kCvTooBigMessage,
+      );
+      return;
+    }
+    setState(() {
+      _error = null;
+      _cvFile = file;
+    });
   }
 
   void _goToReview() {
@@ -108,7 +122,13 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
         final safeName = _cvFile!.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         cvPath =
             '${widget.job['id']}/${DateTime.now().millisecondsSinceEpoch}_$safeName';
-        await client.storage.from('cvs').uploadBinary(cvPath, bytes);
+        await client.storage
+            .from('cvs')
+            .uploadBinary(
+              cvPath,
+              bytes,
+              fileOptions: FileOptions(contentType: cvContentType(safeName)),
+            );
       }
 
       await client.from('job_applications').insert({

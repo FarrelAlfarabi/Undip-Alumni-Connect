@@ -283,6 +283,42 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 
 ---
 
+## Stage 5B-3: Storage, notifications and input limits (migration, local only)
+
+**Status: DONE** (written and tested on the local stub; NOT applied to any live project)
+
+### What changed
+- New migration `supabase/migrations/20260930100000_security_hardening.sql` and matching `supabase/rollback_security_hardening.sql`.
+  - SA-10: `notifications` and `email_log` lose direct insert (rows come from the SECURITY DEFINER trigger); `notifications` can only have `read_at` updated (column privilege).
+  - SA-11, SA-20: the SELECT policies on the `cvs` and `marketplace` buckets are dropped (no more listing every path; public URLs keep working because the buckets are public); `cvs` gets a 5 MB limit and pdf/doc/docx only (bucket setting and upload policy).
+  - SA-15: length checks on messages, city chat, job posts, job applications, marketplace contact/shop URL (added as `NOT VALID`: enforced for new and changed rows, old rows are not re-checked).
+  - SA-16: marketplace `image_url` must be an https link.
+  - SA-18: `reviewed_by` and `reviewed_at` columns; `marketplace_review_listing` records them.
+- App side of the CV limits: `lib/util/cv_upload.dart`, `apply_job_screen.dart` (type and 5 MB check with a friendly message, sends the right content type).
+- Test harness: `supabase/tests/security_audit/run_audit.sh` now also proves the rollback (applied twice on a fresh database, then every weakness is back). `expected_fixed.txt` lists the probes that must be fixed. `supabase/tests/local_stub.sql` tolerates a second database on one cluster.
+- `supabase/tests/marketplace_rls_test.sql`: its fixtures used `http://` image links; changed to `https://` because image links must now be https. Not a weakened check: the assertions are unchanged.
+- Tests: `test/security_fixes/cv_upload_test.dart` (4 tests, includes a check that the app's 5 MB and MIME list equal the migration's).
+
+### Before and after (`run_audit.sh pre` vs `post`)
+Fixed: P06 (forged notification), P07 (rewrite notification), P09 (forged email log), P24 and P25 (1 MB text), P27 (`javascript:` image), P28 and P31 (bucket listing), P29 and P30 (any file type, no size limit), P36 (no reviewer). Still open (need auth): P01 to P05, P08, P10 to P21, P23, P33, P34.
+
+### Checks run
+- `bash supabase/tests/run_local.sh`: all SQL checks pass (existing marketplace tests, migration idempotency, marketplace rollback).
+- `run_audit.sh pre`: every probe as expected. `run_audit.sh post`: fixed probes fixed, the rest still weak, rollback check passes.
+- `flutter analyze` clean, 222 tests pass.
+
+### Apply and rollback note (do not run on the shared live project first)
+1. Take a backup or use a Supabase branch database or a separate project.
+2. Apply the migration (SQL editor or `supabase db push`). It is idempotent.
+3. Check in the app: a job application with a CV (pdf) still uploads and opens from the applicants screen; marketplace photos still show; notifications can still be opened (marked read).
+4. Roll back with `supabase/rollback_security_hardening.sql` if anything breaks.
+Reasoning to verify on a real Supabase database, because the local stub does not run the Storage service: public buckets serve files by URL without any policy, so dropping the SELECT policies only stops API listing. If images or CV links stop loading, the buckets are not public on that project: re-create the two SELECT policies (the rollback does).
+
+### Could not test
+- The real Storage service (public-URL behaviour without a SELECT policy, MIME enforcement), real PostgREST column-privilege handling for `PATCH notifications`.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -316,3 +352,7 @@ See section 6 of `SECURITY_AUDIT.md` (live project, deployed site, the real depl
 - **D-30 (Key check accepts both key formats).** New `sb_publishable_` keys and legacy anon JWTs are both accepted; anything else fails the build.
 - **D-31 (Bare links).** A link typed without a scheme (`linkedin.com/in/x`) is accepted and stored as `https://...`. Rejected: refusing it (LinkedIn users usually paste it that way). A value with any scheme other than http or https is refused.
 - **D-32 (Error text).** All user-visible errors are generic or network-only messages. Nothing logs the original error anywhere the user can see. Rejected: keeping the detail behind a "show details" toggle (still leaks through screenshots and support requests).
+- **D-33 (Migration is separate and local-only).** One new migration file plus a rollback; never applied by me. Rejected: editing old migrations (they may already be applied by hand).
+- **D-34 (NOT VALID constraints).** Length and https checks apply to new and changed rows only, so the migration cannot fail on old data and can be re-run.
+- **D-35 (Buckets stay public).** Making `cvs` private needs signed URLs, which need a session (auth). So only listing, size and type are fixed; a CV is still reachable by anyone who has its exact URL.
+- **D-36 (Fixture edit).** The old SQL marketplace tests used `http://img`; changed to `https://`.

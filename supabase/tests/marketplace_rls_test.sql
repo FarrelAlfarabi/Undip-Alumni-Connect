@@ -59,7 +59,7 @@ reset role;
 set role anon;
 select t.expect_error(
   $q$insert into marketplace_listings (seller_id, title, description, price_idr, category, city, image_url, contact_info)
-     values (t.pid('bunga.ayu@example.com'), 'Direct insert', 'x', 1, 'Other', 'Jakarta', 'http://x', 'a')$q$,
+     values (t.pid('bunga.ayu@example.com'), 'Direct insert', 'x', 1, 'Other', 'Jakarta', 'https://x.example.com/i.jpg', 'a')$q$,
   'permission denied');
 select t.expect_error($q$update marketplace_listings set status = 'approved'$q$, 'permission denied');
 select t.expect_error($q$delete from marketplace_listings$q$, 'permission denied');
@@ -71,7 +71,7 @@ grant insert, update, delete on marketplace_listings to anon;
 set local role anon;
 select t.expect_error(
   $q$insert into marketplace_listings (seller_id, title, description, price_idr, category, city, image_url, contact_info)
-     values (t.pid('bunga.ayu@example.com'), 'Direct insert', 'x', 1, 'Other', 'Jakarta', 'http://x', 'a')$q$,
+     values (t.pid('bunga.ayu@example.com'), 'Direct insert', 'x', 1, 'Other', 'Jakarta', 'https://x.example.com/i.jpg', 'a')$q$,
   'row-level security');
 -- update/delete are filtered to zero rows by RLS (no policy), not errors.
 with u as (update marketplace_listings set status = 'approved' returning 1)
@@ -92,13 +92,13 @@ reset role;
 set role anon;
 -- Non-subscriber cannot create.
 select t.expect_error(
-  format($q$select marketplace_create_listing(%L, 'Kue Kering', 'Enak', 30000, 'Food & Drink', 'Jakarta', 'http://img', null, 'wa 0800-0000-0000')$q$,
+  format($q$select marketplace_create_listing(%L, 'Kue Kering', 'Enak', 30000, 'Food & Drink', 'Jakarta', 'https://img.example.com/a.jpg', null, 'wa 0800-0000-0000')$q$,
          t.pid('ahmad.ramadhan@example.com')),
   'subscriber_required');
 -- Subscriber can; new row is pending.
 insert into t.ctx select 'own', (marketplace_create_listing(
   t.pid('bunga.ayu@example.com'), '  Kue Kering  ', 'Enak', 30000, 'Food & Drink', 'Jakarta',
-  'http://img', '', 'wa 0800-0000-0000')).id;
+  'https://img.example.com/a.jpg', '', 'wa 0800-0000-0000')).id;
 select t.assert((select status from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')) = 'pending', 'new listing is pending');
 select t.assert((select title from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')) = 'Kue Kering', 'title is trimmed');
 select t.assert((select shop_url is null from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')), 'empty shop_url stored as null');
@@ -110,19 +110,19 @@ reset role;
 -- ----------------------------------------------------------- constraints ---
 set role anon;
 select t.expect_error(
-  format($q$select marketplace_create_listing(%L, 'Tanpa kontak', 'x', 1000, 'Other', 'Jakarta', 'http://img', ' ', '  ')$q$, t.pid('bunga.ayu@example.com')),
+  format($q$select marketplace_create_listing(%L, 'Tanpa kontak', 'x', 1000, 'Other', 'Jakarta', 'https://img.example.com/a.jpg', ' ', '  ')$q$, t.pid('bunga.ayu@example.com')),
   'marketplace_listings_contact_present');
 select t.expect_error(
-  format($q$select marketplace_create_listing(%L, 'Harga minus', 'x', -1, 'Other', 'Jakarta', 'http://img', null, 'a')$q$, t.pid('bunga.ayu@example.com')),
+  format($q$select marketplace_create_listing(%L, 'Harga minus', 'x', -1, 'Other', 'Jakarta', 'https://img.example.com/a.jpg', null, 'a')$q$, t.pid('bunga.ayu@example.com')),
   'price_idr');
 select t.expect_error(
-  format($q$select marketplace_create_listing(%L, 'Kategori salah', 'x', 1, 'Weapons', 'Jakarta', 'http://img', null, 'a')$q$, t.pid('bunga.ayu@example.com')),
+  format($q$select marketplace_create_listing(%L, 'Kategori salah', 'x', 1, 'Weapons', 'Jakarta', 'https://img.example.com/a.jpg', null, 'a')$q$, t.pid('bunga.ayu@example.com')),
   'category');
 select t.expect_error(
-  format($q$select marketplace_create_listing(%L, 'Url salah', 'x', 1, 'Other', 'Jakarta', 'http://img', 'javascript:alert(1)', null)$q$, t.pid('bunga.ayu@example.com')),
+  format($q$select marketplace_create_listing(%L, 'Url salah', 'x', 1, 'Other', 'Jakarta', 'https://img.example.com/a.jpg', 'javascript:alert(1)', null)$q$, t.pid('bunga.ayu@example.com')),
   'shop_url');
 select t.expect_error(
-  format($q$select marketplace_create_listing(%L, 'ab', 'x', 1, 'Other', 'Jakarta', 'http://img', null, 'a')$q$, t.pid('bunga.ayu@example.com')),
+  format($q$select marketplace_create_listing(%L, 'ab', 'x', 1, 'Other', 'Jakarta', 'https://img.example.com/a.jpg', null, 'a')$q$, t.pid('bunga.ayu@example.com')),
   'title');
 reset role;
 
@@ -130,7 +130,7 @@ reset role;
 set role anon;
 -- Another user cannot edit / mark sold / delete someone else's listing.
 select t.expect_error(
-  format($q$select marketplace_update_listing(%L, %L, 'Hijack', 'x', 1, 'Other', 'Jakarta', 'http://img', null, 'a')$q$,
+  format($q$select marketplace_update_listing(%L, %L, 'Hijack', 'x', 1, 'Other', 'Jakarta', 'https://img.example.com/a.jpg', null, 'a')$q$,
          t.pid('siti.azizah@example.com'), (select v from t.ctx where k = 'own')),
   'not_owner');
 select t.expect_error(
@@ -162,7 +162,7 @@ select t.assert((select status || '|' || rejected_reason from marketplace_my_lis
 select t.assert((select count(*) from marketplace_listings where id = (select v::uuid from t.ctx where k = 'own')) = 0, 'rejected invisible to browse');
 -- Editing a rejected listing resubmits it (pending, reason cleared).
 select marketplace_update_listing(t.pid('bunga.ayu@example.com'), (select v::uuid from t.ctx where k = 'own'),
-  'Kue Kering Premium', 'Foto baru', 32000, 'Food & Drink', 'Jakarta', 'http://img2', null, 'wa 0800-0000-0000');
+  'Kue Kering Premium', 'Foto baru', 32000, 'Food & Drink', 'Jakarta', 'https://img.example.com/b.jpg', null, 'wa 0800-0000-0000');
 select t.assert((select status || '|' || coalesce(rejected_reason, 'null') from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')) = 'pending|null', 'edit after reject -> pending, reason cleared');
 select marketplace_review_listing(t.pid('farrel.abi.saleh@gmail.com'), (select v::uuid from t.ctx where k = 'own'), 'approved');
 select t.assert((select count(*) from marketplace_listings where id = (select v::uuid from t.ctx where k = 'own') and approved_at is not null) = 1, 'approved is visible with approved_at');
@@ -172,7 +172,7 @@ select t.expect_error(
   'invalid_state');
 -- Editing an approved listing sends it back to pending and hides it.
 select marketplace_update_listing(t.pid('bunga.ayu@example.com'), (select v::uuid from t.ctx where k = 'own'),
-  'Kue Kering Premium', 'Deskripsi baru', 33000, 'Food & Drink', 'Jakarta', 'http://img2', null, 'wa 0800-0000-0000');
+  'Kue Kering Premium', 'Deskripsi baru', 33000, 'Food & Drink', 'Jakarta', 'https://img.example.com/b.jpg', null, 'wa 0800-0000-0000');
 select t.assert((select status from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')) = 'pending', 'edit approved -> pending');
 select t.assert((select approved_at is null from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')), 'approved_at cleared on edit');
 select t.assert((select count(*) from marketplace_listings where id = (select v::uuid from t.ctx where k = 'own')) = 0, 'edited listing hidden until re-approved');
@@ -182,7 +182,7 @@ select marketplace_set_sold(t.pid('bunga.ayu@example.com'), (select v::uuid from
 select t.assert((select count(*) from marketplace_listings where id = (select v::uuid from t.ctx where k = 'own')) = 0, 'sold hidden from browse');
 select t.assert((select status from marketplace_my_listings(t.pid('bunga.ayu@example.com')) where id = (select v::uuid from t.ctx where k = 'own')) = 'sold', 'sold visible to seller');
 select t.expect_error(
-  format($q$select marketplace_update_listing(%L, %L, 'x1x', 'x', 1, 'Other', 'Jakarta', 'http://img', null, 'a')$q$, t.pid('bunga.ayu@example.com'), (select v from t.ctx where k = 'own')),
+  format($q$select marketplace_update_listing(%L, %L, 'x1x', 'x', 1, 'Other', 'Jakarta', 'https://img.example.com/a.jpg', null, 'a')$q$, t.pid('bunga.ayu@example.com'), (select v from t.ctx where k = 'own')),
   'invalid_state');
 reset role;
 
