@@ -79,6 +79,16 @@ order, `seed.sql`, then `seed_marketplace.sql`. The seed is idempotent
 `farrel.abi.saleh@gmail.com` the demo admin. To add another admin, insert
 its profile id into `marketplace_admins` from the dashboard.
 
+**Admin passphrase (after the security migrations).** The admin's profile id is
+public, so every admin action also needs a passphrase, checked in the
+database against a bcrypt hash. Nobody is admin until you set one from the SQL
+editor: `select marketplace_set_admin_key('<admin profile uuid>', '<16+
+character passphrase>');`. The Marketplace admin screen asks for it each time
+and keeps it only in memory. See `SECURITY_AUDIT.md` (SA-04). Never re-run only
+the original `20260930090*` marketplace migrations on a database that has the
+security migrations: they recreate the old id-only admin functions. Apply all
+`2026093*` migrations in order.
+
 **SQL/RLS checks (no Supabase needed).** `supabase/tests/run_local.sh`
 starts a throwaway local Postgres (needs the Postgres server binaries and
 `psql`), applies every migration and seed, runs the marketplace migrations

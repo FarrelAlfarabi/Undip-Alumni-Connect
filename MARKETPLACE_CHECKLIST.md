@@ -55,7 +55,7 @@ Tick the box when it behaves as written.
 - [ ] Delete asks first; Cancel keeps it; Delete removes it.
 
 ## Admin (farrel.abi.saleh@gmail.com)
-- [ ] An "Admin review" icon shows in the Marketplace app bar.
+- [ ] An "Admin review" icon shows in the Marketplace app bar. Tapping it asks for the admin passphrase (set with `marketplace_set_admin_key`); a wrong one is refused, the right one opens the queue.
 - [ ] Review queue lists pending listings (seed has 2) with seller name,
       description, shop link and contact.
 - [ ] Approve: listing leaves the queue and appears in Market.

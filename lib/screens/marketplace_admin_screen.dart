@@ -9,19 +9,52 @@ import 'marketplace_screen.dart' show ListingImage;
 
 /// Demo admin: review queue for pending listings, plus report counts per
 /// listing. Only reachable when marketplace_admins contains the current
-/// profile. That check is not authenticated (see the repository docs).
-class MarketplaceAdminScreen extends StatelessWidget {
+/// profile, and every action also needs the admin passphrase (the profile id
+/// alone is public, see SECURITY_AUDIT.md SA-04). The passphrase is asked for
+/// here, kept only in this screen's memory and never stored on the device.
+class MarketplaceAdminScreen extends StatefulWidget {
   const MarketplaceAdminScreen({
     super.key,
     required this.adminId,
     required this.repository,
+    this.adminKey,
   });
 
   final String adminId;
   final MarketplaceRepository repository;
 
+  /// Pre-filled passphrase (tests). Normally null: the screen asks for it.
+  final String? adminKey;
+
+  @override
+  State<MarketplaceAdminScreen> createState() => _MarketplaceAdminScreenState();
+}
+
+class _MarketplaceAdminScreenState extends State<MarketplaceAdminScreen> {
+  String? _key;
+
+  @override
+  void initState() {
+    super.initState();
+    _key = widget.adminKey;
+  }
+
+  @override
+  void dispose() {
+    _key = null;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final key = _key;
+    if (key == null) {
+      return _AdminKeyGate(
+        adminId: widget.adminId,
+        repository: widget.repository,
+        onUnlocked: (k) => setState(() => _key = k),
+      );
+    }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -40,8 +73,16 @@ class MarketplaceAdminScreen extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  _ReviewQueue(adminId: adminId, repository: repository),
-                  _ReportsTab(adminId: adminId, repository: repository),
+                  _ReviewQueue(
+                    adminId: widget.adminId,
+                    adminKey: key,
+                    repository: widget.repository,
+                  ),
+                  _ReportsTab(
+                    adminId: widget.adminId,
+                    adminKey: key,
+                    repository: widget.repository,
+                  ),
                 ],
               ),
             ),
@@ -52,10 +93,136 @@ class MarketplaceAdminScreen extends StatelessWidget {
   }
 }
 
-class _ReviewQueue extends StatefulWidget {
-  const _ReviewQueue({required this.adminId, required this.repository});
+/// Asks for the admin passphrase and checks it with one real admin call.
+class _AdminKeyGate extends StatefulWidget {
+  const _AdminKeyGate({
+    required this.adminId,
+    required this.repository,
+    required this.onUnlocked,
+  });
 
   final String adminId;
+  final MarketplaceRepository repository;
+  final void Function(String key) onUnlocked;
+
+  @override
+  State<_AdminKeyGate> createState() => _AdminKeyGateState();
+}
+
+class _AdminKeyGateState extends State<_AdminKeyGate> {
+  final _controller = TextEditingController();
+  bool _checking = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final key = _controller.text;
+    if (key.isEmpty) {
+      setState(() => _error = 'Enter the admin passphrase.');
+      return;
+    }
+    setState(() {
+      _checking = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.fetchPending(widget.adminId, key);
+      if (!mounted) return;
+      widget.onUnlocked(key);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _checking = false;
+        _error = marketplaceErrorMessage(e);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Marketplace admin')),
+      body: Column(
+        children: [
+          const MarketplaceDemoNotice(),
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Admin passphrase',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Admin actions need the passphrase, not just your '
+                        'account. It is not saved on this device.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        key: const Key('admin-key-field'),
+                        controller: _controller,
+                        obscureText: true,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        enabled: !_checking,
+                        onSubmitted: (_) => _submit(),
+                        decoration: InputDecoration(
+                          labelText: 'Passphrase',
+                          errorText: _error,
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        key: const Key('admin-key-submit'),
+                        onPressed: _checking ? null : _submit,
+                        child: _checking
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Unlock'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewQueue extends StatefulWidget {
+  const _ReviewQueue({
+    required this.adminId,
+    required this.adminKey,
+    required this.repository,
+  });
+
+  final String adminId;
+  final String adminKey;
   final MarketplaceRepository repository;
 
   @override
@@ -69,12 +236,12 @@ class _ReviewQueueState extends State<_ReviewQueue> {
   @override
   void initState() {
     super.initState();
-    _future = widget.repository.fetchPending(widget.adminId);
+    _future = widget.repository.fetchPending(widget.adminId, widget.adminKey);
   }
 
   void _reload() {
     setState(() {
-      _future = widget.repository.fetchPending(widget.adminId);
+      _future = widget.repository.fetchPending(widget.adminId, widget.adminKey);
     });
   }
 
@@ -92,6 +259,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
     try {
       await widget.repository.review(
         adminId: widget.adminId,
+        adminKey: widget.adminKey,
         listingId: l.id,
         approve: approve,
         reason: reason,
@@ -278,9 +446,14 @@ class _ReviewQueueState extends State<_ReviewQueue> {
 }
 
 class _ReportsTab extends StatefulWidget {
-  const _ReportsTab({required this.adminId, required this.repository});
+  const _ReportsTab({
+    required this.adminId,
+    required this.adminKey,
+    required this.repository,
+  });
 
   final String adminId;
+  final String adminKey;
   final MarketplaceRepository repository;
 
   @override
@@ -299,7 +472,10 @@ class _ReportsTabState extends State<_ReportsTab> {
   // Titles come from the public approved list; a reported listing that is
   // no longer approved shows as unavailable.
   Future<List<(ReportCount, String?)>> _load() async {
-    final counts = await widget.repository.fetchReportCounts(widget.adminId);
+    final counts = await widget.repository.fetchReportCounts(
+      widget.adminId,
+      widget.adminKey,
+    );
     if (counts.isEmpty) return [];
     final approved = await widget.repository.fetchApproved();
     final titles = {for (final l in approved) l.id: l.title};

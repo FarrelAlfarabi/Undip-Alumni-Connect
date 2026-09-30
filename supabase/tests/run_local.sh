@@ -32,8 +32,10 @@ for f in "$ROOT"/supabase/migrations/*.sql; do
 done
 $PSQL -f "$ROOT/supabase/seed.sql" >/dev/null
 
-echo "== re-run marketplace migrations (idempotency)"
-for f in "$ROOT"/supabase/migrations/2026093009*.sql; do
+echo "== re-run marketplace and security migrations in order (idempotency)"
+# All 2026093* files, in order: re-running only the original marketplace
+# migrations would bring back the old id-only admin functions.
+for f in "$ROOT"/supabase/migrations/2026093*.sql; do
   $PSQL -f "$f" >/dev/null
 done
 
@@ -59,6 +61,6 @@ profiles="$($PSQL -tA -c "select count(*) from alumni_profiles")"
 echo "marketplace objects left: $left; other policies before/after: $before/$after; profiles: $profiles"
 [ "$left" = "0" ] || { echo "FAIL: rollback left marketplace objects"; exit 1; }
 [ "$before" = "$after" ] || { echo "FAIL: rollback changed non-marketplace policies"; exit 1; }
-for f in "$ROOT"/supabase/migrations/2026093009*.sql; do $PSQL -f "$f" >/dev/null; done
+for f in "$ROOT"/supabase/migrations/2026093*.sql; do $PSQL -f "$f" >/dev/null; done
 $PSQL -f "$ROOT/supabase/seed_marketplace.sql"
 echo "ALL SQL CHECKS PASSED"

@@ -902,3 +902,11 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** the live Supabase project, the deployed Vercel site, the real deployed key, other branches' history, real devices.
 **Open:** Part B fixes what can be fixed without real Supabase Auth; the rest needs the auth project.
 
+## 2026-09-30 — Home hub, Stage 5B: security fixes that need no real auth
+
+**Done (commits by area):** (1) web hardening: security headers in `vercel.json`, build refuses a non-publishable Supabase key; (2) input safety: no raw error text on screen, only http(s) links open; (3) migration (local only) for notifications, buckets, length limits, https images, review audit; (4) admin passphrase so the public admin id alone no longer gives admin.
+**Decided:** migrations are new files, never applied by me, each with a tested rollback; CSP allows Flutter's inline styles but no inline or eval scripts; buckets stay public (private needs auth); the admin passphrase is a shared secret, not real auth. Full list: `docs/hub/STAGE_REPORTS.md` D-29 to D-39.
+**Verified:** analyze clean, 229 tests pass, SQL checks and audit probes (pre, post, rollback) pass, web build ok, real Chromium loads the app with the new headers.
+**Not verified:** the deployed site with the CDN path, real Supabase Storage and pgcrypto behaviour, real devices.
+**Open:** everything that needs real Supabase Auth (see `SECURITY_AUDIT.md`).
+

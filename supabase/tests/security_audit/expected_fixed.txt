@@ -2,6 +2,8 @@
 # Everything else must still show the weakness: it needs real Supabase Auth.
 P06
 P07
+P18
+P19
 P09
 P24
 P25

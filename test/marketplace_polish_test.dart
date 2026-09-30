@@ -138,6 +138,7 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
+          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );
@@ -196,6 +197,7 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
+          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );
@@ -206,6 +208,7 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
+          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );

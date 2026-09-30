@@ -319,6 +319,29 @@ Reasoning to verify on a real Supabase database, because the local stub does not
 
 ---
 
+## Stage 5B-4: Admin passphrase (SA-04)
+
+**Status: DONE** (SQL tested on the local stub; NOT applied to any live project)
+
+### What changed
+- New migration `supabase/migrations/20260930100100_security_admin_key.sql`: `marketplace_admins.key_hash` (bcrypt via pgcrypto), owner-only `marketplace_set_admin_key(profile, passphrase)` (16+ characters), internal `marketplace_admin_authorized(...)` (not callable by the API roles; every refusal waits 1 second). `marketplace_admin_pending`, `marketplace_review_listing` and `marketplace_report_counts` now need `p_key`; the old id-only signatures are dropped. An admin with no passphrase set cannot act.
+- Rollback: `supabase/rollback_security_hardening.sql` now covers both security migrations; `supabase/rollback_marketplace.sql` drops the new functions too.
+- App: the three repository admin methods take `adminKey`; `MarketplaceAdminScreen` asks for the passphrase first (obscured field, wrong one refused with a clear message, kept in memory only, never stored).
+- Tests: SQL in `supabase/tests/marketplace_rls_test.sql` (hash is bcrypt, no plain text, short key refused, anon cannot run the helpers, id-only calls and wrong key refused, old signatures gone, admin without key refused); `test/security_fixes/admin_passphrase_test.dart` (7 tests); existing admin tests updated for the new signature. `run_audit.sh post`: P18 and P19 fixed, new control C7 (the right passphrase works).
+- `supabase/tests/run_local.sh` now re-runs ALL `2026093*` migrations for its idempotency step. Found while doing this: re-running only the original marketplace migrations recreates the old id-only admin functions and undoes the fix. Documented in the README.
+
+### Still open (needs auth)
+- P16 and P17: the admin's id is still readable and `marketplace_is_admin(id)` still confirms it. With the passphrase in place the id alone gives no access, but this is a shared secret, not real authentication.
+- A shared passphrase is sent by the app on each admin call over HTTPS. Anyone who learns it is admin. Use a long random one and rotate it with `marketplace_set_admin_key`.
+
+### Checks run
+- `bash supabase/tests/run_local.sh`: passes. `run_audit.sh pre` and `post`: pass (including the rollback check). `flutter analyze` clean. 229 tests pass. Web build ok.
+
+### Could not test
+- pgcrypto on a real Supabase project (the migration creates the extension in the `extensions` schema, which is where Supabase installs it).
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
@@ -356,3 +379,6 @@ Reasoning to verify on a real Supabase database, because the local stub does not
 - **D-34 (NOT VALID constraints).** Length and https checks apply to new and changed rows only, so the migration cannot fail on old data and can be re-run.
 - **D-35 (Buckets stay public).** Making `cvs` private needs signed URLs, which need a session (auth). So only listing, size and type are fixed; a CV is still reachable by anyone who has its exact URL.
 - **D-36 (Fixture edit).** The old SQL marketplace tests used `http://img`; changed to `https://`.
+- **D-37 (Passphrase, not a role).** A server-checked shared passphrase per admin, because real per-user auth is out of scope. Rejected: hiding the admin id (it is readable by design); a hard-coded key in the app (would be public in the web bundle); counting failed attempts in a table (an exception rolls the counter back, so it cannot persist without an autonomous transaction).
+- **D-38 (1-second refusal delay).** `pg_sleep(1)` on every refusal limits online guessing to about one try per second per connection. Trade-off: an attacker can tie up database connections. Accepted for a demo; use a long random passphrase.
+- **D-39 (Oracle left).** `marketplace_is_admin(id)` is unchanged because the UI uses it to show the admin entry. With the passphrase it only reveals which ids are admins.

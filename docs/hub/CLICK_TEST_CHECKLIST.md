@@ -43,7 +43,7 @@ Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a d
 
 ## G. Admin and non-admin
 - [ ] Non-admin (Ahmad): Marketplace has no admin entry. Cannot post (needs to subscribe).
-- [ ] Admin: Marketplace shows the review queue; approve and reject (with reason) work.
+- [ ] Admin: the Marketplace admin icon asks for the admin passphrase (wrong one refused, right one opens the queue); approve and reject (with reason) work. Only after the security migrations and `marketplace_set_admin_key` were run on the demo database.
 - [ ] Sign out on the Profile tab, then verify as the other role: the old PIN is gone and you are asked to set a new one.
 
 ## H. Empty announcements

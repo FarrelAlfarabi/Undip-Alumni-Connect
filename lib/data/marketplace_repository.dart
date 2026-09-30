@@ -144,10 +144,17 @@ class MarketplaceRepository {
     return result == true;
   }
 
-  /// Pending listings, oldest first, with seller info attached.
-  Future<List<MarketplaceListing>> fetchPending(String adminId) async {
+  /// Pending listings, oldest first, with seller info attached. Needs the
+  /// admin passphrase as well as the id: the id alone is public (audit SA-04).
+  Future<List<MarketplaceListing>> fetchPending(
+    String adminId,
+    String adminKey,
+  ) async {
     final rows = await _guard(
-      () => _api.rpc('marketplace_admin_pending', {'p_admin': adminId}),
+      () => _api.rpc('marketplace_admin_pending', {
+        'p_admin': adminId,
+        'p_key': adminKey,
+      }),
     );
     final listings = _listings(rows);
     if (listings.isEmpty) return listings;
@@ -165,6 +172,7 @@ class MarketplaceRepository {
   /// Approves, or rejects with a required [reason].
   Future<MarketplaceListing> review({
     required String adminId,
+    required String adminKey,
     required String listingId,
     required bool approve,
     String? reason,
@@ -175,14 +183,21 @@ class MarketplaceRepository {
         'p_listing': listingId,
         'p_decision': approve ? 'approved' : 'rejected',
         'p_reason': approve ? null : reason?.trim(),
+        'p_key': adminKey,
       }),
     );
     return MarketplaceListing.fromMap(_single(row));
   }
 
-  Future<List<ReportCount>> fetchReportCounts(String adminId) async {
+  Future<List<ReportCount>> fetchReportCounts(
+    String adminId,
+    String adminKey,
+  ) async {
     final rows = await _guard(
-      () => _api.rpc('marketplace_report_counts', {'p_admin': adminId}),
+      () => _api.rpc('marketplace_report_counts', {
+        'p_admin': adminId,
+        'p_key': adminKey,
+      }),
     );
     return (rows as List)
         .map((r) => ReportCount.fromMap(Map<String, dynamic>.from(r as Map)))

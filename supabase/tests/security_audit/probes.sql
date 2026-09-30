@@ -68,6 +68,14 @@ insert into alumni_profiles (id, nim, name, faculty, major, graduation_year, ema
  ('bbbbbbbb-0000-4000-8000-000000000002','B002','Bob Example','Fakultas Ekonomika dan Bisnis','Akuntansi',2021,'bob@example.com','free','verified','Beta'),
  ('cccccccc-0000-4000-8000-000000000003','C003','Audit Admin','Fakultas Ekonomika dan Bisnis','Manajemen',2019,'audit.admin@example.com','free','verified','Gamma');
 insert into marketplace_admins (profile_id) values ('cccccccc-0000-4000-8000-000000000003');
+-- When the passphrase migration is present, give the admin a passphrase the
+-- way the owner would (owner-only helper). Absent before that migration.
+do $$
+begin
+  if to_regprocedure('marketplace_set_admin_key(uuid,text)') is not null then
+    perform marketplace_set_admin_key('cccccccc-0000-4000-8000-000000000003', 'audit-passphrase-1234');
+  end if;
+end $$;
 
 insert into conversations (id, participant_one, participant_two) values
  ('dddddddd-0000-4000-8000-000000000001','aaaaaaaa-0000-4000-8000-000000000001','bbbbbbbb-0000-4000-8000-000000000002');
@@ -152,6 +160,15 @@ select audit.rec('C3', audit.try($q$select * from marketplace_admins$q$) like 'o
 select audit.rec('C4', audit.try($q$select * from marketplace_reports$q$) like 'ok%', 'control: anon reads reports (must be blocked)');
 select audit.rec('C5', audit.try($q$insert into alumni_profiles (nim, name, faculty, major, graduation_year, email) values ('Z9','Fake','F','M',2020,'fake@example.com')$q$) like 'ok%', 'control: anon inserts a fake profile (must be blocked)');
 select audit.rec('C6', audit.n($q$select * from marketplace_listings where status = 'pending'$q$) > 0, 'control: anon reads pending listings directly (must be blocked)');
+
+-- Positive control (only when passphrase-protected admin functions exist):
+-- the real admin, with the right passphrase, still gets in as anon.
+do $$
+begin
+  if to_regprocedure('marketplace_admin_pending(uuid,text)') is not null then
+    perform audit.rec('C7', audit.n(format('select * from marketplace_admin_pending(%L, %L)', 'cccccccc-0000-4000-8000-000000000003', 'audit-passphrase-1234')) < 0, 'control: the admin with the right passphrase can use the queue (must work)');
+  end if;
+end $$;
 
 \o
 select 'PROBE|' || id || '|' || weak::text || '|' || note from audit.results order by id;

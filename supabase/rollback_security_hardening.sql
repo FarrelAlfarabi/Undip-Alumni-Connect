@@ -5,11 +5,10 @@
 
 -- admin key migration (safe if it was never applied)
 alter table if exists marketplace_admins drop column if exists key_hash;
-alter table if exists marketplace_admins drop column if exists failed_attempts;
-alter table if exists marketplace_admins drop column if exists locked_until;
 
 -- SA-18: restore the original review function (no reviewer columns), drop columns
-drop function if exists marketplace_is_admin_key(uuid, text);
+drop function if exists marketplace_set_admin_key(uuid, text);
+drop function if exists marketplace_admin_authorized(uuid, text);
 drop function if exists marketplace_admin_pending(uuid, text);
 drop function if exists marketplace_review_listing(uuid, uuid, text, text, text);
 drop function if exists marketplace_report_counts(uuid, text);
