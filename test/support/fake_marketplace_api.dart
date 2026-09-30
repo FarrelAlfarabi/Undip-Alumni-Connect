@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 
 /// A listings row as the API returns it. Override fields per test.
@@ -49,6 +51,10 @@ class FakeApi implements MarketplaceApi {
   List<Map<String, dynamic>> approved = [];
   Map<String, dynamic>? profile;
   dynamic rpcResult;
+
+  /// Per-function result, wins over [rpcResult].
+  final rpcResults = <String, dynamic>{};
+  final uploads = <String>[];
   Object? throwOnCall;
 
   @override
@@ -63,7 +69,7 @@ class FakeApi implements MarketplaceApi {
     calls.add(function);
     params[function] = p;
     if (throwOnCall != null) throw throwOnCall!;
-    return rpcResult;
+    return rpcResults.containsKey(function) ? rpcResults[function] : rpcResult;
   }
 
   @override
@@ -77,5 +83,17 @@ class FakeApi implements MarketplaceApi {
   Future<Map<String, dynamic>?> selectProfile(String id) async {
     calls.add('profile');
     return profile;
+  }
+
+  @override
+  Future<String> uploadImage(
+    String path,
+    Uint8List bytes,
+    String contentType,
+  ) async {
+    calls.add('upload');
+    if (throwOnCall != null) throw throwOnCall!;
+    uploads.add('$path|$contentType');
+    return 'https://storage.example/$path';
   }
 }

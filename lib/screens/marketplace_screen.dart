@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../data/marketplace_format.dart';
+import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_detail_screen.dart';
+import 'marketplace_form_screen.dart';
+import 'marketplace_gate.dart';
+import 'my_listings_screen.dart';
 
 enum MarketplaceSort {
   newest('Newest'),
@@ -48,7 +52,11 @@ class MarketplaceScreen extends StatefulWidget {
     super.key,
     required this.currentUser,
     this.repository,
+    this.pickImage = pickListingImage,
   });
+
+  /// Injectable for tests; defaults to the file picker.
+  final ImagePickerFn pickImage;
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
@@ -100,12 +108,56 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     });
   }
 
+  String get _myId => widget.currentUser.value['id'] as String;
+
+  Future<void> _post() async {
+    if (!await ensureSubscriber(context, widget.currentUser)) return;
+    if (!mounted) return;
+    await Navigator.of(context).push<MarketplaceListing>(
+      MaterialPageRoute(
+        builder: (_) => MarketplaceFormScreen(
+          sellerId: _myId,
+          repository: _repo,
+          defaultCity: widget.currentUser.value['city'] as String?,
+          pickImage: widget.pickImage,
+        ),
+      ),
+    );
+    // A new listing is pending, so browse does not change until approval.
+  }
+
+  Future<void> _openMine() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MyListingsScreen(
+          sellerId: _myId,
+          repository: _repo,
+          defaultCity: widget.currentUser.value['city'] as String?,
+          pickImage: widget.pickImage,
+        ),
+      ),
+    );
+    if (mounted) _reload();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Marketplace'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: _openMine,
+            icon: const Icon(Icons.inventory_2_outlined),
+            tooltip: 'My listings',
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _post,
+        icon: const Icon(Icons.add),
+        label: const Text('Post a listing'),
       ),
       body: Column(
         children: [
@@ -223,7 +275,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               child: Text('No listings match these filters.'),
                             )
                           : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
                               itemCount: listings.length,
                               separatorBuilder: (_, _) =>
                                   const SizedBox(height: 12),

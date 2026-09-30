@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/marketplace_listing.dart';
@@ -39,6 +41,9 @@ abstract class MarketplaceApi {
 
   /// Full alumni_profiles row (what ProfileDetailScreen expects), or null.
   Future<Map<String, dynamic>?> selectProfile(String id);
+
+  /// Uploads to the `marketplace` bucket and returns the public URL.
+  Future<String> uploadImage(String path, Uint8List bytes, String contentType);
 }
 
 class SupabaseMarketplaceApi implements MarketplaceApi {
@@ -79,6 +84,21 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
         .maybeSingle();
     return row == null ? null : Map<String, dynamic>.from(row);
   }
+
+  @override
+  Future<String> uploadImage(
+    String path,
+    Uint8List bytes,
+    String contentType,
+  ) async {
+    final bucket = _client.storage.from('marketplace');
+    await bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: contentType),
+    );
+    return bucket.getPublicUrl(path);
+  }
 }
 
 /// Everything the marketplace screens need from the database.
@@ -97,6 +117,20 @@ class MarketplaceRepository {
   Future<List<MarketplaceListing>> fetchApproved() async {
     final rows = await _guard(() => _api.selectApprovedListings());
     return rows.map(MarketplaceListing.fromMap).toList();
+  }
+
+  /// Uploads a listing photo and returns its public URL. The file name is
+  /// sanitised and prefixed with the seller id and a timestamp.
+  Future<String> uploadImage({
+    required String sellerId,
+    required String fileName,
+    required Uint8List bytes,
+  }) async {
+    final safeName = fileName.replaceAll(RegExp(r'[^\w.\-]'), '_');
+    final path = '$sellerId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+    return _guard(
+      () => _api.uploadImage(path, bytes, imageContentType(fileName)),
+    );
   }
 
   /// The seller's full profile row, for opening their profile screen.
@@ -233,4 +267,19 @@ class MarketplaceRepository {
     };
     return MarketplaceException(code, msg);
   }
+}
+
+/// Allowed listing photo extensions (matches the bucket policy).
+const kListingImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+/// Bucket file size limit (2 MB).
+const kListingImageMaxBytes = 2 * 1024 * 1024;
+
+String imageContentType(String fileName) {
+  final ext = fileName.split('.').last.toLowerCase();
+  return switch (ext) {
+    'png' => 'image/png',
+    'webp' => 'image/webp',
+    _ => 'image/jpeg',
+  };
 }
