@@ -392,3 +392,58 @@ Reasoning to verify on a real Supabase database, because the local stub does not
 - **D-37 (Passphrase, not a role).** A server-checked shared passphrase per admin, because real per-user auth is out of scope. Rejected: hiding the admin id (it is readable by design); a hard-coded key in the app (would be public in the web bundle); counting failed attempts in a table (an exception rolls the counter back, so it cannot persist without an autonomous transaction).
 - **D-38 (1-second refusal delay).** `pg_sleep(1)` on every refusal limits online guessing to about one try per second per connection. Trade-off: an attacker can tie up database connections. Accepted for a demo; use a long random passphrase.
 - **D-39 (Oracle left).** `marketplace_is_admin(id)` is unchanged because the UI uses it to show the admin entry. With the passphrase it only reveals which ids are admins.
+
+---
+
+## Final summary
+
+### 1. Stages
+
+| Stage | Status | Commit | Checks run |
+|---|---|---|---|
+| 0 Recon | DONE | `463b1cd` | baseline analyze, 80 tests, web build |
+| 1 Home hub | DONE | `2a2cd92` | analyze, 110 tests, web build |
+| 2 Preview tiles | DONE | `d612041` | analyze, 114 tests, web build |
+| 3 Lock screen | DONE (device parts untested) | `4ecd735` | analyze, 173 tests, web build |
+| 4 Polish and regression | DONE | `631d9c7` | analyze, 191 tests, web build |
+| 5A Security audit | DONE | `b3ab337` | analyze, 195 tests, SQL checks, 38 audit probes |
+| 5B web hardening | DONE | `3af1df5` | analyze, 204 tests, Chromium CSP check |
+| 5B input safety | DONE | `e78c48a` | analyze, 218 tests, web build |
+| 5B migration (local only) | DONE | `bc48fa9` | analyze, 222 tests, SQL checks, audit pre/post/rollback |
+| 5B admin passphrase | DONE | `b9f5486` | analyze, 229 tests, SQL checks, audit pre/post/rollback, web build |
+| 5B final gate | DONE | `bc69cec` | analyze, 230 tests, SQL checks, audit, web build |
+
+All commits are on `feature/home-hub` and pushed. Nothing was committed to `main`, `demo` or any other branch, and nothing was merged.
+
+### 2. Decisions log
+See the "Decisions log" section above (D-1 to D-39).
+
+### 3. What I could not run or verify
+- Anything on a real Android or iOS device (secure storage, biometric prompt, Android activity/theme/manifest changes, Face ID string, relock after real backgrounding). No SDK or device here.
+- Real Supabase data and the live project (forbidden by the rules). Every database change is tested only on a local Postgres stub; the stub does not run the Storage service, PostgREST or real auth.
+- The deployed Vercel site: CanvasKit from the Google CDN could not be loaded from this sandbox, so the CSP was checked against a local-canvaskit build only.
+- The real deployed Supabase key, other branches' git history, `pgcrypto` on a real project.
+- Auto-advance timing on a real device (fake time only), dark mode (the app has none).
+
+### 4. Packages added
+| Package | Why |
+|---|---|
+| `flutter_secure_storage` ^11.2.0 | PIN hash and remembered-person record in Keychain / Keystore |
+| `local_auth` ^3.0.2 | Optional fingerprint / face unlock |
+| `crypto` ^3.0.7 | HMAC-SHA256 for PBKDF2 (already a transitive dependency) |
+`intl` appeared as a transitive dependency of `local_auth`. Nothing else was added.
+
+### 5. Manual click-test checklist
+`docs/hub/CLICK_TEST_CHECKLIST.md` (sections A to I: new user, home hub, returning user with a PIN, without a PIN, five wrong PINs, background timeout, admin and non-admin, empty announcements, web).
+
+### 6. Security audit verdict
+- **Safe to load real alumni data: NO.** 4 Critical and 5 High findings are open.
+- Fixed: SA-04 (admin takeover, by passphrase), SA-12 (headers), SA-13 (raw errors), SA-14 (unsafe links), SA-16 (https images), SA-18 (audit trail), SA-19 (key check at build), SA-22 (Android backup). Partly fixed: SA-10, SA-11, SA-15, SA-20, SA-24.
+- Open: SA-01, SA-02, SA-03, SA-05, SA-06, SA-07, SA-09, SA-17, plus SA-08 (owner decision).
+- Needs real Supabase Auth: SA-01, 02, 03, 05, 06 (with payments), 07, 09, 10 (reads), 17. Plan, estimate (3 to 5 weeks) and what to decide first are in `SECURITY_AUDIT.md` section 9.
+
+### 7. Three things to look at first
+1. `SECURITY_AUDIT.md`: the verdict box, then section 8. In particular decide SA-08 (real people's emails in the public seeds and notes) and read section 10 (manual steps).
+2. Try the lock screen on a real phone (`docs/hub/CLICK_TEST_CHECKLIST.md` C to F). I could only test it with fakes. Also decide D-23 (a failed profile fetch clears local data, even on a network error).
+3. Apply the two `2026093010*` migrations to a separate project or branch database (not the shared one), set the admin passphrase, and check a CV upload, a marketplace photo and a notification before going further.
+
