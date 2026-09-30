@@ -49,4 +49,16 @@ echo "listings/admins after run 1: $first, after run 2: $second"
 
 echo "== marketplace_rls_test.sql"
 $PSQL -f "$ROOT/supabase/tests/marketplace_rls_test.sql"
+echo "== rollback removes only marketplace objects, and a re-apply works"
+before="$($PSQL -tA -c "select count(*) from pg_policies where schemaname in ('public','storage') and policyname not like 'marketplace_%'")"
+$PSQL -f "$ROOT/supabase/rollback_marketplace.sql" >/dev/null
+$PSQL -f "$ROOT/supabase/rollback_marketplace.sql" >/dev/null   # twice = still fine
+left="$($PSQL -tA -c "select (select count(*) from information_schema.tables where table_schema='public' and table_name like 'marketplace%') + (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'marketplace%') + (select count(*) from storage.buckets where id='marketplace') + (select count(*) from pg_policies where policyname like 'marketplace_%')")"
+after="$($PSQL -tA -c "select count(*) from pg_policies where schemaname in ('public','storage') and policyname not like 'marketplace_%'")"
+profiles="$($PSQL -tA -c "select count(*) from alumni_profiles")"
+echo "marketplace objects left: $left; other policies before/after: $before/$after; profiles: $profiles"
+[ "$left" = "0" ] || { echo "FAIL: rollback left marketplace objects"; exit 1; }
+[ "$before" = "$after" ] || { echo "FAIL: rollback changed non-marketplace policies"; exit 1; }
+for f in "$ROOT"/supabase/migrations/2026093009*.sql; do $PSQL -f "$f" >/dev/null; done
+$PSQL -f "$ROOT/supabase/seed_marketplace.sql"
 echo "ALL SQL CHECKS PASSED"
