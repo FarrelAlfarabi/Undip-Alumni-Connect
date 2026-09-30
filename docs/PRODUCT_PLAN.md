@@ -1,6 +1,6 @@
 # Lingkaran (UNDIP Alumni Connect): Product and Build Plan (public excerpt)
 
-**Version:** 1.8, 30 September 2026
+**Version:** 1.9, 30 September 2026
 **Status:** Public, redacted excerpt of an internal planning document. Business terms, finances, legal and partner details are intentionally left out. Dummy data only; no real payments.
 
 ## 1. What this is
@@ -45,6 +45,7 @@ The core idea is a verified alumni directory connected to an alumni job referral
 - Each stage runs static analysis, tests, database-rule checks and a web build; failures are fixed and re-run before a commit.
 - Marketplace demo: built in stages (data layer, browse and detail, create and subscriber gate, admin approval and reporting, polish and regression).
 - Next: home hub, Preview tiles and returning-user lock screen, in staged prompts.
+- Before any real user data is loaded: a security and privacy audit against the OWASP checklist, reported first and fixed in reviewed steps.
 
 ## 6. Known technical gaps
 
