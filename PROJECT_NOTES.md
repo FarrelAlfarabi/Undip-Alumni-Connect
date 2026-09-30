@@ -885,3 +885,11 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** anything on a real Android or iOS device (Keystore/Keychain, the biometric prompt, the Android activity/theme changes, the Face ID string); the real profile fetch.
 **Open:** on-device test; decide whether a network error should really clear local data (D-23).
 
+## 2026-09-30 — Home hub, Stage 4: polish and regression
+
+**Done:** searched the app for fee and commission wording (none exists; only item prices and the Rp 99.000/year subscription line), added a test that keeps it that way, added layout tests for the lock, PIN setup and Welcome screens at 320, 360 and 390 px with large text, made the lock screen compact on short phones, updated README, DEMO_SCRIPT and MARKETPLACE_CHECKLIST for the new 4-tab navigation, and wrote the manual click-test checklist (`docs/hub/CLICK_TEST_CHECKLIST.md`).
+**Decided:** no dark-mode check because the app has no dark theme. `DEMO_SCRIPT.md` no longer matches the pitch deck bottom nav (flagged, not fixed).
+**Verified:** analyze clean, 191 tests pass, web build ok, Stage 1 reachability table still holds.
+**Not verified:** anything on a real phone.
+**Open:** run the click-test; decide whether "One payment covers a full year" should be softer on the demo Subscribe screen.
+

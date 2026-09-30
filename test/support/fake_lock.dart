@@ -82,7 +82,9 @@ Future<LockService> makeRememberedLock({
 /// Taps the PIN pad keys for [pin], then lets async work finish.
 Future<void> enterPin(WidgetTester tester, String pin) async {
   for (final d in pin.split('')) {
-    await tester.tap(find.byKey(Key('pin-$d')));
+    final key = find.byKey(Key('pin-$d'));
+    await tester.ensureVisible(key); // small screens scroll
+    await tester.tap(key);
     await tester.pump();
   }
   await tester.pump(const Duration(milliseconds: 50));

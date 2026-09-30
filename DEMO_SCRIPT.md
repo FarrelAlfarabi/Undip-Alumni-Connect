@@ -29,7 +29,7 @@ Written for the Sep 23 demo. Assumes the app is already running (see README/PROJ
 
 ## 2. Bottom navigation
 
-Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bottom nav from the pitch deck slides already shown to Gilang.
+Point out the 4 tabs: **Home, Directory, Chat, Profile** (Jobs, News, Marketplace and Nearby open from Home) — this differs from the Alumni/Jobs/Chat/News bottom nav on the pitch deck slides already shown to Gilang, so say so.
 
 ---
 

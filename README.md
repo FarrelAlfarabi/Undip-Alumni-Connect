@@ -54,7 +54,7 @@ demo.
 
 ## Marketplace (demo)
 
-An alumni-to-alumni marketplace on the **Market** tab. **Demo only: dummy
+An alumni-to-alumni marketplace, opened from the **Marketplace** tile on Home. **Demo only: dummy
 data, no real payments, no checkout, nothing is charged.** Every marketplace screen
 shows a "Demo only, no real payments" notice.
 
@@ -156,6 +156,8 @@ Auth session). Anyone who knows a valid alumni email can still verify as that
 person, on any device, and the PIN does not stop that. The lock only saves the
 owner from re-verifying on every launch and keeps a casual bystander out of an
 unlocked phone. It does not protect the data in the database.
+
+**Manual click-test:** `docs/hub/CLICK_TEST_CHECKLIST.md`.
 
 **Known gaps.** Not tested on a real Android or iOS device (only in
 widget tests with fakes and on the web build). Android needs

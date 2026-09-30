@@ -160,6 +160,8 @@ class _LockScreenState extends State<LockScreen> {
     final theme = Theme.of(context);
     const fg = AppTheme.paper;
     final waiting = _waitUntil != null;
+    // Short phones (about 568 px tall): drop the big mark, shrink the avatar.
+    final compact = MediaQuery.sizeOf(context).height < 640;
 
     return Scaffold(
       key: const Key('lock-screen'),
@@ -173,8 +175,10 @@ class _LockScreenState extends State<LockScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const KawungMark(size: 32, color: AppTheme.gold),
-                  const SizedBox(height: 6),
+                  if (!compact) ...[
+                    const KawungMark(size: 32, color: AppTheme.gold),
+                    const SizedBox(height: 6),
+                  ],
                   Text(
                     'LINGKARAN',
                     style: theme.textTheme.labelMedium?.copyWith(
@@ -183,9 +187,9 @@ class _LockScreenState extends State<LockScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: compact ? 10 : 20),
                   CircleAvatar(
-                    radius: 30,
+                    radius: compact ? 22 : 30,
                     backgroundColor: AppTheme.gold,
                     child: Text(
                       initialsOf(widget.user.displayName),

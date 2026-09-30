@@ -16,7 +16,7 @@ Tick the box when it behaves as written.
 - [ ] No yellow/black overflow stripes on any screen.
 
 ## Free user (ahmad.ramadhan@example.com)
-- [ ] Market tab shows 10 approved listings; the 2 pending ones are NOT there.
+- [ ] Marketplace (Home tile) shows 10 approved listings; the 2 pending ones are NOT there.
 - [ ] Search "kopi" narrows by title. Clearing it restores the list.
 - [ ] Category chips filter (scroll the chip row sideways). "All" resets.
 - [ ] Sort: Newest, Price low to high, Price high to low reorder the list.

@@ -196,6 +196,41 @@ PBKDF2-HMAC-SHA256, 16-byte random salt (`Random.secure`), 60,000 iterations (me
 
 ---
 
+## Stage 4: Polish and regression
+
+**Status: DONE**
+
+### Fee, commission and price wording search
+- Searched `lib/` (case-insensitive) for `commission`, `fee(s)`, `biaya`, `service charge`, `platform fee`, `admin fee`, `transaction fee`, `charge`, `payment`, `price`, `Rp`.
+- **No fee, commission or service-charge wording exists anywhere in `lib/`.**
+- What does appear, all expected: listing prices (`formatRupiah`, "Price (whole rupiah)", "Price: low to high") in marketplace screens and the Home Latest row; the Subscribe screen's "Rp 99.000/year", "Annual plan only. One payment covers a full year." and "Demo only, no real payment is processed." (your 30 Sep decision, unchanged).
+- Worth a second look: "One payment covers a full year" on the Subscribe screen sits next to a demo that takes no payment; the "Demo only" line right below it covers this, but you may want it softer.
+- New guard: `test/no_fee_wording_test.dart` fails if fee or commission wording is added to `lib/`.
+
+### Layout and theme
+- The app has only a light theme (`AppTheme.light()`, no dark theme exists), so there is nothing to check in dark mode.
+- New layout tests (`test/lock/lock_layout_test.dart`) at 320x568, 360x640 and 390x844 with 1.4x text: lock screen (with fingerprint key, during a wrong-PIN wait, without a PIN), PIN setup with an error, Welcome with a notice, and a very long name and email. Home and the Upcoming section were checked in Stages 1 and 2 at 320, 360 and 390 px.
+- Fixed while doing this: on very short phones (under 640 px tall) the lock screen now hides the big mark and shrinks the avatar so the PIN pad is not pushed below the fold.
+
+### Regression
+- Existing 80 tests still pass. The Stage 1 reachability table still holds (`test/home_shell_test.dart`).
+- Added `test/lock/sign_out_test.dart` (sign out clears local data and tears down the stack).
+- Docs updated for the new navigation: README ("Market tab" wording, click-test link), `DEMO_SCRIPT.md` (bottom nav description, and a note that it no longer matches the pitch deck), `MARKETPLACE_CHECKLIST.md` (Market tab wording).
+- `README.md` has the new section (home hub, Preview tiles, lock screen, honesty rule, known gaps), written in Stage 3.
+- `PROJECT_NOTES.md` has an entry for the marketplace backfill and for Stages 0, 1, 2, 3 and 4.
+- Manual click-test checklist: `docs/hub/CLICK_TEST_CHECKLIST.md` (also repeated in the final summary).
+
+### Checks run
+- `flutter analyze`: no issues. `flutter test`: 191 pass. `flutter build web --release`: succeeds.
+
+### Could not test
+- Real device behaviour (see Stage 3), real Supabase data, dark mode (none exists).
+
+### Surprises
+- `DEMO_SCRIPT.md` said the bottom nav mirrors the pitch deck; it no longer does (deck: Alumni, Jobs, Chat, News). Flagged for you.
+
+---
+
 ## Decisions log
 - **D-1 (branch base).** `feature/home-hub` is created from `claude/beautiful-cori-mntun6`, as instructed. The other named branches are not in this clone, so I could not compare against them.
 - **D-2 (PROJECT_NOTES backfill placement).** Stage 0 says "commit only the report file". Rule 10 says backfill the marketplace entry first. I kept Stage 0 to the report file only and put the marketplace backfill entry, the Stage 0 entry and the Stage 1 entry into the Stage 1 commit.
