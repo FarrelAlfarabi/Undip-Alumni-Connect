@@ -3,61 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/models/marketplace_listing.dart';
 
-Map<String, dynamic> listingMap({
-  String id = 'l1',
-  String status = 'approved',
-  Object? seller,
-  String? rejectedReason,
-  String? approvedAt = '2026-09-20T10:00:00+00:00',
-}) => {
-  'id': id,
-  'seller_id': 's1',
-  'title': 'Kopi Arabika',
-  'description': 'Sangrai medium',
-  'price_idr': 85000,
-  'category': 'Food & Drink',
-  'city': 'Semarang',
-  'image_url': 'https://picsum.photos/seed/x/600/400',
-  'shop_url': null,
-  'contact_info': 'WA 0800-0000-0000',
-  'status': status,
-  'rejected_reason': rejectedReason,
-  'created_at': '2026-09-19T08:00:00+00:00',
-  'updated_at': '2026-09-19T08:00:00+00:00',
-  'approved_at': approvedAt,
-  'seller': seller,
-};
-
-class FakeApi implements MarketplaceApi {
-  final calls = <String>[];
-  final params = <String, Map<String, dynamic>>{};
-  final reports = <Map<String, dynamic>>[];
-  List<Map<String, dynamic>> approved = [];
-  dynamic rpcResult;
-  Object? throwOnCall;
-
-  @override
-  Future<List<Map<String, dynamic>>> selectApprovedListings() async {
-    calls.add('select');
-    if (throwOnCall != null) throw throwOnCall!;
-    return approved;
-  }
-
-  @override
-  Future<dynamic> rpc(String function, Map<String, dynamic> p) async {
-    calls.add(function);
-    params[function] = p;
-    if (throwOnCall != null) throw throwOnCall!;
-    return rpcResult;
-  }
-
-  @override
-  Future<void> insertReport(Map<String, dynamic> row) async {
-    calls.add('report');
-    if (throwOnCall != null) throw throwOnCall!;
-    reports.add(row);
-  }
-}
+import 'support/fake_marketplace_api.dart';
 
 const input = MarketplaceListingInput(
   title: 'Kopi Arabika',

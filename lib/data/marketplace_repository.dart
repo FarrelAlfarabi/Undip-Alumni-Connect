@@ -36,6 +36,9 @@ abstract class MarketplaceApi {
   Future<dynamic> rpc(String function, Map<String, dynamic> params);
 
   Future<void> insertReport(Map<String, dynamic> row);
+
+  /// Full alumni_profiles row (what ProfileDetailScreen expects), or null.
+  Future<Map<String, dynamic>?> selectProfile(String id);
 }
 
 class SupabaseMarketplaceApi implements MarketplaceApi {
@@ -66,6 +69,16 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
     // No .select(): reports are write-only for the API (no select policy).
     await _client.from('marketplace_reports').insert(row);
   }
+
+  @override
+  Future<Map<String, dynamic>?> selectProfile(String id) async {
+    final row = await _client
+        .from('alumni_profiles')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : Map<String, dynamic>.from(row);
+  }
 }
 
 /// Everything the marketplace screens need from the database.
@@ -84,6 +97,11 @@ class MarketplaceRepository {
   Future<List<MarketplaceListing>> fetchApproved() async {
     final rows = await _guard(() => _api.selectApprovedListings());
     return rows.map(MarketplaceListing.fromMap).toList();
+  }
+
+  /// The seller's full profile row, for opening their profile screen.
+  Future<Map<String, dynamic>?> fetchSellerProfile(String sellerId) {
+    return _guard(() => _api.selectProfile(sellerId));
   }
 
   /// The seller's own listings in every status.
