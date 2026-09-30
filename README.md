@@ -50,6 +50,63 @@ holding the anon key; the whole directory and all messages are still
 world-readable. Do not reuse this project or key for anything beyond the
 demo.
 
+## Marketplace (demo)
+
+An alumni-to-alumni marketplace on the **Market** tab. **Demo only: dummy
+data, no real payments, no checkout, nothing is charged.** Every marketplace screen
+shows a "Demo only, no real payments" notice.
+
+- Anyone can browse approved listings. Only **subscribers** can post.
+- A new or edited listing is `pending` until an **admin** approves it (or
+  rejects it with a reason the seller can see). Sellers can mark an approved
+  listing sold (hidden from browse) or delete their own listings.
+- Buyers use the seller's shop link and/or contact info. There is no in-app
+  checkout or messaging link.
+- Anyone can report an approved listing (spam, prohibited item, misleading,
+  other). Admins see report counts per listing. There is no block feature.
+
+**Files:** migrations `supabase/migrations/20260930*_marketplace_*.sql`,
+seed `supabase/seed_marketplace.sql`, SQL checks in `supabase/tests/`,
+Dart in `lib/{models,data,screens}/marketplace_*`, tests in `test/`.
+
+**Run the demo database.** Do NOT apply these migrations to the shared live
+project the `main`/`demo` branches use. Use a separate project or a
+Supabase branch database, then apply the four `marketplace_*` migrations in
+order, `seed.sql`, then `seed_marketplace.sql`. The seed is idempotent
+(fixed ids, safe to run twice) and makes the profile
+`farrel.abi.saleh@gmail.com` the demo admin. To add another admin, insert
+its profile id into `marketplace_admins` from the dashboard.
+
+**SQL/RLS checks (no Supabase needed).** `supabase/tests/run_local.sh`
+starts a throwaway local Postgres (needs the Postgres server binaries and
+`psql`), applies every migration and seed, runs the marketplace migrations
+and seed a second time to prove they are idempotent, then runs the
+assertions. It uses stand-in roles and schemas, so it is an approximation of
+Supabase, not the real thing.
+
+**Dart checks:** `flutter analyze`, `flutter test`, `flutter build web`.
+
+### Known gaps (what this demo cannot enforce)
+
+The app has no real login (verification is an email match), so every
+request reaches Postgres as `anon` and RLS cannot know who is calling.
+
+- The database blocks all direct writes to listings and only shows
+  `approved` rows to direct reads. Everything else goes through
+  `SECURITY DEFINER` functions that take the profile id **sent by the app**.
+  That id is not authenticated: anyone who knows or guesses another
+  profile's id can post, edit, delete, read the pending/rejected listings
+  of, or report as that person. Admin actions have the same weakness, and
+  `marketplace_is_admin(id)` lets anyone test whether an id is an admin.
+- "Subscribers only" checks `subscription_status`, which any client can set
+  (the demo Subscribe button does exactly that).
+- Contact info on approved listings is readable by anyone holding the anon
+  key, not only signed-in members.
+- The `marketplace` image bucket allows uploads (images only, 2 MB) from
+  anyone holding the anon key.
+- Real enforcement needs real Supabase Auth (`auth.uid()`), which is a
+  separate piece of work.
+
 ## Deploying to Vercel
 
 The Vercel project is connected to this repo's `claude/eloquent-maxwell-pzaky1`

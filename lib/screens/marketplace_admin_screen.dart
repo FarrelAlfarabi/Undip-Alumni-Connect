@@ -334,13 +334,35 @@ class _ReportsTabState extends State<_ReportsTab> {
           separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, i) {
             final (c, title) = rows[i];
-            return ListTile(
-              title: Text(title ?? 'Listing no longer available'),
-              subtitle: Text(c.listingId),
-              trailing: Chip(
-                label: Text(
-                  '${c.count} ${c.count == 1 ? 'report' : 'reports'}',
-                ),
+            final theme = Theme.of(context);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title ?? 'Listing no longer available',
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        Text(
+                          c.listingId,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${c.count} ${c.count == 1 ? 'report' : 'reports'}',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ],
               ),
             );
           },
