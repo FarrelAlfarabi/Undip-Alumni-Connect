@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'UNDIP Alumni Connect',
+      title: 'Lingkaran',
       theme: AppTheme.light(),
       home: const WelcomeScreen(),
     );

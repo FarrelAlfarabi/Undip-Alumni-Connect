@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
                   const KawungMark(size: 48),
                   const SizedBox(height: 20),
                   Text(
-                    'ALUMNI CONNECT',
+                    'LINGKARAN',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w600,

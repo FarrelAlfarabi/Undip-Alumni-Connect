@@ -826,3 +826,13 @@ debugging time and will recur on the next RLS change otherwise.
 **Verified:** `flutter analyze` clean, `dart format` clean,
 `flutter build web --release --dart-define-from-file=.env` succeeds,
 plus the live `set local role anon` UPDATE test above.
+
+## 2026-09-30 — Rename to Lingkaran, annual-only price
+
+**Sources checked:** Drive `UNDIP Alumni App - Master Plan.md` (v1.3, 17 Sep) still says Rp 25.000/month or Rp 250.000/year, "not final", and lists the product name as undecided (§8 item 7). The newer pitch deck `Lingkaran_Pitch_Alumni` (26 Sep) names the app **Lingkaran**, says the plan is **annual only, no monthly plan**, and that the price is announced when the closed beta opens. The Drive files titled "master-plan v2.0 / v1.1" are the Ruangguru Claim Audit project, not this app.
+
+**Decided by Farrel (30 Sep):** annual price **Rp 99.000/year**, monthly plan removed; rename the app to **Lingkaran** everywhere users see it.
+
+**Changed:** app title, Welcome screen wordmark, web page title / PWA manifest, Android label, iOS display name, Subscribe screen price + copy (now mentions applying and the marketplace), README and DEMO_SCRIPT wording. **Not renamed:** repo, Dart package (`undip_alumni_connect`), Android/iOS bundle ids, Vercel project and URL.
+
+**Still open in the master plan (not code):** master plan v1.3 needs updating for the name, annual-only pricing and the Rp 99.000 figure; the "first 3 months free" decision (17 Sep) is not reflected in the app or the deck; the marketplace is not in the plan or the deck's free/paid table.

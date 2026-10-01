@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'alumni_screen.dart';
 import 'announcements_screen.dart';
 import 'job_board_screen.dart';
+import 'marketplace_screen.dart';
 import 'messages_list_screen.dart';
 import 'profile_detail_screen.dart';
 
@@ -36,6 +37,7 @@ class _HomeShellState extends State<HomeShell> {
   // recreates the tab, which refetches.
   int _jobsEpoch = 0;
   int _chatEpoch = 0;
+  int _marketEpoch = 0;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _HomeShellState extends State<HomeShell> {
     setState(() {
       if (i == 2 && _index != 2) _jobsEpoch++;
       if (i == 3 && _index != 3) _chatEpoch++;
+      if (i == 5 && _index != 5) _marketEpoch++;
       _index = i;
     });
   }
@@ -84,6 +87,10 @@ class _HomeShellState extends State<HomeShell> {
         currentUser: _currentUser,
       ),
       const AnnouncementsScreen(),
+      MarketplaceScreen(
+        key: ValueKey('market-$_marketEpoch'),
+        currentUser: _currentUser,
+      ),
     ];
 
     return PopScope(
@@ -119,6 +126,11 @@ class _HomeShellState extends State<HomeShell> {
               icon: Icon(Icons.campaign_outlined),
               selectedIcon: Icon(Icons.campaign),
               label: 'News',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.storefront_outlined),
+              selectedIcon: Icon(Icons.storefront),
+              label: 'Market',
             ),
           ],
         ),

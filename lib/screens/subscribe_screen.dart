@@ -82,9 +82,9 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Subscribe to message alumni directly and contact '
-                        'job posters. Browsing the directory and job board '
-                        'stays free.',
+                        'Subscribe to message alumni directly, contact job '
+                        'posters and apply, and post in the marketplace. '
+                        'Browsing the directory and job board stays free.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -100,13 +100,14 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                         child: Column(
                           children: [
                             Text(
-                              'Rp 25.000/month',
+                              'Rp 99.000/year',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             Text(
-                              'or Rp 250.000/year',
+                              'Annual plan only. One payment covers a full year.',
+                              textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
