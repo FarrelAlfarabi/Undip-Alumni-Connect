@@ -60,7 +60,9 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
     final rows = await _client
         .from('marketplace_listings')
         .select(
-          '*, seller:alumni_profiles(id, name, faculty, major, graduation_year, city)',
+          // Two links to alumni_profiles exist (seller_id, reviewed_by), so
+          // the join names the seller one or the API rejects it as ambiguous.
+          '*, seller:alumni_profiles!marketplace_listings_seller_id_fkey(id, name, faculty, major, graduation_year, city)',
         )
         .eq('status', 'approved')
         .order('created_at', ascending: false);
