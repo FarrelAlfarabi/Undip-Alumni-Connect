@@ -5,24 +5,24 @@ import 'subscribe_screen.dart';
 bool isSubscribed(Map<String, dynamic> user) =>
     user['subscription_status'] == 'subscribed';
 
-/// Posting is for subscribers. A free user gets a short explanation, then
-/// the existing Subscribe screen. Returns true when the user is (now)
-/// subscribed and may continue. The shared [currentUser] notifier is
-/// updated on subscribe, like the job and messaging gates.
+/// Posting is for subscribers. A free user gets a short explanation
+/// ([reason]), then the existing Subscribe screen. Returns true when the
+/// user is (now) subscribed and may continue. The shared [currentUser]
+/// notifier is updated on subscribe, like the messaging gate.
 Future<bool> ensureSubscriber(
   BuildContext context,
-  ValueNotifier<Map<String, dynamic>> currentUser,
-) async {
+  ValueNotifier<Map<String, dynamic>> currentUser, {
+  String reason =
+      'Posting in the marketplace is for subscribers. Browsing stays free '
+      'for everyone.',
+}) async {
   if (isSubscribed(currentUser.value)) return true;
 
   final go = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Subscribers only'),
-      content: const Text(
-        'Posting in the marketplace is for subscribers. Browsing stays '
-        'free for everyone.',
-      ),
+      content: Text(reason),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),

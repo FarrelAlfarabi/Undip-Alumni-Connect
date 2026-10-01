@@ -3,15 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'apply_job_screen.dart';
 import 'job_applicants_screen.dart';
-import 'subscribe_screen.dart';
 
-/// Job detail view + contact-poster visual paywall (Day 6, demo scope).
-/// Free users see the job in full but the poster's contact info is locked
-/// behind Subscribe. No real payment — see subscribe_screen.dart.
+/// Job detail view. Job seekers see the full posting, the poster's contact
+/// info and the Apply button for free; the subscription requirement sits on
+/// posting a job instead (see job_board_screen.dart).
 ///
 /// Also the entry point for the job application feature (added 17 Sep
-/// 2026): other alumni can apply (see apply_job_screen.dart), gated
-/// behind subscription same as contact info; the poster sees an
+/// 2026): other alumni can apply (see apply_job_screen.dart); the poster sees an
 /// applicant count and a link to review them (job_applicants_screen.dart)
 /// instead. There's no real push/email notification in this demo — the
 /// count shown here *is* the "notification," visible next time the
@@ -69,17 +67,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         .eq('job_post_id', widget.job['id'])
         .eq('applicant_id', widget.currentUser.value['id']);
     return (rows as List).isNotEmpty;
-  }
-
-  Future<void> _unlockContact(BuildContext context) async {
-    final updated = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(
-        builder: (_) => SubscribeScreen(profile: widget.currentUser.value),
-      ),
-    );
-    if (updated != null) {
-      widget.currentUser.value = updated;
-    }
   }
 
   Future<void> _apply(BuildContext context) async {
@@ -208,87 +195,52 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       },
                     )
                   else
-                    ValueListenableBuilder<Map<String, dynamic>>(
-                      valueListenable: widget.currentUser,
-                      builder: (context, user, _) {
-                        final isSubscribed =
-                            user['subscription_status'] == 'subscribed';
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.mail_outline,
+                                color: theme.colorScheme.primary,
                               ),
-                              child: isSubscribed
-                                  ? Row(
-                                      children: [
-                                        Icon(
-                                          Icons.mail_outline,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            widget.job['contact_info']
-                                                    as String? ??
-                                                'No contact info provided.',
-                                            style: theme.textTheme.bodyMedium,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Row(
-                                      children: [
-                                        Icon(
-                                          Icons.lock_outline,
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        const Expanded(
-                                          child: Text(
-                                            'Contact: locked. Subscribe to '
-                                            'see how to reach the poster.',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (!isSubscribed)
-                              FilledButton.icon(
-                                onPressed: () => _unlockContact(context),
-                                icon: const Icon(Icons.lock_open_outlined),
-                                label: const Text('Subscribe to Contact'),
-                              )
-                            else
-                              FutureBuilder<bool>(
-                                future: _hasAppliedFuture,
-                                builder: (context, snapshot) {
-                                  final hasApplied = snapshot.data ?? false;
-                                  if (hasApplied) {
-                                    return FilledButton.icon(
-                                      onPressed: null,
-                                      icon: const Icon(
-                                        Icons.check_circle_outline,
-                                      ),
-                                      label: const Text('Applied'),
-                                    );
-                                  }
-                                  return FilledButton.icon(
-                                    onPressed: () => _apply(context),
-                                    icon: const Icon(Icons.send_outlined),
-                                    label: const Text('Apply to this Job'),
-                                  );
-                                },
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  widget.job['contact_info'] as String? ??
+                                      'No contact info provided.',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
                               ),
-                          ],
-                        );
-                      },
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FutureBuilder<bool>(
+                          future: _hasAppliedFuture,
+                          builder: (context, snapshot) {
+                            final hasApplied = snapshot.data ?? false;
+                            if (hasApplied) {
+                              return FilledButton.icon(
+                                onPressed: null,
+                                icon: const Icon(Icons.check_circle_outline),
+                                label: const Text('Applied'),
+                              );
+                            }
+                            return FilledButton.icon(
+                              onPressed: () => _apply(context),
+                              icon: const Icon(Icons.send_outlined),
+                              label: const Text('Apply to this Job'),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                 ],
               ),

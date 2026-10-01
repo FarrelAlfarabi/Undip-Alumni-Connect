@@ -55,19 +55,14 @@ This is the most important part of the demo. Take it slow.
 1. Tap **Jobs**. Three seeded postings are visible: Product Manager @ Gojek, Business Analyst @ Bank Mandiri, Backend Engineer @ Tokopedia.
 2. (Optional) Show search + filters: type part of a title/company/description into the search box, or use the **Industry**/**Company** dropdowns — the list narrows live.
 3. Tap into any job's card → full detail view opens.
-4. Point at the **Contact: locked** section: *"Anyone can browse and read the full posting for free. Contacting the poster is the paid action — this is the app's main monetization mechanism."*
-5. Tap **Subscribe to Contact** → the paywall screen appears, showing the pricing (Rp 99.000/year, annual plan only, no monthly plan — say clearly this number is a placeholder; the final price is announced when the closed beta opens).
-6. Tap **Subscribe Now (Demo)** — note out loud: *"This is a demo button, no real payment happens. In production this becomes Midtrans or Xendit."*
-7. You're returned to the job detail — contact info is now unlocked and visible.
-8. **Go back to the job list and open a *different* job.** Its contact info should also now show unlocked — this proves the subscription applies across the whole app, not just the one job you were looking at.
-9. Go to the **Profile** tab — a **Subscribed** badge now shows on the profile card, confirming the same state everywhere.
-10. (Optional, if time allows) With contact unlocked, the button on that job detail now says **Apply to this Job** instead — tap it. This opens a 3-step flow, like LinkedIn's Easy Apply: **Details** (name/email prefilled; LinkedIn/portfolio/CV/cover note are optional unless the poster marked them required — required ones are clearly labeled) → **Review** (a read-only summary of everything you entered) → **Confirm & Submit** → **Done**, an explicit on-screen confirmation that the application was sent and will be reviewed. *"Applying is a step further than just seeing contact info — it goes into a real applications table the poster can review, and the applicant gets a clear confirmation it was received, not just a toast that disappears."*
+4. Point at the contact line: *"Anyone can browse a posting, see how to reach the poster and apply for free. Job seekers never pay. The paid action is posting a job, shown in section 5."*
+5. Tap **Apply to this Job**. This opens a 3-step flow, like LinkedIn's Easy Apply: **Details** (name/email prefilled; LinkedIn/portfolio/CV/cover note are optional unless the poster marked them required, and required ones are clearly labeled) → **Review** (a read-only summary of everything you entered) → **Confirm & Submit** → **Done**, an explicit on-screen confirmation that the application was sent and will be reviewed. *"Applying goes into a real applications table the poster can review, and the applicant gets a clear confirmation it was received, not just a toast that disappears."*
 
 ---
 
 ## 5. Post a Job
 
-1. Back on the **Jobs** tab, tap the **Post a Job** floating button.
+1. Back on the **Jobs** tab, tap the **Post a Job** floating button. A free user sees a short **Subscribers only** dialog; tap **Subscribe** → the paywall screen appears, showing the pricing (Rp 99.000/year, annual plan only, no monthly plan; say clearly this number is a placeholder, the final price is announced when the closed beta opens). Tap **Subscribe Now (Demo)** and note out loud: *"This is a demo button, no real payment happens. In production this becomes Midtrans or Xendit."* You land back on the job board; tap **Post a Job** again to open the form. *"Posting is the paid action. Job seekers are never charged."*
 2. Fill in a quick example (e.g. Title: "Marketing Intern", Company: "Ikafe", Industry: "Nonprofit", Description: one line, Contact: an email).
 3. Point out the **"Notify me when someone applies"** toggle — on by default. *"In this demo that's an in-app applicant count on the job's own page, not a real push or email notification — that's a post-demo build item."*
 4. Point out the **"Require applicants to provide"** checklist below it (CV, LinkedIn URL, Portfolio, Cover note) — check one or two. *"The poster decides which parts of the application are mandatory — an applicant can't submit without them."*
