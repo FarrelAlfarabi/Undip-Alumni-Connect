@@ -54,7 +54,11 @@ class MarketplaceScreen extends StatefulWidget {
     required this.currentUser,
     this.repository,
     this.pickImage = pickListingImage,
+    this.showBack = false,
   });
+
+  /// True when pushed from the Home hub (shows a back arrow).
+  final bool showBack;
 
   /// Injectable for tests; defaults to the file picker.
   final ImagePickerFn pickImage;
@@ -159,7 +163,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Marketplace'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.showBack,
         actions: [
           FutureBuilder<bool>(
             future: _isAdmin,

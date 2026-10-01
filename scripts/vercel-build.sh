@@ -19,6 +19,10 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
   exit 1
 fi
 
+# Refuse to build with anything but a publishable key (it is bundled into the
+# public web build). See scripts/check_supabase_env.sh.
+bash "$(dirname "$0")/check_supabase_env.sh"
+
 if [ ! -d flutter ]; then
   git clone https://github.com/flutter/flutter.git --depth 1 -b stable
 fi
@@ -30,7 +34,13 @@ SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 EOF
 
 flutter pub get
-flutter build web --release
+# Vercel PREVIEW builds turn the lock screen on for web so it can be tried in
+# a browser. Production builds never do (web has no real secure storage).
+EXTRA_DEFINES=""
+if [ "${VERCEL_ENV:-}" = "preview" ]; then
+  EXTRA_DEFINES="--dart-define=WEB_LOCK_TEST=true"
+fi
+flutter build web --release $EXTRA_DEFINES
 
 # CanvasKit loads from Google's CDN by default (see flutter_bootstrap.js'
 # buildConfig) — the bundled canvaskit/ folder is an unused local fallback

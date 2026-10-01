@@ -2,6 +2,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../util/friendly_error.dart';
+import '../util/cv_upload.dart';
+import '../util/safe_url.dart';
+
 /// Job application form (added 17 Sep 2026, Master Plan §3.4 item 7).
 ///
 /// Redone 18 Sep 2026 per Mas Gilang's feedback: the flow now matches
@@ -65,13 +69,30 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     super.dispose();
   }
 
+  /// Stored link: a normalised http(s) URL, or empty. The form validator has
+  /// already refused anything else.
+  String _normalizedLink(String raw) => parseHttpUrl(raw)?.toString() ?? '';
+
   Future<void> _pickCv() async {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx'],
     );
     if (file == null) return;
-    setState(() => _cvFile = file);
+    if (cvContentType(file.name) == null ||
+        await file.xFile.length() > kMaxCvBytes) {
+      if (!mounted) return;
+      setState(
+        () => _error = cvContentType(file.name) == null
+            ? 'Please choose a PDF, DOC or DOCX file.'
+            : kCvTooBigMessage,
+      );
+      return;
+    }
+    setState(() {
+      _error = null;
+      _cvFile = file;
+    });
   }
 
   void _goToReview() {
@@ -101,7 +122,13 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
         final safeName = _cvFile!.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         cvPath =
             '${widget.job['id']}/${DateTime.now().millisecondsSinceEpoch}_$safeName';
-        await client.storage.from('cvs').uploadBinary(cvPath, bytes);
+        await client.storage
+            .from('cvs')
+            .uploadBinary(
+              cvPath,
+              bytes,
+              fileOptions: FileOptions(contentType: cvContentType(safeName)),
+            );
       }
 
       await client.from('job_applications').insert({
@@ -110,8 +137,8 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
         'full_name': _nameController.text.trim(),
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
-        'linkedin_url': _linkedinController.text.trim(),
-        'portfolio_url': _portfolioController.text.trim(),
+        'linkedin_url': _normalizedLink(_linkedinController.text),
+        'portfolio_url': _normalizedLink(_portfolioController.text),
         'cover_note': _noteController.text.trim(),
         'cv_path': cvPath,
       });
@@ -124,7 +151,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     } catch (e) {
       setState(() {
         _submitting = false;
-        _error = e.toString();
+        _error = friendlyError(e);
       });
     }
   }
@@ -240,10 +267,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
                   : 'LinkedIn URL (optional)',
               border: const OutlineInputBorder(),
             ),
-            validator: (v) =>
-                (_requireLinkedin && (v == null || v.trim().isEmpty))
-                ? 'Required by this job'
-                : null,
+            validator: (v) => validateHttpUrl(v, required: _requireLinkedin),
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -254,10 +278,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
                   : 'Portfolio / other link (optional)',
               border: const OutlineInputBorder(),
             ),
-            validator: (v) =>
-                (_requirePortfolio && (v == null || v.trim().isEmpty))
-                ? 'Required by this job'
-                : null,
+            validator: (v) => validateHttpUrl(v, required: _requirePortfolio),
           ),
           const SizedBox(height: 16),
           TextFormField(

@@ -1,7 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'home_shell.dart';
+import '../lock/lock_service.dart';
+import '../lock/pin_setup_screen.dart';
+import '../lock/session.dart';
+import '../util/friendly_error.dart';
+
+/// Looks up the alumni profile whose email matches and marks it verified.
+/// Returns null when there is no match.
+typedef EmailVerifier = Future<Map<String, dynamic>?> Function(String email);
+
+Future<Map<String, dynamic>?> defaultVerifyEmail(String email) async {
+  final client = Supabase.instance.client;
+  final match = await client
+      .from('alumni_profiles')
+      .select()
+      .eq('email', email)
+      .maybeSingle();
+  if (match == null) return null;
+
+  if (match['verification_status'] != 'verified') {
+    await client
+        .from('alumni_profiles')
+        .update({'verification_status': 'verified'})
+        .eq('id', match['id']);
+    match['verification_status'] = 'verified';
+  }
+  return match;
+}
 
 /// Demo email-verification screen (scope change 14 Sep: was NIM exact-match,
 /// now email exact-match — see PROJECT_NOTES.md Session 3).
@@ -13,7 +39,21 @@ import 'home_shell.dart';
 /// 'verified' directly on the matched row, then the user lands in the app
 /// shell (HomeShell) — see PROJECT_NOTES.md Sessions 5 and 9.
 class VerificationScreen extends StatefulWidget {
-  const VerificationScreen({super.key});
+  const VerificationScreen({
+    super.key,
+    this.lock,
+    this.verifyEmail = defaultVerifyEmail,
+    this.homeBuilder = defaultHomeBuilder,
+  });
+
+  /// Injectable for tests; defaults to the real [HomeShell].
+  final HomeBuilder homeBuilder;
+
+  /// Injectable for tests; defaults to [LockService.shared].
+  final LockService? lock;
+
+  /// Injectable for tests; defaults to the Supabase email match.
+  final EmailVerifier verifyEmail;
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -45,37 +85,65 @@ class _VerificationScreenState extends State<VerificationScreen> {
     });
 
     try {
-      final client = Supabase.instance.client;
-      final match = await client
-          .from('alumni_profiles')
-          .select()
-          .eq('email', email)
-          .maybeSingle();
+      final match = await widget.verifyEmail(email);
 
       if (match == null) {
         setState(() => _state = _VerificationState.notFound);
         return;
       }
 
-      if (match['verification_status'] != 'verified') {
-        await client
-            .from('alumni_profiles')
-            .update({'verification_status': 'verified'})
-            .eq('id', match['id']);
-        match['verification_status'] = 'verified';
-      }
-
       if (!mounted) return;
       setState(() => _state = _VerificationState.idle);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeShell(profile: match)),
-      );
+      await _afterVerified(match, email);
     } catch (e) {
       setState(() {
         _state = _VerificationState.error;
-        _errorMessage = e.toString();
+        _errorMessage = friendlyError(e);
       });
     }
+  }
+
+  /// Remember this person on the device (id, name and a masked email hint
+  /// only) and offer a PIN, then go into the app. If the lock storage fails
+  /// for any reason, skip the lock and go straight in: verification itself
+  /// already succeeded.
+  Future<void> _afterVerified(
+    Map<String, dynamic> profile,
+    String email,
+  ) async {
+    final lock = widget.lock ?? LockService.shared;
+    var offerPin = false;
+    try {
+      if (lock.enabled) {
+        await lock.remember(
+          profileId: profile['id'] as String,
+          displayName: profile['name'] as String? ?? '',
+          email: email,
+        );
+        offerPin = !await lock.hasPin();
+      }
+    } catch (_) {
+      offerPin = false;
+    }
+    if (!mounted) return;
+    if (!offerPin) {
+      enterApp(context, profile, lock: lock, homeBuilder: widget.homeBuilder);
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => PinSetupScreen(
+          lock: lock,
+          // The setup screen is replaced by the app once done or skipped.
+          onDone: (setupContext) async => enterApp(
+            setupContext,
+            profile,
+            lock: lock,
+            homeBuilder: widget.homeBuilder,
+          ),
+        ),
+      ),
+    );
   }
 
   void _reset() {

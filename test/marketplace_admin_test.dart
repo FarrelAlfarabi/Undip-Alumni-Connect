@@ -56,7 +56,7 @@ void main() {
       api.profileNames = [
         {'id': 's1', 'name': 'Bunga Citra Ayu'},
       ];
-      final list = await repo.fetchPending('a');
+      final list = await repo.fetchPending('a', 'k');
       expect(list.map((l) => l.id), ['p1', 'p2']);
       expect(list.first.seller?.name, 'Bunga Citra Ayu');
     });
@@ -69,6 +69,7 @@ void main() {
       );
       await repo.review(
         adminId: 'a',
+        adminKey: 'k',
         listingId: 'l',
         approve: false,
         reason: '  Foto buram ',
@@ -78,10 +79,12 @@ void main() {
         'p_listing': 'l',
         'p_decision': 'rejected',
         'p_reason': 'Foto buram',
+        'p_key': 'k',
       });
       api.rpcResult = listingMap();
       await repo.review(
         adminId: 'a',
+        adminKey: 'k',
         listingId: 'l',
         approve: true,
         reason: 'ignored',
@@ -97,12 +100,12 @@ void main() {
       api.rpcResult = [
         {'listing_id': 'l1', 'report_count': 3},
       ];
-      final counts = await repo.fetchReportCounts('a');
+      final counts = await repo.fetchReportCounts('a', 'k');
       expect(counts.single.count, 3);
 
       api.throwOnCall = PostgrestException(message: 'not_admin', code: 'P0001');
       await expectLater(
-        repo.fetchReportCounts('x'),
+        repo.fetchReportCounts('x', 'k'),
         throwsA(
           isA<MarketplaceException>().having(
             (e) => e.code,
@@ -136,6 +139,7 @@ void main() {
         MaterialApp(
           home: MarketplaceAdminScreen(
             adminId: 'admin',
+            adminKey: 'k',
             repository: MarketplaceRepository(api),
           ),
         ),

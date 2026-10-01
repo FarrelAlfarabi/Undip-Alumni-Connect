@@ -10,9 +10,21 @@ import 'nearby_alumni_screen.dart';
 /// right where people already go to browse alumni is the most visible
 /// place it can live without its own bottom-nav slot.
 class AlumniScreen extends StatefulWidget {
-  const AlumniScreen({super.key, required this.currentUser});
+  const AlumniScreen({
+    super.key,
+    required this.currentUser,
+    this.initialTab = 0,
+    this.showBack = false,
+  });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
+
+  /// 0 = Directory, 1 = Nearby. The Home tiles open Nearby directly.
+  final int initialTab;
+
+  /// True when pushed from the Home hub (a real route with a back arrow);
+  /// false when it is a bottom-nav tab root.
+  final bool showBack;
 
   @override
   State<AlumniScreen> createState() => _AlumniScreenState();
@@ -25,7 +37,11 @@ class _AlumniScreenState extends State<AlumniScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab,
+    );
   }
 
   @override
@@ -39,7 +55,7 @@ class _AlumniScreenState extends State<AlumniScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alumni'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.showBack,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
+import '../util/safe_url.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import 'marketplace_report_sheet.dart';
@@ -47,9 +48,9 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
   MarketplaceListing get _l => widget.listing;
 
   Future<void> _visitShop() async {
-    final uri = Uri.tryParse(_l.shopUrl ?? '');
+    final uri = parseHttpUrl(_l.shopUrl);
     final messenger = ScaffoldMessenger.of(context);
-    if (uri == null || !uri.hasScheme) {
+    if (uri == null) {
       messenger.showSnackBar(
         const SnackBar(content: Text('This shop link is not valid.')),
       );

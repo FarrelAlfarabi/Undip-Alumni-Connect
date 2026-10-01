@@ -16,7 +16,7 @@ Tick the box when it behaves as written.
 - [ ] No yellow/black overflow stripes on any screen.
 
 ## Free user (ahmad.ramadhan@example.com)
-- [ ] Market tab shows 10 approved listings; the 2 pending ones are NOT there.
+- [ ] Marketplace (Home tile) shows 10 approved listings; the 2 pending ones are NOT there.
 - [ ] Search "kopi" narrows by title. Clearing it restores the list.
 - [ ] Category chips filter (scroll the chip row sideways). "All" resets.
 - [ ] Sort: Newest, Price low to high, Price high to low reorder the list.
@@ -55,7 +55,7 @@ Tick the box when it behaves as written.
 - [ ] Delete asks first; Cancel keeps it; Delete removes it.
 
 ## Admin (farrel.abi.saleh@gmail.com)
-- [ ] An "Admin review" icon shows in the Marketplace app bar.
+- [ ] An "Admin review" icon shows in the Marketplace app bar. Tapping it asks for the admin passphrase (set with `marketplace_set_admin_key`); a wrong one is refused, the right one opens the queue.
 - [ ] Review queue lists pending listings (seed has 2) with seller name,
       description, shop link and contact.
 - [ ] Approve: listing leaves the queue and appears in Market.

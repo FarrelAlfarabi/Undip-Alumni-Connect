@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 
 /// A listings row as the API returns it. Override fields per test.
@@ -58,6 +59,15 @@ class FakeApi implements MarketplaceApi {
   List<Map<String, dynamic>> profileNames = [];
   Object? throwOnCall;
 
+  /// When set, the admin functions refuse any call whose `p_key` differs
+  /// (like the database does with a wrong or missing passphrase).
+  String? requireAdminKey;
+  static const _adminFunctions = {
+    'marketplace_admin_pending',
+    'marketplace_review_listing',
+    'marketplace_report_counts',
+  };
+
   @override
   Future<List<Map<String, dynamic>>> selectApprovedListings() async {
     calls.add('select');
@@ -70,6 +80,11 @@ class FakeApi implements MarketplaceApi {
     calls.add(function);
     params[function] = p;
     if (throwOnCall != null) throw throwOnCall!;
+    if (requireAdminKey != null &&
+        _adminFunctions.contains(function) &&
+        p['p_key'] != requireAdminKey) {
+      throw PostgrestException(message: 'not_admin', code: 'P0001');
+    }
     return rpcResults.containsKey(function) ? rpcResults[function] : rpcResult;
   }
 

@@ -1,9 +1,16 @@
 -- Minimal stand-in for the parts of Supabase the migrations depend on, so
 -- the SQL can be tested on a plain local Postgres. NOT a full Supabase: no
 -- PostgREST, no real auth. Approximates Supabase's default privileges.
-create role anon nologin;
-create role authenticated nologin;
-create role service_role nologin bypassrls;
+-- Roles are cluster-wide, so tolerate a second database on the same cluster.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
+end $$;
+
+create schema if not exists extensions;
+grant usage on schema extensions to anon, authenticated, service_role;
 
 create schema auth;
 create table auth.users (id uuid primary key default gen_random_uuid());

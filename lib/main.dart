@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'screens/welcome_screen.dart';
+import 'lock/app_entry.dart';
+import 'lock/lock_overlay.dart';
+import 'lock/lock_service.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -17,15 +19,30 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lingkaran',
       theme: AppTheme.light(),
-      home: const WelcomeScreen(),
+      navigatorKey: _navigatorKey,
+      // Covers the app with the lock screen after it has been in the
+      // background for a while (device convenience lock, see README).
+      builder: (context, child) => LockOverlay(
+        lock: LockService.shared,
+        navigatorKey: _navigatorKey,
+        child: child ?? const SizedBox.shrink(),
+      ),
+      home: const AppEntry(),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'email_log_screen.dart';
 import 'job_applicants_screen.dart';
+import '../util/friendly_error.dart';
 
 /// In-app notification list (added 18 Sep 2026). A row here is created
 /// automatically by a database trigger whenever someone applies to a
@@ -107,7 +108,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Failed to load notifications: ${snapshot.error}'),
+                child: Text(friendlyLoadError('notifications', snapshot.error)),
               ),
             );
           }
