@@ -1,0 +1,15 @@
+# Probes that must show "fixed" (weak = false) after the security migrations.
+# Everything else must still show the weakness: it needs real Supabase Auth.
+P06
+P07
+P18
+P19
+P09
+P24
+P25
+P27
+P28
+P29
+P30
+P31
+P36

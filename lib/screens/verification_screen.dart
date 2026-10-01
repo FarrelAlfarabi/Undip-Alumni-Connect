@@ -1,23 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'home_shell.dart';
+import '../lock/lock_service.dart';
+import '../lock/pin_setup_screen.dart';
+import '../lock/session.dart';
+import '../util/friendly_error.dart';
+
+/// Step 1: finds out whether the email belongs to an alumni record and, if
+/// so, sends a 6-digit code to it. Returns false when there is no match.
+typedef EmailCodeSender = Future<bool> Function(String email);
+
+/// Step 2: confirms the code (creating a real Supabase Auth session) and
+/// links that session to the alumni record. Returns the linked profile.
+typedef EmailCodeConfirmer = Future<Map<String, dynamic>> Function(
+  String email,
+  String code,
+);
+
+Future<bool> defaultSendCode(String email) async {
+  final client = Supabase.instance.client;
+  final match = await client
+      .from('alumni_profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+  if (match == null) return false;
+
+  // The email-exists check happens before sending the code so a stranger's
+  // email never gets an auth account created for it just by trying: only
+  // emails that already match an alumni record trigger a real signup.
+  await client.auth.signInWithOtp(email: email, shouldCreateUser: true);
+  return true;
+}
+
+Future<Map<String, dynamic>> defaultConfirmCode(
+  String email,
+  String code,
+) async {
+  final client = Supabase.instance.client;
+  await client.auth.verifyOTP(email: email, token: code, type: OtpType.email);
+  final profile = await client.rpc('claim_alumni_profile').single();
+  return Map<String, dynamic>.from(profile as Map);
+}
 
 /// Real Supabase Auth verification (replaces the old plain email
-/// exact-match — see PROJECT_NOTES.md's production-hardening entry).
+/// exact-match; see PROJECT_NOTES.md's production-hardening entry).
 ///
-/// Flow: enter email -> confirm it matches a seeded alumni record (open
-/// read, same check the old flow did) -> send a 6-digit email OTP via
-/// `signInWithOtp` -> enter the code -> `verifyOTP` creates a real
-/// Supabase Auth session -> `claim_alumni_profile()` links that session
-/// to the matching `alumni_profiles` row (see the `add_auth_claim_function`
-/// migration) -> land in HomeShell with a real authenticated session.
-///
-/// The email-exists check happens before sending the OTP so a stranger's
-/// email never gets an auth account created for it just by trying — only
-/// emails that already match a seeded alumni record trigger a real signup.
+/// Flow: enter email -> [sendCode] checks it matches an alumni record and
+/// emails a 6-digit code -> enter the code -> [confirmCode] runs `verifyOTP`
+/// (a real Supabase Auth session) and `claim_alumni_profile()` (links that
+/// session to the matching `alumni_profiles` row) -> remember the person on
+/// this device and offer a PIN -> the app, with a real authenticated session.
 class VerificationScreen extends StatefulWidget {
-  const VerificationScreen({super.key});
+  const VerificationScreen({
+    super.key,
+    this.lock,
+    this.sendCode = defaultSendCode,
+    this.confirmCode = defaultConfirmCode,
+    this.homeBuilder = defaultHomeBuilder,
+  });
+
+  /// Injectable for tests; defaults to the real [HomeShell].
+  final HomeBuilder homeBuilder;
+
+  /// Injectable for tests; defaults to [LockService.shared].
+  final LockService? lock;
+
+  /// Injectable for tests; defaults to the Supabase email-code request.
+  final EmailCodeSender sendCode;
+
+  /// Injectable for tests; defaults to Supabase code confirmation.
+  final EmailCodeConfirmer confirmCode;
 
   @override
   State<VerificationScreen> createState() => _VerificationScreenState();
@@ -52,26 +105,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
     });
 
     try {
-      final client = Supabase.instance.client;
-      final match = await client
-          .from('alumni_profiles')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
-
-      if (match == null) {
-        setState(() => _state = _VerificationState.notFound);
-        return;
-      }
-
-      await client.auth.signInWithOtp(email: email, shouldCreateUser: true);
-
+      final found = await widget.sendCode(email);
       if (!mounted) return;
-      setState(() => _state = _VerificationState.awaitingCode);
+      setState(
+        () => _state =
+            found ? _VerificationState.awaitingCode : _VerificationState.notFound,
+      );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _state = _VerificationState.error;
-        _errorMessage = e.toString();
+        _errorMessage = friendlyError(e);
       });
     }
   }
@@ -83,16 +127,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
     });
     try {
       final email = _emailController.text.trim().toLowerCase();
-      await Supabase.instance.client.auth.signInWithOtp(
-        email: email,
-        shouldCreateUser: true,
-      );
+      await widget.sendCode(email);
       if (!mounted) return;
       setState(() => _state = _VerificationState.awaitingCode);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _state = _VerificationState.error;
-        _errorMessage = e.toString();
+        _errorMessage = friendlyError(e);
       });
     }
   }
@@ -106,32 +148,63 @@ class _VerificationScreenState extends State<VerificationScreen> {
     });
 
     try {
-      final client = Supabase.instance.client;
       final email = _emailController.text.trim().toLowerCase();
       final code = _codeController.text.trim();
-
-      await client.auth.verifyOTP(
-        email: email,
-        token: code,
-        type: OtpType.email,
-      );
-
-      final profile = await client.rpc('claim_alumni_profile').single();
+      final profile = await widget.confirmCode(email, code);
 
       if (!mounted) return;
       setState(() => _state = _VerificationState.idle);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) =>
-              HomeShell(profile: Map<String, dynamic>.from(profile as Map)),
-        ),
-      );
+      await _afterVerified(profile, email);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _state = _VerificationState.error;
-        _errorMessage = e.toString();
+        _errorMessage = friendlyError(e);
       });
     }
+  }
+
+  /// Remember this person on the device (id, name and a masked email hint
+  /// only) and offer a PIN, then go into the app. If the lock storage fails
+  /// for any reason, skip the lock and go straight in: verification itself
+  /// already succeeded.
+  Future<void> _afterVerified(
+    Map<String, dynamic> profile,
+    String email,
+  ) async {
+    final lock = widget.lock ?? LockService.shared;
+    var offerPin = false;
+    try {
+      if (lock.enabled) {
+        await lock.remember(
+          profileId: profile['id'] as String,
+          displayName: profile['name'] as String? ?? '',
+          email: email,
+        );
+        offerPin = !await lock.hasPin();
+      }
+    } catch (_) {
+      offerPin = false;
+    }
+    if (!mounted) return;
+    if (!offerPin) {
+      enterApp(context, profile, lock: lock, homeBuilder: widget.homeBuilder);
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => PinSetupScreen(
+          lock: lock,
+          // The setup screen is replaced by the app once done or skipped.
+          onDone: (setupContext) async => enterApp(
+            setupContext,
+            profile,
+            lock: lock,
+            homeBuilder: widget.homeBuilder,
+          ),
+        ),
+      ),
+    );
   }
 
   void _reset() {

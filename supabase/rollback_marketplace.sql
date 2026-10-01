@@ -7,6 +7,13 @@
 -- you want the marketplace gone. Deletes all marketplace data.
 -- ============================================================================
 
+-- admin-passphrase versions (security migration) and helpers
+drop function if exists marketplace_report_counts(uuid, text);
+drop function if exists marketplace_review_listing(uuid, uuid, text, text, text);
+drop function if exists marketplace_admin_pending(uuid, text);
+drop function if exists marketplace_set_admin_key(uuid, text);
+drop function if exists marketplace_admin_authorized(uuid, text);
+-- original id-only versions
 drop function if exists marketplace_report_counts(uuid);
 drop function if exists marketplace_review_listing(uuid, uuid, text, text);
 drop function if exists marketplace_admin_pending(uuid);

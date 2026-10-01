@@ -1017,3 +1017,87 @@ debugging time and will recur on the next RLS change otherwise.
 **Verified:** `flutter analyze` clean, `dart format` clean,
 `flutter build web --release --dart-define-from-file=.env` succeeds,
 plus the live `set local role anon` UPDATE test above.
+
+## 2026-09-30 — Rename to Lingkaran, annual-only price
+
+**Sources checked:** Drive `UNDIP Alumni App - Master Plan.md` (v1.3, 17 Sep) still says Rp 25.000/month or Rp 250.000/year, "not final", and lists the product name as undecided (§8 item 7). The newer pitch deck `Lingkaran_Pitch_Alumni` (26 Sep) names the app **Lingkaran**, says the plan is **annual only, no monthly plan**, and that the price is announced when the closed beta opens. The Drive files titled "master-plan v2.0 / v1.1" are the Ruangguru Claim Audit project, not this app.
+
+**Decided by Farrel (30 Sep):** annual price **Rp 99.000/year**, monthly plan removed; rename the app to **Lingkaran** everywhere users see it.
+
+**Changed:** app title, Welcome screen wordmark, web page title / PWA manifest, Android label, iOS display name, Subscribe screen price + copy (now mentions applying and the marketplace), README and DEMO_SCRIPT wording. **Not renamed:** repo, Dart package (`undip_alumni_connect`), Android/iOS bundle ids, Vercel project and URL.
+
+**Still open in the master plan (not code):** master plan v1.3 needs updating for the name, annual-only pricing and the Rp 99.000 figure; the "first 3 months free" decision (17 Sep) is not reflected in the app or the deck; the marketplace is not in the plan or the deck's free/paid table.
+
+## 2026-09-30 — Marketplace demo, stages 1 to 5 (backfilled)
+
+Backfilled on 2026-09-30 from the git log of `claude/beautiful-cori-mntun6` and `README.md` (Marketplace section) because the marketplace work shipped without session entries. Nothing here was re-run except the baseline checks below.
+
+**What was built (commits `3add5fa`, `ecacab0`, `5434789`, `825e5a5`, `508e489`, `01f6da7`):**
+- Stage 1: data layer. Tables `marketplace_listings`, `marketplace_reports`, `marketplace_admins`, RLS, `SECURITY DEFINER` functions, a public `marketplace` storage bucket, a seed (12 listings, 1 admin), models, `MarketplaceRepository` behind a `MarketplaceApi` seam, and tests against a fake.
+- Stage 2: browse and detail screens, the Market tab.
+- Stage 3: create/edit form, photo upload, subscriber gate, My listings.
+- Stage 4: admin review queue (approve/reject with reason), report sheet, report counts.
+- Stage 5: polish, regression guards, README section, a click-test checklist (`MARKETPLACE_CHECKLIST.md`), and a tested rollback script (`supabase/rollback_marketplace.sql`).
+
+**Decisions recorded in the README:** demo only, no real payments, no fees; posting is for subscribers; new or edited listings are `pending` until an admin approves; the seed makes `farrel.abi.saleh@gmail.com` the demo admin; do not apply the marketplace migrations to the shared live project (use a separate project or branch database).
+
+**Known gaps (from the README):** no real auth, so profile ids sent by the app are not authenticated; `marketplace_is_admin(id)` can be used to test admin ids; `subscription_status` is client-settable; contact info on approved listings is readable with the anon key; the image bucket accepts uploads from anyone with the anon key.
+
+**Verified on 2026-09-30 (this session):** `flutter analyze` clean, 80 tests pass, `flutter build web --release` succeeds on the marketplace branch before any hub change.
+**Not verified:** that the marketplace migrations were ever applied to a real Supabase project or how the demo behaves against one. The commit messages do not say. Marked unverified.
+**Still open:** everything under Known gaps.
+
+## 2026-09-30 — Home hub, Stage 0: recon
+
+Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was not installed in the session, so I installed Flutter 3.47.5 outside the repo to run real checks. Baseline: analyze clean, 80 tests pass, web build ok. No existing test touches `HomeShell`, `WelcomeScreen` or the tab indexes. **Open:** nothing new.
+
+## 2026-09-30 — Home hub, Stage 1: dashboard home and 4-tab navigation
+
+**Done:** new Home tab (greeting, announcement banner carousel, quick-action tiles, Latest strip) and a 4-item bottom nav (Home, Directory, Chat, Profile). Jobs, News, Marketplace and Nearby now open from Home as pushed screens with a back arrow. Back from any tab returns to Home. Shared `currentUser` notifier and the Chat epoch refetch kept.
+**Decided:** Nearby stays reachable both from the Directory tab and from a Home tile; the Directory tile switches tabs. A `showBack` flag on four screens instead of wrapper scaffolds. Item price is shown in the marketplace row (not a fee). See `docs/hub/STAGE_REPORTS.md` D-3 to D-9.
+**Verified:** analyze clean, 110 tests pass (30 new), web build ok. The tests caught a real bug (`setState` given a Future in three retry handlers), fixed.
+**Not verified:** real Supabase data, timing on a real device, city chat via widget test (needs a live client).
+**Open:** the click-test on a real device is Stage 4.
+
+## 2026-09-30 — Home hub, Stage 2: Upcoming Preview tiles
+
+**Done:** an "Upcoming" section at the bottom of Home with three muted, non-functional tiles (Events, Mentoring, Business directory), each with a "Preview" badge. Tapping opens a small sheet saying the feature is a preview and not available yet.
+**Decided:** no dates, no "coming soon" wording, no money features, no tracking. A "notify me" counter is described in the report but not built (unreliable without real auth). Home now uses a plain scroll view so every section is built.
+**Verified:** analyze clean, 114 tests pass (4 new), web build ok.
+**Not verified:** the look on a real device.
+**Open:** nothing.
+
+## 2026-09-30 — Home hub, Stage 3: returning-user lock screen
+
+**Done:** a device lock for people already verified on this phone. After verification the app remembers the profile id, a display name and a masked email hint (secure storage only), then offers a 6-digit PIN and optional fingerprint or face. Next launch shows a lock screen; new users still see Welcome then Verification. 5 wrong PINs wipe the local data; a wait starts after the 3rd wrong try; the lock shows again after 5 minutes in the background. Switch account, Forgot PIN and Sign out clear local data only.
+**Decided:** no lock on web (no real secure storage, so it would only look safe); PBKDF2-HMAC-SHA256 with 60,000 iterations; a failed profile fetch clears local data (as the prompt says). Packages added: `flutter_secure_storage`, `local_auth`, `crypto` (already transitive). Full list of choices in `docs/hub/STAGE_REPORTS.md` D-14 to D-24.
+**Honest limit:** this is a convenience lock, not security. Verification is an email match with no real auth; anyone with a valid alumni email can still verify as that person.
+**Verified:** analyze clean, 173 tests pass (63 new), web build ok.
+**Not verified:** anything on a real Android or iOS device (Keystore/Keychain, the biometric prompt, the Android activity/theme changes, the Face ID string); the real profile fetch.
+**Open:** on-device test; decide whether a network error should really clear local data (D-23).
+
+## 2026-09-30 — Home hub, Stage 4: polish and regression
+
+**Done:** searched the app for fee and commission wording (none exists; only item prices and the Rp 99.000/year subscription line), added a test that keeps it that way, added layout tests for the lock, PIN setup and Welcome screens at 320, 360 and 390 px with large text, made the lock screen compact on short phones, updated README, DEMO_SCRIPT and MARKETPLACE_CHECKLIST for the new 4-tab navigation, and wrote the manual click-test checklist (`docs/hub/CLICK_TEST_CHECKLIST.md`).
+**Decided:** no dark-mode check because the app has no dark theme. `DEMO_SCRIPT.md` no longer matches the pitch deck bottom nav (flagged, not fixed).
+**Verified:** analyze clean, 191 tests pass, web build ok, Stage 1 reachability table still holds.
+**Not verified:** anything on a real phone.
+**Open:** run the click-test; decide whether "One payment covers a full year" should be softer on the demo Subscribe screen.
+
+## 2026-09-30 — Home hub, Stage 5A: security audit (report only)
+
+**Done:** audited the repo (policies, functions, seeds, Dart, config, git history of this clone) and wrote `SECURITY_AUDIT.md`. Added proof tests: 38 SQL probes on a throwaway local Postgres (`supabase/tests/security_audit/run_audit.sh pre`) and 4 Dart tests in `test/security_audit/`. No application code changed.
+**Found:** 5 Critical, 6 High, 9 Medium, 5 Low. Worst: email is the only login and all emails are world-readable, so anyone can act as anyone; every DM, job application and CV is world-readable; the admin's profile id (and email, in the public repo) is public so anyone can act as admin; real people's names and emails are in the public seeds.
+**Verdict:** NOT safe to load real alumni data.
+**Verified:** the probes run and match (32 weaknesses shown, 6 controls blocked); advisories for locked packages do not affect the locked versions.
+**Not verified:** the live Supabase project, the deployed Vercel site, the real deployed key, other branches' history, real devices.
+**Open:** Part B fixes what can be fixed without real Supabase Auth; the rest needs the auth project.
+
+## 2026-09-30 — Home hub, Stage 5B: security fixes that need no real auth
+
+**Done (commits by area):** (1) web hardening: security headers in `vercel.json`, build refuses a non-publishable Supabase key; (2) input safety: no raw error text on screen, only http(s) links open; (3) migration (local only) for notifications, buckets, length limits, https images, review audit; (4) admin passphrase so the public admin id alone no longer gives admin.
+**Decided:** migrations are new files, never applied by me, each with a tested rollback; CSP allows Flutter's inline styles but no inline or eval scripts; buckets stay public (private needs auth); the admin passphrase is a shared secret, not real auth. Full list: `docs/hub/STAGE_REPORTS.md` D-29 to D-39.
+**Verified:** analyze clean, 229 tests pass, SQL checks and audit probes (pre, post, rollback) pass, web build ok, real Chromium loads the app with the new headers.
+**Not verified:** the deployed site with the CDN path, real Supabase Storage and pgcrypto behaviour, real devices.
+**Open:** everything that needs real Supabase Auth (see `SECURITY_AUDIT.md`).
+

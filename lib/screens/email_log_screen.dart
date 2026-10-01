@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../util/friendly_error.dart';
+
 /// Simulated email log (added 18 Sep 2026). Real email needs a
 /// transactional provider (Resend etc.) with its own account/API key —
 /// a real external decision, not something to wire silently. Until
@@ -51,7 +53,7 @@ class _EmailLogScreenState extends State<EmailLogScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Failed to load emails: ${snapshot.error}'),
+                child: Text(friendlyLoadError('emails', snapshot.error)),
               ),
             );
           }

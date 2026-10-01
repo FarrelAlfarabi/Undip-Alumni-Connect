@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'chat_screen.dart';
+import '../util/friendly_error.dart';
 
 /// List of the current user's conversations (Day 6, demo scope). Empty
 /// until they message someone from the directory — this screen doesn't
@@ -108,7 +109,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Failed to load messages: ${snapshot.error}'),
+                child: Text(friendlyLoadError('messages', snapshot.error)),
               ),
             );
           }

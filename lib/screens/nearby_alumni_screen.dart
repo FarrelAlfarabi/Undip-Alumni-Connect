@@ -6,6 +6,7 @@ import '../data/city_distances.dart';
 import '../widgets/nearby_map_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
+import '../util/friendly_error.dart';
 
 /// One city's worth of nearby alumni, grouped for the map's networking
 /// chips and the sheet they open (_CityClusterSheet).
@@ -159,7 +160,7 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Failed to load nearby alumni: ${snapshot.error}',
+                      friendlyLoadError('nearby alumni', snapshot.error),
                     ),
                   ),
                 );

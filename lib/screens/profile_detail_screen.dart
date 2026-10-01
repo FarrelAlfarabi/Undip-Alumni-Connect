@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
 import 'verification_screen.dart';
+import '../util/friendly_error.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -111,9 +113,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open conversation: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
       }
     } finally {
       if (mounted) setState(() => _messaging = false);
@@ -137,16 +138,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             IconButton(
               tooltip: 'Sign out',
               icon: const Icon(Icons.logout),
-              onPressed: () async {
-                // Ends the real Supabase Auth session (not just a local
-                // navigation reset), so a second demo account starts from
-                // a genuinely clean, unauthenticated state.
-                await Supabase.instance.client.auth.signOut();
-                if (!context.mounted) return;
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const VerificationScreen()),
-                  (_) => false,
-                );
+              onPressed: () {
+                // Back to verification with the whole shell torn down, so
+                // a second demo account starts from a clean state. Also
+                // forgets this device's remembered person and PIN (local
+                // only).
+                signOutTo(context, const VerificationScreen());
               },
             ),
         ],

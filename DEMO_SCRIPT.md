@@ -1,4 +1,4 @@
-# Demo Script — UNDIP Alumni Connect (for Mas Gilang / Ikafe)
+# Demo Script — Lingkaran (for Mas Gilang / Ikafe)
 
 Written for the Sep 23 demo. Assumes the app is already running (see README/PROJECT_NOTES for how to launch it — Flutter web via `flutter run -d web-server` or `flutter build web` + a static server, with the real `.env` credentials in place).
 
@@ -29,7 +29,7 @@ Written for the Sep 23 demo. Assumes the app is already running (see README/PROJ
 
 ## 2. Bottom navigation
 
-Point out the 5 tabs: **Profile, Alumni, Jobs, Chat, News** — mirrors the bottom nav from the pitch deck slides already shown to Gilang.
+Point out the 4 tabs: **Home, Directory, Chat, Profile** (Jobs, News, Marketplace and Nearby open from Home) — this differs from the Alumni/Jobs/Chat/News bottom nav on the pitch deck slides already shown to Gilang, so say so.
 
 ---
 
@@ -56,7 +56,7 @@ This is the most important part of the demo. Take it slow.
 2. (Optional) Show search + filters: type part of a title/company/description into the search box, or use the **Industry**/**Company** dropdowns — the list narrows live.
 3. Tap into any job's card → full detail view opens.
 4. Point at the **Contact: locked** section: *"Anyone can browse and read the full posting for free. Contacting the poster is the paid action — this is the app's main monetization mechanism."*
-5. Tap **Subscribe to Contact** → the paywall screen appears, showing the pricing (Rp 25.000/month or Rp 250.000/year — say clearly these numbers are a placeholder, not finalized).
+5. Tap **Subscribe to Contact** → the paywall screen appears, showing the pricing (Rp 99.000/year, annual plan only, no monthly plan — say clearly this number is a placeholder; the final price is announced when the closed beta opens).
 6. Tap **Subscribe Now (Demo)** — note out loud: *"This is a demo button, no real payment happens. In production this becomes Midtrans or Xendit."*
 7. You're returned to the job detail — contact info is now unlocked and visible.
 8. **Go back to the job list and open a *different* job.** Its contact info should also now show unlocked — this proves the subscription applies across the whole app, not just the one job you were looking at.

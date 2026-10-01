@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../util/friendly_error.dart';
+
 /// Visual-only subscription paywall (demo scope). No real payment — tapping
 /// "Subscribe" just flips alumni_profiles.subscription_status to
 /// 'subscribed' directly. Shared by the job-contact gate and the messaging
@@ -38,7 +40,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
     } catch (e) {
       setState(() {
         _saving = false;
-        _error = e.toString();
+        _error = friendlyError(e);
       });
     }
   }
@@ -82,9 +84,9 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Subscribe to message alumni directly and contact '
-                        'job posters. Browsing the directory and job board '
-                        'stays free.',
+                        'Subscribe to message alumni directly, contact job '
+                        'posters and apply, and post in the marketplace. '
+                        'Browsing the directory and job board stays free.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -100,13 +102,14 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                         child: Column(
                           children: [
                             Text(
-                              'Rp 25.000/month',
+                              'Rp 99.000/year',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             Text(
-                              'or Rp 250.000/year',
+                              'Annual plan only. One payment covers a full year.',
+                              textAlign: TextAlign.center,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -117,7 +120,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                       if (_error != null) ...[
                         const SizedBox(height: 16),
                         Text(
-                          'Failed: $_error',
+                          _error!,
                           style: TextStyle(color: theme.colorScheme.error),
                         ),
                       ],

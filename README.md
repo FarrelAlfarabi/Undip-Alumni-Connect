@@ -1,4 +1,6 @@
-# UNDIP Alumni Connect — MVP demo
+# Lingkaran — MVP demo
+
+(Formerly "UNDIP Alumni Connect"; the repo, Dart package and Vercel project keep the old name.)
 
 Flutter + Supabase demo of a verified alumni directory with a job referral
 board, subscription-gated messaging, and an Ikafe announcements feed.
@@ -49,6 +51,133 @@ not a Supabase Auth session), so RLS cannot hide alumni data from anyone
 holding the anon key; the whole directory and all messages are still
 world-readable. Do not reuse this project or key for anything beyond the
 demo.
+
+## Marketplace (demo)
+
+An alumni-to-alumni marketplace, opened from the **Marketplace** tile on Home. **Demo only: dummy
+data, no real payments, no checkout, nothing is charged.** Every marketplace screen
+shows a "Demo only, no real payments" notice.
+
+- Anyone can browse approved listings. Only **subscribers** can post.
+- A new or edited listing is `pending` until an **admin** approves it (or
+  rejects it with a reason the seller can see). Sellers can mark an approved
+  listing sold (hidden from browse) or delete their own listings.
+- Buyers use the seller's shop link and/or contact info. There is no in-app
+  checkout or messaging link.
+- Anyone can report an approved listing (spam, prohibited item, misleading,
+  other). Admins see report counts per listing. There is no block feature.
+
+**Files:** migrations `supabase/migrations/20260930*_marketplace_*.sql`,
+seed `supabase/seed_marketplace.sql`, SQL checks in `supabase/tests/`,
+Dart in `lib/{models,data,screens}/marketplace_*`, tests in `test/`.
+
+**Run the demo database.** Do NOT apply these migrations to the shared live
+project the `main`/`demo` branches use. Use a separate project or a
+Supabase branch database, then apply the four `marketplace_*` migrations in
+order, `seed.sql`, then `seed_marketplace.sql`. The seed is idempotent
+(fixed ids, safe to run twice) and makes the profile
+`farrel.abi.saleh@gmail.com` the demo admin. To add another admin, insert
+its profile id into `marketplace_admins` from the dashboard.
+
+**Admin passphrase (after the security migrations).** The admin's profile id is
+public, so every admin action also needs a passphrase, checked in the
+database against a bcrypt hash. Nobody is admin until you set one from the SQL
+editor: `select marketplace_set_admin_key('<admin profile uuid>', '<16+
+character passphrase>');`. The Marketplace admin screen asks for it each time
+and keeps it only in memory. See `SECURITY_AUDIT.md` (SA-04). Never re-run only
+the original `20260930090*` marketplace migrations on a database that has the
+security migrations: they recreate the old id-only admin functions. Apply all
+`2026093*` migrations in order.
+
+**SQL/RLS checks (no Supabase needed).** `supabase/tests/run_local.sh`
+starts a throwaway local Postgres (needs the Postgres server binaries and
+`psql`), applies every migration and seed, runs the marketplace migrations
+and seed a second time to prove they are idempotent, then runs the
+assertions. It uses stand-in roles and schemas, so it is an approximation of
+Supabase, not the real thing.
+
+**Dart checks:** `flutter analyze`, `flutter test`, `flutter build web`.
+
+### Known gaps (what this demo cannot enforce)
+
+The app has no real login (verification is an email match), so every
+request reaches Postgres as `anon` and RLS cannot know who is calling.
+
+- The database blocks all direct writes to listings and only shows
+  `approved` rows to direct reads. Everything else goes through
+  `SECURITY DEFINER` functions that take the profile id **sent by the app**.
+  That id is not authenticated: anyone who knows or guesses another
+  profile's id can post, edit, delete, read the pending/rejected listings
+  of, or report as that person. Admin actions have the same weakness, and
+  `marketplace_is_admin(id)` lets anyone test whether an id is an admin.
+- "Subscribers only" checks `subscription_status`, which any client can set
+  (the demo Subscribe button does exactly that).
+- Contact info on approved listings is readable by anyone holding the anon
+  key, not only signed-in members.
+- The `marketplace` image bucket allows uploads (images only, 2 MB) from
+  anyone holding the anon key.
+- Real enforcement needs real Supabase Auth (`auth.uid()`), which is a
+  separate piece of work.
+
+## Home hub, Preview tiles and the lock screen
+
+**Home hub.** After verification the app lands on a Home tab: a greeting, a
+banner carousel of the latest Ikafe announcements (text cards, auto-advance,
+swipe, tap for the full text), quick tiles (Jobs, Marketplace, Directory,
+Nearby Alumni), a "Latest" strip (3 newest jobs, 3 newest approved
+marketplace listings) and an Upcoming section. The bottom navigation is
+Home, Directory, Chat, Profile. Jobs, News ("See all announcements"),
+Marketplace and Nearby open from Home with a back arrow. The Marketplace
+"Demo only, no real payments" notice still shows on every marketplace screen.
+
+**Upcoming Preview tiles.** Events, Mentoring and Business directory are
+non-functional tiles marked "Preview". Tapping one only opens an info sheet.
+No data, no dates, no tracking, no money features.
+
+**Lock screen (Android and iOS only).** After the first successful
+verification the app remembers, on that device only, the profile id, a
+display name and a masked email hint (`f***@gmail.com`), all in the
+platform secure storage (Keychain / Keystore). It then offers a 6-digit PIN
+(and fingerprint or face, if the device has it). On the next launch a
+remembered person sees a lock screen instead of the Welcome screen; new users
+see Welcome and Verification as before.
+
+- The PIN is stored only as a salted PBKDF2-HMAC-SHA256 hash, never as text
+  and never in logs.
+- 5 wrong PINs wipe the local unlock data and require full verification; a
+  cool-down starts after the 3rd wrong try; remaining attempts are shown.
+- Biometrics are optional and never the only way in; if the prompt fails
+  or is cancelled, the PIN pad is the fallback.
+- The lock screen shows again after the app has been in the background for
+  more than 5 minutes (`kLockAfterBackground` in `lib/lock/lock_config.dart`).
+- "Forgot PIN? Verify again", "Not you? Switch account" and Profile > Sign
+  out clear the local data only. Nothing is deleted on the server.
+- If the PIN step is skipped, the next launch shows a "Continue" button that
+  runs verification again.
+- **Web has no lock screen in production** (Vercel *preview* builds turn it on for testing only, via `--dart-define=WEB_LOCK_TEST=true` in `scripts/vercel-build.sh`; that is not real protection). Browsers have no real secure storage and no
+  biometrics API here, so a remembered id and PIN hash would sit in
+  localStorage where a PIN of 1,000,000 possibilities can be guessed offline
+  in moments. A lock that looks safe but is not is worse than none, so on web
+  every visit starts at Welcome, as before.
+
+**Honesty rule: this is a device convenience lock, not real security.**
+Verification is still an email match with no real login (no OTP, no Supabase
+Auth session). Anyone who knows a valid alumni email can still verify as that
+person, on any device, and the PIN does not stop that. The lock only saves the
+owner from re-verifying on every launch and keeps a casual bystander out of an
+unlocked phone. It does not protect the data in the database.
+
+**Manual click-test:** `docs/hub/CLICK_TEST_CHECKLIST.md`.
+
+**Known gaps.** Not tested on a real Android or iOS device (only in
+widget tests with fakes and on the web build). Android needs
+`FlutterFragmentActivity`, the `USE_BIOMETRIC` permission and an AppCompat
+launch theme, and iOS needs `NSFaceIDUsageDescription`; these are set but
+have not been built for either platform here. A PIN of 6 digits can be
+guessed offline by someone who can read the secure storage of a rooted
+device; the 5-attempt wipe only limits guessing through the app. The app
+switcher may show a screenshot of the last screen (there is no privacy
+screen).
 
 ## Deploying to Vercel
 
