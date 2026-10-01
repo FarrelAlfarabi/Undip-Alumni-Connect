@@ -256,13 +256,18 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
+    // Fixed tile height (not an aspect ratio) so tiles don't balloon on wide
+    // screens; four across on desktop-width layouts.
+    final wide = MediaQuery.sizeOf(context).width >= 700;
+    return GridView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 2.2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: wide ? 4 : 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        mainAxisExtent: 64,
+      ),
       children: [
         _Tile(
           key: const Key('tile-jobs'),
