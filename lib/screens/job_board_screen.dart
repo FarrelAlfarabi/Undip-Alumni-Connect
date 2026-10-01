@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
+import 'marketplace_gate.dart';
 import 'notifications_screen.dart';
 import 'post_job_screen.dart';
 import '../util/friendly_error.dart';
@@ -125,6 +126,16 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   }
 
   Future<void> _postJob() async {
+    if (!await ensureSubscriber(
+      context,
+      widget.currentUser,
+      reason:
+          'Posting a job is for subscribers. Browsing jobs and applying '
+          'stay free for everyone.',
+    )) {
+      return;
+    }
+    if (!mounted) return;
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) =>

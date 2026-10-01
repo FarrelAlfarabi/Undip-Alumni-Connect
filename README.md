@@ -110,8 +110,15 @@ request reaches Postgres as `anon` and RLS cannot know who is calling.
   profile's id can post, edit, delete, read the pending/rejected listings
   of, or report as that person. Admin actions have the same weakness, and
   `marketplace_is_admin(id)` lets anyone test whether an id is an admin.
-- "Subscribers only" checks `subscription_status`, which any client can set
-  (the demo Subscribe button does exactly that).
+- "Subscribers only" (job posting, marketplace posting) checks
+  `subscription_status`. A plain UPDATE of that column is now blocked, but
+  while `billing_settings.demo_subscriptions` is true any client can call
+  `demo_subscribe(<profile id>)` for any profile, so it is still a speed bump.
+  Before real payments run `update billing_settings set demo_subscriptions =
+  false;` and let only a payment webhook (service_role) set the status.
+  Apply `20261001090000_job_posting_requires_subscriber.sql` and ship the app
+  build that calls `demo_subscribe` together: either one alone breaks the
+  Subscribe button. Checks: `supabase/tests/run_job_gate_local.sh`.
 - Contact info on approved listings is readable by anyone holding the anon
   key, not only signed-in members.
 - The `marketplace` image bucket allows uploads (images only, 2 MB) from

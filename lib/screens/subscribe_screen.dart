@@ -3,11 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
 
-/// Visual-only subscription paywall (demo scope). No real payment — tapping
-/// "Subscribe" just flips alumni_profiles.subscription_status to
-/// 'subscribed' directly. Shared by the job-contact gate and the messaging
-/// gate, matching the pitch deck's "Subscribe to message alumni directly"
-/// paywall screen.
+/// Visual-only subscription paywall (demo scope). No real payment: tapping
+/// "Subscribe" calls the demo_subscribe database function, which sets
+/// alumni_profiles.subscription_status to 'subscribed' while demo mode is on.
+/// Shared by the job-posting, marketplace-posting and messaging gates,
+/// matching the pitch deck's "Subscribe to message alumni directly" paywall
+/// screen.
 class SubscribeScreen extends StatefulWidget {
   const SubscribeScreen({super.key, required this.profile});
 
@@ -28,15 +29,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
     });
 
     try {
-      final updated = await Supabase.instance.client
-          .from('alumni_profiles')
-          .update({'subscription_status': 'subscribed'})
-          .eq('id', widget.profile['id'])
-          .select()
-          .single();
+      final updated = await Supabase.instance.client.rpc(
+        'demo_subscribe',
+        params: {'p_profile': widget.profile['id']},
+      );
 
       if (!mounted) return;
-      Navigator.of(context).pop(updated);
+      Navigator.of(context).pop(Map<String, dynamic>.from(updated as Map));
     } catch (e) {
       setState(() {
         _saving = false;
@@ -84,9 +83,9 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Subscribe to message alumni directly, contact job '
-                        'posters and apply, and post in the marketplace. '
-                        'Browsing the directory and job board stays free.',
+                        'Subscribe to message alumni directly and to post jobs and '
+                        'marketplace listings. Browsing the directory and job '
+                        'board, and applying to jobs, stay free.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
