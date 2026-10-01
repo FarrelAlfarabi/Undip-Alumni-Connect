@@ -1,6 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// A small curated set of common titles for the roles Ikafe/FEB alumni
+/// actually post (business, finance, and adjacent tech roles — matches
+/// this app's faculty-wide scope per PROJECT_NOTES.md, not a generic
+/// jobs-site list). Merged with titles already used in real job_posts
+/// rows so the suggestions improve as the board fills up.
+const List<String> _commonJobTitles = [
+  'Accountant',
+  'Auditor',
+  'Business Analyst',
+  'Business Development Manager',
+  'Data Analyst',
+  'Digital Marketing Specialist',
+  'Finance Manager',
+  'Financial Analyst',
+  'HR Generalist',
+  'Investment Analyst',
+  'Marketing Manager',
+  'Operations Manager',
+  'Product Manager',
+  'Project Manager',
+  'Relationship Manager',
+  'Risk Analyst',
+  'Sales Executive',
+  'Software Engineer',
+  'Supply Chain Analyst',
+  'Tax Consultant',
+];
+
 /// Post-a-job form (Day 5). No visual paywall here — anyone verified can
 /// post. Contact-button gating is Day 6's job, on the (not yet built) job
 /// detail view.
@@ -28,6 +56,35 @@ class _PostJobScreenState extends State<PostJobScreen> {
 
   bool _saving = false;
   String? _error;
+
+  List<String> _titleOptions = _commonJobTitles;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTitleOptions();
+  }
+
+  // Best-effort: if this fails (offline, RLS, whatever), the curated
+  // static list above is still there as a fallback — autocomplete is a
+  // convenience, not something the form depends on to work.
+  Future<void> _loadTitleOptions() async {
+    try {
+      final rows = await Supabase.instance.client
+          .from('job_posts')
+          .select('title');
+      final existingTitles = List<Map<String, dynamic>>.from(rows as List)
+          .map((r) => r['title'] as String?)
+          .whereType<String>()
+          .where((t) => t.trim().isNotEmpty);
+
+      final merged = <String>{..._commonJobTitles, ...existingTitles}.toList()
+        ..sort();
+      if (mounted) setState(() => _titleOptions = merged);
+    } catch (_) {
+      // Keep the static fallback list — see comment above.
+    }
+  }
 
   @override
   void dispose() {
@@ -87,15 +144,34 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextFormField(
-                      controller: _titleController,
-                      enabled: !_saving,
-                      decoration: const InputDecoration(
-                        labelText: 'Job Title',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    Autocomplete<String>(
+                      textEditingController: _titleController,
+                      optionsBuilder: (textEditingValue) {
+                        final query = textEditingValue.text
+                            .trim()
+                            .toLowerCase();
+                        if (query.isEmpty) {
+                          return const Iterable<String>.empty();
+                        }
+                        return _titleOptions.where(
+                          (title) => title.toLowerCase().contains(query),
+                        );
+                      },
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onFieldSubmitted) {
+                            return TextFormField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              enabled: !_saving,
+                              decoration: const InputDecoration(
+                                labelText: 'Job Title',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Required'
+                                  : null,
+                            );
+                          },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
