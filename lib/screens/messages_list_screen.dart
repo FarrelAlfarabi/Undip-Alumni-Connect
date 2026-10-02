@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'chat_screen.dart';
-import '../util/friendly_error.dart';
+import '../widgets/load_error_view.dart';
 
 /// List of the current user's conversations (Day 6, demo scope). Empty
 /// until they message someone from the directory — this screen doesn't
@@ -106,11 +106,10 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('messages', snapshot.error)),
-              ),
+            return LoadErrorView(
+              thing: 'messages',
+              error: snapshot.error,
+              onRetry: () => setState(() => _future = _fetchConversations()),
             );
           }
 
@@ -164,38 +163,45 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                     ? const Center(
                         child: Text('No conversations match these filters.'),
                       )
-                    : ListView.separated(
-                        itemCount: conversations.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) {
-                          final c = conversations[i];
-                          final other = _otherParticipant(c);
-                          return ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.person_outline),
-                            ),
-                            title: Text(other['name'] as String? ?? 'Alumni'),
-                            subtitle:
-                                (other['faculty'] as String?)?.isNotEmpty ==
-                                    true
-                                ? Text(other['faculty'] as String)
-                                : null,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChatScreen(
-                                    conversationId: c['id'] as String,
-                                    currentProfileId:
-                                        widget.currentUser.value['id']
-                                            as String,
-                                    otherName:
-                                        other['name'] as String? ?? 'Alumni',
-                                  ),
-                                ),
-                              );
-                            },
-                          );
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          setState(() => _future = _fetchConversations());
+                          await _future;
                         },
+                        child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: conversations.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, i) {
+                            final c = conversations[i];
+                            final other = _otherParticipant(c);
+                            return ListTile(
+                              leading: const CircleAvatar(
+                                child: Icon(Icons.person_outline),
+                              ),
+                              title: Text(other['name'] as String? ?? 'Alumni'),
+                              subtitle:
+                                  (other['faculty'] as String?)?.isNotEmpty ==
+                                      true
+                                  ? Text(other['faculty'] as String)
+                                  : null,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatScreen(
+                                      conversationId: c['id'] as String,
+                                      currentProfileId:
+                                          widget.currentUser.value['id']
+                                              as String,
+                                      otherName:
+                                          other['name'] as String? ?? 'Alumni',
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
               ),
             ],

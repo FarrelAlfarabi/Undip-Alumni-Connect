@@ -1,7 +1,8 @@
 """Regenerates every app icon from the kawung mark on the Welcome screen
 (lib/kawung_mark.dart). Needs Pillow:  pip install pillow
 Run from the repo root:  python3 scripts/make_app_icons.py
-Overwrites the PNGs already in the Android, iOS and web icon folders,
+Overwrites the PNGs already in the Android, iOS and web icon folders (and the
+Android adaptive-icon layers),
 keeping each file's existing pixel size.
 """
 import glob
@@ -16,7 +17,9 @@ RADIUS, DOT, STROKE = 7.2, 3.1, 2.2  # stroke a little bolder than 1.6 so it hol
 MARK_SPAN = 24.4  # circles run from 4.8 to 29.2 in that box
 
 
-def render(px, mark_fraction=0.58):
+def render(px, mark_fraction=0.58, transparent_color=None):
+    """transparent_color set -> RGBA with only the mark, in that colour
+    (used for the Android adaptive-icon foreground and monochrome layers)."""
     n = px * 4  # supersample, then shrink for smooth edges
     unit = n * mark_fraction / MARK_SPAN  # pixels per mark unit
     origin = n / 2 - 17 * unit  # centre of the 34-unit box on the canvas
@@ -40,6 +43,10 @@ def render(px, mark_fraction=0.58):
     x, y = pt(17, 17)
     r = DOT * unit
     md.ellipse([x - r, y - r, x + r, y + r], fill=255)
+    if transparent_color is not None:
+        out = Image.new("RGBA", (n, n), transparent_color + (0,))
+        out.paste(Image.new("RGBA", (n, n), transparent_color + (255,)), mask=mask)
+        return out.resize((px, px), Image.LANCZOS)
     img.paste(Image.new("RGB", (n, n), GOLD), mask=mask)
     return img.resize((px, px), Image.LANCZOS)
 
@@ -56,3 +63,13 @@ for path in sorted(targets):
     fraction = 0.50 if "maskable" in path else 0.58
     render(px, fraction).save(path, optimize=True)
     print(path, px)
+
+
+# Android adaptive icon layers: 108dp canvas per density, mark kept inside
+# the 66dp safe zone that launcher masks never crop.
+for density, px in [("mdpi", 108), ("hdpi", 162), ("xhdpi", 216),
+                    ("xxhdpi", 324), ("xxxhdpi", 432)]:
+    folder = f"android/app/src/main/res/mipmap-{density}"
+    render(px, 0.46, transparent_color=GOLD).save(f"{folder}/ic_launcher_foreground.png", optimize=True)
+    render(px, 0.46, transparent_color=(0, 0, 0)).save(f"{folder}/ic_launcher_monochrome.png", optimize=True)
+    print(folder, "adaptive layers", px)

@@ -3,11 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/application_status.dart';
 import '../widgets/filter_dropdown.dart';
+import '../widgets/load_error_view.dart';
 import 'job_detail_screen.dart';
 import 'marketplace_gate.dart';
 import 'notifications_screen.dart';
 import 'post_job_screen.dart';
-import '../util/friendly_error.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
 /// browsing for everyone — the contact button / visual paywall lives on
@@ -69,6 +69,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
         builder: (_) => NotificationsScreen(
           currentUserId: widget.currentUser.value['id'] as String,
           currentUserEmail: widget.currentUser.value['email'] as String,
+          currentUser: widget.currentUser,
         ),
       ),
     );
@@ -111,9 +112,12 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             JobDetailScreen(job: job, currentUser: widget.currentUser),
       ),
     );
-    // The applicant may have applied from the detail screen.
+    // The applicant may have applied, or the poster edited or deleted it.
     if (mounted) {
-      setState(() => _applicationsFuture = _fetchMyApplications());
+      setState(() {
+        _future = _fetchJobs();
+        _applicationsFuture = _fetchMyApplications();
+      });
     }
   }
 
@@ -226,13 +230,11 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                friendlyLoadError('your applications', snapshot.error),
-              ),
-            ),
+          return LoadErrorView(
+            thing: 'your applications',
+            error: snapshot.error,
+            onRetry: () =>
+                setState(() => _applicationsFuture = _fetchMyApplications()),
           );
         }
         // An application whose job was deleted has no job row to show.
@@ -283,11 +285,10 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(friendlyLoadError('the job board', snapshot.error)),
-            ),
+          return LoadErrorView(
+            thing: 'the job board',
+            error: snapshot.error,
+            onRetry: () => setState(() => _future = _fetchJobs()),
           );
         }
 
@@ -351,13 +352,20 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             Expanded(
               child: jobs.isEmpty
                   ? const Center(child: Text('No jobs match these filters.'))
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                      itemCount: jobs.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _JobCard(
-                        job: jobs[i],
-                        onTap: () => _openJob(jobs[i]),
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        setState(() => _future = _fetchJobs());
+                        await _future;
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                        itemCount: jobs.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _JobCard(
+                          job: jobs[i],
+                          onTap: () => _openJob(jobs[i]),
+                        ),
                       ),
                     ),
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/announcement_card.dart';
-import '../util/friendly_error.dart';
+import '../widgets/load_error_view.dart';
 
 /// Ikafe announcements feed (Day 7): one-way broadcast, no moderation, no
 /// posting UI in the app — these are seeded/admin content, not something an
@@ -48,11 +48,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('announcements', snapshot.error)),
-              ),
+            return LoadErrorView(
+              thing: 'announcements',
+              error: snapshot.error,
+              onRetry: () => setState(() => _future = _fetchAnnouncements()),
             );
           }
 
@@ -66,11 +65,19 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: announcements.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => AnnouncementCard(a: announcements[i]),
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() => _future = _fetchAnnouncements());
+              await _future;
+            },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: announcements.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, i) =>
+                  AnnouncementCard(a: announcements[i]),
+            ),
           );
         },
       ),

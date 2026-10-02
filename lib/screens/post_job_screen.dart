@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/job_industries.dart';
 import '../util/friendly_error.dart';
 
 /// A small curated set of common titles for the roles Ikafe/FEB alumni
@@ -31,13 +32,16 @@ const List<String> _commonJobTitles = [
   'Tax Consultant',
 ];
 
-/// Post-a-job form (Day 5). No visual paywall here — anyone verified can
+/// Post-a-job form (Day 5), also used to edit one of your own jobs. No visual paywall here — anyone verified can
 /// post. Contact-button gating is Day 6's job, on the (not yet built) job
 /// detail view.
 class PostJobScreen extends StatefulWidget {
-  const PostJobScreen({super.key, required this.posterId});
+  const PostJobScreen({super.key, required this.posterId, this.existing});
 
   final String posterId;
+
+  /// The job being edited, or null to post a new one.
+  final Map<String, dynamic>? existing;
 
   @override
   State<PostJobScreen> createState() => _PostJobScreenState();
@@ -50,9 +54,11 @@ class _PostJobScreenState extends State<PostJobScreen> {
   // either both given or both null, so the title field owns both.
   final _titleFocusNode = FocusNode();
   final _companyController = TextEditingController();
-  final _industryController = TextEditingController();
+  String? _industry;
   final _descriptionController = TextEditingController();
   final _contactController = TextEditingController();
+  bool get _isEdit => widget.existing != null;
+
   bool _notifyOnApply = true;
   bool _requireCv = false;
   bool _requireLinkedin = false;
@@ -67,6 +73,20 @@ class _PostJobScreenState extends State<PostJobScreen> {
   @override
   void initState() {
     super.initState();
+    final job = widget.existing;
+    if (job != null) {
+      _titleController.text = job['title'] as String? ?? '';
+      _companyController.text = job['company'] as String? ?? '';
+      _industry = (job['industry'] as String?)?.trim();
+      if (_industry?.isEmpty == true) _industry = null;
+      _descriptionController.text = job['description'] as String? ?? '';
+      _contactController.text = job['contact_info'] as String? ?? '';
+      _notifyOnApply = job['notify_on_apply'] != false;
+      _requireCv = job['require_cv'] == true;
+      _requireLinkedin = job['require_linkedin'] == true;
+      _requirePortfolio = job['require_portfolio'] == true;
+      _requireCoverNote = job['require_cover_note'] == true;
+    }
     _loadTitleOptions();
   }
 
@@ -96,7 +116,6 @@ class _PostJobScreenState extends State<PostJobScreen> {
     _titleController.dispose();
     _titleFocusNode.dispose();
     _companyController.dispose();
-    _industryController.dispose();
     _descriptionController.dispose();
     _contactController.dispose();
     super.dispose();
@@ -111,19 +130,41 @@ class _PostJobScreenState extends State<PostJobScreen> {
     });
 
     try {
-      await Supabase.instance.client.from('job_posts').insert({
-        'posted_by': widget.posterId,
-        'title': _titleController.text.trim(),
-        'company': _companyController.text.trim(),
-        'industry': _industryController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'contact_info': _contactController.text.trim(),
-        'notify_on_apply': _notifyOnApply,
-        'require_cv': _requireCv,
-        'require_linkedin': _requireLinkedin,
-        'require_portfolio': _requirePortfolio,
-        'require_cover_note': _requireCoverNote,
-      });
+      final client = Supabase.instance.client;
+      if (_isEdit) {
+        // Goes through a function that checks the caller posted this job.
+        await client.rpc(
+          'update_job_post',
+          params: {
+            'p_job': widget.existing!['id'],
+            'p_poster': widget.posterId,
+            'p_title': _titleController.text.trim(),
+            'p_company': _companyController.text.trim(),
+            'p_industry': _industry,
+            'p_description': _descriptionController.text.trim(),
+            'p_contact_info': _contactController.text.trim(),
+            'p_notify_on_apply': _notifyOnApply,
+            'p_require_cv': _requireCv,
+            'p_require_linkedin': _requireLinkedin,
+            'p_require_portfolio': _requirePortfolio,
+            'p_require_cover_note': _requireCoverNote,
+          },
+        );
+      } else {
+        await client.from('job_posts').insert({
+          'posted_by': widget.posterId,
+          'title': _titleController.text.trim(),
+          'company': _companyController.text.trim(),
+          'industry': _industry,
+          'description': _descriptionController.text.trim(),
+          'contact_info': _contactController.text.trim(),
+          'notify_on_apply': _notifyOnApply,
+          'require_cv': _requireCv,
+          'require_linkedin': _requireLinkedin,
+          'require_portfolio': _requirePortfolio,
+          'require_cover_note': _requireCoverNote,
+        });
+      }
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -138,7 +179,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post a Job')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit Job' : 'Post a Job')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -192,13 +233,26 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _industryController,
-                      enabled: !_saving,
+                    DropdownButtonFormField<String>(
+                      initialValue: _industry,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Industry',
                         border: OutlineInputBorder(),
                       ),
+                      // A job saved before this was a fixed list may have an
+                      // industry that isn't in it; keep it selectable.
+                      items: [
+                        for (final i in {
+                          ...kJobIndustries,
+                          if (_industry != null) _industry!,
+                        })
+                          DropdownMenuItem(value: i, child: Text(i)),
+                      ],
+                      onChanged: _saving
+                          ? null
+                          : (v) => setState(() => _industry = v),
+                      validator: (v) => v == null ? 'Choose an industry' : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -280,7 +334,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     if (_error != null) ...[
                       const SizedBox(height: 16),
                       Text(
-                        'Post failed. $_error',
+                        '${_isEdit ? 'Save' : 'Post'} failed. $_error',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -300,7 +354,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Post Job'),
+                          : Text(_isEdit ? 'Save changes' : 'Post Job'),
                     ),
                   ],
                 ),

@@ -910,3 +910,36 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** the deployed site with the CDN path, real Supabase Storage and pgcrypto behaviour, real devices.
 **Open:** everything that needs real Supabase Auth (see `SECURITY_AUDIT.md`).
 
+
+## 2026-10-02 — Job board fixes, application status, city picker, icon, admin passphrase off
+
+**Done:**
+- Post a Job crashed on open (the title Autocomplete had a controller but no focus node). Fixed.
+- Job Details re-reads the application after applying and shows "Applied · <status>". Content now starts at the top instead of being centred.
+- Job Board has "All Jobs" and "My Applications" tabs. Applications have a status (pending, reviewed, accepted, rejected); the poster sets it from the applicant list, the applicant sees it on the job and in the tab. New column `job_applications.status`.
+- Applicants get a notification when their status changes (trigger `notify_applicant_on_status_change`). Tapping it opens the job; a poster's "someone applied" notification still opens the applicant list.
+- Opening the notifications list marks everything read, so the Job Board badge clears.
+- Posters can edit and delete their own jobs (menu on Job Details). Both go through functions that check `posted_by`: `update_job_post`, `delete_job_post`. Deleting also removes the job's applications, notifications and email log rows.
+- Industry on Post a Job is a fixed list (`lib/data/job_industries.dart`). Existing "IT" jobs were changed to "Technology".
+- Marketplace listing City is a searchable picker over `lib/data/indonesia_cities.dart` (109 entries: all kota, plus well-known kabupaten and towns; not every kabupaten).
+- Every "failed to load" screen has a Try again button (`LoadErrorView`); the main lists have pull-to-refresh.
+- Chats (direct and city group) check for new messages every 5 seconds.
+- App icon is the kawung mark from the Welcome screen, for Android (including an adaptive icon and a themed-icon layer), iOS and web. `python3 scripts/make_app_icons.py` regenerates them.
+- Unlock offers fingerprint only (checked from the device's reported sensors); Face ID permission text removed. The OS prompt itself still may accept a face on a phone with both enrolled.
+- Marketplace admin passphrase is OFF: `marketplace_admin_authorized` lets an admin with no passphrase in by profile id (`20261002100000_admin_passphrase_optional.sql`). The admin screen tries this first and only shows the passphrase gate if one is set. Set one with `marketplace_set_admin_key(...)` to turn the protection back on.
+
+**Live database (project `kdmxgtwqqnlbgfcpdivp`):** applied by hand, statement by statement, not through the migration history: `add_application_status`, `admin_passphrase_optional`, `update_job_post`, the applicant-notification trigger, and the IT-to-Technology update. **`delete_job_post` is NOT applied yet** (the SQL tool stalled on statements containing `delete`/`drop`). Until it is run from the Supabase SQL editor (it is in `20261002110000_job_edit_delete_and_applicant_notifications.sql`), Delete job shows an error. The grants for `delete_job_post` in that file also need running with it.
+
+**Decided:**
+- The marketplace admin passphrase is off for the demo only. While it is off, anyone who knows the admin's profile id (public) can approve or reject listings. Real fix: real login, admin decided server-side (SA-03, SA-04, SA-05).
+- Application status can be changed by anyone who can call the API; the update right is limited to the status column only.
+- Sign out still wipes the PIN (`lib/lock/session.dart`). Whether it should survive sign out is undecided.
+
+**Verified:** code formatted; no syntax errors in a Dart-only check; live database checked by query after each change (status column and check constraint, update grant limited to `status`, trigger present, admin authorised without a passphrase while a stranger is not, no passphrase left set).
+**Not verified:** Flutter is not installed in the session that did this, so `flutter analyze`, the test suite and the app were NOT run. Two tests were changed (`admin_passphrase_test.dart`, `lock_screens_test.dart`) and one added (`job_features_test.dart`) without being run. Nothing was tried on a device, including the new icons.
+**Open:**
+- Apply `delete_job_post` and its grants (see above).
+- Run `flutter analyze` and `flutter test`, fix whatever breaks.
+- Decide: keep the lock PIN after sign out? Keep the admin passphrase off?
+- Welcome screen still says "Placeholder visual identity".
+- Industry filter on Job Board only shows industries that have jobs (by design).

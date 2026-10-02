@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/application_status.dart';
+import '../util/friendly_error.dart';
 import 'apply_job_screen.dart';
 import 'job_applicants_screen.dart';
+import 'post_job_screen.dart';
 
 /// Job detail view. Job seekers see the full posting, the poster's contact
 /// info and the Apply button for free; the subscription requirement sits on
@@ -34,11 +36,11 @@ class JobDetailScreen extends StatefulWidget {
 }
 
 class _JobDetailScreenState extends State<JobDetailScreen> {
+  late Map<String, dynamic> _job = widget.job;
   Future<int>? _applicantCountFuture;
   Future<Map<String, dynamic>?>? _applicationFuture;
 
-  bool get _isOwnJob =>
-      widget.job['posted_by'] == widget.currentUser.value['id'];
+  bool get _isOwnJob => _job['posted_by'] == widget.currentUser.value['id'];
 
   @override
   void initState() {
@@ -54,7 +56,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final rows = await Supabase.instance.client
         .from('job_applications')
         .select('id')
-        .eq('job_post_id', widget.job['id']);
+        .eq('job_post_id', _job['id']);
     return (rows as List).length;
   }
 
@@ -65,7 +67,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final rows = await Supabase.instance.client
         .from('job_applications')
         .select('id, status')
-        .eq('job_post_id', widget.job['id'])
+        .eq('job_post_id', _job['id'])
         .eq('applicant_id', widget.currentUser.value['id'])
         .order('created_at', ascending: false)
         .limit(1);
@@ -76,10 +78,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   Future<void> _apply(BuildContext context) async {
     final applied = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => ApplyJobScreen(
-          job: widget.job,
-          applicant: widget.currentUser.value,
-        ),
+        builder: (_) =>
+            ApplyJobScreen(job: _job, applicant: widget.currentUser.value),
       ),
     );
     if (!mounted) return;
@@ -96,14 +96,91 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     });
   }
 
+  Future<void> _edit() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PostJobScreen(
+          posterId: widget.currentUser.value['id'] as String,
+          existing: _job,
+        ),
+      ),
+    );
+    if (saved != true || !mounted) return;
+    try {
+      final fresh = await Supabase.instance.client
+          .from('job_posts')
+          .select('*, poster:alumni_profiles(name)')
+          .eq('id', _job['id'])
+          .single();
+      if (mounted) setState(() => _job = Map<String, dynamic>.from(fresh));
+    } catch (_) {
+      // The edit itself saved; the list refreshes when you go back.
+    }
+  }
+
+  Future<void> _delete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this job?'),
+        content: const Text(
+          'This also removes every application and notification for it. '
+          'It cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const Key('job-delete-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await Supabase.instance.client.rpc(
+        'delete_job_post',
+        params: {
+          'p_job': _job['id'],
+          'p_poster': widget.currentUser.value['id'],
+        },
+      );
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not delete the job. ${friendlyError(e)}'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final poster = widget.job['poster'] as Map<String, dynamic>?;
+    final poster = _job['poster'] as Map<String, dynamic>?;
     final posterName = poster?['name'] as String? ?? 'Alumni';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Job Details')),
+      appBar: AppBar(
+        title: const Text('Job Details'),
+        actions: [
+          if (_isOwnJob)
+            PopupMenuButton<String>(
+              key: const Key('job-menu'),
+              onSelected: (v) => v == 'edit' ? _edit() : _delete(),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit job')),
+                PopupMenuItem(value: 'delete', child: Text('Delete job')),
+              ],
+            ),
+        ],
+      ),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -115,7 +192,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    widget.job['title'] as String? ?? '',
+                    _job['title'] as String? ?? '',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -123,10 +200,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   const SizedBox(height: 4),
                   Text(
                     [
-                      widget.job['company'] as String? ?? '',
-                      if ((widget.job['industry'] as String?)?.isNotEmpty ==
-                          true)
-                        widget.job['industry'] as String,
+                      _job['company'] as String? ?? '',
+                      if ((_job['industry'] as String?)?.isNotEmpty == true)
+                        _job['industry'] as String,
                     ].join(' · '),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -134,7 +210,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    widget.job['description'] as String? ?? '',
+                    _job['description'] as String? ?? '',
                     style: theme.textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 8),
@@ -150,7 +226,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       future: _applicantCountFuture,
                       builder: (context, snapshot) {
                         final count = snapshot.data;
-                        final notify = widget.job['notify_on_apply'] != false;
+                        final notify = _job['notify_on_apply'] != false;
                         // notify_on_apply on: proactive "N applications
                         // received" banner (the demo's notification
                         // surface). Off: same "View Applicants" access,
@@ -195,9 +271,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                     : () {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (_) => JobApplicantsScreen(
-                                              job: widget.job,
-                                            ),
+                                            builder: (_) =>
+                                                JobApplicantsScreen(job: _job),
                                           ),
                                         );
                                       },
@@ -227,7 +302,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  widget.job['contact_info'] as String? ??
+                                  _job['contact_info'] as String? ??
                                       'No contact info provided.',
                                   style: theme.textTheme.bodyMedium,
                                 ),

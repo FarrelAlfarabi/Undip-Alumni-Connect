@@ -3,10 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/city_distances.dart';
+import '../widgets/load_error_view.dart';
 import '../widgets/nearby_map_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
-import '../util/friendly_error.dart';
 
 /// One city's worth of nearby alumni, grouped for the map's networking
 /// chips and the sheet they open (_CityClusterSheet).
@@ -156,13 +156,10 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      friendlyLoadError('nearby alumni', snapshot.error),
-                    ),
-                  ),
+                return LoadErrorView(
+                  thing: 'nearby alumni',
+                  error: snapshot.error,
+                  onRetry: () => setState(() => _future = _fetchAlumni()),
                 );
               }
 

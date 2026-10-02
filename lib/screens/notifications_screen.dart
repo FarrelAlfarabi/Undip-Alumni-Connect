@@ -3,7 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'email_log_screen.dart';
 import 'job_applicants_screen.dart';
-import '../util/friendly_error.dart';
+import 'job_detail_screen.dart';
+import '../widgets/load_error_view.dart';
 
 /// In-app notification list (added 18 Sep 2026). A row here is created
 /// automatically by a database trigger whenever someone applies to a
@@ -20,10 +21,14 @@ class NotificationsScreen extends StatefulWidget {
     super.key,
     required this.currentUserId,
     required this.currentUserEmail,
+    required this.currentUser,
   });
 
   final String currentUserId;
   final String currentUserEmail;
+
+  /// Needed to open a job's detail page from an application-status update.
+  final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -72,13 +77,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     final job = await Supabase.instance.client
         .from('job_posts')
-        .select()
+        .select('*, poster:alumni_profiles(name)')
         .eq('id', jobPostId)
         .maybeSingle();
     if (job == null || !mounted) return;
 
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => JobApplicantsScreen(job: job)));
+    // "Someone applied" goes to the poster's applicant list; "your
+    // application changed" goes to the applicant, on the job itself.
+    final isPoster = job['posted_by'] == widget.currentUserId;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => isPoster
+            ? JobApplicantsScreen(job: job)
+            : JobDetailScreen(job: job, currentUser: widget.currentUser),
+      ),
+    );
   }
 
   String _timeAgo(DateTime time) {
@@ -116,11 +129,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('notifications', snapshot.error)),
-              ),
+            return LoadErrorView(
+              thing: 'notifications',
+              error: snapshot.error,
+              onRetry: () => setState(() => _future = _fetchNotifications()),
             );
           }
 
@@ -134,42 +146,51 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             );
           }
 
-          return ListView.separated(
-            itemCount: notifications.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final n = notifications[i];
-              final isUnread = n['read_at'] == null;
-              final createdAt = DateTime.parse(n['created_at'] as String);
-
-              return ListTile(
-                tileColor: isUnread
-                    ? theme.colorScheme.secondaryContainer.withValues(
-                        alpha: 0.35,
-                      )
-                    : null,
-                leading: Icon(
-                  Icons.work_outline,
-                  color: isUnread
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  n['title'] as String? ?? '',
-                  style: TextStyle(
-                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-                subtitle: Text(n['body'] as String? ?? ''),
-                trailing: Text(
-                  _timeAgo(createdAt),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () => _openNotification(n),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() => _future = _fetchNotifications());
+              await _future;
             },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: notifications.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, i) {
+                final n = notifications[i];
+                final isUnread = n['read_at'] == null;
+                final createdAt = DateTime.parse(n['created_at'] as String);
+
+                return ListTile(
+                  tileColor: isUnread
+                      ? theme.colorScheme.secondaryContainer.withValues(
+                          alpha: 0.35,
+                        )
+                      : null,
+                  leading: Icon(
+                    Icons.work_outline,
+                    color: isUnread
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(
+                    n['title'] as String? ?? '',
+                    style: TextStyle(
+                      fontWeight: isUnread
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  subtitle: Text(n['body'] as String? ?? ''),
+                  trailing: Text(
+                    _timeAgo(createdAt),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  onTap: () => _openNotification(n),
+                );
+              },
+            ),
           );
         },
       ),

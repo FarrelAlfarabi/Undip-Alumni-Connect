@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
-import '../util/friendly_error.dart';
+import '../widgets/load_error_view.dart';
 
 /// Searchable alumni directory: filter by major, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
@@ -102,11 +102,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(friendlyLoadError('the directory', snapshot.error)),
-            ),
+          return LoadErrorView(
+            thing: 'the directory',
+            error: snapshot.error,
+            onRetry: () => setState(() => _future = _fetchAlumni()),
           );
         }
 
@@ -176,51 +175,59 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Expanded(
               child: filtered.isEmpty
                   ? const Center(child: Text('No alumni match these filters.'))
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, i) {
-                        final p = filtered[i];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer,
-                            child: Text(
-                              (p['name'] as String? ?? '?')
-                                  .trim()
-                                  .split(RegExp(r'\s+'))
-                                  .map((w) => w.isNotEmpty ? w[0] : '')
-                                  .take(2)
-                                  .join()
-                                  .toUpperCase(),
-                            ),
-                          ),
-                          title: Text(p['name'] as String? ?? ''),
-                          subtitle: Text(
-                            [
-                              if ((p['current_role'] as String?)?.isNotEmpty ==
-                                  true)
-                                '${p['current_role']}'
-                                    '${(p['current_employer'] as String?)?.isNotEmpty == true ? ' @ ${p['current_employer']}' : ''}',
-                              '${p['major']} · Class of ${p['graduation_year']}',
-                            ].join('\n'),
-                          ),
-                          isThreeLine: true,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ProfileDetailScreen(
-                                  profile: p,
-                                  showEditButton: false,
-                                  currentUser: widget.currentUser,
-                                ),
-                              ),
-                            );
-                          },
-                        );
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        setState(() => _future = _fetchAlumni());
+                        await _future;
                       },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, i) {
+                          final p = filtered[i];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              child: Text(
+                                (p['name'] as String? ?? '?')
+                                    .trim()
+                                    .split(RegExp(r'\s+'))
+                                    .map((w) => w.isNotEmpty ? w[0] : '')
+                                    .take(2)
+                                    .join()
+                                    .toUpperCase(),
+                              ),
+                            ),
+                            title: Text(p['name'] as String? ?? ''),
+                            subtitle: Text(
+                              [
+                                if ((p['current_role'] as String?)
+                                        ?.isNotEmpty ==
+                                    true)
+                                  '${p['current_role']}'
+                                      '${(p['current_employer'] as String?)?.isNotEmpty == true ? ' @ ${p['current_employer']}' : ''}',
+                                '${p['major']} · Class of ${p['graduation_year']}',
+                              ].join('\n'),
+                            ),
+                            isThreeLine: true,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProfileDetailScreen(
+                                    profile: p,
+                                    showEditButton: false,
+                                    currentUser: widget.currentUser,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],
