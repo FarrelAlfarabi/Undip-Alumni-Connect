@@ -41,8 +41,19 @@ void main() {
     await pump(tester, api);
     expect(find.text('Admin passphrase'), findsOneWidget);
     expect(find.byKey(const Key('admin-key-field')), findsOneWidget);
-    expect(api.calls, isEmpty);
+    // Only the one probe without a passphrase, which the database refuses.
+    expect(api.calls, ['marketplace_admin_pending']);
     expect(find.text('Pending One'), findsNothing);
+  });
+
+  testWidgets('opens straight away when the admin has no passphrase set', (
+    tester,
+  ) async {
+    final api = makeApi()..requireAdminKey = null;
+    await pump(tester, api);
+    expect(find.byKey(const Key('admin-key-field')), findsNothing);
+    expect(find.text('Review queue'), findsOneWidget);
+    expect(find.text('Pending One'), findsOneWidget);
   });
 
   testWidgets('the passphrase field hides what is typed', (tester) async {
@@ -81,10 +92,11 @@ void main() {
   testWidgets('an empty passphrase makes no call', (tester) async {
     final api = makeApi();
     await pump(tester, api);
+    final callsBefore = api.calls.length;
     await tester.tap(find.byKey(const Key('admin-key-submit')));
     await tester.pump();
     expect(find.text('Enter the admin passphrase.'), findsOneWidget);
-    expect(api.calls, isEmpty);
+    expect(api.calls.length, callsBefore);
   });
 
   testWidgets(

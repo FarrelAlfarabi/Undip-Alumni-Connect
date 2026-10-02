@@ -12,6 +12,10 @@ import 'marketplace_screen.dart' show ListingImage;
 /// profile, and every action also needs the admin passphrase (the profile id
 /// alone is public, see SECURITY_AUDIT.md SA-04). The passphrase is asked for
 /// here, kept only in this screen's memory and never stored on the device.
+///
+/// If the database says this admin has no passphrase set (see
+/// 20261002100000_admin_passphrase_optional.sql), the screen opens straight
+/// away and the gate never shows.
 class MarketplaceAdminScreen extends StatefulWidget {
   const MarketplaceAdminScreen({
     super.key,
@@ -32,11 +36,27 @@ class MarketplaceAdminScreen extends StatefulWidget {
 
 class _MarketplaceAdminScreenState extends State<MarketplaceAdminScreen> {
   String? _key;
+  bool _probing = false;
 
   @override
   void initState() {
     super.initState();
     _key = widget.adminKey;
+    if (_key == null) _probeWithoutPassphrase();
+  }
+
+  // One call with an empty passphrase: it only succeeds when the database
+  // has no passphrase set for this admin. Otherwise fall through to the gate.
+  Future<void> _probeWithoutPassphrase() async {
+    _probing = true;
+    try {
+      await widget.repository.fetchPending(widget.adminId, '');
+      if (mounted) setState(() => _key = '');
+    } catch (_) {
+      // Passphrase required (or not reachable): show the gate.
+    } finally {
+      if (mounted) setState(() => _probing = false);
+    }
   }
 
   @override
@@ -48,6 +68,12 @@ class _MarketplaceAdminScreenState extends State<MarketplaceAdminScreen> {
   @override
   Widget build(BuildContext context) {
     final key = _key;
+    if (key == null && _probing) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Marketplace admin')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     if (key == null) {
       return _AdminKeyGate(
         adminId: widget.adminId,
