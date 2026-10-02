@@ -933,13 +933,13 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Decided:**
 - The marketplace admin passphrase is off for the demo only. While it is off, anyone who knows the admin's profile id (public) can approve or reject listings. Real fix: real login, admin decided server-side (SA-03, SA-04, SA-05).
 - Application status can be changed by anyone who can call the API; the update right is limited to the status column only.
-- Sign out still wipes the PIN (`lib/lock/session.dart`). Whether it should survive sign out is undecided.
+- Sign out wipes the PIN (`lib/lock/session.dart`). Owner decided on 2 Oct: keep it that way.
 
 **Verified:** code formatted; no syntax errors in a Dart-only check; live database checked by query after each change (status column and check constraint, update grant limited to `status`, trigger present, admin authorised without a passphrase while a stranger is not, no passphrase left set).
 **Not verified:** Flutter is not installed in the session that did this, so `flutter analyze`, the test suite and the app were NOT run. Two tests were changed (`admin_passphrase_test.dart`, `lock_screens_test.dart`) and one added (`job_features_test.dart`) without being run. Nothing was tried on a device, including the new icons.
 **Open:**
 - Apply `delete_job_post` and its grants (see above).
 - Run `flutter analyze` and `flutter test`, fix whatever breaks.
-- Decide: keep the lock PIN after sign out? Keep the admin passphrase off?
+- Decide: keep the admin passphrase off?
 - Welcome screen still says "Placeholder visual identity".
 - Industry filter on Job Board only shows industries that have jobs (by design).
