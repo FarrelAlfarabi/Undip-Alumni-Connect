@@ -910,3 +910,20 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** the deployed site with the CDN path, real Supabase Storage and pgcrypto behaviour, real devices.
 **Open:** everything that needs real Supabase Auth (see `SECURITY_AUDIT.md`).
 
+
+## 2026-10-01 — Merge to main, job-posting rule change, two fixes (backfilled 2026-10-02)
+
+Backfilled on 2026-10-02 from the git log of `origin/main`. Nothing here was re-run; no checks were run in this entry.
+
+**What landed on `main` on 1 Oct (commits `83a449d`, `5558eb5`, `7096fbc`, `dbccb98`, `7e91a8a`, `a89ec3b`, `afb9b1f`):**
+- Merged the marketplace demo and the Lingkaran rename (annual-only Rp 99.000 Subscribe screen), the job title autocomplete branch, and `lingkaran-hub` (home hub, Preview tiles, lock screen, security hardening). The merge commit message says the migrations were applied to the live database. The security audit had asked for a separate project or branch database first.
+- **Decided by Farrel:** the subscription requirement moved from job seekers to job posters. Contact info and Apply are free; posting a job needs a subscription (`dbccb98`). Enforced in the database by a `BEFORE INSERT` gate on `job_posts`, plain updates of `subscription_status` blocked, and `demo_subscribe(uuid)` behind a `billing_settings.demo_subscriptions` switch (`7e91a8a`, migration `20261001090000_job_posting_requires_subscriber.sql`, rollback and tests included).
+- Fix: oversized home quick-action tiles on desktop (`a89ec3b`, PR #5).
+- Fix: the marketplace did not load because the security migration added a second foreign key (`reviewed_by`) to `alumni_profiles`, making the seller join ambiguous. The query now names the key (`afb9b1f`, PR #6).
+
+**Open or unverified:**
+- The README says the job-posting migration is not applied to any live project and that the app build and the migration must ship together. The app change is already on `main`. If the deployed site has the new build and the database lacks the migration, Subscribe breaks. Not checked.
+- Whether the admin passphrase is set on the live project, and whether CV upload, marketplace photos and notifications still work after the hardening migration. Not checked.
+- The 30 Sep checks (analyze clean, 230 tests) predate these commits. Not re-run.
+- Security audit verdict unchanged: not safe to load real alumni data until real Supabase Auth is built (`SECURITY_AUDIT.md`).
+- Target launch timeline proposed in the master plan v2.1 (not a commitment).
