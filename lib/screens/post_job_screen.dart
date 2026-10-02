@@ -46,6 +46,9 @@ class PostJobScreen extends StatefulWidget {
 class _PostJobScreenState extends State<PostJobScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  // Autocomplete asserts that focusNode and textEditingController are
+  // either both given or both null, so the title field owns both.
+  final _titleFocusNode = FocusNode();
   final _companyController = TextEditingController();
   final _industryController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -91,6 +94,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
   @override
   void dispose() {
     _titleController.dispose();
+    _titleFocusNode.dispose();
     _companyController.dispose();
     _industryController.dispose();
     _descriptionController.dispose();
@@ -148,6 +152,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                   children: [
                     Autocomplete<String>(
                       textEditingController: _titleController,
+                      focusNode: _titleFocusNode,
                       optionsBuilder: (textEditingValue) {
                         final query = textEditingValue.text
                             .trim()

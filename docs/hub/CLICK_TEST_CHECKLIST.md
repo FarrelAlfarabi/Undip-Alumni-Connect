@@ -7,7 +7,7 @@ Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a d
 - [ ] Verify with a seeded email. A "Set a PIN" screen appears.
 - [ ] Enter a PIN twice: lands on Home. "Hello, <first name>" shows.
 - [ ] Try 111111 as a PIN: refused. Try two different PINs: "didn't match", starts again.
-- [ ] If the phone has fingerprint/face: a second step offers it. Turning it on asks for one real scan.
+- [ ] If the phone has fingerprint: a second step offers it. Turning it on asks for one real scan.
 
 ## B. Home hub
 - [ ] Bottom bar shows exactly Home, Directory, Chat, Profile.

@@ -90,7 +90,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
   Future<void> _enableBiometrics() async {
     final r = await widget.lock.authenticateBiometric(
-      'Confirm to turn on unlock with fingerprint or face',
+      'Confirm to turn on unlock with fingerprint',
     );
     if (!mounted) return;
     if (r == BiometricResult.success) {
@@ -132,7 +132,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                     switch (_step) {
                       _Step.enter => 'Create a $kPinLength-digit PIN',
                       _Step.confirm => 'Enter it again to confirm',
-                      _Step.biometric => 'Unlock with fingerprint or face?',
+                      _Step.biometric => 'Unlock with fingerprint?',
                     },
                     key: const Key('pin-setup-title'),
                     textAlign: TextAlign.center,

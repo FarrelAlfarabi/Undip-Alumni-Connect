@@ -145,7 +145,7 @@ No data, no dates, no tracking, no money features.
 verification the app remembers, on that device only, the profile id, a
 display name and a masked email hint (`f***@gmail.com`), all in the
 platform secure storage (Keychain / Keystore). It then offers a 6-digit PIN
-(and fingerprint or face, if the device has it). On the next launch a
+(and fingerprint, if the device has it). On the next launch a
 remembered person sees a lock screen instead of the Welcome screen; new users
 see Welcome and Verification as before.
 
@@ -179,8 +179,7 @@ unlocked phone. It does not protect the data in the database.
 **Known gaps.** Not tested on a real Android or iOS device (only in
 widget tests with fakes and on the web build). Android needs
 `FlutterFragmentActivity`, the `USE_BIOMETRIC` permission and an AppCompat
-launch theme, and iOS needs `NSFaceIDUsageDescription`; these are set but
-have not been built for either platform here. A PIN of 6 digits can be
+launch theme; these are set but have not been built for either platform here. A PIN of 6 digits can be
 guessed offline by someone who can read the secure storage of a rooted
 device; the 5-attempt wipe only limits guessing through the app. The app
 switcher may show a screenshot of the last screen (there is no privacy

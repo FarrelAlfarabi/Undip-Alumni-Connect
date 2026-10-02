@@ -1,16 +1,20 @@
 import 'package:local_auth/local_auth.dart';
 
-/// Result of asking the device for a fingerprint / face check.
+/// Result of asking the device for a fingerprint check.
 enum BiometricResult { success, failed, cancelled, unavailable }
 
 abstract class BiometricProvider {
-  /// True when the device has biometrics enrolled and usable.
+  /// True when the device has a fingerprint enrolled and usable.
   Future<bool> isAvailable();
 
   Future<BiometricResult> authenticate(String reason);
 }
 
-/// Real provider (Android BiometricPrompt, iOS Face ID / Touch ID).
+/// Real provider (Android BiometricPrompt, iOS Touch ID). Fingerprint only:
+/// a device is treated as supported only if it reports a fingerprint
+/// sensor, so a Face ID iPhone or a face-only Android never sees the option.
+/// The OS prompt itself can't be limited to one sensor, so a phone with both
+/// fingerprint and face enrolled may accept either one.
 class LocalAuthBiometrics implements BiometricProvider {
   LocalAuthBiometrics([LocalAuthentication? auth])
     : _auth = auth ?? LocalAuthentication();
@@ -21,7 +25,9 @@ class LocalAuthBiometrics implements BiometricProvider {
   Future<bool> isAvailable() async {
     try {
       if (!await _auth.canCheckBiometrics) return false;
-      return (await _auth.getAvailableBiometrics()).isNotEmpty;
+      return (await _auth.getAvailableBiometrics()).contains(
+        BiometricType.fingerprint,
+      );
     } catch (_) {
       return false;
     }

@@ -372,7 +372,7 @@ void main() {
         await pumpSetup(tester, lock, done);
         await enterPin(tester, testPin);
         await enterPin(tester, testPin);
-        expect(find.text('Unlock with fingerprint or face?'), findsOneWidget);
+        expect(find.text('Unlock with fingerprint?'), findsOneWidget);
         // A failed check does not turn it on.
         bio.result = BiometricResult.failed;
         await tester.tap(find.byKey(const Key('bio-enable')));

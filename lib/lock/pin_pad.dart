@@ -96,7 +96,7 @@ class _PinPadState extends State<PinPad> {
               _iconKey(
                 const Key('pin-biometric'),
                 Icons.fingerprint,
-                'Use fingerprint or face',
+                'Use fingerprint',
                 dim,
                 widget.enabled ? widget.onBiometric : null,
               )

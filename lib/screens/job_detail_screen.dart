@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/application_status.dart';
 import 'apply_job_screen.dart';
 import 'job_applicants_screen.dart';
 
@@ -34,7 +35,7 @@ class JobDetailScreen extends StatefulWidget {
 
 class _JobDetailScreenState extends State<JobDetailScreen> {
   Future<int>? _applicantCountFuture;
-  Future<bool>? _hasAppliedFuture;
+  Future<Map<String, dynamic>?>? _applicationFuture;
 
   bool get _isOwnJob =>
       widget.job['posted_by'] == widget.currentUser.value['id'];
@@ -45,7 +46,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     if (_isOwnJob) {
       _applicantCountFuture = _fetchApplicantCount();
     } else {
-      _hasAppliedFuture = _fetchHasApplied();
+      _applicationFuture = _fetchApplication();
     }
   }
 
@@ -57,16 +58,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     return (rows as List).length;
   }
 
-  // Checked so the applicant can't submit a duplicate application by
-  // accident — there's no unique constraint at the database level (see
-  // the job_applications migration), so this is purely a UI guard.
-  Future<bool> _fetchHasApplied() async {
+  // The applicant's own application for this job, if any — drives the
+  // Apply button (also a UI guard against duplicates, since there's no
+  // unique constraint at the database level) and shows its status.
+  Future<Map<String, dynamic>?> _fetchApplication() async {
     final rows = await Supabase.instance.client
         .from('job_applications')
-        .select('id')
+        .select('id, status')
         .eq('job_post_id', widget.job['id'])
-        .eq('applicant_id', widget.currentUser.value['id']);
-    return (rows as List).isNotEmpty;
+        .eq('applicant_id', widget.currentUser.value['id'])
+        .order('created_at', ascending: false)
+        .limit(1);
+    final list = List<Map<String, dynamic>>.from(rows as List);
+    return list.isEmpty ? null : list.first;
   }
 
   Future<void> _apply(BuildContext context) async {
@@ -78,9 +82,18 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         ),
       ),
     );
-    if (applied == true) {
-      setState(() => _hasAppliedFuture = Future.value(true));
-    }
+    if (!mounted) return;
+    // Re-read the application so the real status shows, but if the
+    // apply screen reported success and the read comes back empty or
+    // fails, still show it as applied rather than offering Apply again.
+    final justApplied = applied == true;
+    Map<String, dynamic>? fallback() =>
+        justApplied ? {'status': ApplicationStatus.pending} : null;
+    setState(() {
+      _applicationFuture = _fetchApplication()
+          .then((a) => a ?? fallback())
+          .catchError((_) => fallback());
+    });
   }
 
   @override
@@ -222,15 +235,18 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        FutureBuilder<bool>(
-                          future: _hasAppliedFuture,
+                        FutureBuilder<Map<String, dynamic>?>(
+                          future: _applicationFuture,
                           builder: (context, snapshot) {
-                            final hasApplied = snapshot.data ?? false;
-                            if (hasApplied) {
+                            final application = snapshot.data;
+                            if (application != null) {
+                              final status = ApplicationStatus.label(
+                                application['status'] as String?,
+                              );
                               return FilledButton.icon(
                                 onPressed: null,
                                 icon: const Icon(Icons.check_circle_outline),
-                                label: const Text('Applied'),
+                                label: Text('Applied · $status'),
                               );
                             }
                             return FilledButton.icon(

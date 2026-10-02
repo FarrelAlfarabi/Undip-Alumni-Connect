@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/application_status.dart';
 import '../util/friendly_error.dart';
 import '../widgets/safe_link_chip.dart';
 
@@ -34,6 +35,27 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
         .eq('job_post_id', widget.job['id'])
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  Future<void> _setStatus(
+    Map<String, dynamic> application,
+    String status,
+  ) async {
+    final previous = application['status'];
+    if (previous == status) return;
+    setState(() => application['status'] = status);
+    try {
+      await Supabase.instance.client
+          .from('job_applications')
+          .update({'status': status})
+          .eq('id', application['id']);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => application['status'] = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update status. ${friendlyError(e)}')),
+      );
+    }
   }
 
   String? _cvUrl(String? cvPath) {
@@ -144,6 +166,23 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                               icon: Icons.description_outlined,
                               label: 'CV',
                               url: cvUrl,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text('Status', style: theme.textTheme.labelMedium),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          for (final status in ApplicationStatus.all)
+                            ChoiceChip(
+                              label: Text(ApplicationStatus.label(status)),
+                              selected:
+                                  (a['status'] as String? ?? 'pending') ==
+                                  status,
+                              onSelected: (_) => _setStatus(a, status),
                             ),
                         ],
                       ),

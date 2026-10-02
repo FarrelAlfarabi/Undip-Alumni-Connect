@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../widgets/city_picker_field.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
@@ -250,13 +251,9 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             validator: MarketplaceValidation.category,
                           ),
                           const SizedBox(height: 16),
-                          TextFormField(
+                          CityPickerField(
                             controller: _city,
                             enabled: !_saving,
-                            decoration: const InputDecoration(
-                              labelText: 'City',
-                              border: OutlineInputBorder(),
-                            ),
                             validator: MarketplaceValidation.city,
                           ),
                           const SizedBox(height: 24),

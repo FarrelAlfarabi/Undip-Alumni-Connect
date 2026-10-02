@@ -44,18 +44,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         .select()
         .eq('recipient_id', widget.currentUserId)
         .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows as List);
+    final notifications = List<Map<String, dynamic>>.from(rows as List);
+    // Opening the list counts as seeing them: clear the unread badge on
+    // the Job Board. This screen still shows them highlighted this once,
+    // since `notifications` was read before the update.
+    if (notifications.any((n) => n['read_at'] == null)) {
+      await _markAllRead();
+    }
+    return notifications;
+  }
+
+  Future<void> _markAllRead() async {
+    try {
+      await Supabase.instance.client
+          .from('notifications')
+          .update({'read_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('recipient_id', widget.currentUserId)
+          .filter('read_at', 'is', null);
+    } catch (_) {
+      // Best effort: the list is still shown if marking read fails.
+    }
   }
 
   Future<void> _openNotification(Map<String, dynamic> notification) async {
-    if (notification['read_at'] == null) {
-      await Supabase.instance.client
-          .from('notifications')
-          .update({'read_at': DateTime.now().toIso8601String()})
-          .eq('id', notification['id']);
-      if (mounted) setState(() => _future = _fetchNotifications());
-    }
-
     final jobPostId = notification['job_post_id'] as String?;
     if (jobPostId == null || !mounted) return;
 

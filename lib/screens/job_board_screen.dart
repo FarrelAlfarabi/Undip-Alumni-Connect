@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/application_status.dart';
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
 import 'marketplace_gate.dart';
@@ -42,11 +43,13 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   String _industry = kAllFilter;
   String _company = kAllFilter;
   Future<int>? _unreadNotificationsFuture;
+  late Future<List<Map<String, dynamic>>> _applicationsFuture;
 
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
+    _applicationsFuture = _fetchMyApplications();
     _unreadNotificationsFuture = _fetchUnreadNotificationCount();
     _searchController.addListener(() => setState(() {}));
   }
@@ -88,6 +91,30 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
         .select('*, poster:alumni_profiles(name)')
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchMyApplications() async {
+    final rows = await Supabase.instance.client
+        .from('job_applications')
+        .select(
+          'id, status, created_at, job:job_posts(*, poster:alumni_profiles(name))',
+        )
+        .eq('applicant_id', widget.currentUser.value['id'])
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  Future<void> _openJob(Map<String, dynamic> job) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            JobDetailScreen(job: job, currentUser: widget.currentUser),
+      ),
+    );
+    // The applicant may have applied from the detail screen.
+    if (mounted) {
+      setState(() => _applicationsFuture = _fetchMyApplications());
+    }
   }
 
   List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {
@@ -149,139 +176,205 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Job Board'),
-        automaticallyImplyLeading: widget.showBack,
-        actions: [
-          FutureBuilder<int>(
-            future: _unreadNotificationsFuture,
-            builder: (context, snapshot) {
-              final unread = snapshot.data ?? 0;
-              return IconButton(
-                onPressed: _openNotifications,
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread'),
-                  child: const Icon(Icons.notifications_outlined),
-                ),
-                tooltip: 'Notifications',
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Job Board'),
+          automaticallyImplyLeading: widget.showBack,
+          actions: [
+            FutureBuilder<int>(
+              future: _unreadNotificationsFuture,
+              builder: (context, snapshot) {
+                final unread = snapshot.data ?? 0;
+                return IconButton(
+                  onPressed: _openNotifications,
+                  icon: Badge(
+                    isLabelVisible: unread > 0,
+                    label: Text('$unread'),
+                    child: const Icon(Icons.notifications_outlined),
+                  ),
+                  tooltip: 'Notifications',
+                );
+              },
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'All Jobs'),
+              Tab(text: 'My Applications'),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _postJob,
+          icon: const Icon(Icons.add),
+          label: const Text('Post a Job'),
+        ),
+        body: TabBarView(
+          children: [_buildAllJobs(context), _buildMyApplications(context)],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMyApplications(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _applicationsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                friendlyLoadError('your applications', snapshot.error),
+              ),
+            ),
+          );
+        }
+        // An application whose job was deleted has no job row to show.
+        final applications = (snapshot.data ?? [])
+            .where((a) => a['job'] is Map<String, dynamic>)
+            .toList();
+        if (applications.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                "You haven't applied to any jobs yet.",
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () async {
+            setState(() => _applicationsFuture = _fetchMyApplications());
+            await _applicationsFuture;
+          },
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+            itemCount: applications.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, i) {
+              final application = applications[i];
+              final job = application['job'] as Map<String, dynamic>;
+              return _JobCard(
+                job: job,
+                status: application['status'] as String? ?? 'pending',
+                onTap: () => _openJob(job),
               );
             },
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _postJob,
-        icon: const Icon(Icons.add),
-        label: const Text('Post a Job'),
-      ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('the job board', snapshot.error)),
-              ),
-            );
-          }
+        );
+      },
+    );
+  }
 
-          final all = snapshot.data ?? [];
-          if (all.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'No jobs posted yet. Be the first alumnus to post one.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          final jobs = _applyFilters(all);
-          final industries = distinctSortedValues(all, 'industry');
-          final companies = distinctSortedValues(all, 'company');
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: ClearableSearchField(
-                  controller: _searchController,
-                  hintText: 'Search by title, company, or description...',
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: FilterDropdown(
-                        label: 'Industry',
-                        value: _industry,
-                        options: industries,
-                        onChanged: (v) => setState(() => _industry = v),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilterDropdown(
-                        label: 'Company',
-                        value: _company,
-                        options: companies,
-                        onChanged: (v) => setState(() => _company = v),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                child: ClearFiltersButton(
-                  active: _hasActiveFilters,
-                  onPressed: _clearFilters,
-                ),
-              ),
-              Expanded(
-                child: jobs.isEmpty
-                    ? const Center(child: Text('No jobs match these filters.'))
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                        itemCount: jobs.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) => _JobCard(
-                          job: jobs[i],
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => JobDetailScreen(
-                                  job: jobs[i],
-                                  currentUser: widget.currentUser,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-              ),
-            ],
+  Widget _buildAllJobs(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(friendlyLoadError('the job board', snapshot.error)),
+            ),
           );
-        },
-      ),
+        }
+
+        final all = snapshot.data ?? [];
+        if (all.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'No jobs posted yet. Be the first alumnus to post one.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        final jobs = _applyFilters(all);
+        final industries = distinctSortedValues(all, 'industry');
+        final companies = distinctSortedValues(all, 'company');
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: ClearableSearchField(
+                controller: _searchController,
+                hintText: 'Search by title, company, or description...',
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilterDropdown(
+                      label: 'Industry',
+                      value: _industry,
+                      options: industries,
+                      onChanged: (v) => setState(() => _industry = v),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilterDropdown(
+                      label: 'Company',
+                      value: _company,
+                      options: companies,
+                      onChanged: (v) => setState(() => _company = v),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: ClearFiltersButton(
+                active: _hasActiveFilters,
+                onPressed: _clearFilters,
+              ),
+            ),
+            Expanded(
+              child: jobs.isEmpty
+                  ? const Center(child: Text('No jobs match these filters.'))
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                      itemCount: jobs.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) => _JobCard(
+                        job: jobs[i],
+                        onTap: () => _openJob(jobs[i]),
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _JobCard extends StatelessWidget {
-  const _JobCard({required this.job, required this.onTap});
+  const _JobCard({required this.job, required this.onTap, this.status});
 
   final Map<String, dynamic> job;
+
+  /// Set on the My Applications tab to show where the application stands.
+  final String? status;
   final VoidCallback onTap;
 
   @override
@@ -337,6 +430,10 @@ class _JobCard extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (status != null) ...[
+                const SizedBox(height: 10),
+                ApplicationStatusChip(status: status),
+              ],
             ],
           ),
         ),
