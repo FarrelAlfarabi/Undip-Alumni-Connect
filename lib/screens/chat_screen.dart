@@ -1,11 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
 
 /// Basic messaging UI (Day 6, demo scope). One conversation, no realtime —
-/// the thread refetches after you send, and on the refresh button for
-/// seeing the other side's replies. Messaging is only reachable once
+/// the thread refetches after you send and polls every few seconds for
+/// the other side's replies (the refresh button does it on demand). Messaging is only reachable once
 /// subscribed (gated upstream in profile_detail_screen.dart).
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
@@ -30,15 +32,23 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Map<String, dynamic>>? _messages;
   String? _loadError;
   bool _sending = false;
+  Timer? _poll;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    // No realtime in this demo: check for new messages every few seconds so
+    // a reply shows up without tapping refresh.
+    _poll = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _refresh(quiet: true),
+    );
   }
 
   @override
   void dispose() {
+    _poll?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -56,7 +66,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Keeps the current thread on screen while fetching, rather than
   // swapping the whole list for a spinner every time a message is sent.
-  Future<void> _refresh() async {
+  // [quiet] is the background poll: it only touches the screen when
+  // something actually changed, so it never yanks the scroll position
+  // while someone reads older messages, and never replaces a loaded
+  // thread with an error on a flaky connection.
+  Future<void> _refresh({bool quiet = false}) async {
     try {
       final rows = await Supabase.instance.client
           .from('messages')
@@ -64,13 +78,16 @@ class _ChatScreenState extends State<ChatScreen> {
           .eq('conversation_id', widget.conversationId)
           .order('created_at', ascending: true);
       if (!mounted) return;
+      final fresh = List<Map<String, dynamic>>.from(rows as List);
+      final grew = fresh.length != (_messages?.length ?? -1);
+      if (quiet && !grew) return;
       setState(() {
-        _messages = List<Map<String, dynamic>>.from(rows as List);
+        _messages = fresh;
         _loadError = null;
       });
-      _scrollToBottom();
+      if (!quiet || grew) _scrollToBottom();
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || (quiet && _messages != null)) return;
       setState(() => _loadError = friendlyError(e));
     }
   }

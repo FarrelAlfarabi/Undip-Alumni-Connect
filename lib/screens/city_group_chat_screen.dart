@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -34,15 +36,23 @@ class _CityGroupChatScreenState extends State<CityGroupChatScreen> {
   List<Map<String, dynamic>>? _messages;
   String? _loadError;
   bool _sending = false;
+  Timer? _poll;
 
   @override
   void initState() {
     super.initState();
     _refresh();
+    // No realtime in this demo: check for new messages every few seconds so
+    // a reply shows up without tapping refresh.
+    _poll = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _refresh(quiet: true),
+    );
   }
 
   @override
   void dispose() {
+    _poll?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -55,7 +65,11 @@ class _CityGroupChatScreenState extends State<CityGroupChatScreen> {
     });
   }
 
-  Future<void> _refresh() async {
+  // [quiet] is the background poll: it only touches the screen when
+  // something actually changed, so it never yanks the scroll position
+  // while someone reads older messages, and never replaces a loaded
+  // thread with an error on a flaky connection.
+  Future<void> _refresh({bool quiet = false}) async {
     try {
       final rows = await Supabase.instance.client
           .from('city_chat_messages')
@@ -63,13 +77,16 @@ class _CityGroupChatScreenState extends State<CityGroupChatScreen> {
           .eq('city', widget.city)
           .order('created_at', ascending: true);
       if (!mounted) return;
+      final fresh = List<Map<String, dynamic>>.from(rows as List);
+      final grew = fresh.length != (_messages?.length ?? -1);
+      if (quiet && !grew) return;
       setState(() {
-        _messages = List<Map<String, dynamic>>.from(rows as List);
+        _messages = fresh;
         _loadError = null;
       });
-      _scrollToBottom();
+      if (!quiet || grew) _scrollToBottom();
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || (quiet && _messages != null)) return;
       setState(() => _loadError = friendlyError(e));
     }
   }
