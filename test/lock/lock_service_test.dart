@@ -150,6 +150,50 @@ void main() {
     });
   });
 
+  group('signOut', () {
+    test('forgets the person but keeps the PIN', () async {
+      final lock = await makeRememberedLock();
+      lock.sessionActive = true;
+      await lock.signOut();
+      expect(await lock.load(), isNull);
+      expect(await lock.hasPin(), isTrue);
+      expect(lock.sessionActive, isFalse);
+    });
+
+    test(
+      'the same person signing in again still has the PIN, which works',
+      () async {
+        final lock = await makeRememberedLock();
+        await lock.signOut();
+        await lock.remember(
+          profileId: 'p1',
+          displayName: 'Ahmad Ramadhan',
+          email: testEmail,
+        );
+        expect(await lock.hasPin(), isTrue);
+        expect(await lock.checkPin(testPin), isA<PinOk>());
+      },
+    );
+
+    test('a different person signing in drops the old PIN', () async {
+      final lock = await makeRememberedLock();
+      await lock.signOut();
+      await lock.remember(
+        profileId: 'p2',
+        displayName: 'Bunga',
+        email: 'bunga@example.com',
+      );
+      expect(await lock.hasPin(), isFalse);
+    });
+
+    test('wrong tries are not reset by signing out', () async {
+      final lock = await makeRememberedLock();
+      await lock.checkPin('111112');
+      await lock.signOut();
+      expect(await lock.attemptsLeft(), kMaxPinAttempts - 1);
+    });
+  });
+
   group('clear (switch account, forgot PIN, sign out)', () {
     test('wipes everything local and ends the session', () async {
       final store = MemoryLockStore();

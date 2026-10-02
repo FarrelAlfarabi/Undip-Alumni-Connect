@@ -22,9 +22,10 @@ void enterApp(
       .pushReplacement(MaterialPageRoute(builder: (_) => homeBuilder(profile)));
 }
 
-/// Sign out on this device: forget the remembered person and PIN (local
+/// Sign out on this device: forget who is signed in but keep their PIN (local
 /// only, nothing on the server changes), then show [destination] with the
-/// whole stack torn down.
+/// whole stack torn down. Signing in again as the same person asks for that
+/// PIN.
 Future<void> signOutTo(
   BuildContext context,
   Widget destination, {
@@ -32,7 +33,7 @@ Future<void> signOutTo(
 }) async {
   final navigator = Navigator.of(context);
   try {
-    await (lock ?? LockService.shared).clear();
+    await (lock ?? LockService.shared).signOut();
   } catch (_) {
     // Nothing else to do; the screen change below still signs the person out.
   }

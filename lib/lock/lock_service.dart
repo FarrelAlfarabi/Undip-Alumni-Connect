@@ -103,6 +103,9 @@ class LockService {
   static const _kName = 'lingkaran.lock.v1.display_name';
   static const _kMasked = 'lingkaran.lock.v1.masked_email';
   static const _kPin = 'lingkaran.lock.v1.pin_hash';
+  // Whose PIN it is. Kept after sign out so the same person signing in
+  // again is asked for their PIN, while a different person starts clean.
+  static const _kPinOwner = 'lingkaran.lock.v1.pin_owner';
   static const _kFailed = 'lingkaran.lock.v1.failed';
   static const _kWait = 'lingkaran.lock.v1.wait_until';
   static const _kBio = 'lingkaran.lock.v1.bio';
@@ -131,7 +134,7 @@ class LockService {
     required String email,
   }) async {
     if (!enabled) return;
-    final previous = await _store.read(_kId);
+    final previous = await _store.read(_kId) ?? await _store.read(_kPinOwner);
     if (previous != null && previous != profileId) {
       await _clearSecrets();
     }
@@ -151,6 +154,8 @@ class LockService {
   Future<void> setPin(String pin) async {
     assert(RegExp(r'^\d{6}$').hasMatch(pin));
     await _store.write(_kPin, await _hasher.hash(pin));
+    final owner = await _store.read(_kId);
+    if (owner != null) await _store.write(_kPinOwner, owner);
     await _store.delete(_kFailed);
     await _store.delete(_kWait);
     _changes.value++;
@@ -210,9 +215,24 @@ class LockService {
 
   Future<void> _clearSecrets() async {
     await _store.delete(_kPin);
+    await _store.delete(_kPinOwner);
     await _store.delete(_kFailed);
     await _store.delete(_kWait);
     await _store.delete(_kBio);
+  }
+
+  /// Sign out: forget who is signed in (id, name, masked email) but KEEP
+  /// the PIN, its owner and the wrong-try counters. The next verification
+  /// of the same person then asks for the PIN they already made instead of
+  /// asking them to create one again. A different person verifying drops it
+  /// (see [remember]); "Forgot PIN" and "Switch account" still wipe all
+  /// ([clear]). Local only; nothing on the server changes.
+  Future<void> signOut() async {
+    sessionActive = false;
+    await _store.delete(_kId);
+    await _store.delete(_kName);
+    await _store.delete(_kMasked);
+    _changes.value++;
   }
 
   /// Wipes everything remembered on this device (used by "Switch account",

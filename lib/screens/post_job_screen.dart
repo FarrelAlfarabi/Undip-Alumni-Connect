@@ -243,10 +243,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       // A job saved before this was a fixed list may have an
                       // industry that isn't in it; keep it selectable.
                       items: [
-                        for (final i in {
-                          ...kJobIndustries,
-                          ?_industry,
-                        })
+                        for (final i in {...kJobIndustries, ?_industry})
                           DropdownMenuItem(value: i, child: Text(i)),
                       ],
                       onChanged: _saving

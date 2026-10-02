@@ -157,8 +157,11 @@ see Welcome and Verification as before.
   or is cancelled, the PIN pad is the fallback.
 - The lock screen shows again after the app has been in the background for
   more than 5 minutes (`kLockAfterBackground` in `lib/lock/lock_config.dart`).
-- "Forgot PIN? Verify again", "Not you? Switch account" and Profile > Sign
-  out clear the local data only. Nothing is deleted on the server.
+- "Forgot PIN? Verify again" and "Not you? Switch account" clear all the local
+  data. Profile > Sign out forgets who is signed in but keeps the PIN: verifying
+  again as the same person asks for the PIN they already made instead of
+  creating a new one. A different person verifying on the phone drops it.
+  Nothing is deleted on the server.
 - If the PIN step is skipped, the next launch shows a "Continue" button that
   runs verification again.
 - **Web has no lock screen in production** (Vercel *preview* builds turn it on for testing only, via `--dart-define=WEB_LOCK_TEST=true` in `scripts/vercel-build.sh`; that is not real protection). Browsers have no real secure storage and no

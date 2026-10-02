@@ -438,6 +438,69 @@ void main() {
       expect(lock.sessionActive, isTrue);
     });
 
+    Future<void> verifyAs(
+      WidgetTester tester,
+      LockService lock,
+      Map<String, dynamic> profile,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: VerificationScreen(
+            lock: lock,
+            verifyEmail: (email) async => profile,
+            homeBuilder: appHome,
+          ),
+        ),
+      );
+      await tester.enterText(find.byType(TextFormField), testEmail);
+      await tester.tap(find.text('Verify'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets(
+      'after sign out, the same person is asked for the PIN they made',
+      (tester) async {
+        final lock = await makeRememberedLock();
+        await lock.signOut();
+        await verifyAs(tester, lock, testProfile());
+        expect(find.byKey(const Key('pin-setup')), findsNothing);
+        expect(find.byKey(const Key('lock-screen')), findsOneWidget);
+
+        await enterPin(tester, testPin);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
+        expect(lock.sessionActive, isTrue);
+      },
+    );
+
+    testWidgets('a wrong PIN there does not let them in', (tester) async {
+      final lock = await makeRememberedLock();
+      await lock.signOut();
+      await verifyAs(tester, lock, testProfile());
+      await enterPin(tester, '111112');
+      expect(find.text('APP for Ahmad Ramadhan'), findsNothing);
+      expect(find.byKey(const Key('lock-screen')), findsOneWidget);
+    });
+
+    testWidgets('a different person after sign out sets up a new PIN', (
+      tester,
+    ) async {
+      final lock = await makeRememberedLock();
+      await lock.signOut();
+      await verifyAs(tester, lock, {
+        ...testProfile(),
+        'id': 'p2',
+        'name': 'Bunga',
+      });
+      expect(find.byKey(const Key('pin-setup')), findsOneWidget);
+      expect(find.byKey(const Key('lock-screen')), findsNothing);
+    });
+
     testWidgets('web (lock disabled): straight into the app, nothing stored', (
       tester,
     ) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../lock/lock_screen.dart';
 import '../lock/lock_service.dart';
 import '../lock/pin_setup_screen.dart';
 import '../lock/session.dart';
@@ -104,7 +105,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
   }
 
   /// Remember this person on the device (id, name and a masked email hint
-  /// only) and offer a PIN, then go into the app. If the lock storage fails
+  /// only). If they already made a PIN on this device (they signed out and
+  /// are back), ask for it; otherwise offer to create one. Then go into the
+  /// app. If the lock storage fails
   /// for any reason, skip the lock and go straight in: verification itself
   /// already succeeded.
   Future<void> _afterVerified(
@@ -113,6 +116,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
   ) async {
     final lock = widget.lock ?? LockService.shared;
     var offerPin = false;
+    RememberedUser? askForPin;
     try {
       if (lock.enabled) {
         await lock.remember(
@@ -120,12 +124,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
           displayName: profile['name'] as String? ?? '',
           email: email,
         );
-        offerPin = !await lock.hasPin();
+        if (await lock.hasPin()) {
+          askForPin = await lock.load();
+        } else {
+          offerPin = true;
+        }
       }
     } catch (_) {
       offerPin = false;
+      askForPin = null;
     }
     if (!mounted) return;
+    if (askForPin != null) {
+      _askForExistingPin(lock, askForPin, profile);
+      return;
+    }
     if (!offerPin) {
       enterApp(context, profile, lock: lock, homeBuilder: widget.homeBuilder);
       return;
@@ -137,6 +150,57 @@ class _VerificationScreenState extends State<VerificationScreen> {
           // The setup screen is replaced by the app once done or skipped.
           onDone: (setupContext) async => enterApp(
             setupContext,
+            profile,
+            lock: lock,
+            homeBuilder: widget.homeBuilder,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Same screen as the launch lock. Forgot PIN, Switch account and five
+  // wrong tries wipe the local data and restart verification, as at launch.
+  void _askForExistingPin(
+    LockService lock,
+    RememberedUser user,
+    Map<String, dynamic> profile,
+  ) {
+    Future<void> startOver() async {
+      try {
+        await lock.clear();
+      } catch (_) {
+        // The screen change below still starts verification again.
+      }
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => VerificationScreen(
+            lock: widget.lock,
+            verifyEmail: widget.verifyEmail,
+            homeBuilder: widget.homeBuilder,
+          ),
+        ),
+        (_) => false,
+      );
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (lockContext) => LockScreen(
+          lock: lock,
+          user: user,
+          onUnlocked: () async => enterApp(
+            lockContext,
+            profile,
+            lock: lock,
+            homeBuilder: widget.homeBuilder,
+          ),
+          onSwitchAccount: startOver,
+          onForgotPin: startOver,
+          onLockedOut: startOver,
+          onContinue: () async => enterApp(
+            lockContext,
             profile,
             lock: lock,
             homeBuilder: widget.homeBuilder,

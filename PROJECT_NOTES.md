@@ -935,7 +935,7 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Decided:**
 - The marketplace admin passphrase is off for the demo only. While it is off, anyone who knows the admin's profile id (public) can approve or reject listings. Real fix: real login, admin decided server-side (SA-03, SA-04, SA-05).
 - Application status can be changed by anyone who can call the API; the update right is limited to the status column only.
-- Sign out wipes the PIN (`lib/lock/session.dart`). Owner decided on 2 Oct: keep it that way.
+- Sign out keeps the PIN (changed later on 2 Oct, after the owner reported being asked to create a new PIN at every sign in): `LockService.signOut()` forgets the person but keeps the PIN hash, its owner and the wrong-try counters. Verifying again as the same person shows the lock screen (enter the PIN) instead of PIN setup; a different person drops the old PIN; Forgot PIN and Switch account still wipe everything. (An earlier "no" from the owner to "should the PIN survive sign out?" was read the wrong way round.)
 
 **Verified:** code formatted; no syntax errors in a Dart-only check; live database checked by query after each change (status column and check constraint, update grant limited to `status`, trigger present, admin authorised without a passphrase while a stranger is not, no passphrase left set).
 **Then verified (same day, after installing Flutter 3.47.6 in the session):** `flutter analyze` clean, all 235 tests pass (including the changed and new ones). A `.env` copied from `.env.example` is needed for analyze/tests (the file is gitignored).
