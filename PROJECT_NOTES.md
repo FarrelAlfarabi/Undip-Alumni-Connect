@@ -14,6 +14,8 @@ is already one faculty. Keep this in mind for any future feature — don't
 build campus-wide assumptions (e.g. a faculty picker, cross-faculty
 directory search) into the data model or UI.
 
+**Where the project lives.** This project is never saved on the owner's local machine. The only copy is the GitHub repo (`FarrelAlfarabi/Undip-Alumni-Connect`) and the cloud Claude Code sessions that work on it. So: commit and push everything worth keeping, because a cloud session's container is thrown away when it ends. Nothing can be "run locally" by the owner; checks (`flutter analyze`, `flutter test`) have to run in the cloud session. The Flutter SDK is not kept between sessions: each new session must install it again (stable 3.47.x from `storage.googleapis.com/flutter_infra_release/releases/stable/linux/`, unpacked to `/opt/flutter`, then `flutter pub get`).
+
 ---
 
 ## 2026-09-14 — Session 1: Project setup
@@ -936,10 +938,10 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 - Sign out wipes the PIN (`lib/lock/session.dart`). Owner decided on 2 Oct: keep it that way.
 
 **Verified:** code formatted; no syntax errors in a Dart-only check; live database checked by query after each change (status column and check constraint, update grant limited to `status`, trigger present, admin authorised without a passphrase while a stranger is not, no passphrase left set).
-**Not verified:** Flutter is not installed in the session that did this, so `flutter analyze`, the test suite and the app were NOT run. Two tests were changed (`admin_passphrase_test.dart`, `lock_screens_test.dart`) and one added (`job_features_test.dart`) without being run. Nothing was tried on a device, including the new icons.
+**Then verified (same day, after installing Flutter 3.47.6 in the session):** `flutter analyze` clean, all 235 tests pass (including the changed and new ones). A `.env` copied from `.env.example` is needed for analyze/tests (the file is gitignored).
+**Not verified:** nothing was tried on a device or in a browser, including the tabs, menus, retry buttons and the new icons.
 **Open:**
 - Apply `delete_job_post` and its grants (see above).
-- Run `flutter analyze` and `flutter test`, fix whatever breaks.
 - Decide: keep the admin passphrase off?
 - Welcome screen still says "Placeholder visual identity".
 - Industry filter on Job Board only shows industries that have jobs (by design).

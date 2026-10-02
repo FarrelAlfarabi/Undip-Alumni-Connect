@@ -245,7 +245,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       items: [
                         for (final i in {
                           ...kJobIndustries,
-                          if (_industry != null) _industry!,
+                          ?_industry,
                         })
                           DropdownMenuItem(value: i, child: Text(i)),
                       ],
