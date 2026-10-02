@@ -922,7 +922,7 @@ Backfilled on 2026-10-02 from the git log of `origin/main`. Nothing here was re-
 - Fix: the marketplace did not load because the security migration added a second foreign key (`reviewed_by`) to `alumni_profiles`, making the seller join ambiguous. The query now names the key (`afb9b1f`, PR #6).
 
 **Open or unverified:**
-- The README says the job-posting migration is not applied to any live project and that the app build and the migration must ship together. The app change is already on `main`. If the deployed site has the new build and the database lacks the migration, Subscribe breaks. Not checked.
+- The README says the job-posting migration and the app build must ship together. Per the Notion build log (1 Oct), the migration was applied to the live demo project before the new app build deployed, so Subscribe failed on the live site until the build went out. The production build of `9d1164e` is READY and a preview was tested by hand. The live site has not been clicked through, and `flutter analyze` and `flutter test` were never run on this change (the repo has no Flutter CI).
 - Whether the admin passphrase is set on the live project, and whether CV upload, marketplace photos and notifications still work after the hardening migration. Not checked.
 - The 30 Sep checks (analyze clean, 230 tests) predate these commits. Not re-run.
 - Security audit verdict unchanged: not safe to load real alumni data until real Supabase Auth is built (`SECURITY_AUDIT.md`).
