@@ -1,6 +1,6 @@
 # Lingkaran (UNDIP Alumni Connect): Product and Build Plan (public excerpt)
 
-**Version:** 2.0, 2 October 2026
+**Version:** 2.1, 2 October 2026
 **Status:** Public, redacted excerpt of an internal planning document. Business terms, finances, legal and partner details are intentionally left out. Dummy data only; no real payments.
 
 ## 1. What this is
@@ -46,6 +46,20 @@ The core idea is a verified alumni directory connected to an alumni job referral
 - Marketplace demo: built in stages (data layer, browse and detail, create and subscriber gate, admin approval and reporting, polish and regression).
 - Home hub, Preview tiles and the returning-user lock screen were built in staged prompts and merged.
 - A security and privacy audit against the OWASP checklist has been run. Fixes that need no real login were applied. **The app is not approved for real alumni data.** The remaining work needs real per-user authentication, which is the next build. Details are not published.
+
+## 5a. Target roadmap (proposed, not a commitment)
+
+Dates assume part-time solo work and no new features before launch.
+
+| Phase | Target | What happens |
+|---|---|---|
+| 0. Verify and decide | Oct 2026 | Check the live setup, settle open product and legal decisions |
+| 1. Real authentication | Oct to Dec 2026 | Per-user login and access rules, then a repeat of the security audit |
+| 2. Payments | Dec 2026 to Jan 2027 | Real subscription payments through an Indonesian provider |
+| 3. Real data and compliance | Jan to Feb 2027 | Written data agreement, privacy policy, real alumni verification |
+| 4. Store submission | Feb to Mar 2027 | Android and iOS review, web stays live |
+| 5. Closed beta | Mar 2027 | 50 to 100 invited alumni |
+| 6. Launch | Apr 2027 | Open to all registered FEB alumni records |
 
 ## 6. Known technical gaps
 
