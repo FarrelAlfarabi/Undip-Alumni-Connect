@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
 
+/// The one annual price shown in the paywall and in Settings.
+const String kAnnualPriceLabel = 'Rp 99.000/year';
+
 /// Visual-only subscription paywall (demo scope). No real payment: tapping
 /// "Subscribe" calls the demo_subscribe database function, which sets
 /// alumni_profiles.subscription_status to 'subscribed' while demo mode is on.
@@ -101,7 +104,7 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                         child: Column(
                           children: [
                             Text(
-                              'Rp 99.000/year',
+                              kAnnualPriceLabel,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),

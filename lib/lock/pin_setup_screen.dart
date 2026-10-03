@@ -19,9 +19,25 @@ enum _Step { enter, confirm, biometric }
 /// Skipping is fine; the next launch then shows a "Continue" that re-runs
 /// verification.
 class PinSetupScreen extends StatefulWidget {
-  const PinSetupScreen({super.key, required this.lock, required this.onDone});
+  const PinSetupScreen({
+    super.key,
+    required this.lock,
+    required this.onDone,
+    this.title = 'Set a PIN',
+    this.skipLabel = 'Skip for now',
+    this.offerBiometrics = true,
+  });
 
   final LockService lock;
+
+  /// App bar title and the label of the top-right button. Settings uses
+  /// "Change PIN" / "Cancel"; first-time setup keeps the defaults.
+  final String title;
+  final String skipLabel;
+
+  /// False when fingerprint/face is already on, so changing the PIN does not
+  /// ask about it again.
+  final bool offerBiometrics;
 
   /// Called when the person finishes or skips. Gets this screen's context so
   /// the caller can replace it with the app.
@@ -69,7 +85,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     }
     await widget.lock.setPin(pin);
     if (!mounted) return;
-    if (_bioAvailable) {
+    if (_bioAvailable && widget.offerBiometrics) {
       setState(() {
         _error = null;
         _step = _Step.biometric;
@@ -109,13 +125,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     return Scaffold(
       key: const Key('pin-setup'),
       appBar: AppBar(
-        title: const Text('Set a PIN'),
+        title: Text(widget.title),
         automaticallyImplyLeading: false,
         actions: [
           TextButton(
             key: const Key('pin-skip'),
             onPressed: _busy ? null : _finish,
-            child: const Text('Skip for now'),
+            child: Text(widget.skipLabel),
           ),
         ],
       ),

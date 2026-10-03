@@ -14,27 +14,53 @@ class AppTheme {
   static const paperRaised = Color(0xFFEDE6D2);
   static const ink = Color(0xFF211D3C);
 
-  static ThemeData light() {
-    final colorScheme =
-        ColorScheme.fromSeed(
-          seedColor: indigo,
-          brightness: Brightness.light,
-        ).copyWith(
-          primary: indigo,
-          onPrimary: const Color(0xFFFAF6EA),
-          primaryContainer: const Color(0xFFE7E2F2),
-          onPrimaryContainer: indigo,
-          secondary: gold,
-          onSecondary: const Color(0xFFFAF6EA),
-          secondaryContainer: const Color(0xFFF1E4C9),
-          onSecondaryContainer: const Color(0xFF6B4B17),
-          surface: paper,
-          onSurface: ink,
-          surfaceContainerLowest: const Color(0xFFFAF6EA),
-          surfaceContainer: paperRaised,
-          surfaceContainerHigh: const Color(0xFFE7DFC6),
-        );
+  static ThemeData light() => _build(_lightScheme());
 
+  static ThemeData dark() => _build(_darkScheme());
+
+  static ColorScheme _lightScheme() =>
+      ColorScheme.fromSeed(
+        seedColor: indigo,
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: indigo,
+        onPrimary: const Color(0xFFFAF6EA),
+        primaryContainer: const Color(0xFFE7E2F2),
+        onPrimaryContainer: indigo,
+        secondary: gold,
+        onSecondary: const Color(0xFFFAF6EA),
+        secondaryContainer: const Color(0xFFF1E4C9),
+        onSecondaryContainer: const Color(0xFF6B4B17),
+        surface: paper,
+        onSurface: ink,
+        surfaceContainerLowest: const Color(0xFFFAF6EA),
+        surfaceContainer: paperRaised,
+        surfaceContainerHigh: const Color(0xFFE7DFC6),
+      );
+
+  /// Night version of the same indigo/brass identity: deep indigo cloth with
+  /// lighter brass for accents so contrast holds on dark surfaces.
+  static ColorScheme _darkScheme() =>
+      ColorScheme.fromSeed(
+        seedColor: indigo,
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: const Color(0xFFC9C3F0),
+        onPrimary: const Color(0xFF1E1A45),
+        primaryContainer: const Color(0xFF3A3570),
+        onPrimaryContainer: const Color(0xFFE7E2F2),
+        secondary: const Color(0xFFD9A94B),
+        onSecondary: const Color(0xFF2E1F05),
+        secondaryContainer: const Color(0xFF5A4116),
+        onSecondaryContainer: const Color(0xFFF1E4C9),
+        surface: const Color(0xFF16142B),
+        onSurface: const Color(0xFFEDE8F5),
+        surfaceContainerLowest: const Color(0xFF110F23),
+        surfaceContainer: const Color(0xFF1F1C3A),
+        surfaceContainerHigh: const Color(0xFF2A2650),
+      );
+
+  static ThemeData _build(ColorScheme colorScheme) {
     final baseText = GoogleFonts.ibmPlexSansTextTheme();
     final textTheme = baseText.copyWith(
       displayLarge: GoogleFonts.fraunces(

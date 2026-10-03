@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
+import 'settings_screen.dart';
 import 'subscribe_screen.dart';
-import 'verification_screen.dart';
 import '../util/friendly_error.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
@@ -136,15 +135,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         actions: [
           if (widget.showEditButton)
             IconButton(
-              tooltip: 'Sign out',
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                // Back to verification with the whole shell torn down, so
-                // a second demo account starts from a clean state. Also
-                // forgets this device's remembered person and PIN (local
-                // only).
-                signOutTo(context, const VerificationScreen());
-              },
+              tooltip: 'Settings',
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      SettingsScreen(currentUser: widget.currentUser),
+                ),
+              ),
             ),
         ],
       ),

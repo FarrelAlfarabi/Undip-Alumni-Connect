@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'lock/app_entry.dart';
 import 'lock/lock_overlay.dart';
 import 'lock/lock_service.dart';
+import 'settings/app_settings.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -15,6 +16,8 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL'] ?? '',
     publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
+
+  AppSettings.shared = await AppSettings.load();
 
   runApp(const MyApp());
 }
@@ -31,9 +34,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: AppSettings.shared,
+      builder: (context, _) => _buildApp(),
+    );
+  }
+
+  Widget _buildApp() {
     return MaterialApp(
       title: 'Lingkaran',
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: AppSettings.shared.themeMode,
       navigatorKey: _navigatorKey,
       // Covers the app with the lock screen after it has been in the
       // background for a while (device convenience lock, see README).
