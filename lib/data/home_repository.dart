@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'notification_repository.dart';
+
 /// How many banners the Home carousel shows at most.
 const int kHomeBannerLimit = 5;
 
@@ -18,6 +20,9 @@ abstract class HomeApi {
 
   /// Contact requests waiting for an answer (the badge on Home).
   Future<int> pendingRequestCount(String profileId);
+
+  /// Unread in-app notifications (the bell on Home).
+  Future<int> unreadNotificationCount(String profileId);
 }
 
 class SupabaseHomeApi implements HomeApi {
@@ -54,4 +59,8 @@ class SupabaseHomeApi implements HomeApi {
     );
     return (n as num?)?.toInt() ?? 0;
   }
+
+  @override
+  Future<int> unreadNotificationCount(String profileId) =>
+      NotificationRepository().unreadCount(profileId);
 }

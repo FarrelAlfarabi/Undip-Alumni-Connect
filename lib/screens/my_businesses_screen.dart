@@ -35,7 +35,9 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
     return (mine, usage);
   }
 
-  void _reload() => setState(() => _future = _load());
+  void _reload() => setState(() {
+    _future = _load();
+  });
 
   Future<void> _openForm([Business? existing]) async {
     await Navigator.of(context).push<Business>(

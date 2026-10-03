@@ -11,6 +11,7 @@ import 'job_detail_screen.dart';
 import 'marketplace_detail_screen.dart';
 import 'marketplace_screen.dart';
 import 'messages_list_screen.dart';
+import 'notifications_screen.dart';
 import 'profile_detail_screen.dart';
 import 'requests_screen.dart';
 
@@ -30,6 +31,7 @@ class HomePages {
     this.marketplace = _marketplace,
     this.businesses = _businesses,
     this.requests = _requests,
+    this.notifications = _notifications,
     this.nearby = _nearby,
     this.announcements = _announcements,
     this.jobDetail = _jobDetail,
@@ -48,6 +50,7 @@ class HomePages {
   final UserPageBuilder marketplace;
   final UserPageBuilder businesses;
   final UserPageBuilder requests;
+  final UserPageBuilder notifications;
   final UserPageBuilder nearby;
   final Widget Function() announcements;
   final Widget Function(
@@ -81,6 +84,8 @@ class HomePages {
       MarketplaceScreen(currentUser: user, showBack: true);
   static Widget _businesses(ValueNotifier<Map<String, dynamic>> user) =>
       BusinessDirectoryScreen(currentUser: user);
+  static Widget _notifications(ValueNotifier<Map<String, dynamic>> user) =>
+      NotificationsScreen(currentUser: user);
   static Widget _requests(ValueNotifier<Map<String, dynamic>> user) =>
       RequestsScreen(currentUser: user);
   static Widget _nearby(ValueNotifier<Map<String, dynamic>> user) =>

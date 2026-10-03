@@ -74,7 +74,9 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
     super.dispose();
   }
 
-  void _reload() => setState(() => _future = _repo.directory(_myId));
+  void _reload() => setState(() {
+    _future = _repo.directory(_myId);
+  });
 
   Future<void> _register() async {
     await Navigator.of(context).push<Business>(

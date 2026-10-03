@@ -54,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Map<String, dynamic>>> _jobs;
   late Future<List<MarketplaceListing>> _listings;
   late Future<int> _pendingRequests;
+  late Future<int> _unreadNotifications;
 
   @override
   void initState() {
@@ -69,6 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _listings = _fetchListings();
     _pendingRequests = _api
         .pendingRequestCount(_user.value['id'] as String)
+        .catchError((_) => 0);
+    _unreadNotifications = _api
+        .unreadNotificationCount(_user.value['id'] as String)
         .catchError((_) => 0);
   }
 
@@ -109,6 +113,36 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Lingkaran'),
         automaticallyImplyLeading: false,
         actions: [
+          FutureBuilder<int>(
+            future: _unreadNotifications,
+            builder: (context, snap) {
+              final n = snap.data ?? 0;
+              return IconButton(
+                key: const Key('home-notifications'),
+                tooltip: n > 0 ? 'Notifications ($n new)' : 'Notifications',
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => widget.pages.notifications(_user),
+                    ),
+                  );
+                  if (mounted) {
+                    setState(() {
+                      _unreadNotifications = _api
+                          .unreadNotificationCount(_user.value['id'] as String)
+                          .catchError((_) => 0);
+                    });
+                  }
+                },
+                icon: Badge(
+                  key: const Key('notifications-badge'),
+                  isLabelVisible: n > 0,
+                  label: Text('$n'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+              );
+            },
+          ),
           FutureBuilder<int>(
             future: _pendingRequests,
             builder: (context, snap) {
@@ -185,7 +219,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   emptyIcon: Icons.work_outline,
                   emptyText:
                       'No jobs posted yet. New openings will show up here.',
-                  onRetry: () => setState(() => _jobs = _latestJobs()),
+                  onRetry: () => setState(() {
+                    _jobs = _latestJobs();
+                  }),
                   tileBuilder: (job) => _LatestTile(
                     icon: Icons.work_outline,
                     title: job['title'] as String? ?? '',

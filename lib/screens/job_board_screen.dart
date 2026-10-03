@@ -5,7 +5,6 @@ import '../data/block_list.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
-import 'notifications_screen.dart';
 import 'post_job_screen.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
@@ -21,12 +20,10 @@ class JobBoardScreen extends StatefulWidget {
     required this.currentUser,
     this.showBack = false,
     this.fetchJobs,
-    this.fetchUnreadCount,
   });
 
   /// Injectable for tests; default to the Supabase queries.
   final Future<List<Map<String, dynamic>>> Function()? fetchJobs;
-  final Future<int> Function()? fetchUnreadCount;
 
   /// True when pushed from the Home hub (shows a back arrow).
   final bool showBack;
@@ -45,40 +42,12 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   final _searchController = TextEditingController();
   String _industry = kAllFilter;
   String _company = kAllFilter;
-  Future<int>? _unreadNotificationsFuture;
 
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
-    _unreadNotificationsFuture = _fetchUnreadNotificationCount();
     _searchController.addListener(() => setState(() {}));
-  }
-
-  Future<int> _fetchUnreadNotificationCount() async {
-    if (widget.fetchUnreadCount != null) return widget.fetchUnreadCount!();
-    final rows = await Supabase.instance.client
-        .from('notifications')
-        .select('id')
-        .eq('recipient_id', widget.currentUser.value['id'])
-        .filter('read_at', 'is', null);
-    return (rows as List).length;
-  }
-
-  Future<void> _openNotifications() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => NotificationsScreen(
-          currentUserId: widget.currentUser.value['id'] as String,
-          currentUserEmail: widget.currentUser.value['email'] as String,
-        ),
-      ),
-    );
-    if (mounted) {
-      setState(
-        () => _unreadNotificationsFuture = _fetchUnreadNotificationCount(),
-      );
-    }
   }
 
   @override
@@ -148,7 +117,9 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       ),
     );
     if (posted == true) {
-      setState(() => _future = _fetchJobs());
+      setState(() {
+        _future = _fetchJobs();
+      });
     }
   }
 
@@ -158,23 +129,6 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       appBar: AppBar(
         title: const Text('Job Board'),
         automaticallyImplyLeading: widget.showBack,
-        actions: [
-          FutureBuilder<int>(
-            future: _unreadNotificationsFuture,
-            builder: (context, snapshot) {
-              final unread = snapshot.data ?? 0;
-              return IconButton(
-                onPressed: _openNotifications,
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread'),
-                  child: const Icon(Icons.notifications_outlined),
-                ),
-                tooltip: 'Notifications',
-              );
-            },
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _postJob,

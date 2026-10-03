@@ -463,7 +463,6 @@ void main() {
         MaterialApp(
           home: JobBoardScreen(
             currentUser: me,
-            fetchUnreadCount: () async => 0,
             fetchJobs: () async => [
               {
                 'id': 'j1',

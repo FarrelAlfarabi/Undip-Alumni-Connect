@@ -1,73 +1,207 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/admin_repository.dart';
+import '../data/marketplace_repository.dart';
+import '../data/notification_repository.dart';
+import '../models/app_notification.dart';
+import '../util/friendly_error.dart';
+import 'admin_reports_screen.dart';
+import 'admin_screen.dart';
 import 'email_log_screen.dart';
 import 'job_applicants_screen.dart';
-import '../util/friendly_error.dart';
+import 'my_businesses_screen.dart';
+import 'my_listings_screen.dart';
+import 'requests_screen.dart';
 
-/// In-app notification list (added 18 Sep 2026). A row here is created
-/// automatically by a database trigger whenever someone applies to a
-/// job the current user posted (see notify_poster_on_application in
-/// 20260918100000_add_notifications.sql) — not written by the app, so it
-/// can't be skipped by a client bug. Tapping a notification marks it
-/// read and opens that job's applicant list.
-///
-/// The same trigger also logs the email that would be sent (real
-/// sending needs a transactional provider this demo doesn't have yet)
-/// — see the mail icon in the AppBar, which opens email_log_screen.dart.
+/// Shown when the thing a notification points at is gone or hidden.
+const String kNotificationGone = 'This is no longer available.';
+
+/// Where tapping a notification goes.
+enum NotificationDestination {
+  requestsReceived,
+  requestsSent,
+  myBusinesses,
+  myListings,
+  hiddenJobInfo,
+  adminReports,
+  adminBusinesses,
+  jobApplicants,
+  none,
+}
+
+NotificationDestination destinationOf(AppNotification n) {
+  switch (n.type) {
+    case 'contact_request_received':
+      return NotificationDestination.requestsReceived;
+    case 'contact_request_accepted':
+      return NotificationDestination.requestsSent;
+    case 'business_approved' ||
+        'business_rejected' ||
+        'business_suspended' ||
+        'business_restored':
+      return NotificationDestination.myBusinesses;
+    case 'content_hidden':
+      return switch (n.targetType) {
+        'business' => NotificationDestination.myBusinesses,
+        'product' => NotificationDestination.myListings,
+        _ => NotificationDestination.hiddenJobInfo,
+      };
+    case 'report_new':
+      return NotificationDestination.adminReports;
+    case 'business_pending':
+      return NotificationDestination.adminBusinesses;
+    default:
+      // Job applications, and old rows that only carry a job id.
+      final jobId = n.type == 'job_application'
+          ? (n.targetId ?? n.jobPostId)
+          : n.jobPostId;
+      return jobId == null
+          ? NotificationDestination.none
+          : NotificationDestination.jobApplicants;
+  }
+}
+
+typedef NotificationPageBuilder = Widget Function(
+  NotificationDestination destination,
+  AppNotification notification,
+  ValueNotifier<Map<String, dynamic>> currentUser,
+  Map<String, dynamic>? job,
+);
+
+Widget defaultNotificationPage(
+  NotificationDestination d,
+  AppNotification n,
+  ValueNotifier<Map<String, dynamic>> user,
+  Map<String, dynamic>? job,
+) {
+  final me = user.value['id'] as String;
+  return switch (d) {
+    NotificationDestination.requestsReceived => RequestsScreen(
+      currentUser: user,
+    ),
+    NotificationDestination.requestsSent => RequestsScreen(
+      currentUser: user,
+      initialTab: 1,
+    ),
+    NotificationDestination.myBusinesses => MyBusinessesScreen(ownerId: me),
+    NotificationDestination.myListings => MyListingsScreen(
+      sellerId: me,
+      repository: MarketplaceRepository(),
+    ),
+    NotificationDestination.adminReports => AdminReportsScreen(
+      adminId: me,
+      repository: AdminRepository(),
+    ),
+    NotificationDestination.adminBusinesses => AdminBusinessesScreen(
+      adminId: me,
+      repository: AdminRepository(),
+    ),
+    NotificationDestination.jobApplicants => JobApplicantsScreen(job: job!),
+    NotificationDestination.hiddenJobInfo ||
+    NotificationDestination.none => const SizedBox.shrink(),
+  };
+}
+
+/// In-app notifications, newest first. Rows are created only by the database
+/// (triggers), never by the app. Opening the screen marks them read; the ones
+/// that were new stay highlighted until you leave. Tapping one opens the
+/// right screen. There is no push notification (that needs a Firebase
+/// project and keys).
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({
     super.key,
-    required this.currentUserId,
-    required this.currentUserEmail,
+    required this.currentUser,
+    this.repository,
+    this.buildPage = defaultNotificationPage,
   });
 
-  final String currentUserId;
-  final String currentUserEmail;
+  /// Injectable for tests.
+  final NotificationPageBuilder buildPage;
+
+  final ValueNotifier<Map<String, dynamic>> currentUser;
+  final NotificationRepository? repository;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  late Future<List<Map<String, dynamic>>> _future;
+  late final NotificationRepository _repo =
+      widget.repository ?? NotificationRepository();
+  late Future<List<AppNotification>> _future;
+
+  String get _myId => widget.currentUser.value['id'] as String;
 
   @override
   void initState() {
     super.initState();
-    _future = _fetchNotifications();
+    _future = _load();
   }
 
-  Future<List<Map<String, dynamic>>> _fetchNotifications() async {
-    final rows = await Supabase.instance.client
-        .from('notifications')
-        .select()
-        .eq('recipient_id', widget.currentUserId)
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows as List);
+  Future<List<AppNotification>> _load() async {
+    final items = await _repo.list(_myId);
+    // Mark as read on open. A failure here must not hide the list.
+    try {
+      await _repo.markAllRead(_myId);
+    } catch (_) {}
+    return items;
   }
 
-  Future<void> _openNotification(Map<String, dynamic> notification) async {
-    if (notification['read_at'] == null) {
-      await Supabase.instance.client
-          .from('notifications')
-          .update({'read_at': DateTime.now().toIso8601String()})
-          .eq('id', notification['id']);
-      if (mounted) setState(() => _future = _fetchNotifications());
+  void _reload() => setState(() {
+    _future = _load();
+  });
+
+  void _gone() =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(kNotificationGone)));
+
+  Future<void> _open(AppNotification n) async {
+    final nav = Navigator.of(context);
+    final d = destinationOf(n);
+    switch (d) {
+      case NotificationDestination.none:
+        return;
+      case NotificationDestination.hiddenJobInfo:
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(n.title),
+            content: Text(n.body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      case NotificationDestination.jobApplicants:
+        final jobId = n.type == 'job_application'
+            ? (n.targetId ?? n.jobPostId)
+            : n.jobPostId;
+        Map<String, dynamic>? job;
+        try {
+          job = await _repo.job(jobId!);
+        } catch (_) {
+          job = null;
+        }
+        if (!mounted) return;
+        if (job == null) {
+          _gone();
+          return;
+        }
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => widget.buildPage(d, n, widget.currentUser, job),
+          ),
+        );
+      default:
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => widget.buildPage(d, n, widget.currentUser, null),
+          ),
+        );
     }
-
-    final jobPostId = notification['job_post_id'] as String?;
-    if (jobPostId == null || !mounted) return;
-
-    final job = await Supabase.instance.client
-        .from('job_posts')
-        .select()
-        .eq('id', jobPostId)
-        .maybeSingle();
-    if (job == null || !mounted) return;
-
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => JobApplicantsScreen(job: job)));
   }
 
   String _timeAgo(DateTime time) {
@@ -78,10 +212,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return '${diff.inDays}d ago';
   }
 
+  IconData _icon(AppNotification n) => switch (n.type) {
+    'contact_request_received' ||
+    'contact_request_accepted' => Icons.handshake_outlined,
+    'business_approved' ||
+    'business_rejected' ||
+    'business_suspended' ||
+    'business_restored' ||
+    'business_pending' => Icons.business_center_outlined,
+    'content_hidden' => Icons.visibility_off_outlined,
+    'report_new' => Icons.flag_outlined,
+    _ => Icons.work_outline,
+  };
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
@@ -89,8 +235,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           IconButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) =>
-                    EmailLogScreen(recipientEmail: widget.currentUserEmail),
+                builder: (_) => EmailLogScreen(
+                  recipientEmail:
+                      widget.currentUser.value['email'] as String? ?? '',
+                ),
               ),
             ),
             icon: const Icon(Icons.mail_outline),
@@ -98,65 +246,79 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
+      body: FutureBuilder<List<AppNotification>>(
         future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
+          if (snap.hasError) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('notifications', snapshot.error)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      friendlyLoadError('notifications', snap.error),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _reload,
+                      child: const Text('Try again'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
-
-          final notifications = snapshot.data ?? [];
-          if (notifications.isEmpty) {
+          final items = snap.data ?? const [];
+          if (items.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('No notifications yet.'),
+                child: Text(
+                  'No notifications yet. Things like new requests and '
+                  'decisions on your business show up here.',
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
-
           return ListView.separated(
-            itemCount: notifications.length,
+            itemCount: items.length,
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, i) {
-              final n = notifications[i];
-              final isUnread = n['read_at'] == null;
-              final createdAt = DateTime.parse(n['created_at'] as String);
-
+              final n = items[i];
+              final fresh = n.isUnread;
               return ListTile(
-                tileColor: isUnread
+                key: Key('notification-${n.id}'),
+                tileColor: fresh
                     ? theme.colorScheme.secondaryContainer.withValues(
                         alpha: 0.35,
                       )
                     : null,
                 leading: Icon(
-                  Icons.work_outline,
-                  color: isUnread
+                  _icon(n),
+                  color: fresh
                       ? theme.colorScheme.primary
                       : theme.colorScheme.onSurfaceVariant,
                 ),
                 title: Text(
-                  n['title'] as String? ?? '',
+                  n.title,
                   style: TextStyle(
-                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
-                subtitle: Text(n['body'] as String? ?? ''),
+                subtitle: Text(n.body),
                 trailing: Text(
-                  _timeAgo(createdAt),
+                  _timeAgo(n.createdAt),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                onTap: () => _openNotification(n),
+                onTap: () => _open(n),
               );
             },
           );

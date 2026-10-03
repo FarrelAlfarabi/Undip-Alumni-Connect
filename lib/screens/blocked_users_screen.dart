@@ -31,7 +31,9 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
     _future = _repo.list(widget.currentUserId);
   }
 
-  void _reload() => setState(() => _future = _repo.list(widget.currentUserId));
+  void _reload() => setState(() {
+    _future = _repo.list(widget.currentUserId);
+  });
 
   Future<void> _unblock(BlockedPerson p) async {
     setState(() => _busy.add(p.id));
