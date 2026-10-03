@@ -4,6 +4,7 @@ import '../data/admin_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
+import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
@@ -30,6 +31,13 @@ class AdminScreen extends StatelessWidget {
     final market = marketplaceRepository ?? MarketplaceRepository();
     final sections = [
       ...extraSections,
+      AdminSection(
+        key: 'admin-reports',
+        icon: Icons.flag_outlined,
+        title: 'Reports',
+        subtitle: 'Reported content: dismiss, hide, restore',
+        builder: (_) => AdminReportsScreen(adminId: adminId, repository: admin),
+      ),
       AdminSection(
         key: 'admin-businesses',
         icon: Icons.business_center_outlined,

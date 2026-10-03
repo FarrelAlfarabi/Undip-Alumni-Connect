@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/marketplace_listing.dart';
+import 'block_list.dart';
 
 /// Error codes raised by the marketplace SQL functions (see
 /// supabase/migrations/20260930090200_marketplace_functions.sql).
@@ -134,9 +135,17 @@ class MarketplaceRepository {
 
   /// Approved listings, newest first. Search/filter/sort happen client-side
   /// (same pattern as the job board).
-  Future<List<MarketplaceListing>> fetchApproved() async {
+  ///
+  /// Products of people I blocked are left out (the shared block helper).
+  /// Admin screens pass [applyBlocks] false and see everything.
+  Future<List<MarketplaceListing>> fetchApproved({
+    bool applyBlocks = true,
+  }) async {
     final rows = await _guard(() => _api.selectApprovedListings());
-    return rows.map(MarketplaceListing.fromMap).toList();
+    final all = rows.map(MarketplaceListing.fromMap).toList();
+    if (!applyBlocks) return all;
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(all, (l) => l.sellerId);
   }
 
   // ---- admin: the database checks the admin id against app_admins (see

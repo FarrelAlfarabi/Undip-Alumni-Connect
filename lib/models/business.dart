@@ -67,6 +67,8 @@ class Business {
     this.unlimitedUntil,
     this.createdAt,
     this.ownerName,
+    this.hiddenAt,
+    this.hiddenReason,
   });
 
   final String id;
@@ -86,6 +88,12 @@ class Business {
   final DateTime? unlimitedUntil;
   final DateTime? createdAt;
   final String? ownerName;
+
+  /// Set when an admin hid this business. Others cannot see it.
+  final DateTime? hiddenAt;
+  final String? hiddenReason;
+
+  bool get isHidden => hiddenAt != null;
 
   bool get isApproved => status == BusinessStatus.approved;
 
@@ -110,6 +118,8 @@ class Business {
       unlimitedUntil: date(m['unlimited_until']),
       createdAt: date(m['created_at']),
       ownerName: m['owner_name'] as String?,
+      hiddenAt: date(m['hidden_at']),
+      hiddenReason: m['hidden_reason'] as String?,
     );
   }
 }

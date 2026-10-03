@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/contact_repository.dart';
+import '../data/report_repository.dart';
 import '../models/contact_request.dart';
 import '../util/friendly_error.dart';
+import '../widgets/content_actions_menu.dart';
 
 /// "Requests": what people asked me (Received) and what I asked (Sent).
 class RequestsScreen extends StatefulWidget {
@@ -224,11 +226,26 @@ class _IncomingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              r.requesterName,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    r.requesterName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ContentActionsMenu(
+                  currentUserId: myId,
+                  ownerId: r.requesterId,
+                  ownerName: r.requesterName,
+                  reportType: ReportTarget.contactRequest,
+                  targetId: r.id,
+                  what: 'this request',
+                  onBlocked: onChanged,
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(

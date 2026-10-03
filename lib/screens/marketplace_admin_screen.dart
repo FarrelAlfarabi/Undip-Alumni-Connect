@@ -302,7 +302,7 @@ class _ReportsTabState extends State<_ReportsTab> {
   Future<List<(ReportCount, String?)>> _load() async {
     final counts = await widget.repository.fetchReportCounts(widget.adminId);
     if (counts.isEmpty) return [];
-    final approved = await widget.repository.fetchApproved();
+    final approved = await widget.repository.fetchApproved(applyBlocks: false);
     final titles = {for (final l in approved) l.id: l.title};
     return [for (final c in counts) (c, titles[c.listingId])];
   }

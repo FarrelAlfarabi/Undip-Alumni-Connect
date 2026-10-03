@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/report_repository.dart';
+import '../widgets/content_actions_menu.dart';
 import 'apply_job_screen.dart';
 import 'job_applicants_screen.dart';
 
@@ -21,7 +23,13 @@ class JobDetailScreen extends StatefulWidget {
     super.key,
     required this.job,
     required this.currentUser,
+    this.loadApplicantCount,
+    this.loadHasApplied,
   });
+
+  /// Injectable for tests; default to the Supabase queries.
+  final Future<int> Function()? loadApplicantCount;
+  final Future<bool> Function()? loadHasApplied;
 
   final Map<String, dynamic> job;
   final ValueNotifier<Map<String, dynamic>> currentUser;
@@ -48,6 +56,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   }
 
   Future<int> _fetchApplicantCount() async {
+    if (widget.loadApplicantCount != null) return widget.loadApplicantCount!();
     final rows = await Supabase.instance.client
         .from('job_applications')
         .select('id')
@@ -59,6 +68,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   // accident — there's no unique constraint at the database level (see
   // the job_applications migration), so this is purely a UI guard.
   Future<bool> _fetchHasApplied() async {
+    if (widget.loadHasApplied != null) return widget.loadHasApplied!();
     final rows = await Supabase.instance.client
         .from('job_applications')
         .select('id')
@@ -88,7 +98,20 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final posterName = poster?['name'] as String? ?? 'Alumni';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Job Details')),
+      appBar: AppBar(
+        title: const Text('Job Details'),
+        actions: [
+          ContentActionsMenu(
+            currentUserId: widget.currentUser.value['id'] as String,
+            ownerId: widget.job['posted_by'] as String?,
+            ownerName: posterName,
+            reportType: ReportTarget.job,
+            targetId: widget.job['id'] as String?,
+            what: 'this job',
+            onBlocked: () => Navigator.of(context).maybePop(),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

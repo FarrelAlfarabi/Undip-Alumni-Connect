@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
@@ -64,15 +65,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _load() {
     _announcements = _api.latestAnnouncements(kHomeBannerLimit);
-    _jobs = _api.latestJobs(kHomeLatestLimit);
+    _jobs = _latestJobs();
     _listings = _fetchListings();
     _pendingRequests = _api
         .pendingRequestCount(_user.value['id'] as String)
         .catchError((_) => 0);
   }
 
+  Future<List<Map<String, dynamic>>> _latestJobs() async {
+    final jobs = await _api.latestJobs(kHomeLatestLimit);
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(jobs, (j) => j['posted_by'] as String?);
+  }
+
   Future<List<MarketplaceListing>> _fetchListings() async {
-    final all = await _market.fetchApproved();
+    final all = await _market.fetchApproved(); // already without blocked people
     final sorted = [...all]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.take(kHomeLatestLimit).toList();
   }
@@ -178,8 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   emptyIcon: Icons.work_outline,
                   emptyText:
                       'No jobs posted yet. New openings will show up here.',
-                  onRetry: () =>
-                      setState(() => _jobs = _api.latestJobs(kHomeLatestLimit)),
+                  onRetry: () => setState(() => _jobs = _latestJobs()),
                   tileBuilder: (job) => _LatestTile(
                     icon: Icons.work_outline,
                     title: job['title'] as String? ?? '',

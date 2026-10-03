@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/feature_flags.dart';
+import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_repository.dart';
 import 'home_pages.dart';
@@ -63,6 +64,8 @@ class _HomeShellState extends State<HomeShell> {
   void initState() {
     super.initState();
     _currentUser = ValueNotifier(widget.profile);
+    // Who I blocked: asked once per session, used by every list.
+    BlockList.shared.load(widget.profile['id'] as String);
   }
 
   @override

@@ -256,6 +256,17 @@ class _MyListingCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (l.isHidden) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Hidden by an admin${l.hiddenReason != null ? ': ${l.hiddenReason}' : ''}. '
+                'Other people cannot see this product.',
+                key: Key('hidden-${l.id}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
             if (l.status == ListingStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(

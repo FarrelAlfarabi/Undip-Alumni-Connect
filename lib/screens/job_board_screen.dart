@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/block_list.dart';
+import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
 import 'notifications_screen.dart';
 import 'post_job_screen.dart';
-import '../util/friendly_error.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
 /// browsing for everyone — the contact button / visual paywall lives on
@@ -19,7 +20,13 @@ class JobBoardScreen extends StatefulWidget {
     super.key,
     required this.currentUser,
     this.showBack = false,
+    this.fetchJobs,
+    this.fetchUnreadCount,
   });
+
+  /// Injectable for tests; default to the Supabase queries.
+  final Future<List<Map<String, dynamic>>> Function()? fetchJobs;
+  final Future<int> Function()? fetchUnreadCount;
 
   /// True when pushed from the Home hub (shows a back arrow).
   final bool showBack;
@@ -49,6 +56,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   }
 
   Future<int> _fetchUnreadNotificationCount() async {
+    if (widget.fetchUnreadCount != null) return widget.fetchUnreadCount!();
     final rows = await Supabase.instance.client
         .from('notifications')
         .select('id')
@@ -80,11 +88,20 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchJobs() async {
+    if (widget.fetchJobs != null) {
+      final rows = await widget.fetchJobs!();
+      await BlockList.shared.ensureLoaded();
+      return BlockList.shared.filter(rows, (j) => j['posted_by'] as String?);
+    }
     final rows = await Supabase.instance.client
         .from('job_posts')
         .select('*, poster:alumni_profiles(name)')
         .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows as List);
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(
+      List<Map<String, dynamic>>.from(rows as List),
+      (j) => j['posted_by'] as String?,
+    );
   }
 
   List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {

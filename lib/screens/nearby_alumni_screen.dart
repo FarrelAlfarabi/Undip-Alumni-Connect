@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../data/city_distances.dart';
-import '../widgets/nearby_map_view.dart';
 import '../config/feature_flags.dart';
+import '../data/blocked_filter.dart';
+import '../data/city_distances.dart';
+import '../util/friendly_error.dart';
+import '../widgets/nearby_map_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
-import '../util/friendly_error.dart';
 
 /// One city's worth of nearby alumni, grouped for the map's networking
 /// chips and the sheet they open (_CityClusterSheet).
@@ -77,13 +78,17 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
-    if (widget.fetchAlumni != null) return widget.fetchAlumni!();
+    if (widget.fetchAlumni != null) {
+      return withoutBlockedProfiles(await widget.fetchAlumni!());
+    }
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
         .select()
         .eq('verification_status', 'verified')
         .order('name', ascending: true);
-    return List<Map<String, dynamic>>.from(rows as List);
+    return withoutBlockedProfiles(
+      List<Map<String, dynamic>>.from(rows as List),
+    );
   }
 
   void _openClusterSheet(_CityCluster cluster) {

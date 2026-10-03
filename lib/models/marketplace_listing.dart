@@ -73,6 +73,8 @@ class MarketplaceListing {
     this.approvedAt,
     this.seller,
     this.businessId,
+    this.hiddenAt,
+    this.hiddenReason,
   });
 
   final String id;
@@ -99,6 +101,12 @@ class MarketplaceListing {
   /// The business this product belongs to. Null for the old seed listings.
   final String? businessId;
 
+  /// Set when an admin hid this product. Only its owner still sees it.
+  final DateTime? hiddenAt;
+  final String? hiddenReason;
+
+  bool get isHidden => hiddenAt != null;
+
   MarketplaceListing withSeller(MarketplaceSeller? seller) {
     return MarketplaceListing(
       id: id,
@@ -118,6 +126,8 @@ class MarketplaceListing {
       approvedAt: approvedAt,
       seller: seller,
       businessId: businessId,
+      hiddenAt: hiddenAt,
+      hiddenReason: hiddenReason,
     );
   }
 
@@ -145,6 +155,10 @@ class MarketplaceListing {
           ? MarketplaceSeller.fromMap(sellerMap)
           : null,
       businessId: map['business_id'] as String?,
+      hiddenAt: map['hidden_at'] == null
+          ? null
+          : DateTime.tryParse('${map['hidden_at']}'),
+      hiddenReason: map['hidden_reason'] as String?,
     );
   }
 }

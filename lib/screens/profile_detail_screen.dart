@@ -4,13 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/feature_flags.dart';
 import '../data/admin_repository.dart';
 import '../data/contact_repository.dart';
+import '../data/report_repository.dart';
 import '../lock/session.dart';
+import '../util/friendly_error.dart';
+import '../widgets/content_actions_menu.dart';
 import 'admin_screen.dart';
+import 'blocked_users_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
-import '../util/friendly_error.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -161,6 +164,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         // poster's name, etc.), where a back arrow is correct.
         automaticallyImplyLeading: !widget.showEditButton,
         actions: [
+          if (!widget.showEditButton)
+            ContentActionsMenu(
+              currentUserId: widget.currentUser.value['id'] as String,
+              ownerId: _profile['id'] as String?,
+              ownerName: _profile['name'] as String?,
+              reportType: ReportTarget.profile,
+              targetId: _profile['id'] as String?,
+              what: 'this profile',
+              onBlocked: () => Navigator.of(context).maybePop(),
+            ),
           if (widget.showEditButton)
             IconButton(
               tooltip: 'Sign out',
@@ -281,6 +294,20 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onPressed: _editProfile,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const Key('profile-blocked'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => BlockedUsersScreen(
+                            currentUserId:
+                                widget.currentUser.value['id'] as String,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.block),
+                      label: const Text('Blocked users'),
                     ),
                     FutureBuilder<bool>(
                       future: _isAdmin,

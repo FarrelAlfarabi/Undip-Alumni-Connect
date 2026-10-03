@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/block_list.dart';
 import '../data/business_repository.dart';
+import '../data/report_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
+import '../widgets/content_actions_menu.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/safe_link_chip.dart';
 import 'business_form_screen.dart';
@@ -118,7 +121,10 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
             ),
           );
         }
-        final all = snap.data ?? const [];
+        final all = BlockList.shared.filter(
+          snap.data ?? const <Business>[],
+          (b) => b.ownerId,
+        );
         if (all.isEmpty) {
           return const Center(
             child: Padding(
@@ -290,7 +296,20 @@ class BusinessDetailScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final b = business;
     return Scaffold(
-      appBar: AppBar(title: const Text('Business')),
+      appBar: AppBar(
+        title: const Text('Business'),
+        actions: [
+          ContentActionsMenu(
+            currentUserId: currentUser.value['id'] as String,
+            ownerId: b.ownerId,
+            ownerName: b.ownerName,
+            reportType: ReportTarget.business,
+            targetId: b.id,
+            what: 'this business',
+            onBlocked: () => Navigator.of(context).maybePop(),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

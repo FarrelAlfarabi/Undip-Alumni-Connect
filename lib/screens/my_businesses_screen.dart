@@ -190,6 +190,15 @@ class BusinessOwnerCard extends StatelessWidget {
                 style: theme.textTheme.bodyMedium,
               ),
             ],
+            if (b.isHidden) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Hidden by an admin${b.hiddenReason != null ? ': ${b.hiddenReason}' : ''}. '
+                'Other people cannot see this business or its products.',
+                key: Key('hidden-${b.id}'),
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
             if (b.status == BusinessStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(

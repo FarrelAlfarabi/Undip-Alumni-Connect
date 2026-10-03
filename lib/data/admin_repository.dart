@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business.dart';
+import 'report_repository.dart';
 
 enum AdminErrorCode {
   notAdmin,
+  invalidView,
   invalidBand,
   reasonRequired,
   invalidState,
@@ -35,6 +37,7 @@ String adminErrorMessage(Object error) {
         return 'That is not possible in the current status. Reload the list.';
       case AdminErrorCode.notFound:
         return 'This item no longer exists.';
+      case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
         break;
@@ -124,6 +127,52 @@ class AdminRepository {
     return Business.fromMap(Map<String, dynamic>.from(map as Map));
   }
 
+  /// Open reports (one row per reported thing, with counts and reasons), or
+  /// everything an admin has hidden. Marketplace reports are included.
+  Future<List<AdminReport>> reports(
+    String adminId, {
+    bool hidden = false,
+  }) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_reports_list', {
+        'p_admin': adminId,
+        'p_view': hidden ? 'hidden' : 'open',
+      }),
+    );
+    return (rows as List)
+        .map((r) => AdminReport.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  Future<void> dismissReports(String adminId, AdminReport r) =>
+      _reportAction(adminId, r, 'dismiss');
+
+  Future<void> markActioned(String adminId, AdminReport r) =>
+      _reportAction(adminId, r, 'mark_actioned');
+
+  Future<void> hideContent(String adminId, AdminReport r, String reason) =>
+      _reportAction(adminId, r, 'hide', reason: reason);
+
+  Future<void> restoreContent(String adminId, AdminReport r) =>
+      _reportAction(adminId, r, 'restore');
+
+  Future<void> _reportAction(
+    String adminId,
+    AdminReport r,
+    String action, {
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_reports_decide', {
+        'p_admin': adminId,
+        'p_type': r.targetType.value,
+        'p_target': r.targetId,
+        'p_action': action,
+        'p_reason': reason?.trim(),
+      }),
+    );
+  }
+
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
       return await run();
@@ -138,7 +187,64 @@ class AdminRepository {
     'reason_required' => AdminErrorCode.reasonRequired,
     'invalid_state' => AdminErrorCode.invalidState,
     'invalid_action' => AdminErrorCode.invalidAction,
+    'invalid_view' => AdminErrorCode.invalidView,
     'not_found' => AdminErrorCode.notFound,
     _ => AdminErrorCode.unknown,
   };
+}
+
+/// One reported thing, as the admin sees it.
+class AdminReport {
+  const AdminReport({
+    required this.targetType,
+    required this.targetId,
+    required this.title,
+    required this.ownerName,
+    required this.reportCount,
+    required this.reasons,
+    required this.notes,
+    required this.isHidden,
+    this.hiddenReason,
+  });
+
+  final ReportTarget targetType;
+  final String targetId;
+  final String title;
+  final String? ownerName;
+  final int reportCount;
+  final List<ContentReportReason> reasons;
+  final List<String> notes;
+  final bool isHidden;
+  final String? hiddenReason;
+
+  /// Jobs, products and businesses can be hidden. Profiles and contact
+  /// requests can only be dismissed or marked as handled.
+  bool get canHide =>
+      targetType == ReportTarget.job ||
+      targetType == ReportTarget.product ||
+      targetType == ReportTarget.business;
+
+  factory AdminReport.fromMap(Map<String, dynamic> m) {
+    final type = ReportTarget.values.firstWhere(
+      (t) => t.value == m['target_type'],
+      orElse: () => ReportTarget.profile,
+    );
+    List<String> strings(Object? v) =>
+        (v as List? ?? const []).map((e) => '$e').toList();
+    return AdminReport(
+      targetType: type,
+      targetId: m['target_id'] as String,
+      title: m['title'] as String? ?? '(no longer available)',
+      ownerName: m['owner_name'] as String?,
+      reportCount: (m['report_count'] as num?)?.toInt() ?? 0,
+      reasons: [
+        for (final v in strings(m['reasons']))
+          if (ContentReportReason.fromValue(v) != null)
+            ContentReportReason.fromValue(v)!,
+      ],
+      notes: strings(m['notes']),
+      isHidden: m['is_hidden'] == true,
+      hiddenReason: m['hidden_reason'] as String?,
+    );
+  }
 }
