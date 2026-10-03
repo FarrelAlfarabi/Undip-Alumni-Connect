@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/feature_flags.dart';
 import '../data/blocked_filter.dart';
 import '../data/city_distances.dart';
+import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/nearby_map_view.dart';
 import 'city_group_chat_screen.dart';
@@ -177,13 +178,13 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      friendlyLoadError('nearby alumni', snapshot.error),
-                    ),
-                  ),
+                return ErrorView(
+                  message: friendlyLoadError('nearby alumni', snapshot.error),
+                  screen: 'Nearby alumni',
+                  error: snapshot.error,
+                  onRetry: () => setState(() {
+                    _future = _fetchAlumni();
+                  }),
                 );
               }
 

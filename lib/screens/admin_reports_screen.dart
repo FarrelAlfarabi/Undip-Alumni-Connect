@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/admin_repository.dart';
 import '../data/report_repository.dart';
 import '../util/friendly_error.dart';
+import '../widgets/error_view.dart';
 
 String reportTargetLabel(ReportTarget t) => switch (t) {
   ReportTarget.job => 'Job',
@@ -62,7 +63,12 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy.remove(r.targetId));
-      _toast(adminErrorMessage(e));
+      showErrorSnackBar(
+        context,
+        message: adminErrorMessage(e),
+        screen: 'Admin reports',
+        error: e,
+      );
     }
   }
 
@@ -143,26 +149,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snap.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            snap.error is AdminException
-                                ? adminErrorMessage(snap.error!)
-                                : friendlyLoadError('reports', snap.error),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _reload,
-                            child: const Text('Try again'),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorView(
+                    message: snap.error is AdminException
+                        ? adminErrorMessage(snap.error!)
+                        : friendlyLoadError('reports', snap.error),
+                    screen: 'Admin reports',
+                    error: snap.error,
+                    onRetry: _reload,
                   );
                 }
                 final items = snap.data ?? const [];

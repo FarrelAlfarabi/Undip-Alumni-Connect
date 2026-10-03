@@ -12,6 +12,7 @@ import 'job_applicants_screen.dart';
 import 'my_businesses_screen.dart';
 import 'my_listings_screen.dart';
 import 'requests_screen.dart';
+import '../widgets/error_view.dart';
 
 /// Shown when the thing a notification points at is gone or hidden.
 const String kNotificationGone = 'This is no longer available.';
@@ -253,24 +254,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      friendlyLoadError('notifications', snap.error),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _reload,
-                      child: const Text('Try again'),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('notifications', snap.error),
+              screen: 'Notifications',
+              error: snap.error,
+              onRetry: _reload,
             );
           }
           final items = snap.data ?? const [];

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'chat_screen.dart';
+import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 
 /// List of the current user's conversations (Day 6, demo scope). Empty
@@ -106,11 +107,13 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('messages', snapshot.error)),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('messages', snapshot.error),
+              screen: 'Messages',
+              error: snapshot.error,
+              onRetry: () => setState(() {
+                _future = _fetchConversations();
+              }),
             );
           }
 

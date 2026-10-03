@@ -6,6 +6,7 @@ import '../data/report_repository.dart';
 import '../models/contact_request.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
+import '../widgets/error_view.dart';
 
 /// "Requests": what people asked me (Received) and what I asked (Sent).
 class RequestsScreen extends StatefulWidget {
@@ -118,24 +119,11 @@ class _ListTab<T> extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    friendlyLoadError(what, snap.error),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: onRetry,
-                    child: const Text('Try again'),
-                  ),
-                ],
-              ),
-            ),
+          return ErrorView(
+            message: friendlyLoadError(what, snap.error),
+            screen: 'Requests',
+            error: snap.error,
+            onRetry: onRetry,
           );
         }
         final items = snap.data ?? const [];
@@ -192,7 +180,12 @@ class _IncomingCard extends StatelessWidget {
         ),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(contactErrorMessage(e))));
+      showErrorSnackBarOn(
+        messenger,
+        message: contactErrorMessage(e),
+        screen: 'Requests',
+        error: e,
+      );
     }
     onChanged();
   }
@@ -205,7 +198,12 @@ class _IncomingCard extends StatelessWidget {
         const SnackBar(content: Text('Request declined.')),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(contactErrorMessage(e))));
+      showErrorSnackBarOn(
+        messenger,
+        message: contactErrorMessage(e),
+        screen: 'Requests',
+        error: e,
+      );
     }
     onChanged();
   }

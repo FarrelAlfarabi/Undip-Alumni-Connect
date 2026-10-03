@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/report_repository.dart';
+import 'error_view.dart';
 
 /// "Report" bottom sheet: pick a reason, add an optional note (300
 /// characters), send, then a thank you. Returns true when a report was sent.
@@ -55,6 +56,7 @@ class _ReportSheetState extends State<_ReportSheet> {
   final _note = TextEditingController();
   bool _sending = false;
   String? _error;
+  Object? _lastError;
 
   @override
   void dispose() {
@@ -85,6 +87,7 @@ class _ReportSheetState extends State<_ReportSheet> {
       setState(() {
         _sending = false;
         _error = reportErrorMessage(e);
+        _lastError = e;
       });
     }
   }
@@ -154,11 +157,18 @@ class _ReportSheetState extends State<_ReportSheet> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  _error!,
-                  key: const Key('report-error'),
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
+                child: _lastError == null
+                    ? Text(
+                        _error!,
+                        key: const Key('report-error'),
+                        style: TextStyle(color: theme.colorScheme.error),
+                      )
+                    : InlineError(
+                        message: _error!,
+                        textKey: const Key('report-error'),
+                        screen: 'Report',
+                        error: _lastError,
+                      ),
               ),
             const SizedBox(height: 12),
             FilledButton(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/business_repository.dart';
 import '../models/business.dart';
 import '../util/safe_url.dart';
+import '../widgets/error_view.dart';
 
 /// What the owner is told after submitting.
 const String kBusinessSubmittedMessage =
@@ -38,6 +39,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   String? _bandError;
   String? _linkError;
   String? _error;
+  Object? _lastError;
   bool _saving = false;
 
   bool get _isEdit => widget.existing != null;
@@ -113,6 +115,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     setState(() {
       _saving = true;
       _error = null;
+      _lastError = null;
     });
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
@@ -138,6 +141,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
       setState(() {
         _saving = false;
         _error = businessErrorMessage(e);
+        _lastError = e;
       });
     }
   }
@@ -309,10 +313,11 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        key: const Key('business-form-error'),
-                        style: TextStyle(color: theme.colorScheme.error),
+                      InlineError(
+                        message: _error!,
+                        textKey: const Key('business-form-error'),
+                        screen: 'Register a business',
+                        error: _lastError,
                       ),
                     ],
                     const SizedBox(height: 24),

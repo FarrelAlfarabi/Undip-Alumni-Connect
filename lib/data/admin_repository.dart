@@ -173,6 +173,39 @@ class AdminRepository {
     );
   }
 
+  /// Feedback reports, newest first. Rows are only readable through this
+  /// admin function (the app role cannot read the table).
+  Future<List<FeedbackItem>> feedback(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_feedback_list', {'p_admin': adminId}),
+    );
+    return (rows as List)
+        .map((r) => FeedbackItem.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  Future<int> newFeedbackCount(String adminId) async {
+    final n = await _guard(
+      () => _api.rpc('admin_feedback_new_count', {'p_admin': adminId}),
+    );
+    return (n as num?)?.toInt() ?? 0;
+  }
+
+  /// [status] is `new`, `seen` or `done`.
+  Future<void> setFeedbackStatus(
+    String adminId,
+    String id,
+    String status,
+  ) async {
+    await _guard(
+      () => _api.rpc('admin_feedback_set_status', {
+        'p_admin': adminId,
+        'p_id': id,
+        'p_status': status,
+      }),
+    );
+  }
+
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
       return await run();
@@ -247,4 +280,46 @@ class AdminReport {
       hiddenReason: m['hidden_reason'] as String?,
     );
   }
+}
+
+/// One feedback report, as the admin sees it.
+class FeedbackItem {
+  const FeedbackItem({
+    required this.id,
+    required this.status,
+    required this.createdAt,
+    this.profileName,
+    this.message,
+    this.errorText,
+    this.screen,
+    this.appVersion,
+    this.buildNumber,
+    this.platform,
+  });
+
+  final String id;
+  final String status;
+  final DateTime createdAt;
+  final String? profileName;
+  final String? message;
+  final String? errorText;
+  final String? screen;
+  final String? appVersion;
+  final String? buildNumber;
+  final String? platform;
+
+  bool get isNew => status == 'new';
+
+  factory FeedbackItem.fromMap(Map<String, dynamic> m) => FeedbackItem(
+    id: m['id'] as String,
+    status: m['status'] as String? ?? 'new',
+    createdAt: DateTime.tryParse('${m['created_at']}') ?? DateTime.now(),
+    profileName: m['profile_name'] as String?,
+    message: m['message'] as String?,
+    errorText: m['error_text'] as String?,
+    screen: m['screen'] as String?,
+    appVersion: m['app_version'] as String?,
+    buildNumber: m['build_number'] as String?,
+    platform: m['platform'] as String?,
+  );
 }

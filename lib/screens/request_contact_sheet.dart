@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/contact_repository.dart';
+import '../widgets/error_view.dart';
 
 /// "Request to contact" bottom sheet: an optional short message (200
 /// characters, plain text) and Send. Shows the result as a snackbar.
@@ -50,6 +51,7 @@ class _RequestSheetState extends State<_RequestSheet> {
   final _message = TextEditingController();
   bool _sending = false;
   String? _error;
+  Object? _lastError;
 
   @override
   void dispose() {
@@ -74,6 +76,7 @@ class _RequestSheetState extends State<_RequestSheet> {
       setState(() {
         _sending = false;
         _error = contactErrorMessage(e);
+        _lastError = e;
       });
     }
   }
@@ -122,10 +125,11 @@ class _RequestSheetState extends State<_RequestSheet> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 8),
-              Text(
-                _error!,
-                key: const Key('request-error'),
-                style: TextStyle(color: theme.colorScheme.error),
+              InlineError(
+                message: _error!,
+                textKey: const Key('request-error'),
+                screen: 'Request to contact',
+                error: _lastError,
               ),
             ],
             const SizedBox(height: 12),

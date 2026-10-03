@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/blocked_filter.dart';
+import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
@@ -114,11 +115,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(friendlyLoadError('the directory', snapshot.error)),
-            ),
+          return ErrorView(
+            message: friendlyLoadError('the directory', snapshot.error),
+            screen: 'Directory',
+            error: snapshot.error,
+            onRetry: () => setState(() {
+              _future = _fetchAlumni();
+            }),
           );
         }
 

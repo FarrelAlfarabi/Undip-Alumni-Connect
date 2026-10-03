@@ -6,6 +6,7 @@ import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
+import '../widgets/error_view.dart';
 
 /// Admin: review queue for pending listings (the old seed listings), plus
 /// report counts per listing. Reached from Profile > Admin, which shows only
@@ -104,7 +105,12 @@ class _ReviewQueueState extends State<_ReviewQueue> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy.remove(l.id));
-      _toast(marketplaceErrorMessage(e));
+      showErrorSnackBar(
+        context,
+        message: marketplaceErrorMessage(e),
+        screen: 'Marketplace review',
+        error: e,
+      );
     }
   }
 
@@ -162,6 +168,8 @@ class _ReviewQueueState extends State<_ReviewQueue> {
           return _ErrorRetry(
             text: marketplaceErrorMessage(snapshot.error!),
             onRetry: _reload,
+            screen: 'Marketplace review',
+            error: snapshot.error,
           );
         }
         final items = snapshot.data ?? [];
@@ -323,6 +331,8 @@ class _ReportsTabState extends State<_ReportsTab> {
           return _ErrorRetry(
             text: marketplaceErrorMessage(snapshot.error!),
             onRetry: _reload,
+            screen: 'Marketplace review',
+            error: snapshot.error,
           );
         }
         final rows = snapshot.data ?? [];
@@ -374,25 +384,24 @@ class _ReportsTabState extends State<_ReportsTab> {
 }
 
 class _ErrorRetry extends StatelessWidget {
-  const _ErrorRetry({required this.text, required this.onRetry});
+  const _ErrorRetry({
+    required this.text,
+    required this.onRetry,
+    required this.screen,
+    this.error,
+  });
 
   final String text;
   final VoidCallback onRetry;
+  final String screen;
+  final Object? error;
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(text, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ErrorView(
+    message: text,
+    screen: screen,
+    error: error,
+    onRetry: onRetry,
+    retryLabel: 'Retry',
+  );
 }

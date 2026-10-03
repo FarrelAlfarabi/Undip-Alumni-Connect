@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/verification_screen.dart';
 import '../screens/welcome_screen.dart';
 import '../util/friendly_error.dart';
+import '../widgets/error_view.dart';
 import 'lock_screen.dart';
 import 'lock_service.dart';
 import 'session.dart';
@@ -71,9 +72,12 @@ class _AppEntryState extends State<AppEntry> {
       // A network or server error says nothing about the profile. Keep the
       // PIN and the remembered person, and let them try again.
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(friendlyError(e))));
+      showErrorSnackBar(
+        context,
+        message: friendlyError(e),
+        screen: 'Unlock',
+        error: e,
+      );
       return;
     }
     if (profile == null || profile['verification_status'] != 'verified') {

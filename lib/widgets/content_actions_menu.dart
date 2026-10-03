@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/block_list.dart';
 import '../data/report_repository.dart';
 import 'report_sheet.dart';
+import 'error_view.dart';
 
 /// The flag / overflow menu on someone else's job, product, business, profile
 /// or contact request: Report, and Block person (with a confirm step).
@@ -80,9 +81,12 @@ class ContentActionsMenu extends StatelessWidget {
       await (blockList ?? BlockList.shared).block(currentUserId, ownerId!);
       messenger.showSnackBar(SnackBar(content: Text('Blocked $name.')));
       onBlocked?.call();
-    } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Could not block. Please try again.')),
+    } catch (e) {
+      showErrorSnackBarOn(
+        messenger,
+        message: 'Could not block. Please try again.',
+        screen: 'Block person',
+        error: e,
       );
     }
   }

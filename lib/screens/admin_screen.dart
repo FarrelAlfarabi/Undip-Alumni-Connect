@@ -4,12 +4,14 @@ import '../data/admin_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
+import 'admin_feedback_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
+import '../widgets/error_view.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
 /// only when the database says this profile is an admin.
-class AdminScreen extends StatelessWidget {
+class AdminScreen extends StatefulWidget {
   const AdminScreen({
     super.key,
     required this.adminId,
@@ -22,21 +24,51 @@ class AdminScreen extends StatelessWidget {
   final AdminRepository? adminRepository;
   final MarketplaceRepository? marketplaceRepository;
 
-  /// Sections added by later features (Reports, Feedback).
+  /// Sections added by later features.
   final List<AdminSection> extraSections;
 
   @override
+  State<AdminScreen> createState() => _AdminScreenState();
+}
+
+class _AdminScreenState extends State<AdminScreen> {
+  late final AdminRepository _admin =
+      widget.adminRepository ?? AdminRepository();
+  late final MarketplaceRepository _market =
+      widget.marketplaceRepository ?? MarketplaceRepository();
+  late Future<int> _newFeedback;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCount();
+  }
+
+  void _loadCount() {
+    _newFeedback = _admin.newFeedbackCount(widget.adminId).catchError((_) => 0);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final admin = adminRepository ?? AdminRepository();
-    final market = marketplaceRepository ?? MarketplaceRepository();
+    final adminId = widget.adminId;
     final sections = [
-      ...extraSections,
+      ...widget.extraSections,
       AdminSection(
         key: 'admin-reports',
         icon: Icons.flag_outlined,
         title: 'Reports',
         subtitle: 'Reported content: dismiss, hide, restore',
-        builder: (_) => AdminReportsScreen(adminId: adminId, repository: admin),
+        builder: (_) =>
+            AdminReportsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-feedback',
+        icon: Icons.feedback_outlined,
+        title: 'Feedback',
+        subtitle: 'What testers sent from the Send feedback button',
+        showsFeedbackCount: true,
+        builder: (_) =>
+            AdminFeedbackScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-businesses',
@@ -44,7 +76,7 @@ class AdminScreen extends StatelessWidget {
         title: 'Businesses',
         subtitle: 'Approve, reject, suspend or restore',
         builder: (_) =>
-            AdminBusinessesScreen(adminId: adminId, repository: admin),
+            AdminBusinessesScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-marketplace',
@@ -52,7 +84,7 @@ class AdminScreen extends StatelessWidget {
         title: 'Marketplace review',
         subtitle: 'Old listings waiting for review, report counts',
         builder: (_) =>
-            MarketplaceAdminScreen(adminId: adminId, repository: market),
+            MarketplaceAdminScreen(adminId: adminId, repository: _market),
       ),
     ];
     return Scaffold(
@@ -74,10 +106,25 @@ class AdminScreen extends StatelessWidget {
                 leading: Icon(s.icon),
                 title: Text(s.title),
                 subtitle: Text(s.subtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: s.builder)),
+                trailing: s.showsFeedbackCount
+                    ? FutureBuilder<int>(
+                        future: _newFeedback,
+                        builder: (context, snap) {
+                          final n = snap.data ?? 0;
+                          return Badge(
+                            key: const Key('feedback-badge'),
+                            isLabelVisible: n > 0,
+                            label: Text('$n'),
+                            child: const Icon(Icons.chevron_right),
+                          );
+                        },
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: () async {
+                  await Navigator.of(context)
+                      .push(MaterialPageRoute(builder: s.builder));
+                  if (mounted) setState(_loadCount);
+                },
               ),
             ),
         ],
@@ -93,9 +140,11 @@ class AdminSection {
     required this.title,
     required this.subtitle,
     required this.builder,
+    this.showsFeedbackCount = false,
   });
 
   final String key;
+  final bool showsFeedbackCount;
   final IconData icon;
   final String title;
   final String subtitle;
@@ -159,7 +208,12 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy.remove(b.id));
-      _toast(adminErrorMessage(e));
+      showErrorSnackBar(
+        context,
+        message: adminErrorMessage(e),
+        screen: 'Admin businesses',
+        error: e,
+      );
     }
   }
 
@@ -295,26 +349,13 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snap.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            snap.error is AdminException
-                                ? adminErrorMessage(snap.error!)
-                                : friendlyLoadError('businesses', snap.error),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _reload,
-                            child: const Text('Try again'),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorView(
+                    message: snap.error is AdminException
+                        ? adminErrorMessage(snap.error!)
+                        : friendlyLoadError('businesses', snap.error),
+                    screen: 'Admin businesses',
+                    error: snap.error,
+                    onRetry: _reload,
                   );
                 }
                 final items = snap.data ?? const [];

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/block_list.dart';
 import '../util/friendly_error.dart';
+import '../widgets/error_view.dart';
 
 /// People I blocked, each with an Unblock button.
 class BlockedUsersScreen extends StatefulWidget {
@@ -47,7 +48,12 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
       _busy.remove(p.id);
       if (mounted) _reload();
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(friendlyError(e))));
+      showErrorSnackBarOn(
+        messenger,
+        message: friendlyError(e),
+        screen: 'Blocked users',
+        error: e,
+      );
       if (mounted) setState(() => _busy.remove(p.id));
     }
   }
@@ -63,24 +69,11 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      friendlyLoadError('blocked users', snap.error),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _reload,
-                      child: const Text('Try again'),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('blocked users', snap.error),
+              screen: 'Blocked users',
+              error: snap.error,
+              onRetry: _reload,
             );
           }
           final items = snap.data ?? const [];

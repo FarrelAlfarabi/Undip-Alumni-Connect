@@ -5,6 +5,7 @@ import '../lock/lock_service.dart';
 import '../lock/pin_setup_screen.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
+import '../widgets/feedback_sheet.dart';
 
 /// Looks up the alumni profile whose email matches and marks it verified.
 /// Returns null when there is no match.
@@ -67,6 +68,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   _VerificationState _state = _VerificationState.idle;
   String? _errorMessage;
+  Object? _lastError;
 
   @override
   void dispose() {
@@ -99,6 +101,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       setState(() {
         _state = _VerificationState.error;
         _errorMessage = friendlyError(e);
+        _lastError = e;
       });
     }
   }
@@ -194,7 +197,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
           onTryAgain: _reset,
         );
       case _VerificationState.error:
-        return _ErrorResult(message: _errorMessage!, onTryAgain: _reset);
+        return _ErrorResult(
+          message: _errorMessage!,
+          error: _lastError,
+          onTryAgain: _reset,
+        );
       case _VerificationState.idle:
       case _VerificationState.loading:
         return _VerificationForm(
@@ -342,8 +349,13 @@ class _NotFoundResult extends StatelessWidget {
 }
 
 class _ErrorResult extends StatelessWidget {
-  const _ErrorResult({required this.message, required this.onTryAgain});
+  const _ErrorResult({
+    required this.message,
+    required this.onTryAgain,
+    this.error,
+  });
 
+  final Object? error;
   final String message;
   final VoidCallback onTryAgain;
 
@@ -379,6 +391,12 @@ class _ErrorResult extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         FilledButton(onPressed: onTryAgain, child: const Text('Try again')),
+        TextButton(
+          key: const Key('send-feedback'),
+          onPressed: () =>
+              showFeedbackSheet(context, error: error, screen: 'Verification'),
+          child: const Text('Send feedback'),
+        ),
       ],
     );
   }

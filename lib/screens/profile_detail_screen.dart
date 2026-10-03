@@ -14,6 +14,7 @@ import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
+import '../widgets/error_view.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -143,8 +144,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Profile',
+          error: e,
+        );
       }
     } finally {
       if (mounted) setState(() => _messaging = false);

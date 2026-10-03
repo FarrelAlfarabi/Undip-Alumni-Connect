@@ -76,3 +76,10 @@ If a session ends early, continue from the last entry here.
 - Also fixed: several `setState(() => _future = ...)` calls returned a Future (a debug assertion); they now use a block body.
 - Tests first: `supabase/tests/beta/07_notifications_test.sql` (exactly one row per event, no duplicates, blocked senders suppressed, anon insert rejected) and `test/notifications_test.dart`.
 - Checks: analyze clean, 351 tests pass, beta SQL checks pass.
+
+## Stage 6F: feedback on errors
+- Database: `20261003160000_feedback_reports.sql` (+ rollback). `feedback_reports` (profile id nullable, message max 500, error_text max 300, screen max 60, app version, build number, platform, status new/seen/done). The app role can only INSERT (no read, no update, no delete, no returning). 10 per profile per day by trigger; the database sets `created_at`. Admins use `admin_feedback_list`, `admin_feedback_new_count`, `admin_feedback_set_status` (checked against `app_admins`).
+- App: `cleanErrorText` (emails, keys, tokens, URLs, phone and long numbers, ids, stack traces removed; max 300). One shared `ErrorView`, `InlineError` and `showErrorSnackBar`, used on every load error screen, every failed form submit and the error snackbars, each with Send feedback (and Try again where there is one). Feedback sheet: plain line about what is sent, optional "What were you doing?", thank you; on failure it says so and offers Copy details. Version comes from `AppInfo` (package_info_plus), the same place the About screen will use. Admin > Feedback (newest first, new count, mark as seen or done) with a badge on the Admin screen.
+- Tests first: `test/error_report_test.dart` (cleaning, with email, key and phone samples), `supabase/tests/beta/08_feedback_reports_test.sql` (anon can insert but not read, daily limit, back-dating), `test/feedback_test.dart` (error screen button, send success and failure, copy, admin screen).
+- Checks: analyze clean, 376 tests pass, beta SQL checks pass.
+- Added dependency: `package_info_plus`.

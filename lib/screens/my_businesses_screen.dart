@@ -5,6 +5,7 @@ import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
+import '../widgets/error_view.dart';
 
 /// The owner's own businesses, with status, rejection reason and band.
 /// A rejected business can be edited and sent again.
@@ -68,24 +69,11 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      friendlyLoadError('your businesses', snap.error),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _reload,
-                      child: const Text('Try again'),
-                    ),
-                  ],
-                ),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('your businesses', snap.error),
+              screen: 'My businesses',
+              error: snap.error,
+              onRetry: _reload,
             );
           }
           final items = snap.data?.$1 ?? const <Business>[];

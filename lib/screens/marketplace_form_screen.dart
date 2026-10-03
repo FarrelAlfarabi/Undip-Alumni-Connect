@@ -8,6 +8,7 @@ import '../data/marketplace_validation.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
+import '../widgets/error_view.dart';
 
 /// Create or edit a listing. Pops with the saved [MarketplaceListing], or
 /// null if the user backed out. Shows the "what happens next" message
@@ -51,6 +52,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
   PickedImage? _picked;
   bool _saving = false;
   String? _error;
+  Object? _lastError;
   String? _photoError;
 
   bool get _isEdit => widget.existing != null;
@@ -112,6 +114,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
     setState(() {
       _saving = true;
       _error = null;
+      _lastError = null;
     });
 
     final messenger = ScaffoldMessenger.of(context);
@@ -161,6 +164,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
       setState(() {
         _saving = false;
         _error = marketplaceErrorMessage(e);
+        _lastError = e;
       });
     }
   }
@@ -322,10 +326,18 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           ],
                           if (_error != null) ...[
                             const SizedBox(height: 16),
-                            Text(
-                              _error!,
-                              style: TextStyle(color: theme.colorScheme.error),
-                            ),
+                            _lastError == null
+                                ? Text(
+                                    _error!,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  )
+                                : InlineError(
+                                    message: _error!,
+                                    screen: 'Add a product',
+                                    error: _lastError,
+                                  ),
                           ],
                           const SizedBox(height: 24),
                           FilledButton(

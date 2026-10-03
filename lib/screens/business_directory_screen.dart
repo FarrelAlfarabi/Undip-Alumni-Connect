@@ -10,6 +10,7 @@ import '../widgets/filter_dropdown.dart';
 import '../widgets/safe_link_chip.dart';
 import 'business_form_screen.dart';
 import 'my_businesses_screen.dart';
+import '../widgets/error_view.dart';
 
 /// Client-side search by name or category, plus a category filter.
 List<Business> applyBusinessFilters(
@@ -103,24 +104,11 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    friendlyLoadError('the business directory', snap.error),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: _reload,
-                    child: const Text('Try again'),
-                  ),
-                ],
-              ),
-            ),
+          return ErrorView(
+            message: friendlyLoadError('the business directory', snap.error),
+            screen: 'Businesses',
+            error: snap.error,
+            onRetry: _reload,
           );
         }
         final all = BlockList.shared.filter(

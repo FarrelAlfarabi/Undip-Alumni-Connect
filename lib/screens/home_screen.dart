@@ -6,6 +6,7 @@ import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 
@@ -293,6 +294,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load announcements.",
                 actionLabel: 'Try again',
+                feedbackScreen: 'Home',
+                error: snap.error,
                 onAction: () => setState(() {
                   _announcements = _api.latestAnnouncements(kHomeBannerLimit);
                 }),
@@ -488,6 +491,8 @@ class _LatestBlock<T> extends StatelessWidget {
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load this right now.",
                 actionLabel: 'Try again',
+                feedbackScreen: 'Home',
+                error: snap.error,
                 onAction: onRetry,
               );
             }
@@ -586,12 +591,18 @@ class _MessageCard extends StatelessWidget {
     required this.text,
     this.actionLabel,
     this.onAction,
+    this.feedbackScreen,
+    this.error,
   });
 
   final IconData icon;
   final String text;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// When set, an error card: adds a "Send feedback" button for this screen.
+  final String? feedbackScreen;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
@@ -602,20 +613,43 @@ class _MessageCard extends StatelessWidget {
         color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+          Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-            ),
+              if (actionLabel != null && feedbackScreen == null)
+                TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
           ),
-          if (actionLabel != null)
-            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+          if (feedbackScreen != null)
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              children: [
+                if (actionLabel != null)
+                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                TextButton(
+                  key: const Key('send-feedback'),
+                  onPressed: () => showFeedbackSheet(
+                    context,
+                    error: error,
+                    screen: feedbackScreen!,
+                  ),
+                  child: const Text('Send feedback'),
+                ),
+              ],
+            ),
         ],
       ),
     );

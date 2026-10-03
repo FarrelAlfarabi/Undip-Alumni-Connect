@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../util/friendly_error.dart';
 import '../util/cv_upload.dart';
 import '../util/safe_url.dart';
+import '../widgets/error_view.dart';
 
 /// Job application form (added 17 Sep 2026, Master Plan §3.4 item 7).
 ///
@@ -49,6 +50,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
   PlatformFile? _cvFile;
   bool _submitting = false;
   String? _error;
+  Object? _lastError;
   _ApplyStep _step = _ApplyStep.details;
 
   bool get _requireCv => widget.job['require_cv'] == true;
@@ -71,6 +73,16 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
   /// already refused anything else.
   String _normalizedLink(String raw) => parseHttpUrl(raw)?.toString() ?? '';
 
+  /// The error line. A failed submit (a server error, not a form mistake)
+  /// also gets a "Send feedback" button.
+  Widget _errorWidget(ThemeData theme) => _lastError == null
+      ? Text(_error!, style: TextStyle(color: theme.colorScheme.error))
+      : InlineError(
+          message: _error!,
+          screen: 'Apply to a job',
+          error: _lastError,
+        );
+
   Future<void> _pickCv() async {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
@@ -89,6 +101,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     }
     setState(() {
       _error = null;
+      _lastError = null;
       _cvFile = file;
     });
   }
@@ -101,6 +114,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     }
     setState(() {
       _error = null;
+      _lastError = null;
       _step = _ApplyStep.review;
     });
   }
@@ -109,6 +123,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     setState(() {
       _submitting = true;
       _error = null;
+      _lastError = null;
     });
 
     try {
@@ -150,6 +165,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
       setState(() {
         _submitting = false;
         _error = friendlyError(e);
+        _lastError = e;
       });
     }
   }
@@ -309,7 +325,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           ),
           if (_error != null) ...[
             const SizedBox(height: 16),
-            Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            _errorWidget(theme),
           ],
           const SizedBox(height: 24),
           FilledButton(
@@ -380,7 +396,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 16),
-          Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+          _errorWidget(theme),
         ],
         const SizedBox(height: 24),
         FilledButton(

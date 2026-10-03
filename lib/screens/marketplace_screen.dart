@@ -14,6 +14,7 @@ import 'business_form_screen.dart';
 import 'marketplace_form_screen.dart';
 import 'marketplace_detail_screen.dart';
 import 'my_listings_screen.dart';
+import '../widgets/error_view.dart';
 
 enum MarketplaceSort {
   newest('Newest'),
@@ -195,8 +196,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       usage = {for (final x in u) x.businessId: x};
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Marketplace',
+          error: e,
+        );
       }
       return;
     } finally {
@@ -291,25 +296,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Could not load the marketplace. Check your '
-                            'connection and try again.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _reload,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorView(
+                    message:
+                        'Could not load the marketplace. Check your '
+                        'connection and try again.',
+                    screen: 'Marketplace',
+                    error: snapshot.error,
+                    onRetry: _reload,
+                    retryLabel: 'Retry',
                   );
                 }
 
