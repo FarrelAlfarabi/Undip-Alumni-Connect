@@ -3,11 +3,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:undip_alumni_connect/screens/verification_screen.dart';
+import 'package:undip_alumni_connect/screens/sign_in_screen.dart';
 import 'package:undip_alumni_connect/util/friendly_error.dart';
 import 'package:undip_alumni_connect/util/safe_url.dart';
 import 'package:undip_alumni_connect/widgets/safe_link_chip.dart';
 
+import '../support/fake_auth.dart';
 import '../support/fake_lock.dart';
 
 /// Fixes for SA-13 (raw exception text) and SA-14 (unchecked links).
@@ -43,25 +44,34 @@ void main() {
       expect(msg.contains('secret-detail'), isFalse);
     });
 
-    testWidgets('verification never shows the exception text', (tester) async {
+    testWidgets('sign-in never shows the exception text', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: VerificationScreen(
+          home: SignInScreen(
             lock: makeLock(),
-            verifyEmail: (_) async => throw Exception(
-              'ClientException: https://abcdefgh.supabase.co failed (JWT expired)',
+            gateway: FakeAuth(
+              signInError: Exception(
+                'ClientException: https://abcdefgh.supabase.co failed (JWT expired)',
+              ),
             ),
           ),
         ),
       );
-      await tester.enterText(find.byType(TextFormField), 'someone@example.com');
-      await tester.tap(find.text('Verify'));
+      await tester.enterText(
+        find.byKey(const Key('auth-email')),
+        'someone@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('auth-password')),
+        'whatever1',
+      );
+      await tester.tap(find.byKey(const Key('auth-submit')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.textContaining('supabase.co'), findsNothing);
       expect(find.textContaining('JWT'), findsNothing);
       expect(find.textContaining('Exception'), findsNothing);
-      expect(find.textContaining("Couldn't reach the server"), findsWidgets);
+      expect(find.byKey(const Key('auth-error')), findsOneWidget);
     });
 
     test('no screen interpolates a raw error into visible text', () {

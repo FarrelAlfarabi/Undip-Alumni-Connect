@@ -8,12 +8,27 @@ import 'package:undip_alumni_connect/lock/lock_screen.dart';
 import 'package:undip_alumni_connect/lock/lock_service.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:undip_alumni_connect/lock/pin_setup_screen.dart';
-import 'package:undip_alumni_connect/screens/verification_screen.dart';
+import 'package:undip_alumni_connect/screens/sign_in_screen.dart';
 
+import '../support/fake_auth.dart';
 import '../support/fake_lock.dart';
 
 Widget appHome(Map<String, dynamic> profile) =>
     Scaffold(body: Text('APP for ${profile['name']}'));
+
+/// Types the email and password on the sign-in screen and taps Sign in.
+Future<void> signInWith(
+  WidgetTester tester, {
+  String email = testEmail,
+  String password = 'correct-horse',
+}) async {
+  await tester.enterText(find.byKey(const Key('auth-email')), email);
+  await tester.enterText(find.byKey(const Key('auth-password')), password);
+  await tester.tap(find.byKey(const Key('auth-submit')));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump(const Duration(milliseconds: 400));
+}
 
 Future<void> pumpEntry(
   WidgetTester tester,
@@ -288,7 +303,7 @@ void main() {
   });
 
   group('skipped PIN', () {
-    testWidgets('lock screen offers Continue that re-runs verification', (
+    testWidgets('lock screen offers Continue that goes to sign-in', (
       tester,
     ) async {
       final lock = await makeRememberedLock(withPin: false);
@@ -298,7 +313,7 @@ void main() {
       await tester.tap(find.byKey(const Key('lock-continue')));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('Verify Alumni Status'), findsOneWidget);
+      expect(find.byKey(const Key('auth-title')), findsOneWidget);
     });
   });
 
@@ -415,18 +430,14 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
         MaterialApp(
-          home: VerificationScreen(
+          home: SignInScreen(
+            gateway: FakeAuth(),
             lock: lock,
-            verifyEmail: (email) async => testProfile(),
             homeBuilder: appHome,
           ),
         ),
       );
-      await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(const Duration(milliseconds: 400));
+      await signInWith(tester);
       expect(find.byKey(const Key('pin-setup')), findsOneWidget);
       expect((await lock.load())!.profileId, 'p1');
       expect(store.data.values.join().contains(testEmail), isFalse);
@@ -448,18 +459,14 @@ void main() {
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
         MaterialApp(
-          home: VerificationScreen(
+          home: SignInScreen(
+            gateway: FakeAuth(profile: profile),
             lock: lock,
-            verifyEmail: (email) async => profile,
             homeBuilder: appHome,
           ),
         ),
       );
-      await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(const Duration(milliseconds: 400));
+      await signInWith(tester, email: profile['email'] as String);
     }
 
     testWidgets(
@@ -508,18 +515,14 @@ void main() {
       final lock = makeLock(store: store, enabled: false);
       await tester.pumpWidget(
         MaterialApp(
-          home: VerificationScreen(
+          home: SignInScreen(
+            gateway: FakeAuth(),
             lock: lock,
-            verifyEmail: (email) async => testProfile(),
             homeBuilder: appHome,
           ),
         ),
       );
-      await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(const Duration(milliseconds: 400));
+      await signInWith(tester);
       expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
       expect(store.data, isEmpty);
     });

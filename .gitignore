@@ -55,3 +55,6 @@ app.*.map.json
 
 # Claude Code — personal local settings (permission overrides etc.), not shared
 .claude/settings.local.json
+
+scripts/ui_test/node_modules/
+scripts/ui_test/shots/

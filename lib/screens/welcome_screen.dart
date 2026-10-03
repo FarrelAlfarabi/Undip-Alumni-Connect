@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
-import 'verification_screen.dart';
+import 'sign_in_screen.dart';
 
 /// The app's actual entry screen — a proper branded landing moment in
 /// front of the verification form, instead of dropping straight into a
@@ -92,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const VerificationScreen(),
+                            builder: (_) => const SignInScreen(),
                           ),
                         );
                       },

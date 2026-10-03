@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../lock/session.dart';
-import 'verification_screen.dart';
+import 'sign_in_screen.dart';
 
 /// Lets the verified alumnus update their employment info. Identity fields
 /// (name, NIM, faculty, major, graduation year) came from verification and
@@ -125,7 +125,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   void _signOut() {
-    signOutTo(context, const VerificationScreen());
+    signOutTo(context, const SignInScreen());
   }
 
   @override

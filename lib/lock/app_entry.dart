@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../screens/verification_screen.dart';
+import '../screens/sign_in_screen.dart';
 import '../screens/welcome_screen.dart';
 import 'lock_screen.dart';
 import 'lock_service.dart';
@@ -78,6 +78,7 @@ class _AppEntryState extends State<AppEntry> {
   }
 
   Future<void> _forget([String? notice]) async {
+    await endAuthSession();
     await _lock.clear();
     if (mounted) _showWelcome(notice);
   }
@@ -104,7 +105,7 @@ class _AppEntryState extends State<AppEntry> {
           onLockedOut: () => _forget(kTooManyPinsNotice),
           onContinue: () async {
             // No PIN was set: re-run verification.
-            await signOutTo(context, const VerificationScreen(), lock: _lock);
+            await signOutTo(context, const SignInScreen(), lock: _lock);
           },
         );
       },

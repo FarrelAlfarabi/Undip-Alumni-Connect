@@ -5,7 +5,7 @@ import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'subscribe_screen.dart';
-import 'verification_screen.dart';
+import 'sign_in_screen.dart';
 import '../util/friendly_error.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
@@ -143,7 +143,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 // a second demo account starts from a clean state. Also
                 // forgets this device's remembered person and PIN (local
                 // only).
-                signOutTo(context, const VerificationScreen());
+                signOutTo(context, const SignInScreen());
               },
             ),
         ],

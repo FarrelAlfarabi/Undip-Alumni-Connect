@@ -1,0 +1,9 @@
+{
+  "name": "ui-test",
+  "private": true,
+  "type": "module",
+  "description": "Fake backend + browser walk-through for the Flutter web build. See README.md.",
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}

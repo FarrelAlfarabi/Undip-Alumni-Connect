@@ -41,6 +41,7 @@ const testPin = '482913';
 
 Map<String, dynamic> testProfile({String status = 'verified'}) => {
   'id': 'p1',
+  'nim': 'NIM-0001',
   'name': 'Ahmad Ramadhan',
   'email': testEmail,
   'verification_status': status,

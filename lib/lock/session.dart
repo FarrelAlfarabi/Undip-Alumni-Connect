@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../auth/auth_gateway.dart';
 import '../screens/home_shell.dart';
 import 'lock_service.dart';
 
@@ -22,6 +23,16 @@ void enterApp(
       .pushReplacement(MaterialPageRoute(builder: (_) => homeBuilder(profile)));
 }
 
+/// Ends the Supabase login session, if there is one. Never throws: signing
+/// out locally must work offline and in tests with no Supabase.
+Future<void> endAuthSession([AuthGateway? auth]) async {
+  try {
+    await (auth ?? const SupabaseAuthGateway()).signOut();
+  } catch (_) {
+    // Nothing to sign out of.
+  }
+}
+
 /// Sign out on this device: forget who is signed in but keep their PIN (local
 /// only, nothing on the server changes), then show [destination] with the
 /// whole stack torn down. Signing in again as the same person asks for that
@@ -30,8 +41,10 @@ Future<void> signOutTo(
   BuildContext context,
   Widget destination, {
   LockService? lock,
+  AuthGateway? auth,
 }) async {
   final navigator = Navigator.of(context);
+  await endAuthSession(auth);
   try {
     await (lock ?? LockService.shared).signOut();
   } catch (_) {
