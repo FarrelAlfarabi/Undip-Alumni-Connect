@@ -128,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _QuickActions(
                   onJobs: () => _push(widget.pages.jobs(_user)),
                   onMarketplace: () => _push(widget.pages.marketplace(_user)),
+                  onBusinesses: () => _push(widget.pages.businesses(_user)),
                   onDirectory: widget.onOpenDirectory,
                   onNearby: () => _push(widget.pages.nearby(_user)),
                 ),
@@ -245,12 +246,14 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onJobs,
     required this.onMarketplace,
+    required this.onBusinesses,
     required this.onDirectory,
     required this.onNearby,
   });
 
   final VoidCallback onJobs;
   final VoidCallback onMarketplace;
+  final VoidCallback onBusinesses;
   final VoidCallback onDirectory;
   final VoidCallback onNearby;
 
@@ -280,6 +283,12 @@ class _QuickActions extends StatelessWidget {
           icon: Icons.storefront_outlined,
           label: 'Marketplace',
           onTap: onMarketplace,
+        ),
+        _Tile(
+          key: const Key('tile-businesses'),
+          icon: Icons.business_center_outlined,
+          label: 'Businesses',
+          onTap: onBusinesses,
         ),
         _Tile(
           key: const Key('tile-directory'),

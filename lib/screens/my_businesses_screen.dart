@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+
+import '../data/business_repository.dart';
+import '../models/business.dart';
+import '../util/friendly_error.dart';
+import 'business_form_screen.dart';
+
+/// The owner's own businesses, with status, rejection reason and band.
+/// A rejected business can be edited and sent again.
+class MyBusinessesScreen extends StatefulWidget {
+  const MyBusinessesScreen({super.key, required this.ownerId, this.repository});
+
+  final String ownerId;
+  final BusinessRepository? repository;
+
+  @override
+  State<MyBusinessesScreen> createState() => _MyBusinessesScreenState();
+}
+
+class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
+  late final BusinessRepository _repo =
+      widget.repository ?? BusinessRepository();
+  late Future<List<Business>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _repo.mine(widget.ownerId);
+  }
+
+  void _reload() => setState(() => _future = _repo.mine(widget.ownerId));
+
+  Future<void> _openForm([Business? existing]) async {
+    await Navigator.of(context).push<Business>(
+      MaterialPageRoute(
+        builder: (_) => BusinessFormScreen(
+          ownerId: widget.ownerId,
+          repository: _repo,
+          existing: existing,
+        ),
+      ),
+    );
+    if (mounted) _reload();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('My businesses')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openForm(),
+        icon: const Icon(Icons.add_business_outlined),
+        label: const Text('Register a business'),
+      ),
+      body: FutureBuilder<List<Business>>(
+        future: _future,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snap.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      friendlyLoadError('your businesses', snap.error),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _reload,
+                      child: const Text('Try again'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          final items = snap.data ?? const [];
+          if (items.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'You have not registered a business yet. Register one so '
+                  'other alumni can find it.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, i) => BusinessOwnerCard(
+              business: items[i],
+              onEdit: () => _openForm(items[i]),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// One business as its owner sees it.
+class BusinessOwnerCard extends StatelessWidget {
+  const BusinessOwnerCard({super.key, required this.business, this.onEdit});
+
+  final Business business;
+  final VoidCallback? onEdit;
+
+  bool get _canEdit =>
+      business.status == BusinessStatus.pending ||
+      business.status == BusinessStatus.rejected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final b = business;
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    b.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Chip(
+                  key: Key('status-${b.id}'),
+                  label: Text(b.status.label),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+            Text(
+              b.category,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              b.approvedBand != null
+                  ? 'Approved band: ${b.approvedBand!.label}'
+                  : 'Band you chose: ${b.requestedBand?.label ?? '-'} '
+                        '(an admin sets the approved band)',
+              style: theme.textTheme.bodyMedium,
+            ),
+            if (b.status == BusinessStatus.rejected) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Reason: ${b.rejectionReason ?? 'not given'}',
+                key: Key('reason-${b.id}'),
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+            if (b.status == BusinessStatus.suspended) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'This business is suspended. Please contact an admin.',
+              ),
+            ],
+            if (_canEdit && onEdit != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton(
+                  key: Key('edit-${b.id}'),
+                  onPressed: onEdit,
+                  child: Text(
+                    b.status == BusinessStatus.rejected
+                        ? 'Edit and apply again'
+                        : 'Edit',
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -34,3 +34,11 @@ If a session ends early, continue from the last entry here.
 - `NearbyAlumniScreen` got an optional `fetchAlumni` so it can be tested without Supabase.
 - Tests: `test/chat_switch_test.dart` (new), `home_shell_test.dart` updated for both switch states.
 - Checks: analyze clean, 251 tests pass.
+
+## Stage 5: business directory
+- Database: `20261003100000_business_directory.sql` (+ `rollback_business_directory.sql`). Table `businesses` (owner, name, description, category, social_link, website_link, requested_band, approved_band, status, rejection_reason, unlimited_until, timestamps). The app has NO direct table access. It uses functions: `business_register`, `business_update`, `business_my`, `business_directory`. A column lock trigger is a second guard (status, approved_band, unlimited_until, rejection_reason, requested_band, owner_id cannot be set by anon). Links are cleaned (lower case, no scheme, no www, no query, no trailing slash) and a link already used by another business, in either link column, is refused.
+- App: registration form (four bands with Rp amounts, at least one link, band chosen once), My businesses (status, rejection reason, edit and apply again), searchable Businesses directory (name, category, category chips) for verified alumni, business detail with links. Home: a real "Businesses" tile replaces the Business directory preview.
+- Tests first: `supabase/tests/beta/02_business_directory_test.sql` (anon role: no direct select/insert/update, self-approval impossible, link rules, owner rules, directory visibility, trigger guard with a deliberately added grant and policy) and `test/business_directory_test.dart`.
+- Checks: analyze clean, 270 tests pass, beta SQL checks pass.
+- Decisions: owner may edit only while pending or rejected (approved and suspended are locked, contact admin); at least one link is required; categories are the same five as the marketplace.
+- Could not verify: the live database; the directory on a phone.

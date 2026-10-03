@@ -5,6 +5,7 @@ import '../models/marketplace_listing.dart';
 import 'alumni_screen.dart';
 import 'announcement_detail_screen.dart';
 import 'announcements_screen.dart';
+import 'business_directory_screen.dart';
 import 'job_board_screen.dart';
 import 'job_detail_screen.dart';
 import 'marketplace_detail_screen.dart';
@@ -26,6 +27,7 @@ class HomePages {
     this.chat = _chat,
     this.jobs = _jobs,
     this.marketplace = _marketplace,
+    this.businesses = _businesses,
     this.nearby = _nearby,
     this.announcements = _announcements,
     this.jobDetail = _jobDetail,
@@ -42,6 +44,7 @@ class HomePages {
   final UserPageBuilder chat;
   final UserPageBuilder jobs;
   final UserPageBuilder marketplace;
+  final UserPageBuilder businesses;
   final UserPageBuilder nearby;
   final Widget Function() announcements;
   final Widget Function(
@@ -73,6 +76,8 @@ class HomePages {
       JobBoardScreen(currentUser: user, showBack: true);
   static Widget _marketplace(ValueNotifier<Map<String, dynamic>> user) =>
       MarketplaceScreen(currentUser: user, showBack: true);
+  static Widget _businesses(ValueNotifier<Map<String, dynamic>> user) =>
+      BusinessDirectoryScreen(currentUser: user);
   static Widget _nearby(ValueNotifier<Map<String, dynamic>> user) =>
       AlumniScreen(currentUser: user, initialTab: 1, showBack: true);
   static Widget _announcements() => const AnnouncementsScreen(showBack: true);

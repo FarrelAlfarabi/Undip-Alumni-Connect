@@ -112,6 +112,10 @@ HomePages fakePages({
       note(u);
       return const MarkerPage('Marketplace');
     },
+    businesses: (u) {
+      note(u);
+      return const MarkerPage('Businesses');
+    },
     nearby: (u) {
       note(u);
       return const MarkerPage('Nearby');

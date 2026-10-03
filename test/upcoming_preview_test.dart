@@ -29,13 +29,9 @@ Future<void> pumpHome(WidgetTester tester, {double width = 390}) async {
 }
 
 void main() {
-  const tiles = {
-    'preview-events': 'Events',
-    'preview-mentoring': 'Mentoring',
-    'preview-business': 'Business directory',
-  };
+  const tiles = {'preview-events': 'Events', 'preview-mentoring': 'Mentoring'};
 
-  testWidgets('three tiles, each with a Preview badge', (tester) async {
+  testWidgets('two tiles, each with a Preview badge', (tester) async {
     await pumpHome(tester);
     for (final e in tiles.entries) {
       final tile = find.byKey(Key(e.key));
