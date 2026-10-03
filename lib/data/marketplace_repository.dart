@@ -7,7 +7,7 @@ import '../models/marketplace_listing.dart';
 /// Error codes raised by the marketplace SQL functions (see
 /// supabase/migrations/20260930090200_marketplace_functions.sql).
 enum MarketplaceErrorCode {
-  subscriberRequired,
+  postingClosed,
   notFound,
   notOwner,
   notAdmin,
@@ -234,7 +234,7 @@ class MarketplaceRepository {
   }
 
   /// Creates a listing in `pending`. Throws
-  /// [MarketplaceErrorCode.subscriberRequired] for non-subscribers.
+  /// [MarketplaceErrorCode.postingClosed] while posting is closed.
   Future<MarketplaceListing> create(
     String sellerId,
     MarketplaceListingInput input,
@@ -343,7 +343,7 @@ class MarketplaceRepository {
       return MarketplaceException(MarketplaceErrorCode.duplicateReport, msg);
     }
     final code = switch (msg) {
-      'subscriber_required' => MarketplaceErrorCode.subscriberRequired,
+      'posting_closed' => MarketplaceErrorCode.postingClosed,
       'not_found' => MarketplaceErrorCode.notFound,
       'not_owner' => MarketplaceErrorCode.notOwner,
       'not_admin' => MarketplaceErrorCode.notAdmin,

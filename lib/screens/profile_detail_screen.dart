@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
-import 'subscribe_screen.dart';
 import 'verification_screen.dart';
 import '../util/friendly_error.dart';
 
@@ -15,16 +14,11 @@ import '../util/friendly_error.dart';
 /// [showEditButton] controls whether this is "my profile" (verification
 /// flow — edit button shown; directory/jobs/messages/news are reached via
 /// HomeShell's bottom nav, not from here) or someone else's profile viewed
-/// from the directory (read-only, email hidden, subscription-gated
-/// "Message" button).
+/// from the directory (read-only, email hidden, "Message" button).
 ///
 /// [currentUser] is the logged-in user's profile as a shared
-/// [ValueNotifier], not a plain map — subscription_status is checked and
-/// mutated from several independent screens (job contact gate, messaging
-/// gate), and a plain map snapshot went stale across screens (subscribing
-/// via one job's detail view didn't unlock another job's contact info,
-/// since each screen held its own copy). Passing the same notifier
-/// reference everywhere means every screen reads the current value.
+/// [ValueNotifier], not a plain map, so every screen reads the current value
+/// after an edit made on another screen.
 class ProfileDetailScreen extends StatefulWidget {
   const ProfileDetailScreen({
     super.key,
@@ -67,16 +61,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   Future<void> _messageThisAlumnus() async {
-    var viewer = widget.currentUser.value;
-
-    if (viewer['subscription_status'] != 'subscribed') {
-      final updated = await Navigator.of(context).push<Map<String, dynamic>>(
-        MaterialPageRoute(builder: (_) => SubscribeScreen(profile: viewer)),
-      );
-      if (updated == null) return;
-      widget.currentUser.value = updated;
-      viewer = updated;
-    }
+    final viewer = widget.currentUser.value;
 
     setState(() => _messaging = true);
     try {
@@ -220,35 +205,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               ),
                             ],
                           ),
-                          if (widget.showEditButton) ...[
-                            const SizedBox(height: 12),
-                            ValueListenableBuilder<Map<String, dynamic>>(
-                              valueListenable: widget.currentUser,
-                              builder: (context, user, _) {
-                                if (user['subscription_status'] !=
-                                    'subscribed') {
-                                  return const SizedBox.shrink();
-                                }
-                                return Chip(
-                                  avatar: Icon(
-                                    Icons.workspace_premium_outlined,
-                                    size: 16,
-                                    color:
-                                        theme.colorScheme.onSecondaryContainer,
-                                  ),
-                                  label: const Text('Subscribed'),
-                                  backgroundColor:
-                                      theme.colorScheme.secondaryContainer,
-                                  labelStyle: TextStyle(
-                                    color:
-                                        theme.colorScheme.onSecondaryContainer,
-                                  ),
-                                  side: BorderSide.none,
-                                  visualDensity: VisualDensity.compact,
-                                );
-                              },
-                            ),
-                          ],
                           const Divider(height: 32),
                           _section(theme, 'Academic'),
                           _field(theme, 'NIM', _profile['nim']),
@@ -286,27 +242,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
-                    ValueListenableBuilder<Map<String, dynamic>>(
-                      valueListenable: widget.currentUser,
-                      builder: (context, user, _) {
-                        return FilledButton.icon(
-                          onPressed: _messaging ? null : _messageThisAlumnus,
-                          icon: _messaging
-                              ? const SizedBox(
-                                  height: 18,
-                                  width: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Icon(Icons.chat_bubble_outline),
-                          label: Text(
-                            user['subscription_status'] == 'subscribed'
-                                ? 'Message'
-                                : 'Subscribe to Message',
-                          ),
-                        );
-                      },
+                    FilledButton.icon(
+                      onPressed: _messaging ? null : _messageThisAlumnus,
+                      icon: _messaging
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : const Icon(Icons.chat_bubble_outline),
+                      label: const Text('Message'),
                     ),
                   ],
                 ],

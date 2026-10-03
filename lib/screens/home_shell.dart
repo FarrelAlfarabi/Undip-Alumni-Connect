@@ -12,8 +12,8 @@ import 'home_screen.dart';
 ///
 /// Owns the single [ValueNotifier] that represents "the logged-in user"
 /// for the whole session and passes the same reference to every tab (see
-/// profile_detail_screen.dart's doc comment) — subscribing from any one
-/// screen updates every other screen's paywall/gate consistently.
+/// profile_detail_screen.dart's doc comment), so an edit made on one screen
+/// shows up on every other screen.
 class HomeShell extends StatefulWidget {
   const HomeShell({
     super.key,

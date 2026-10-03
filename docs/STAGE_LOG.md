@@ -19,3 +19,11 @@ If a session ends early, continue from the last entry here.
 - Checks: analyze clean, 242 tests pass.
 - Could not verify: real secure storage on a phone.
 - Old installs (PIN without owner key) keep the PIN for the remembered person, so no one is forced to set it again.
+
+## Stage 3: remove subscription
+- App: deleted `subscribe_screen.dart` and `marketplace_gate.dart`, removed the gates in job board, profile detail, marketplace. Jobs can be posted by any verified alumnus. "Post a listing" now shows a plain "Posting is not open yet" message (until Stage 6).
+- Database: `20261003090000_remove_subscription_gate.sql` (+ `rollback_remove_subscription_gate.sql`). Job posts now need a VERIFIED poster (replaces the subscriber rule). `marketplace_create_listing` raises `posting_closed`. `demo_subscribe` is off (flag false, no execute right). Nothing dropped.
+- New local SQL harness: `supabase/tests/run_beta_local.sh` (+ `supabase/tests/beta/`). It applies every beta migration twice, runs the tests as anon, runs rollbacks, re-applies.
+- Checks: analyze clean, 244 tests pass, beta SQL checks pass.
+- Could not verify: the live database. The migration must be applied together with this app build.
+- Decision: a verified-poster check replaces the subscriber check on job_posts (kept some protection against anonymous inserts; reason: the old rule was the only DB guard on that table).

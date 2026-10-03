@@ -4,8 +4,8 @@ import 'marketplace_repository.dart';
 String marketplaceErrorMessage(Object error) {
   if (error is MarketplaceException) {
     switch (error.code) {
-      case MarketplaceErrorCode.subscriberRequired:
-        return 'Only subscribers can post listings.';
+      case MarketplaceErrorCode.postingClosed:
+        return kPostingClosedMessage;
       case MarketplaceErrorCode.notOwner:
         return 'You can only change your own listings.';
       case MarketplaceErrorCode.notFound:
@@ -24,6 +24,12 @@ String marketplaceErrorMessage(Object error) {
   }
   return 'Something went wrong. Please try again.';
 }
+
+/// Shown while product posting is closed (until it is tied to approved
+/// businesses).
+const kPostingClosedMessage =
+    'Adding products is not open yet. It will open for owners of approved '
+    'businesses.';
 
 const kSubmittedMessage =
     'Listing submitted. It will appear in the marketplace once an admin '

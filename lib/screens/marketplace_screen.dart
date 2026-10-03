@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../data/marketplace_format.dart';
 import '../data/marketplace_image_picker.dart';
+import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_admin_screen.dart';
 import 'marketplace_detail_screen.dart';
-import 'marketplace_form_screen.dart';
-import 'marketplace_gate.dart';
 import 'my_listings_screen.dart';
 
 enum MarketplaceSort {
@@ -47,7 +46,7 @@ List<MarketplaceListing> applyMarketplaceFilters(
 }
 
 /// Alumni-to-alumni marketplace (demo): browse approved listings. Free for
-/// everyone; posting is gated to subscribers in a later screen.
+/// everyone; posting is closed for now (see [_post]).
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({
     super.key,
@@ -118,20 +117,21 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   String get _myId => widget.currentUser.value['id'] as String;
 
+  // Product posting is closed until it is tied to approved businesses.
   Future<void> _post() async {
-    if (!await ensureSubscriber(context, widget.currentUser)) return;
-    if (!mounted) return;
-    await Navigator.of(context).push<MarketplaceListing>(
-      MaterialPageRoute(
-        builder: (_) => MarketplaceFormScreen(
-          sellerId: _myId,
-          repository: _repo,
-          defaultCity: widget.currentUser.value['city'] as String?,
-          pickImage: widget.pickImage,
-        ),
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Posting is not open yet'),
+        content: const Text(kPostingClosedMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
-    // A new listing is pending, so browse does not change until approval.
   }
 
   Future<void> _openAdmin() async {

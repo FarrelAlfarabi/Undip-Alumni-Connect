@@ -20,9 +20,7 @@ import '../util/safe_url.dart';
 /// Details step won't let the applicant continue to Review until those
 /// are filled in.
 ///
-/// Gated behind subscription, same mechanism as messaging and contacting
-/// a job poster (see job_detail_screen.dart) — applying is at least as
-/// much "contacting the poster" as the existing paid action.
+/// Free for every verified alumnus.
 class ApplyJobScreen extends StatefulWidget {
   const ApplyJobScreen({super.key, required this.job, required this.applicant});
 

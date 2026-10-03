@@ -5,8 +5,7 @@ import '../util/friendly_error.dart';
 
 /// Basic messaging UI (Day 6, demo scope). One conversation, no realtime —
 /// the thread refetches after you send, and on the refresh button for
-/// seeing the other side's replies. Messaging is only reachable once
-/// subscribed (gated upstream in profile_detail_screen.dart).
+/// seeing the other side's replies. Reached from profile_detail_screen.dart.
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,

@@ -145,7 +145,7 @@ void main() {
 
     test('maps database error codes to MarketplaceErrorCode', () async {
       final cases = {
-        'subscriber_required': MarketplaceErrorCode.subscriberRequired,
+        'posting_closed': MarketplaceErrorCode.postingClosed,
         'not_owner': MarketplaceErrorCode.notOwner,
         'not_found': MarketplaceErrorCode.notFound,
         'invalid_state': MarketplaceErrorCode.invalidState,

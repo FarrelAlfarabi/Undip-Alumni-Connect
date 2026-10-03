@@ -20,8 +20,7 @@ class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({super.key, required this.currentUser});
 
   /// The verified alumnus browsing the directory, as a shared notifier —
-  /// threaded through (same reference, not a copy) to ProfileDetailScreen
-  /// so a subscribe action anywhere stays visible everywhere.
+  /// threaded through (same reference, not a copy) to ProfileDetailScreen.
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override

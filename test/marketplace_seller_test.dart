@@ -267,17 +267,17 @@ void main() {
       await openForm(tester);
       await fillValid(tester);
       api.throwOnCall = MarketplaceException(
-        MarketplaceErrorCode.subscriberRequired,
-        'subscriber_required',
+        MarketplaceErrorCode.postingClosed,
+        'posting_closed',
       );
       await tester.tap(find.text('Submit for approval'));
       await tester.pumpAndSettle();
-      expect(find.text('Only subscribers can post listings.'), findsOneWidget);
+      expect(find.text(kPostingClosedMessage), findsOneWidget);
       expect(find.text('Submit for approval'), findsOneWidget);
     });
   });
 
-  group('subscriber gate', () {
+  group('posting is closed (no subscription, products need a business)', () {
     Future<void> pumpMarket(
       WidgetTester tester,
       ValueNotifier<Map<String, dynamic>> u,
@@ -297,39 +297,31 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('free user gets an explanation, not the form', (tester) async {
-      await pumpMarket(tester, user('free'));
-      await tester.tap(find.text('Post a listing'));
-      await tester.pumpAndSettle();
-      expect(find.text('Subscribers only'), findsOneWidget);
-      expect(find.textContaining('Browsing stays free'), findsOneWidget);
-      expect(find.text('Submit for approval'), findsNothing);
-
-      await tester.tap(find.text('Not now'));
-      await tester.pumpAndSettle();
-      expect(find.text('Subscribers only'), findsNothing);
-      expect(find.text('Submit for approval'), findsNothing);
-    });
-
-    testWidgets(
-      'free user who accepts lands on the existing Subscribe screen',
-      (tester) async {
-        await pumpMarket(tester, user('free'));
+    for (final status in ['free', 'subscribed']) {
+      testWidgets('$status user gets a plain closed message, no form', (
+        tester,
+      ) async {
+        await pumpMarket(tester, user(status));
         await tester.tap(find.text('Post a listing'));
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(FilledButton, 'Subscribe'));
-        await tester.pumpAndSettle();
-        expect(find.text('Subscribe Now (Demo)'), findsOneWidget);
-        expect(find.text('Rp 99.000/year'), findsOneWidget);
-      },
-    );
+        expect(find.text('Posting is not open yet'), findsOneWidget);
+        expect(find.text(kPostingClosedMessage), findsOneWidget);
+        expect(find.text('Submit for approval'), findsNothing);
+        expect(find.textContaining('Subscribe'), findsNothing);
+        expect(find.textContaining('99.000'), findsNothing);
 
-    testWidgets('subscriber goes straight to the form', (tester) async {
-      await pumpMarket(tester, user('subscribed'));
-      await tester.tap(find.text('Post a listing'));
-      await tester.pumpAndSettle();
-      expect(find.text('Subscribers only'), findsNothing);
-      expect(find.text('Submit for approval'), findsOneWidget);
+        await tester.tap(find.text('OK'));
+        await tester.pumpAndSettle();
+        expect(find.text('Posting is not open yet'), findsNothing);
+      });
+    }
+
+    testWidgets('browsing still works', (tester) async {
+      await pumpMarket(tester, user('free'));
+      expect(
+        find.text(listingMap(seller: sellerMap)['title'] as String),
+        findsOneWidget,
+      );
     });
   });
 

@@ -4,9 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'apply_job_screen.dart';
 import 'job_applicants_screen.dart';
 
-/// Job detail view. Job seekers see the full posting, the poster's contact
-/// info and the Apply button for free; the subscription requirement sits on
-/// posting a job instead (see job_board_screen.dart).
+/// Job detail view. Verified alumni see the full posting, the poster's
+/// contact info and the Apply button, and can post jobs, all for free.
 ///
 /// Also the entry point for the job application feature (added 17 Sep
 /// 2026): other alumni can apply (see apply_job_screen.dart); the poster sees an
@@ -16,8 +15,7 @@ import 'job_applicants_screen.dart';
 /// poster opens the app.
 ///
 /// [currentUser] is a shared notifier (see profile_detail_screen.dart's
-/// doc comment) so subscribing here, or from messaging, unlocks contact
-/// info on every job — not just the one open when the user subscribed.
+/// doc comment).
 class JobDetailScreen extends StatefulWidget {
   const JobDetailScreen({
     super.key,

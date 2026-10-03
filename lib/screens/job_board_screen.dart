@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
-import 'marketplace_gate.dart';
 import 'notifications_screen.dart';
 import 'post_job_screen.dart';
 import '../util/friendly_error.dart';
@@ -26,9 +25,7 @@ class JobBoardScreen extends StatefulWidget {
   final bool showBack;
 
   /// The verified alumnus currently using the app, as a shared notifier —
-  /// needed so a posted job records who posted it, and so the contact
-  /// paywall on JobDetailScreen reflects a subscribe action taken via any
-  /// other job or via messaging.
+  /// needed so a posted job records who posted it.
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
@@ -126,15 +123,6 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   }
 
   Future<void> _postJob() async {
-    if (!await ensureSubscriber(
-      context,
-      widget.currentUser,
-      reason:
-          'Posting a job is for subscribers. Browsing jobs and applying '
-          'stay free for everyone.',
-    )) {
-      return;
-    }
     if (!mounted) return;
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
