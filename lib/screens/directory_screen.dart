@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/blocked_filter.dart';
+import '../widgets/error_view.dart';
+import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
-import '../util/friendly_error.dart';
 
 /// Searchable alumni directory: filter by major, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
@@ -17,11 +19,17 @@ import '../util/friendly_error.dart';
 /// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) —
 /// see alumni_screen.dart.
 class DirectoryScreen extends StatefulWidget {
-  const DirectoryScreen({super.key, required this.currentUser});
+  const DirectoryScreen({
+    super.key,
+    required this.currentUser,
+    this.fetchAlumni,
+  });
+
+  /// Injectable for tests; defaults to the Supabase query.
+  final Future<List<Map<String, dynamic>>> Function()? fetchAlumni;
 
   /// The verified alumnus browsing the directory, as a shared notifier —
-  /// threaded through (same reference, not a copy) to ProfileDetailScreen
-  /// so a subscribe action anywhere stays visible everywhere.
+  /// threaded through (same reference, not a copy) to ProfileDetailScreen.
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
@@ -50,12 +58,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
+    if (widget.fetchAlumni != null) {
+      return withoutBlockedProfiles(await widget.fetchAlumni!());
+    }
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
         .select()
         .eq('verification_status', 'verified')
         .order('name', ascending: true);
-    return List<Map<String, dynamic>>.from(rows as List);
+    return withoutBlockedProfiles(
+      List<Map<String, dynamic>>.from(rows as List),
+    );
   }
 
   List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {
@@ -102,11 +115,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(friendlyLoadError('the directory', snapshot.error)),
-            ),
+          return ErrorView(
+            message: friendlyLoadError('the directory', snapshot.error),
+            screen: 'Directory',
+            error: snapshot.error,
+            onRetry: () => setState(() {
+              _future = _fetchAlumni();
+            }),
           );
         }
 

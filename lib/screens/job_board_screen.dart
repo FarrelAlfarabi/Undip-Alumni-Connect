@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/block_list.dart';
+import '../widgets/error_view.dart';
+import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
-import 'marketplace_gate.dart';
-import 'notifications_screen.dart';
 import 'post_job_screen.dart';
-import '../util/friendly_error.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
 /// browsing for everyone — the contact button / visual paywall lives on
@@ -20,15 +20,17 @@ class JobBoardScreen extends StatefulWidget {
     super.key,
     required this.currentUser,
     this.showBack = false,
+    this.fetchJobs,
   });
+
+  /// Injectable for tests; default to the Supabase queries.
+  final Future<List<Map<String, dynamic>>> Function()? fetchJobs;
 
   /// True when pushed from the Home hub (shows a back arrow).
   final bool showBack;
 
   /// The verified alumnus currently using the app, as a shared notifier —
-  /// needed so a posted job records who posted it, and so the contact
-  /// paywall on JobDetailScreen reflects a subscribe action taken via any
-  /// other job or via messaging.
+  /// needed so a posted job records who posted it.
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   @override
@@ -41,39 +43,12 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   final _searchController = TextEditingController();
   String _industry = kAllFilter;
   String _company = kAllFilter;
-  Future<int>? _unreadNotificationsFuture;
 
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
-    _unreadNotificationsFuture = _fetchUnreadNotificationCount();
     _searchController.addListener(() => setState(() {}));
-  }
-
-  Future<int> _fetchUnreadNotificationCount() async {
-    final rows = await Supabase.instance.client
-        .from('notifications')
-        .select('id')
-        .eq('recipient_id', widget.currentUser.value['id'])
-        .filter('read_at', 'is', null);
-    return (rows as List).length;
-  }
-
-  Future<void> _openNotifications() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => NotificationsScreen(
-          currentUserId: widget.currentUser.value['id'] as String,
-          currentUserEmail: widget.currentUser.value['email'] as String,
-        ),
-      ),
-    );
-    if (mounted) {
-      setState(
-        () => _unreadNotificationsFuture = _fetchUnreadNotificationCount(),
-      );
-    }
   }
 
   @override
@@ -83,11 +58,20 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchJobs() async {
+    if (widget.fetchJobs != null) {
+      final rows = await widget.fetchJobs!();
+      await BlockList.shared.ensureLoaded();
+      return BlockList.shared.filter(rows, (j) => j['posted_by'] as String?);
+    }
     final rows = await Supabase.instance.client
         .from('job_posts')
         .select('*, poster:alumni_profiles(name)')
         .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows as List);
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(
+      List<Map<String, dynamic>>.from(rows as List),
+      (j) => j['posted_by'] as String?,
+    );
   }
 
   List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {
@@ -126,15 +110,6 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   }
 
   Future<void> _postJob() async {
-    if (!await ensureSubscriber(
-      context,
-      widget.currentUser,
-      reason:
-          'Posting a job is for subscribers. Browsing jobs and applying '
-          'stay free for everyone.',
-    )) {
-      return;
-    }
     if (!mounted) return;
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -143,7 +118,9 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       ),
     );
     if (posted == true) {
-      setState(() => _future = _fetchJobs());
+      setState(() {
+        _future = _fetchJobs();
+      });
     }
   }
 
@@ -153,23 +130,6 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       appBar: AppBar(
         title: const Text('Job Board'),
         automaticallyImplyLeading: widget.showBack,
-        actions: [
-          FutureBuilder<int>(
-            future: _unreadNotificationsFuture,
-            builder: (context, snapshot) {
-              final unread = snapshot.data ?? 0;
-              return IconButton(
-                onPressed: _openNotifications,
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread'),
-                  child: const Icon(Icons.notifications_outlined),
-                ),
-                tooltip: 'Notifications',
-              );
-            },
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _postJob,
@@ -183,11 +143,13 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('the job board', snapshot.error)),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('the job board', snapshot.error),
+              screen: 'Job board',
+              error: snapshot.error,
+              onRetry: () => setState(() {
+                _future = _fetchJobs();
+              }),
             );
           }
 

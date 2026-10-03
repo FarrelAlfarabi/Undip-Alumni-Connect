@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 
@@ -52,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Map<String, dynamic>>> _announcements;
   late Future<List<Map<String, dynamic>>> _jobs;
   late Future<List<MarketplaceListing>> _listings;
+  late Future<int> _pendingRequests;
+  late Future<int> _unreadNotifications;
 
   @override
   void initState() {
@@ -63,12 +67,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _load() {
     _announcements = _api.latestAnnouncements(kHomeBannerLimit);
-    _jobs = _api.latestJobs(kHomeLatestLimit);
+    _jobs = _latestJobs();
     _listings = _fetchListings();
+    _pendingRequests = _api
+        .pendingRequestCount(_user.value['id'] as String)
+        .catchError((_) => 0);
+    _unreadNotifications = _api
+        .unreadNotificationCount(_user.value['id'] as String)
+        .catchError((_) => 0);
+  }
+
+  Future<List<Map<String, dynamic>>> _latestJobs() async {
+    final jobs = await _api.latestJobs(kHomeLatestLimit);
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(jobs, (j) => j['posted_by'] as String?);
   }
 
   Future<List<MarketplaceListing>> _fetchListings() async {
-    final all = await _market.fetchApproved();
+    final all = await _market.fetchApproved(); // already without blocked people
     final sorted = [...all]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.take(kHomeLatestLimit).toList();
   }
@@ -97,6 +113,68 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Lingkaran'),
         automaticallyImplyLeading: false,
+        actions: [
+          FutureBuilder<int>(
+            future: _unreadNotifications,
+            builder: (context, snap) {
+              final n = snap.data ?? 0;
+              return IconButton(
+                key: const Key('home-notifications'),
+                tooltip: n > 0 ? 'Notifications ($n new)' : 'Notifications',
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => widget.pages.notifications(_user),
+                    ),
+                  );
+                  if (mounted) {
+                    setState(() {
+                      _unreadNotifications = _api
+                          .unreadNotificationCount(_user.value['id'] as String)
+                          .catchError((_) => 0);
+                    });
+                  }
+                },
+                icon: Badge(
+                  key: const Key('notifications-badge'),
+                  isLabelVisible: n > 0,
+                  label: Text('$n'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+              );
+            },
+          ),
+          FutureBuilder<int>(
+            future: _pendingRequests,
+            builder: (context, snap) {
+              final n = snap.data ?? 0;
+              return IconButton(
+                key: const Key('home-requests'),
+                tooltip: n > 0 ? 'Requests ($n waiting)' : 'Requests',
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => widget.pages.requests(_user),
+                    ),
+                  );
+                  if (mounted) {
+                    setState(() {
+                      _pendingRequests = _api
+                          .pendingRequestCount(_user.value['id'] as String)
+                          .catchError((_) => 0);
+                    });
+                  }
+                },
+                icon: Badge(
+                  key: const Key('requests-badge'),
+                  isLabelVisible: n > 0,
+                  label: Text('$n'),
+                  child: const Icon(Icons.handshake_outlined),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -128,6 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _QuickActions(
                   onJobs: () => _push(widget.pages.jobs(_user)),
                   onMarketplace: () => _push(widget.pages.marketplace(_user)),
+                  onBusinesses: () => _push(widget.pages.businesses(_user)),
                   onDirectory: widget.onOpenDirectory,
                   onNearby: () => _push(widget.pages.nearby(_user)),
                 ),
@@ -141,8 +220,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   emptyIcon: Icons.work_outline,
                   emptyText:
                       'No jobs posted yet. New openings will show up here.',
-                  onRetry: () =>
-                      setState(() => _jobs = _api.latestJobs(kHomeLatestLimit)),
+                  onRetry: () => setState(() {
+                    _jobs = _latestJobs();
+                  }),
                   tileBuilder: (job) => _LatestTile(
                     icon: Icons.work_outline,
                     title: job['title'] as String? ?? '',
@@ -214,6 +294,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load announcements.",
                 actionLabel: 'Try again',
+                feedbackScreen: 'Home',
+                error: snap.error,
                 onAction: () => setState(() {
                   _announcements = _api.latestAnnouncements(kHomeBannerLimit);
                 }),
@@ -245,12 +327,14 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onJobs,
     required this.onMarketplace,
+    required this.onBusinesses,
     required this.onDirectory,
     required this.onNearby,
   });
 
   final VoidCallback onJobs;
   final VoidCallback onMarketplace;
+  final VoidCallback onBusinesses;
   final VoidCallback onDirectory;
   final VoidCallback onNearby;
 
@@ -280,6 +364,12 @@ class _QuickActions extends StatelessWidget {
           icon: Icons.storefront_outlined,
           label: 'Marketplace',
           onTap: onMarketplace,
+        ),
+        _Tile(
+          key: const Key('tile-businesses'),
+          icon: Icons.business_center_outlined,
+          label: 'Businesses',
+          onTap: onBusinesses,
         ),
         _Tile(
           key: const Key('tile-directory'),
@@ -401,6 +491,8 @@ class _LatestBlock<T> extends StatelessWidget {
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load this right now.",
                 actionLabel: 'Try again',
+                feedbackScreen: 'Home',
+                error: snap.error,
                 onAction: onRetry,
               );
             }
@@ -499,12 +591,18 @@ class _MessageCard extends StatelessWidget {
     required this.text,
     this.actionLabel,
     this.onAction,
+    this.feedbackScreen,
+    this.error,
   });
 
   final IconData icon;
   final String text;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// When set, an error card: adds a "Send feedback" button for this screen.
+  final String? feedbackScreen;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
@@ -515,20 +613,43 @@ class _MessageCard extends StatelessWidget {
         color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+          Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-            ),
+              if (actionLabel != null && feedbackScreen == null)
+                TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
           ),
-          if (actionLabel != null)
-            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+          if (feedbackScreen != null)
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              children: [
+                if (actionLabel != null)
+                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                TextButton(
+                  key: const Key('send-feedback'),
+                  onPressed: () => showFeedbackSheet(
+                    context,
+                    error: error,
+                    screen: feedbackScreen!,
+                  ),
+                  child: const Text('Send feedback'),
+                ),
+              ],
+            ),
         ],
       ),
     );

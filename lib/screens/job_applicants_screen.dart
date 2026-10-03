@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/safe_link_chip.dart';
 
@@ -56,11 +57,13 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('applicants', snapshot.error)),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('applicants', snapshot.error),
+              screen: 'Job applicants',
+              error: snapshot.error,
+              onRetry: () => setState(() {
+                _future = _fetchApplicants();
+              }),
             );
           }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/announcement_card.dart';
+import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 
 /// Ikafe announcements feed (Day 7): one-way broadcast, no moderation, no
@@ -48,11 +49,13 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('announcements', snapshot.error)),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('announcements', snapshot.error),
+              screen: 'News',
+              error: snapshot.error,
+              onRetry: () => setState(() {
+                _future = _fetchAnnouncements();
+              }),
             );
           }
 

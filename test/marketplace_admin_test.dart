@@ -6,7 +6,6 @@ import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/models/marketplace_listing.dart';
 import 'package:undip_alumni_connect/screens/marketplace_admin_screen.dart';
 import 'package:undip_alumni_connect/screens/marketplace_detail_screen.dart';
-import 'package:undip_alumni_connect/screens/marketplace_screen.dart';
 
 import 'support/fake_marketplace_api.dart';
 
@@ -43,20 +42,12 @@ void main() {
       repo = MarketplaceRepository(api);
     });
 
-    test('isAdmin is true only for a true result', () async {
-      api.rpcResults['marketplace_is_admin'] = true;
-      expect(await repo.isAdmin('a'), isTrue);
-      api.rpcResults['marketplace_is_admin'] = false;
-      expect(await repo.isAdmin('a'), isFalse);
-      expect(api.params['marketplace_is_admin'], {'p_profile': 'a'});
-    });
-
     test('fetchPending attaches seller names', () async {
       api.rpcResults['marketplace_admin_pending'] = pendingRows();
       api.profileNames = [
         {'id': 's1', 'name': 'Bunga Citra Ayu'},
       ];
-      final list = await repo.fetchPending('a', 'k');
+      final list = await repo.fetchPending('a');
       expect(list.map((l) => l.id), ['p1', 'p2']);
       expect(list.first.seller?.name, 'Bunga Citra Ayu');
     });
@@ -69,7 +60,6 @@ void main() {
       );
       await repo.review(
         adminId: 'a',
-        adminKey: 'k',
         listingId: 'l',
         approve: false,
         reason: '  Foto buram ',
@@ -79,12 +69,10 @@ void main() {
         'p_listing': 'l',
         'p_decision': 'rejected',
         'p_reason': 'Foto buram',
-        'p_key': 'k',
       });
       api.rpcResult = listingMap();
       await repo.review(
         adminId: 'a',
-        adminKey: 'k',
         listingId: 'l',
         approve: true,
         reason: 'ignored',
@@ -100,12 +88,12 @@ void main() {
       api.rpcResult = [
         {'listing_id': 'l1', 'report_count': 3},
       ];
-      final counts = await repo.fetchReportCounts('a', 'k');
+      final counts = await repo.fetchReportCounts('a');
       expect(counts.single.count, 3);
 
       api.throwOnCall = PostgrestException(message: 'not_admin', code: 'P0001');
       await expectLater(
-        repo.fetchReportCounts('x', 'k'),
+        repo.fetchReportCounts('x'),
         throwsA(
           isA<MarketplaceException>().having(
             (e) => e.code,
@@ -139,7 +127,6 @@ void main() {
         MaterialApp(
           home: MarketplaceAdminScreen(
             adminId: 'admin',
-            adminKey: 'k',
             repository: MarketplaceRepository(api),
           ),
         ),
@@ -156,6 +143,8 @@ void main() {
       expect(find.text('Desain Undangan'), findsOneWidget);
       expect(find.text('By Bunga Citra Ayu'), findsNWidgets(2));
       expect(find.text('Demo only, no real payments'), findsOneWidget);
+      // No passphrase prompt any more: the queue is shown straight away.
+      expect(find.text('Admin passphrase'), findsNothing);
     });
 
     testWidgets('approve calls the review function and reloads', (
@@ -237,35 +226,6 @@ void main() {
       expect(find.text('2 reports'), findsOneWidget);
       expect(find.text('Listing no longer available'), findsOneWidget);
       expect(find.text('1 report'), findsOneWidget);
-    });
-  });
-
-  group('admin entry point', () {
-    Future<void> pumpMarket(WidgetTester tester, bool admin) async {
-      phone(tester);
-      final api = FakeApi()
-        ..approved = [listingMap(seller: sellerMap)]
-        ..rpcResults['marketplace_is_admin'] = admin;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MarketplaceScreen(
-            currentUser: user(),
-            repository: MarketplaceRepository(api),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('shown for an admin', (tester) async {
-      await pumpMarket(tester, true);
-      expect(find.byTooltip('Admin review'), findsOneWidget);
-    });
-
-    testWidgets('hidden for everyone else', (tester) async {
-      await pumpMarket(tester, false);
-      expect(find.byTooltip('Admin review'), findsNothing);
-      expect(find.byTooltip('My listings'), findsOneWidget);
     });
   });
 

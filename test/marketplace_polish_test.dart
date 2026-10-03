@@ -52,8 +52,7 @@ FakeApi richApi() => FakeApi()
   ]
   ..rpcResults['marketplace_report_counts'] = [
     {'listing_id': 'a', 'report_count': 12},
-  ]
-  ..rpcResults['marketplace_is_admin'] = true;
+  ];
 
 /// Narrowest phone we care about, with the OS text size cranked up.
 Future<void> pumpNarrow(WidgetTester tester, Widget home) async {
@@ -138,7 +137,6 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
-          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );
@@ -197,7 +195,6 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
-          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );
@@ -208,7 +205,6 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
-          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );

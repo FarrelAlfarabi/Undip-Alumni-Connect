@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/config/policy_config.dart';
 import 'package:undip_alumni_connect/lock/biometrics.dart';
 import 'package:undip_alumni_connect/lock/lock_service.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
@@ -39,11 +40,16 @@ class FakeBiometrics implements BiometricProvider {
 const testEmail = 'ahmad.ramadhan@example.com';
 const testPin = '482913';
 
-Map<String, dynamic> testProfile({String status = 'verified'}) => {
+/// By default this person has already accepted the current privacy policy.
+Map<String, dynamic> testProfile({
+  String status = 'verified',
+  String? policyVersion = kPolicyVersion,
+}) => {
   'id': 'p1',
   'name': 'Ahmad Ramadhan',
   'email': testEmail,
   'verification_status': status,
+  'policy_version': policyVersion,
 };
 
 /// A service on an in-memory store with a fast hasher and a fake clock.

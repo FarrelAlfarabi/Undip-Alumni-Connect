@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/config/feature_flags.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/alumni_screen.dart';
 import 'package:undip_alumni_connect/screens/home_pages.dart';
@@ -24,6 +25,7 @@ Future<void> pumpShell(
   HomePages? pages,
   List<int>? chatBuilds,
   List<ValueNotifier<Map<String, dynamic>>>? users,
+  bool? chat,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -38,6 +40,7 @@ Future<void> pumpShell(
                 MaterialPageRoute(
                   builder: (_) => HomeShell(
                     profile: profile,
+                    chat: chat ?? chatEnabled,
                     pages:
                         pages ??
                         fakePages(users: users, chatBuilds: chatBuilds),
@@ -65,10 +68,34 @@ Future<void> tapNav(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets('bottom navigation has exactly Home, Directory, Chat, Profile', (
+  test('chat is switched off for the beta', () {
+    expect(chatEnabled, isFalse);
+  });
+
+  testWidgets('switch off: bottom navigation has Home, Directory, Profile', (
     tester,
   ) async {
-    await pumpShell(tester);
+    await pumpShell(tester, chat: false);
+    final destinations = tester.widgetList<NavigationDestination>(
+      find.byType(NavigationDestination),
+    );
+    expect(destinations.map((d) => d.label).toList(), [
+      'Home',
+      'Directory',
+      'Profile',
+    ]);
+    expect(find.text('Chat'), findsNothing);
+    // Lands on Home.
+    expect(find.text('Hello, Ahmad'), findsOneWidget);
+    // Profile is the last tab and still opens.
+    await tapNav(tester, 'Profile');
+    expect(find.text('PAGE Profile'), findsOneWidget);
+  });
+
+  testWidgets('switch on: Home, Directory, Chat, Profile come back', (
+    tester,
+  ) async {
+    await pumpShell(tester, chat: true);
     final destinations = tester.widgetList<NavigationDestination>(
       find.byType(NavigationDestination),
     );
@@ -78,15 +105,13 @@ void main() {
       'Chat',
       'Profile',
     ]);
-    // Lands on Home.
-    expect(find.text('Hello, Ahmad'), findsOneWidget);
   });
 
   group('back button', () {
     testWidgets('from any other tab, back returns to Home and stays in app', (
       tester,
     ) async {
-      await pumpShell(tester);
+      await pumpShell(tester, chat: true);
       for (final tab in ['Directory', 'Chat', 'Profile']) {
         await tapNav(tester, tab);
         await tester.binding.handlePopRoute();
@@ -108,7 +133,7 @@ void main() {
     tester,
   ) async {
     final users = <ValueNotifier<Map<String, dynamic>>>[];
-    await pumpShell(tester, users: users);
+    await pumpShell(tester, users: users, chat: true);
     for (final tab in ['Directory', 'Chat', 'Profile']) {
       await tapNav(tester, tab);
     }
@@ -127,7 +152,7 @@ void main() {
     tester,
   ) async {
     final chatBuilds = <int>[];
-    await pumpShell(tester, chatBuilds: chatBuilds);
+    await pumpShell(tester, chatBuilds: chatBuilds, chat: true);
     await tapNav(tester, 'Chat');
     expect(chatBuilds.length, 2); // initial IndexedStack build + epoch bump
     final afterFirst = chatBuilds.length;
@@ -140,7 +165,7 @@ void main() {
     testWidgets('Profile, Directory (and Nearby), Chat via bottom nav', (
       tester,
     ) async {
-      await pumpShell(tester);
+      await pumpShell(tester, chat: true);
       await tapNav(tester, 'Profile');
       expect(find.text('PAGE Profile'), findsOneWidget);
       await tapNav(tester, 'Directory');

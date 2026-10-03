@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Regression guard: no fee or commission wording anywhere in the app's
-/// source. (Listing prices and the annual subscription price are fine; a fee
-/// on top of them is not something the demo offers.)
+/// source. (Listing prices are fine; a fee on top of them is not something
+/// the app offers.)
 void main() {
   test('no fee, commission or service-charge wording in lib/', () {
     final banned = RegExp(

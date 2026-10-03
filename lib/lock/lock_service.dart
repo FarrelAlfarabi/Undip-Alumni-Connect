@@ -103,6 +103,9 @@ class LockService {
   static const _kName = 'lingkaran.lock.v1.display_name';
   static const _kMasked = 'lingkaran.lock.v1.masked_email';
   static const _kPin = 'lingkaran.lock.v1.pin_hash';
+  // Which profile the PIN belongs to. Lets the PIN survive a sign out, while
+  // a different person verifying on the same phone never inherits it.
+  static const _kOwner = 'lingkaran.lock.v1.owner_id';
   static const _kFailed = 'lingkaran.lock.v1.failed';
   static const _kWait = 'lingkaran.lock.v1.wait_until';
   static const _kBio = 'lingkaran.lock.v1.bio';
@@ -123,17 +126,28 @@ class LockService {
   }
 
   /// Remember a freshly verified person. Only the id, a display name and a
-  /// masked email are stored. If this is a different person than before,
-  /// the old PIN and biometric choice are dropped.
+  /// masked email are stored. The PIN and biometric choice are kept only if
+  /// they belong to this same person. If they belong to someone else, or to
+  /// nobody we can name, they are dropped, so the new person is offered PIN
+  /// setup and never inherits another person's PIN.
   Future<void> remember({
     required String profileId,
     required String displayName,
     required String email,
   }) async {
     if (!enabled) return;
-    final previous = await _store.read(_kId);
-    if (previous != null && previous != profileId) {
-      await _clearSecrets();
+    if (await _store.read(_kPin) != null) {
+      var owner = await _store.read(_kOwner);
+      if (owner == null || owner.isEmpty) {
+        // Saved before owners were recorded: the remembered person owns it.
+        final previous = await _store.read(_kId);
+        owner = (previous == null || previous.isEmpty) ? null : previous;
+      }
+      if (owner == profileId) {
+        await _store.write(_kOwner, profileId);
+      } else {
+        await _clearSecrets();
+      }
     }
     await _store.write(_kId, profileId);
     await _store.write(_kName, displayName);
@@ -150,6 +164,8 @@ class LockService {
   /// Sets (or replaces) the PIN. Stores a salted hash only.
   Future<void> setPin(String pin) async {
     assert(RegExp(r'^\d{6}$').hasMatch(pin));
+    final owner = await _store.read(_kId);
+    if (owner != null && owner.isNotEmpty) await _store.write(_kOwner, owner);
     await _store.write(_kPin, await _hasher.hash(pin));
     await _store.delete(_kFailed);
     await _store.delete(_kWait);
@@ -210,14 +226,26 @@ class LockService {
 
   Future<void> _clearSecrets() async {
     await _store.delete(_kPin);
+    await _store.delete(_kOwner);
     await _store.delete(_kFailed);
     await _store.delete(_kWait);
     await _store.delete(_kBio);
   }
 
+  /// Sign out: forget who is signed in, but keep the PIN (and fingerprint
+  /// choice) with its owner, so verifying the same person again skips PIN
+  /// setup. It never touches the server.
+  Future<void> signOut() async {
+    sessionActive = false;
+    await _store.delete(_kId);
+    await _store.delete(_kName);
+    await _store.delete(_kMasked);
+    _changes.value++;
+  }
+
   /// Wipes everything remembered on this device (used by "Switch account",
-  /// "Forgot PIN", sign out, 5 wrong PINs, and a failed profile fetch). It
-  /// never touches the server.
+  /// "Forgot PIN", 5 wrong PINs, a profile that no longer exists, and
+  /// account deletion). It never touches the server.
   Future<void> clear() async {
     sessionActive = false;
     await _clearSecrets();

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/account_repository.dart';
 import '../screens/verification_screen.dart';
 import '../screens/welcome_screen.dart';
+import '../util/friendly_error.dart';
+import '../widgets/error_view.dart';
 import 'lock_screen.dart';
 import 'lock_service.dart';
 import 'session.dart';
@@ -31,7 +34,11 @@ class AppEntry extends StatefulWidget {
     this.fetchProfile = defaultProfileFetcher,
     this.homeBuilder = defaultHomeBuilder,
     this.clock = DateTime.now,
+    this.accountRepository,
   });
+
+  /// Injectable for tests (consent is saved through it).
+  final AccountRepository? accountRepository;
 
   final LockService? lock;
   final ProfileFetcher fetchProfile;
@@ -63,18 +70,35 @@ class _AppEntryState extends State<AppEntry> {
   }
 
   Future<void> _unlock(RememberedUser user) async {
+    Map<String, dynamic>? profile;
     try {
-      final profile = await widget.fetchProfile(user.profileId);
-      if (profile == null || profile['verification_status'] != 'verified') {
-        throw StateError('profile unavailable');
-      }
+      profile = await widget.fetchProfile(user.profileId);
+    } catch (e) {
+      // A network or server error says nothing about the profile. Keep the
+      // PIN and the remembered person, and let them try again.
       if (!mounted) return;
-      enterApp(context, profile, lock: _lock, homeBuilder: widget.homeBuilder);
-    } catch (_) {
-      // Profile gone, not verified, or the fetch failed: forget this device.
+      showErrorSnackBar(
+        context,
+        message: friendlyError(e),
+        screen: 'Unlock',
+        error: e,
+      );
+      return;
+    }
+    if (profile == null || profile['verification_status'] != 'verified') {
+      // The profile is really gone or no longer verified: forget this device.
       await _lock.clear();
       if (mounted) _showWelcome(kSignInFailedNotice);
+      return;
     }
+    if (!mounted) return;
+    enterApp(
+      context,
+      profile,
+      lock: _lock,
+      homeBuilder: widget.homeBuilder,
+      accountRepository: widget.accountRepository,
+    );
   }
 
   Future<void> _forget([String? notice]) async {

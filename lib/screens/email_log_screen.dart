@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 
 /// Simulated email log (added 18 Sep 2026). Real email needs a
@@ -50,11 +51,13 @@ class _EmailLogScreenState extends State<EmailLogScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(friendlyLoadError('emails', snapshot.error)),
-              ),
+            return ErrorView(
+              message: friendlyLoadError('emails', snapshot.error),
+              screen: 'Email log',
+              error: snapshot.error,
+              onRetry: () => setState(() {
+                _future = _fetchEmailLog();
+              }),
             );
           }
 

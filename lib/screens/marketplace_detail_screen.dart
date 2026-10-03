@@ -5,9 +5,10 @@ import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../util/safe_url.dart';
+import '../widgets/content_actions_menu.dart';
 import '../widgets/marketplace_demo_notice.dart';
-import 'marketplace_screen.dart' show ListingImage;
 import 'marketplace_report_sheet.dart';
+import 'marketplace_screen.dart' show ListingImage;
 import 'profile_detail_screen.dart';
 
 typedef UrlOpener = Future<bool> Function(Uri uri);
@@ -117,7 +118,18 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
     final hasContact = (_l.contactInfo ?? '').trim().isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Listing')),
+      appBar: AppBar(
+        title: const Text('Listing'),
+        actions: [
+          // Products keep their own Report button below; this menu adds Block.
+          ContentActionsMenu(
+            currentUserId: widget.currentUser.value['id'] as String,
+            ownerId: _l.sellerId,
+            ownerName: seller?.name,
+            onBlocked: () => Navigator.of(context).maybePop(),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           const MarketplaceDemoNotice(),

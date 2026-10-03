@@ -27,15 +27,9 @@ const _features = [
     'Mentoring',
     'Connect with alumni for career guidance.',
   ),
-  _PreviewFeature(
-    'preview-business',
-    Icons.business_center_outlined,
-    'Business directory',
-    'Find businesses run by alumni.',
-  ),
 ];
 
-/// "Upcoming" section on Home: three non-functional Preview tiles. Tapping
+/// "Upcoming" section on Home: two non-functional Preview tiles. Tapping
 /// one only opens an info sheet. Nothing navigates, nothing is tracked.
 class UpcomingSection extends StatelessWidget {
   const UpcomingSection({super.key});
