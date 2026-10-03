@@ -110,18 +110,23 @@ void main() {
       },
     );
 
-    testWidgets('fetch fails: local data cleared, Welcome + message', (
-      tester,
-    ) async {
-      final store = MemoryLockStore();
-      final lock = await makeRememberedLock(store: store);
-      await pumpEntry(tester, lock, fetch: (_) async => throw Exception('net'));
-      await enterPin(tester, testPin);
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text(kSignInFailedNotice), findsOneWidget);
-      expect(find.textContaining('net'), findsNothing); // no raw error
-      expect(store.data, isEmpty);
-    });
+    testWidgets(
+      'network error: data kept, retry message (see pin_survives_sign_out_test)',
+      (tester) async {
+        final store = MemoryLockStore();
+        final lock = await makeRememberedLock(store: store);
+        await pumpEntry(
+          tester,
+          lock,
+          fetch: (_) async => throw Exception('net'),
+        );
+        await enterPin(tester, testPin);
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.textContaining('net'), findsNothing); // no raw error
+        expect(store.data, isNotEmpty);
+        expect(find.byKey(const Key('lock-screen')), findsOneWidget);
+      },
+    );
 
     testWidgets('profile not verified counts as gone', (tester) async {
       final lock = await makeRememberedLock();
