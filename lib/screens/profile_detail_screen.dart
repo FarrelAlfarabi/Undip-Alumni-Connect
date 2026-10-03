@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/feature_flags.dart';
+import '../data/contact_repository.dart';
 import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
+import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
 import '../util/friendly_error.dart';
 
@@ -27,7 +29,11 @@ class ProfileDetailScreen extends StatefulWidget {
     required this.currentUser,
     this.showEditButton = true,
     this.chat = chatEnabled,
+    this.contactRepository,
   });
+
+  /// Injectable for tests; defaults to the real repository.
+  final ContactRepository? contactRepository;
 
   /// Whether the Message button shows (the app-wide chat switch).
   final bool chat;
@@ -63,6 +69,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         widget.currentUser.value = updated;
       }
     }
+  }
+
+  Future<void> _requestContact() async {
+    await showRequestContactSheet(
+      context,
+      repository: widget.contactRepository ?? ContactRepository(),
+      requesterId: widget.currentUser.value['id'] as String,
+      targetId: _profile['id'] as String,
+      targetName: _profile['name'] as String? ?? 'this alumnus',
+    );
   }
 
   Future<void> _messageThisAlumnus() async {
@@ -245,21 +261,30 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
                     ),
-                  ] else if (!_isOwnProfile && widget.chat) ...[
+                  ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
                     FilledButton.icon(
-                      onPressed: _messaging ? null : _messageThisAlumnus,
-                      icon: _messaging
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Icon(Icons.chat_bubble_outline),
-                      label: const Text('Message'),
+                      key: const Key('request-contact'),
+                      onPressed: _requestContact,
+                      icon: const Icon(Icons.person_add_alt_outlined),
+                      label: const Text('Request to contact'),
                     ),
+                    if (widget.chat) ...[
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: _messaging ? null : _messageThisAlumnus,
+                        icon: _messaging
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Message'),
+                      ),
+                    ],
                   ],
                 ],
               ),

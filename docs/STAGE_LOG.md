@@ -49,3 +49,10 @@ If a session ends early, continue from the last entry here.
 - Tests first: `supabase/tests/beta/03_marketplace_products_test.sql` (anon role, limits, dashboard changes the limit, unlimited today and expired, suspended hides, direct insert path guarded) and `test/marketplace_products_test.dart`. Old marketplace tests updated.
 - Decisions: edit of an approved business product stays approved (no review); rejected ones go back to pending. A product an admin rejects still counts toward the limit until deleted (status is not "sold"). Admin "reject an approved product" comes with the admin migration (Stage 6C).
 - Checks: analyze clean, tests pass, beta SQL checks pass.
+
+## Stage 6B: request to contact
+- Database: `20261003120000_contact_requests.sql` (+ rollback). `contact_requests` (requester, target, message max 200, status, shared_contact max 200, timestamps). No direct table access for the app. Functions: send, incoming, outgoing, pending_count, respond, shared_contact. `shared_contact` is never in a list, and is released only by `contact_request_shared_contact` when status is accepted and the caller is the requester. A trigger enforces: not yourself, one open request per pair, 5 new requests per requester per Jakarta day, 30 day cool-down after a rejection. The dashboard is not restricted and can read everything.
+- App: "Request to contact" on other people's profiles (not on your own), optional message (200), Requests screen (Received and Sent), accept requires typing what to share (200), rejected shows only "Not accepted", shared contact shown only after accept and a tap, Home app bar Requests icon with a badge of waiting requests.
+- Tests first: `supabase/tests/beta/04_contact_requests_test.sql` (anon role) and `test/contact_requests_test.dart`.
+- Checks: analyze clean, 294 tests pass, beta SQL checks pass.
+- Honest limit (also in docs/DECISIONS.md): without real login this is a speed bump, not security.

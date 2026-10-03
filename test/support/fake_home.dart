@@ -26,7 +26,10 @@ class FakeHomeApi implements HomeApi {
     this.jobs = const [],
     this.announcementsError,
     this.jobsError,
+    this.pendingRequests = 0,
   });
+
+  int pendingRequests;
 
   List<Map<String, dynamic>> announcements;
   List<Map<String, dynamic>> jobs;
@@ -48,6 +51,9 @@ class FakeHomeApi implements HomeApi {
     if (jobsError != null) throw jobsError!;
     return jobs.take(limit).toList();
   }
+
+  @override
+  Future<int> pendingRequestCount(String profileId) async => pendingRequests;
 }
 
 /// A stand-in page that shows [label] so tests can tell where they landed.
@@ -97,6 +103,10 @@ HomePages fakePages({
     directory: (u) {
       note(u);
       return const MarkerPage('Directory');
+    },
+    requests: (u) {
+      note(u);
+      return const MarkerPage('Requests');
     },
     chat: (u) {
       note(u);

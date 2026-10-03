@@ -12,6 +12,7 @@ import 'marketplace_detail_screen.dart';
 import 'marketplace_screen.dart';
 import 'messages_list_screen.dart';
 import 'profile_detail_screen.dart';
+import 'requests_screen.dart';
 
 typedef UserPageBuilder = Widget Function(
   ValueNotifier<Map<String, dynamic>> currentUser,
@@ -28,6 +29,7 @@ class HomePages {
     this.jobs = _jobs,
     this.marketplace = _marketplace,
     this.businesses = _businesses,
+    this.requests = _requests,
     this.nearby = _nearby,
     this.announcements = _announcements,
     this.jobDetail = _jobDetail,
@@ -45,6 +47,7 @@ class HomePages {
   final UserPageBuilder jobs;
   final UserPageBuilder marketplace;
   final UserPageBuilder businesses;
+  final UserPageBuilder requests;
   final UserPageBuilder nearby;
   final Widget Function() announcements;
   final Widget Function(
@@ -78,6 +81,8 @@ class HomePages {
       MarketplaceScreen(currentUser: user, showBack: true);
   static Widget _businesses(ValueNotifier<Map<String, dynamic>> user) =>
       BusinessDirectoryScreen(currentUser: user);
+  static Widget _requests(ValueNotifier<Map<String, dynamic>> user) =>
+      RequestsScreen(currentUser: user);
   static Widget _nearby(ValueNotifier<Map<String, dynamic>> user) =>
       AlumniScreen(currentUser: user, initialTab: 1, showBack: true);
   static Widget _announcements() => const AnnouncementsScreen(showBack: true);

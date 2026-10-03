@@ -52,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Map<String, dynamic>>> _announcements;
   late Future<List<Map<String, dynamic>>> _jobs;
   late Future<List<MarketplaceListing>> _listings;
+  late Future<int> _pendingRequests;
 
   @override
   void initState() {
@@ -65,6 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _announcements = _api.latestAnnouncements(kHomeBannerLimit);
     _jobs = _api.latestJobs(kHomeLatestLimit);
     _listings = _fetchListings();
+    _pendingRequests = _api
+        .pendingRequestCount(_user.value['id'] as String)
+        .catchError((_) => 0);
   }
 
   Future<List<MarketplaceListing>> _fetchListings() async {
@@ -97,6 +101,38 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Lingkaran'),
         automaticallyImplyLeading: false,
+        actions: [
+          FutureBuilder<int>(
+            future: _pendingRequests,
+            builder: (context, snap) {
+              final n = snap.data ?? 0;
+              return IconButton(
+                key: const Key('home-requests'),
+                tooltip: n > 0 ? 'Requests ($n waiting)' : 'Requests',
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => widget.pages.requests(_user),
+                    ),
+                  );
+                  if (mounted) {
+                    setState(() {
+                      _pendingRequests = _api
+                          .pendingRequestCount(_user.value['id'] as String)
+                          .catchError((_) => 0);
+                    });
+                  }
+                },
+                icon: Badge(
+                  key: const Key('requests-badge'),
+                  isLabelVisible: n > 0,
+                  label: Text('$n'),
+                  child: const Icon(Icons.handshake_outlined),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
