@@ -15,7 +15,7 @@ String marketplaceErrorMessage(Object error) {
       case MarketplaceErrorCode.notFound:
         return 'This listing no longer exists.';
       case MarketplaceErrorCode.notAdmin:
-        return 'Wrong admin passphrase, or you are not an admin.';
+        return 'You are not an admin.';
       case MarketplaceErrorCode.reasonRequired:
         return 'Give a reason for rejecting.';
       case MarketplaceErrorCode.duplicateReport:

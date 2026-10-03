@@ -56,3 +56,10 @@ If a session ends early, continue from the last entry here.
 - Tests first: `supabase/tests/beta/04_contact_requests_test.sql` (anon role) and `test/contact_requests_test.dart`.
 - Checks: analyze clean, 294 tests pass, beta SQL checks pass.
 - Honest limit (also in docs/DECISIONS.md): without real login this is a speed bump, not security.
+
+## Stage 6C: admins without passphrase
+- Database: `20261003130000_app_admins.sql` (+ rollback). `app_admins` (profile_id unique, added_at, note; the app cannot read or write it). `is_app_admin(profile)`. The old passphrase functions (`marketplace_admin_pending`, `marketplace_review_listing`, `marketplace_report_counts`, `marketplace_is_admin`) now check `app_admins` and ignore the passphrase. New `admin_businesses_list` and `admin_business_decide`. Business reviewer columns added. Nobody is made admin in the migration. The SQL to add Gilang and Maria is a comment at the top of the migration (and in the PR description).
+- App: no passphrase prompt. Profile shows "Admin" only when `is_app_admin` is true (asked once per session, never cached on the device). Admin screen with Businesses (pending first, approve with the band chosen from the four, reject with reason, suspend, restore) and the old Marketplace review queue. The admin icon in the marketplace app bar is gone. Reports (6D) and Feedback (6F) are added to the admin screen by their stages.
+- Tests first: `supabase/tests/beta/05_app_admins_test.sql` (anon role: app cannot read app_admins; non-admin refused on every admin function; the old passphrase is refused; an admin works; unlimited_until untouched) and `test/admin_test.dart`. The old passphrase widget tests were removed.
+- Checks: analyze clean, 300 tests pass, beta SQL checks pass.
+- Note: `supabase/tests/run_local.sh` and the old `marketplace_rls_test.sql` still assume the passphrase system and the old marketplace create function. They did not run on a clean database before this work either (see the audit). The new harness is `run_beta_local.sh`.

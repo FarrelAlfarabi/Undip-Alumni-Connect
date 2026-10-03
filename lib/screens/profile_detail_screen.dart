@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/feature_flags.dart';
+import '../data/admin_repository.dart';
 import '../data/contact_repository.dart';
 import '../lock/session.dart';
+import 'admin_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
@@ -30,7 +32,13 @@ class ProfileDetailScreen extends StatefulWidget {
     this.showEditButton = true,
     this.chat = chatEnabled,
     this.contactRepository,
+    this.adminCheck,
   });
+
+  /// Asks the database whether this profile is an admin. Injectable for
+  /// tests. Asked once per session (when the Profile tab is built) and
+  /// never cached on the device.
+  final Future<bool> Function(String profileId)? adminCheck;
 
   /// Injectable for tests; defaults to the real repository.
   final ContactRepository? contactRepository;
@@ -50,11 +58,24 @@ class ProfileDetailScreen extends StatefulWidget {
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
   bool _messaging = false;
+  Future<bool>? _isAdmin;
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
+    if (widget.showEditButton) _isAdmin = _askAdmin();
+  }
+
+  // A failed check just hides the Admin entry.
+  Future<bool> _askAdmin() async {
+    try {
+      final id = widget.currentUser.value['id'] as String;
+      final check = widget.adminCheck ?? AdminRepository().isAdmin;
+      return await check(id);
+    } catch (_) {
+      return false;
+    }
   }
 
   bool get _isOwnProfile => _profile['id'] == widget.currentUser.value['id'];
@@ -260,6 +281,30 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onPressed: _editProfile,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
+                    ),
+                    FutureBuilder<bool>(
+                      future: _isAdmin,
+                      builder: (context, snap) {
+                        if (snap.data != true) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: OutlinedButton.icon(
+                            key: const Key('profile-admin'),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AdminScreen(
+                                  adminId:
+                                      widget.currentUser.value['id'] as String,
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.admin_panel_settings_outlined,
+                            ),
+                            label: const Text('Admin'),
+                          ),
+                        );
+                      },
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),

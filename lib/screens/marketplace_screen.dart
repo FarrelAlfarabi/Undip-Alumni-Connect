@@ -12,7 +12,6 @@ import '../widgets/filter_dropdown.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'business_form_screen.dart';
 import 'marketplace_form_screen.dart';
-import 'marketplace_admin_screen.dart';
 import 'marketplace_detail_screen.dart';
 import 'my_listings_screen.dart';
 
@@ -83,7 +82,6 @@ class MarketplaceScreen extends StatefulWidget {
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   late final MarketplaceRepository _repo;
   late Future<List<MarketplaceListing>> _future;
-  late final Future<bool> _isAdmin;
 
   final _searchController = TextEditingController();
   String _category = kAllFilter;
@@ -94,8 +92,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     super.initState();
     _repo = widget.repository ?? MarketplaceRepository();
     _future = _repo.fetchApproved();
-    // Failing the admin check just hides the admin entry.
-    _isAdmin = _repo.isAdmin(_myId).catchError((_) => false);
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -251,16 +247,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     if (mounted) _reload();
   }
 
-  Future<void> _openAdmin() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            MarketplaceAdminScreen(adminId: _myId, repository: _repo),
-      ),
-    );
-    if (mounted) _reload();
-  }
-
   Future<void> _openMine() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -282,16 +268,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         title: const Text('Marketplace'),
         automaticallyImplyLeading: widget.showBack,
         actions: [
-          FutureBuilder<bool>(
-            future: _isAdmin,
-            builder: (context, snapshot) => snapshot.data == true
-                ? IconButton(
-                    onPressed: _openAdmin,
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    tooltip: 'Admin review',
-                  )
-                : const SizedBox.shrink(),
-          ),
           IconButton(
             onPressed: _openMine,
             icon: const Icon(Icons.inventory_2_outlined),
