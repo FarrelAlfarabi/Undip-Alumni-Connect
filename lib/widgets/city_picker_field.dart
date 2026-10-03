@@ -30,7 +30,12 @@ class CityPickerField extends StatelessWidget {
       showDragHandle: true,
       builder: (_) => _CitySheet(selected: controller.text.trim()),
     );
-    if (picked != null) controller.text = picked;
+    if (picked != null) {
+      controller.value = TextEditingValue(
+        text: picked,
+        selection: TextSelection.collapsed(offset: picked.length),
+      );
+    }
   }
 
   @override
@@ -38,6 +43,10 @@ class CityPickerField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       readOnly: true,
+      // Picking happens in the sheet: no cursor or text selection (which
+      // showed the chosen city highlighted) in the field itself.
+      showCursor: false,
+      enableInteractiveSelection: false,
       enabled: enabled,
       onTap: () => _pick(context),
       validator: validator,

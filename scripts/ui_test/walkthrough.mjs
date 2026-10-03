@@ -3,41 +3,26 @@
 // Run:  node mock_backend.mjs &   (serve build/web on :8080)   node walkthrough.mjs
 import { launch, open, shot, tree, login } from './lib.mjs';
 
-const API = 'http://localhost:54321';
-const results = [];
-const state = async () => (await fetch(API + '/__state')).json();
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function step(name, fn) {
-  try { await fn(); results.push(['PASS', name]); console.log('PASS', name); }
-  catch (e) { results.push(['FAIL', name, String(e.message).split('\n')[0]]); console.log('FAIL', name, '-', String(e.message).split('\n')[0]); }
-}
-const has = async (page, re, ms = 6000) => {
-  const end = Date.now() + ms;
-  while (Date.now() < end) { if ((await tree(page)).some((t) => re.test(t))) return; await page.waitForTimeout(250); }
-  throw new Error('not on screen: ' + re + '\n' + (await tree(page)).slice(0, 25).join(' | '));
-};
-const gone = async (page, re, ms = 4000) => {
-  const end = Date.now() + ms;
-  while (Date.now() < end) { if (!(await tree(page)).some((t) => re.test(t))) return; await page.waitForTimeout(250); }
-  throw new Error('still on screen: ' + re);
-};
-const tap = async (page, name, opts = {}) => { await page.getByRole(opts.role || 'button', { name, exact: opts.exact ?? false }).first().click({ timeout: 8000 }); await page.waitForTimeout(opts.wait ?? 900); };
-const type = async (page, nth, text) => { const f = page.getByRole('textbox').nth(nth); await f.click(); await page.keyboard.press('Control+A'); await page.keyboard.type(text); };
+import { API, results, state, wait, step, has, gone, tap, type } from './helpers.mjs';
 
 await fetch(API + '/__reset');
 const { browser, page, problems } = await launch();
 await open(page);
 
-await step('Welcome -> Verification rejects an unknown email', async () => {
+await step('Sign in: empty form is refused, wrong password shows a plain message', async () => {
   await page.getByRole('button', { name: 'Get Started' }).click(); await page.waitForTimeout(800);
-  await shot(page, '02-verification');
-  await page.getByRole('textbox').first().click(); await page.keyboard.type('nobody@example.com');
-  await tap(page, /^Verify/, { wait: 2000 });
-  await shot(page, '03-verification-notfound');
-  await has(page, /not found|couldn.t find|no match|isn.t|not in/i);
+  await shot(page, '02-sign-in');
+  await has(page, /First time\? Your password is your NIM/);
+  await tap(page, /^Sign in/, { wait: 1000 });
+  await shot(page, '03-sign-in-empty');
+  await has(page, /Enter your email/);
+  await page.getByRole('textbox').nth(0).click(); await page.waitForTimeout(400); await page.keyboard.type('rina@example.com');
+  await page.getByRole('textbox').nth(1).click(); await page.waitForTimeout(400); await page.keyboard.type('wrong-password');
+  await tap(page, /^Sign in/, { wait: 2000 });
+  await shot(page, '03b-sign-in-wrong');
+  await has(page, /Wrong email or password/);
 });
-await step('Verification with a valid email reaches Home', async () => {
+await step('Sign in with the right password reaches Home', async () => {
   await page.reload(); await open(page);
   await login(page, 'rina@example.com');
   await has(page, /Hello, Rina/);
@@ -59,7 +44,7 @@ await step('My Applications lists the applied job with its status', async () => 
 });
 await step('Back on All Jobs: filters narrow the list', async () => {
   await tap(page, /All Jobs/, { role: 'tab', wait: 1200 });
-  await page.getByRole('textbox').first().click(); await page.keyboard.type('analyst'); await page.waitForTimeout(800);
+  await page.getByRole('textbox').first().click(); await page.waitForTimeout(400); await page.keyboard.type('analyst'); await page.waitForTimeout(800);
   await has(page, /Business Analyst/); await has(page, /Data Analyst/); await gone(page, /Backend Engineer/);
   await shot(page, '07-search');
   await page.keyboard.press('Control+A'); await page.keyboard.press('Backspace'); await page.waitForTimeout(600);
@@ -96,6 +81,15 @@ await step('My Applications now has 2 entries after returning', async () => {
   await tap(page, /All Jobs/, { role: 'tab', wait: 800 });
 });
 
+await step('Notifications: opening them clears the badge', async () => {
+  await tap(page, /Notifications/, { wait: 1800 });
+  await shot(page, '26-notifications');
+  await has(page, /New application/);
+  await tap(page, /Back/, { wait: 1500 }).catch(() => {});
+  const s = await state(); if (s.notifications.some((n) => n.recipient_id === '11111111-1111-4111-8111-111111111111' && n.read_at == null)) throw new Error('still unread in db');
+  await shot(page, '27-badge-cleared');
+});
+
 await step('Own job: menu offers Edit and Delete', async () => {
   await tap(page, /Data Analyst/, { wait: 1500 });
   await shot(page, '14-own-job');
@@ -124,7 +118,7 @@ await step('Applicants list: status chips; accepting notifies the applicant', as
   if (!s.notifications.some((n) => /Application update/.test(n.title) && n.recipient_id === '55555555-5555-4555-8555-555555555555')) throw new Error('applicant not notified');
 });
 await step('Delete job: confirmation, then the job is gone everywhere', async () => {
-  await page.getByRole('button', { name: /Back/ }).first().click().catch(() => {}); await page.waitForTimeout(800);
+  await tap(page, /Back/, { wait: 800 }).catch(() => {});
   await tap(page, /Show menu|Menu/, { wait: 800 }).catch(async () => { await page.locator('flt-semantics[role=button]').last().click(); await page.waitForTimeout(800); });
   await tap(page, /Delete job/, { role: 'menuitem', wait: 1000 });
   await shot(page, '20-delete-confirm');
@@ -142,28 +136,19 @@ await step('Post a Job: empty submit is refused, industry is required, then it p
   await shot(page, '23-post-job-errors');
   await has(page, /Required/); await has(page, /Choose an industry/);
   await type(page, 0, 'Finance Manager'); await type(page, 1, 'Gojek'); await type(page, 2, 'Lead our finance team and report to the CFO.'); await type(page, 3, 'rina@example.com');
-  await page.getByRole('button', { name: /Industry/ }).first().click().catch(async () => { await page.getByText('Industry').first().click(); });
-  await page.waitForTimeout(800); await shot(page, '24-industry-menu');
-  await page.getByText('Banking & Finance').last().click(); await page.waitForTimeout(600);
+  await tap(page, /Industry/, { wait: 900 });
+  await shot(page, '24-industry-menu');
+  await tap(page, /Banking & Finance/, { role: 'menuitem', wait: 800 });
   await tap(page, /^Post Job$/, { wait: 2500 });
   await has(page, /Finance Manager/);
   await shot(page, '25-after-post');
   const s = await state(); const j = s.job_posts.find((x) => x.title === 'Finance Manager'); if (!j || j.industry !== 'Banking & Finance') throw new Error('bad row ' + JSON.stringify(j));
 });
 
-await step('Notifications: opening them clears the badge', async () => {
-  await tap(page, /Notifications/, { wait: 1800 });
-  await shot(page, '26-notifications');
-  await has(page, /New application/);
-  await page.getByRole('button', { name: /Back/ }).first().click().catch(() => {}); await page.waitForTimeout(1500);
-  const s = await state(); if (s.notifications.some((n) => n.recipient_id === '11111111-1111-4111-8111-111111111111' && n.read_at == null)) throw new Error('still unread in db');
-  await shot(page, '27-badge-cleared');
-});
-
 await step('Error screen has Try again, and it recovers', async () => {
   await fetch(API + '/__fail?on=1');
   await page.getByRole('tab', { name: /My Applications/ }).click().catch(() => {});
-  await page.getByRole('button', { name: /Back/ }).first().click().catch(() => {}); await page.waitForTimeout(800);
+  await tap(page, /Back/, { wait: 800 }).catch(() => {});
   await tap(page, /Jobs/, { wait: 2000 }).catch(() => {});
   await shot(page, '28-error');
   await has(page, /Try again/);

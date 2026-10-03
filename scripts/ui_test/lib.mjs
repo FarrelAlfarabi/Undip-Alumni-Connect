@@ -31,11 +31,13 @@ export const tree = (page) => page.evaluate(() => [...document.querySelectorAll(
   .map((e) => { const r = e.getAttribute('role'); const t = (e.getAttribute('aria-label') || e.textContent || '').trim().replace(/\s+/g, ' '); return t ? `${r || '-'}: ${t.slice(0, 600)}` : null; })
   .filter(Boolean).filter((v, i, a) => a.indexOf(v) === i));
 
-export async function login(page, email = 'rina@example.com') {
+export async function login(page, email = 'rina@example.com', password = 'rina-pass-123') {
   await page.getByRole('button', { name: 'Get Started' }).click();
   await page.waitForTimeout(800);
-  await page.getByRole('textbox').first().click();
+  await page.getByRole('textbox').nth(0).click(); await page.waitForTimeout(400);
   await page.keyboard.type(email);
-  await page.getByRole('button', { name: /^Verify/ }).first().click();
+  await page.getByRole('textbox').nth(1).click(); await page.waitForTimeout(400);
+  await page.keyboard.type(password);
+  await page.getByRole('button', { name: /^Sign in/ }).first().click();
   await page.waitForTimeout(2500);
 }

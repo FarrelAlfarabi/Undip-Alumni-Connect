@@ -945,3 +945,22 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 - Decide: keep the admin passphrase off?
 - Welcome screen still says "Placeholder visual identity".
 - Industry filter on Job Board only shows industries that have jobs (by design).
+
+## 2026-10-03 — Email + password login, browser UI test, small fixes
+
+**Done:**
+- Real login: email + password with Supabase Auth (`lib/screens/sign_in_screen.dart`, `lib/auth/`), replacing the email-only Verification screen. Sign in, "Forgot password?" (emailed code, then a new password), sign out (also ends the Supabase session). There is no sign-up: every alumnus already has an account.
+- First password is the NIM. `provision_alumni_accounts()` created an account for all 27 alumni in the live database (password = NIM, email marked confirmed, no email sent). After the first sign-in the app invites them to choose their own password (`set_password_screen.dart`); they can skip with "Not now" and are asked again next time. `alumni_profiles.password_set` records it. Run `select provision_alumni_accounts();` after adding alumni.
+- The PIN lock is unchanged and still comes after sign-in.
+- Browser walk-through of the web build against a fake backend (`scripts/ui_test/`, see its README): 30 steps over sign-in, first-time password, forgot password, job board (tabs, apply, status, edit, delete, post, notifications, retry), directory, chat (a new message arrives by itself), profile and sign out, announcements, nearby, marketplace city picker, and 320 / 360 px phones.
+- Fixes from it: the chat Send button and the apply-form back button had no accessible label; the apply form had a large empty gap at the top; "Applied · Pending" was a greyed-out disabled button (now a readable status); the chosen city showed as highlighted text; Home tile labels broke mid-word at 320 px.
+
+**Decided / honest limits:**
+- A NIM is not secret (it is readable with the public key and listed in the seeds). Until someone has chosen their own password, anyone who knows their email and NIM can sign in as them, and could change the password and lock them out. Acceptable for demo data only; the safe version is a set-password email to each person.
+- Login gives real accounts and sessions, but the database rules are still open to anyone with the public key (owner chose "login screens and sessions only"). Signing in does not yet protect data (SECURITY_AUDIT.md SA-01 to SA-05).
+- "Forgot password" needs the Supabase "Reset password" email template to include the code (`{{ .Token }}`); with the default template (link only) the code never arrives. Not checked in the dashboard.
+- Accounts were created by writing to the `auth` tables directly from SQL; whether Supabase's sign-in accepts them was NOT tested against the real service (the sandbox cannot reach it). First real check: sign in on the new APK.
+
+**Verified:** `flutter analyze` clean; 255 tests pass (new: `test/auth/sign_in_screen_test.dart` and a fake auth backend); 30 browser steps pass twice against the fake backend; live database checked (27 users, each password hash matches its NIM, no null token columns).
+**Not verified:** sign-in against the real Supabase Auth; the APK on a phone.
+**Open:** `delete_job_post` is still the placeholder in the live database (the SQL tool stalls on `delete`): run the real one from the Supabase SQL editor. Set up the "Reset password" email template. Decide whether to keep the admin passphrase off.

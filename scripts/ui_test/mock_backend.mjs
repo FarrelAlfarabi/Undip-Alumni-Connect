@@ -29,16 +29,16 @@ const J = {
 };
 
 const profile = (id, name, email, major, year, role, employer, industry, city, extra = {}) => ({
-  id, user_id: null, nim: 'N' + id.slice(0, 6), name, email, faculty: 'Ekonomika dan Bisnis',
+  id, user_id: null, nim: 'NIM' + id.replaceAll('-', '').slice(0, 10), name, email, faculty: 'Ekonomika dan Bisnis',
   major, graduation_year: year, current_employer: employer, current_role: role,
   industry, company: employer, city, verification_status: 'verified',
-  subscription_status: 'free', created_at: ago(9000), updated_at: ago(9000), ...extra,
+  subscription_status: 'free', password_set: false, created_at: ago(9000), updated_at: ago(9000), ...extra,
 });
 
 function seed() {
   return {
     alumni_profiles: [
-      profile(P.rina, 'Rina Test', 'rina@example.com', 'Manajemen', 2018, 'Product Lead', 'Gojek', 'Technology', 'Jakarta', { subscription_status: 'subscribed' }),
+      profile(P.rina, 'Rina Test', 'rina@example.com', 'Manajemen', 2018, 'Product Lead', 'Gojek', 'Technology', 'Jakarta', { subscription_status: 'subscribed', password_set: true }),
       profile(P.reza, 'Reza Pratama Putra', 'reza.putra@example.com', 'Akuntansi', 2016, 'Engineering Manager', 'Tokopedia', 'Technology', 'Jakarta'),
       profile(P.siti, 'Siti Nur Azizah', 'siti@example.com', 'Manajemen', 2019, 'Business Analyst', 'Bank Mandiri', 'Banking & Finance', 'Semarang'),
       profile(P.ahmad, 'Ahmad Fauzan Ramadhan', 'ahmad@example.com', 'Ilmu Ekonomi', 2014, 'Product Manager', 'Gojek', 'Technology', 'Bandung'),
@@ -79,6 +79,20 @@ function seed() {
   };
 }
 let db = seed();
+// Auth: every alumnus has an account, password = NIM until they change it.
+const passwords = {};      // email -> password
+const sessions = new Map(); // access token -> profile id
+const resetCodes = new Map(); // email -> code
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+function passwordFor(p) { return passwords[p.email] ?? p.nim; }
+function sessionFor(p) {
+  const exp = Math.floor(Date.now() / 1000) + 3600;
+  const access = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: p.id, email: p.email, role: 'authenticated', aud: 'authenticated', exp, session_id: randomUUID() })}.sig${randomUUID()}`;
+  sessions.set(access, p.id);
+  return { access_token: access, token_type: 'bearer', expires_in: 3600, expires_at: exp, refresh_token: randomUUID(), user: { id: p.id, aud: 'authenticated', role: 'authenticated', email: p.email, email_confirmed_at: now(), app_metadata: {}, user_metadata: {}, created_at: now() } };
+}
+const callerOf = (req) => db.alumni_profiles.find((p) => p.id === sessions.get((req.headers['authorization'] || '').replace(/^Bearer /, '')));
+passwords['rina@example.com'] = 'rina-pass-123';
 let failing = false; // /__fail?on=1 makes every REST call return 500, to test error screens
 
 // Which column links a table to the table named in an embedded select.
@@ -182,8 +196,17 @@ function afterUpdate(table, before, row) {
   }
 }
 
-function rpc(fn, a) {
+function rpc(fn, a, caller) {
   switch (fn) {
+    case 'claim_alumni_profile': {
+      if (!caller) throw { code: 'P0001', message: 'Not authenticated' };
+      caller.user_id = caller.id; caller.verification_status = 'verified';
+      return { ...caller };
+    }
+    case 'mark_password_set': {
+      if (!caller) throw { code: 'P0001', message: 'Not authenticated' };
+      caller.password_set = true; return null;
+    }
     case 'marketplace_is_admin': return false;
     case 'update_job_post': {
       const j = db.job_posts.find((r) => r.id === a.p_job && r.posted_by === a.p_poster);
@@ -206,7 +229,7 @@ function rpc(fn, a) {
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
   'Access-Control-Expose-Headers': 'Content-Range',
 };
 const send = (res, status, body, extra = {}) => {
@@ -221,9 +244,35 @@ http.createServer((req, res) => {
   req.on('data', (c) => (raw += c));
   req.on('end', () => {
     try {
-      if (url.pathname === '/__reset') { db = seed(); failing = false; return send(res, 200, { ok: true }); }
+      if (url.pathname === '/__reset') { db = seed(); failing = false; for (const k of Object.keys(passwords)) delete passwords[k]; passwords['rina@example.com'] = 'rina-pass-123'; return send(res, 200, { ok: true }); }
       if (url.pathname === '/__fail') { failing = url.searchParams.get('on') === '1'; return send(res, 200, { failing }); }
       if (url.pathname === '/__state') return send(res, 200, db);
+      if (url.pathname.startsWith('/auth/v1/')) {
+        const route = url.pathname.slice('/auth/v1/'.length);
+        const body = raw ? JSON.parse(raw) : {};
+        if (route === 'token') {
+          const p = db.alumni_profiles.find((x) => x.email === body.email);
+          if (!p || passwordFor(p) !== body.password) { console.log('auth rejected', JSON.stringify({ email: body.email, pwLen: (body.password||'').length, known: !!p, expectLen: p ? passwordFor(p).length : null })); } if (!p || passwordFor(p) !== body.password) return send(res, 400, { code: 'invalid_credentials', error_code: 'invalid_credentials', msg: 'Invalid login credentials' });
+          return send(res, 200, sessionFor(p));
+        }
+        if (route === 'user' && req.method === 'PUT') {
+          const p = callerOf(req); if (!p) return send(res, 401, { code: 'no_authorization', msg: 'not signed in' });
+          if (body.password) passwords[p.email] = body.password;
+          return send(res, 200, { id: p.id, aud: 'authenticated', email: p.email, app_metadata: {}, user_metadata: {}, created_at: now() });
+        }
+        if (route === 'recover') {
+          const p = db.alumni_profiles.find((x) => x.email === body.email);
+          if (p) resetCodes.set(p.email, '123456');
+          return send(res, 200, {});
+        }
+        if (route === 'verify') {
+          const p = db.alumni_profiles.find((x) => x.email === body.email);
+          if (!p || resetCodes.get(p.email) !== body.token) return send(res, 403, { code: 'otp_expired', error_code: 'otp_expired', msg: 'Token has expired or is invalid' });
+          return send(res, 200, sessionFor(p));
+        }
+        if (route === 'logout') { sessions.delete((req.headers['authorization'] || '').replace(/^Bearer /, '')); return send(res, 204); }
+        return send(res, 200, {});
+      }
       const m = url.pathname.match(/^\/rest\/v1\/(\w+)(?:\/(\w+))?$/);
       if (!m) return send(res, 404, { message: 'not found' });
       if (failing) return send(res, 500, { message: 'simulated outage' });
@@ -233,7 +282,7 @@ http.createServer((req, res) => {
       const wantsObject = (req.headers['accept'] || '').includes('vnd.pgrst.object');
 
       if (first === 'rpc') {
-        try { return send(res, 200, rpc(second, body || {}) ?? null); } catch (e) { return send(res, 400, e); }
+        try { return send(res, 200, rpc(second, body || {}, callerOf(req)) ?? null); } catch (e) { return send(res, 400, e); }
       }
       const table = first;
       if (!(table in db)) return send(res, 404, { code: '42P01', message: `no table ${table}` });

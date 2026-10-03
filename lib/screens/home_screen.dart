@@ -313,6 +313,10 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // On narrow phones (about 320 px) the label has so little room that
+    // "Marketplace" broke in the middle of the word; use a smaller icon
+    // circle and tighter padding there.
+    final compact = MediaQuery.sizeOf(context).width < 360;
     return Material(
       color: scheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
@@ -325,15 +329,19 @@ class _Tile extends StatelessWidget {
         ),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 18,
+                radius: compact ? 14 : 18,
                 backgroundColor: scheme.primaryContainer,
-                child: Icon(icon, size: 20, color: scheme.primary),
+                child: Icon(
+                  icon,
+                  size: compact ? 16 : 20,
+                  color: scheme.primary,
+                ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: compact ? 6 : 10),
               Expanded(
                 child: Text(
                   label,

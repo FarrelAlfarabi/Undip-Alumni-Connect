@@ -319,10 +319,38 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               final status = ApplicationStatus.label(
                                 application['status'] as String?,
                               );
-                              return FilledButton.icon(
-                                onPressed: null,
-                                icon: const Icon(Icons.check_circle_outline),
-                                label: Text('Applied · $status'),
+                              // A status, not a disabled button: readable
+                              // and clearly not tappable.
+                              return Container(
+                                key: const Key('applied-status'),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle_outline,
+                                      color:
+                                          theme.colorScheme.onPrimaryContainer,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Applied · $status',
+                                      style: theme.textTheme.labelLarge
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                          ),
+                                    ),
+                                  ],
+                                ),
                               );
                             }
                             return FilledButton.icon(

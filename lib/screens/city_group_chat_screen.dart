@@ -166,6 +166,7 @@ class _CityGroupChatScreenState extends State<CityGroupChatScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
+                    tooltip: 'Send message',
                     onPressed: _sending ? null : _send,
                     icon: const Icon(Icons.send),
                   ),

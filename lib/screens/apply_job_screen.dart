@@ -188,13 +188,19 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           automaticallyImplyLeading: _step != _ApplyStep.done,
           leading: _step == _ApplyStep.review
               ? IconButton(
+                  tooltip: 'Back',
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => setState(() => _step = _ApplyStep.details),
                 )
               : null,
         ),
         body: SafeArea(
-          child: Center(
+          // The form starts at the top; only the short "done" screen is
+          // centred.
+          child: Align(
+            alignment: _step == _ApplyStep.done
+                ? Alignment.center
+                : Alignment.topCenter,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
