@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/account_repository.dart';
 import '../screens/verification_screen.dart';
 import '../screens/welcome_screen.dart';
 import '../util/friendly_error.dart';
@@ -33,7 +34,11 @@ class AppEntry extends StatefulWidget {
     this.fetchProfile = defaultProfileFetcher,
     this.homeBuilder = defaultHomeBuilder,
     this.clock = DateTime.now,
+    this.accountRepository,
   });
+
+  /// Injectable for tests (consent is saved through it).
+  final AccountRepository? accountRepository;
 
   final LockService? lock;
   final ProfileFetcher fetchProfile;
@@ -87,7 +92,13 @@ class _AppEntryState extends State<AppEntry> {
       return;
     }
     if (!mounted) return;
-    enterApp(context, profile, lock: _lock, homeBuilder: widget.homeBuilder);
+    enterApp(
+      context,
+      profile,
+      lock: _lock,
+      homeBuilder: widget.homeBuilder,
+      accountRepository: widget.accountRepository,
+    );
   }
 
   Future<void> _forget([String? notice]) async {

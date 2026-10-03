@@ -8,7 +8,9 @@ import '../data/report_repository.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
+import '../policy/policy_screen.dart';
 import 'admin_screen.dart';
+import 'delete_account_screen.dart';
 import 'blocked_users_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
@@ -299,6 +301,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onPressed: _editProfile,
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const Key('profile-policy'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
+                      ),
+                      icon: const Icon(Icons.privacy_tip_outlined),
+                      label: const Text('Privacy policy and community rules'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const Key('profile-delete'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DeleteAccountScreen(
+                            currentUser: widget.currentUser,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.delete_forever_outlined),
+                      label: const Text('Delete my account'),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(

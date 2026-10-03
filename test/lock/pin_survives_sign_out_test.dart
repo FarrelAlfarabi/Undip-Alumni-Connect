@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/config/policy_config.dart';
 import 'package:undip_alumni_connect/lock/app_entry.dart';
 import 'package:undip_alumni_connect/lock/lock_service.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
@@ -153,6 +154,7 @@ void main() {
           'name': 'Bunga',
           'email': testEmail,
           'verification_status': 'verified',
+          'policy_version': kPolicyVersion,
         });
         expect(find.byKey(const Key('pin-setup')), findsOneWidget);
       },

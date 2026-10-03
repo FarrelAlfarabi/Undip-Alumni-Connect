@@ -83,3 +83,10 @@ If a session ends early, continue from the last entry here.
 - Tests first: `test/error_report_test.dart` (cleaning, with email, key and phone samples), `supabase/tests/beta/08_feedback_reports_test.sql` (anon can insert but not read, daily limit, back-dating), `test/feedback_test.dart` (error screen button, send success and failure, copy, admin screen).
 - Checks: analyze clean, 376 tests pass, beta SQL checks pass.
 - Added dependency: `package_info_plus`.
+
+## Stage 6G: account deletion, privacy policy, consent
+- Database: `20261003170000_account_deletion_and_consent.sql` (+ rollback). `alumni_profiles.policy_version`, `policy_accepted_at`, `deleted_at` (locked from direct app edits), `nim` now nullable. Select policy hides deleted rows. `account_accept_policy`, `account_files`, `account_delete` (one transaction: businesses, products, jobs, applications, contact requests both ways, notifications to and from, blocks both ways, feedback, simulated emails, chat messages, admin rows; reports kept without their note; profile cleared and marked deleted). `storage_cleanup_queue` for the files the app cannot remove.
+- App: privacy policy and community rules (two asset files, Indonesian first then English, version constant, last updated date, draft banner; operator name and contact email placeholders in one config file); consent screen (checkbox, Continue, back and sign out) shown after verification or unlock only when the accepted version differs; Delete my account (plain explanation, type HAPUS or first name, final confirm, files removed best effort, then the device is wiped and Welcome is shown). Profile has entries for the policy and for deleting the account.
+- Tests first: `supabase/tests/beta/09_account_deletion_test.sql` (function result, constraints, hidden from lists, cannot verify again, restore from the dashboard) and `test/account_test.dart` (policy text, consent gate for not accepted, accepted and changed version, device wipe, storage failure).
+- Checks: analyze clean, 401 tests pass, beta SQL checks pass.
+- Could not verify: real storage removal, the real secure storage wipe on a phone.

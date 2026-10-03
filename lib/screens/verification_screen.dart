@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
+import '../policy/consent_screen.dart';
 import '../lock/pin_setup_screen.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
@@ -45,7 +47,11 @@ class VerificationScreen extends StatefulWidget {
     this.lock,
     this.verifyEmail = defaultVerifyEmail,
     this.homeBuilder = defaultHomeBuilder,
+    this.accountRepository,
   });
+
+  /// Injectable for tests (consent is saved through it).
+  final AccountRepository? accountRepository;
 
   /// Injectable for tests; defaults to the real [HomeShell].
   final HomeBuilder homeBuilder;
@@ -129,11 +135,41 @@ class _VerificationScreenState extends State<VerificationScreen> {
       offerPin = false;
     }
     if (!mounted) return;
-    if (!offerPin) {
-      enterApp(context, profile, lock: lock, homeBuilder: widget.homeBuilder);
+    // First run: Welcome, verify, consent, PIN offer, app.
+    if (needsConsent(profile)) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ConsentScreen(
+            profile: profile,
+            lock: lock,
+            repository: widget.accountRepository,
+            onAccepted: (ctx, accepted) =>
+                _continueAfterConsent(ctx, accepted, lock, offerPin),
+          ),
+        ),
+      );
       return;
     }
-    Navigator.of(context).pushReplacement(
+    _continueAfterConsent(context, profile, lock, offerPin);
+  }
+
+  void _continueAfterConsent(
+    BuildContext ctx,
+    Map<String, dynamic> profile,
+    LockService lock,
+    bool offerPin,
+  ) {
+    if (!offerPin) {
+      enterApp(
+        ctx,
+        profile,
+        lock: lock,
+        homeBuilder: widget.homeBuilder,
+        accountRepository: widget.accountRepository,
+      );
+      return;
+    }
+    Navigator.of(ctx).pushReplacement(
       MaterialPageRoute(
         builder: (_) => PinSetupScreen(
           lock: lock,
@@ -143,6 +179,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
             profile,
             lock: lock,
             homeBuilder: widget.homeBuilder,
+            accountRepository: widget.accountRepository,
           ),
         ),
       ),

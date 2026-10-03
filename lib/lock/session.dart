@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../data/account_repository.dart';
+import '../data/feedback_repository.dart';
+import '../policy/consent_screen.dart';
 import '../screens/home_shell.dart';
 import 'lock_service.dart';
 
@@ -11,13 +14,38 @@ Widget defaultHomeBuilder(Map<String, dynamic> profile) =>
     HomeShell(profile: profile);
 
 /// Go into the app for a verified person, replacing the current screen.
+///
+/// If this person has not accepted the CURRENT privacy policy version, the
+/// consent screen comes first; without accepting they cannot enter.
 void enterApp(
   BuildContext context,
   Map<String, dynamic> profile, {
   LockService? lock,
   HomeBuilder homeBuilder = defaultHomeBuilder,
+  AccountRepository? accountRepository,
 }) {
-  (lock ?? LockService.shared).sessionActive = true;
+  final l = lock ?? LockService.shared;
+  if (needsConsent(profile)) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ConsentScreen(
+          profile: profile,
+          lock: l,
+          repository: accountRepository,
+          onAccepted: (ctx, accepted) => enterApp(
+            ctx,
+            accepted,
+            lock: l,
+            homeBuilder: homeBuilder,
+            accountRepository: accountRepository,
+          ),
+        ),
+      ),
+    );
+    return;
+  }
+  l.sessionActive = true;
+  FeedbackSession.profileId = profile['id'] as String?;
   Navigator.of(context)
       .pushReplacement(MaterialPageRoute(builder: (_) => homeBuilder(profile)));
 }
@@ -31,6 +59,7 @@ Future<void> signOutTo(
   LockService? lock,
 }) async {
   final navigator = Navigator.of(context);
+  FeedbackSession.profileId = null;
   try {
     await (lock ?? LockService.shared).signOut();
   } catch (_) {
