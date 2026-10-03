@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../data/business_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
+import '../models/business.dart';
 import '../models/marketplace_listing.dart';
+import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/marketplace_demo_notice.dart';
+import 'business_form_screen.dart';
+import 'marketplace_form_screen.dart';
 import 'marketplace_admin_screen.dart';
 import 'marketplace_detail_screen.dart';
 import 'my_listings_screen.dart';
@@ -46,7 +51,7 @@ List<MarketplaceListing> applyMarketplaceFilters(
 }
 
 /// Alumni-to-alumni marketplace (demo): browse approved listings. Free for
-/// everyone; posting is closed for now (see [_post]).
+/// everyone; adding a product needs an approved business (see [_post]).
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({
     super.key,
@@ -54,7 +59,11 @@ class MarketplaceScreen extends StatefulWidget {
     this.repository,
     this.pickImage = pickListingImage,
     this.showBack = false,
+    this.businessRepository,
   });
+
+  /// Injectable for tests.
+  final BusinessRepository? businessRepository;
 
   /// True when pushed from the Home hub (shows a back arrow).
   final bool showBack;
@@ -117,21 +126,129 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   String get _myId => widget.currentUser.value['id'] as String;
 
-  // Product posting is closed until it is tied to approved businesses.
-  Future<void> _post() async {
-    await showDialog<void>(
+  late final BusinessRepository _bizRepo =
+      widget.businessRepository ?? BusinessRepository();
+  bool _checkingPost = false;
+
+  Future<void> _info(
+    String title,
+    String body, {
+    String? action,
+    VoidCallback? onAction,
+  }) {
+    return showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Posting is not open yet'),
-        content: const Text(kPostingClosedMessage),
+        title: Text(title),
+        content: Text(body),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
+            child: Text(action == null ? 'OK' : 'Not now'),
           ),
+          if (action != null)
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                onAction?.call();
+              },
+              child: Text(action),
+            ),
         ],
       ),
     );
+  }
+
+  Future<Business?> _pickBusiness(List<Business> approved) async {
+    if (approved.length == 1) return approved.first;
+    return showModalBottomSheet<Business>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text('Add a product to which business?'),
+            ),
+            for (final b in approved)
+              ListTile(
+                key: Key('pick-${b.id}'),
+                title: Text(b.name),
+                subtitle: Text(b.category),
+                onTap: () => Navigator.of(ctx).pop(b),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Only owners of approved businesses can add products, up to the limit the
+  // database reports. The database enforces both rules too.
+  Future<void> _post() async {
+    if (_checkingPost) return;
+    setState(() => _checkingPost = true);
+    List<Business> approved;
+    Map<String, BusinessUsage> usage;
+    try {
+      final mine = await _bizRepo.mine(_myId);
+      final u = await _bizRepo.usage(_myId);
+      approved = mine.where((b) => b.isApproved).toList();
+      usage = {for (final x in u) x.businessId: x};
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+      }
+      return;
+    } finally {
+      if (mounted) setState(() => _checkingPost = false);
+    }
+    if (!mounted) return;
+
+    if (approved.isEmpty) {
+      await _info(
+        'Add a product',
+        kProductsNeedBusinessMessage,
+        action: 'Register a business',
+        onAction: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                BusinessFormScreen(ownerId: _myId, repository: _bizRepo),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final business = await _pickBusiness(approved);
+    if (business == null || !mounted) return;
+
+    final u = usage[business.id];
+    if (u != null && !u.canPost) {
+      await _info(
+        'Free limit reached',
+        'You have used ${u.used} of ${u.freeLimit} free products for '
+            '${business.name}.\n\n$kPostLimitMessage',
+      );
+      return;
+    }
+
+    await Navigator.of(context).push<MarketplaceListing>(
+      MaterialPageRoute(
+        builder: (_) => MarketplaceFormScreen(
+          sellerId: _myId,
+          businessId: business.id,
+          repository: _repo,
+          defaultCity: widget.currentUser.value['city'] as String?,
+          pickImage: widget.pickImage,
+        ),
+      ),
+    );
+    // The product is approved at creation, so show it right away.
+    if (mounted) _reload();
   }
 
   Future<void> _openAdmin() async {
@@ -185,7 +302,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Post a listing'),
+        label: const Text('Add a product'),
       ),
       body: Column(
         children: [

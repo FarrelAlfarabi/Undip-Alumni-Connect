@@ -72,6 +72,7 @@ class MarketplaceListing {
     this.rejectedReason,
     this.approvedAt,
     this.seller,
+    this.businessId,
   });
 
   final String id;
@@ -95,6 +96,9 @@ class MarketplaceListing {
   /// Only present when the query joined alumni_profiles (browse/detail).
   final MarketplaceSeller? seller;
 
+  /// The business this product belongs to. Null for the old seed listings.
+  final String? businessId;
+
   MarketplaceListing withSeller(MarketplaceSeller? seller) {
     return MarketplaceListing(
       id: id,
@@ -113,6 +117,7 @@ class MarketplaceListing {
       rejectedReason: rejectedReason,
       approvedAt: approvedAt,
       seller: seller,
+      businessId: businessId,
     );
   }
 
@@ -139,6 +144,7 @@ class MarketplaceListing {
       seller: sellerMap is Map<String, dynamic>
           ? MarketplaceSeller.fromMap(sellerMap)
           : null,
+      businessId: map['business_id'] as String?,
     );
   }
 }

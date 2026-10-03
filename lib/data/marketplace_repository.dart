@@ -7,7 +7,10 @@ import '../models/marketplace_listing.dart';
 /// Error codes raised by the marketplace SQL functions (see
 /// supabase/migrations/20260930090200_marketplace_functions.sql).
 enum MarketplaceErrorCode {
-  postingClosed,
+  businessRequired,
+  businessNotFound,
+  businessNotApproved,
+  postLimitReached,
   notFound,
   notOwner,
   notAdmin,
@@ -233,15 +236,19 @@ class MarketplaceRepository {
     return _listings(rows);
   }
 
-  /// Creates a listing in `pending`. Throws
-  /// [MarketplaceErrorCode.postingClosed] while posting is closed.
+  /// Adds a product to an approved business. It is approved at creation.
+  /// Throws [MarketplaceErrorCode.postLimitReached] at the free limit and
+  /// [MarketplaceErrorCode.businessNotApproved] for a business that is not
+  /// approved.
   Future<MarketplaceListing> create(
     String sellerId,
+    String businessId,
     MarketplaceListingInput input,
   ) async {
     final row = await _guard(
       () => _api.rpc('marketplace_create_listing', {
         'p_seller': sellerId,
+        'p_business': businessId,
         ..._inputParams(input),
       }),
     );
@@ -343,7 +350,10 @@ class MarketplaceRepository {
       return MarketplaceException(MarketplaceErrorCode.duplicateReport, msg);
     }
     final code = switch (msg) {
-      'posting_closed' => MarketplaceErrorCode.postingClosed,
+      'business_required' => MarketplaceErrorCode.businessRequired,
+      'business_not_found' => MarketplaceErrorCode.businessNotFound,
+      'business_not_approved' => MarketplaceErrorCode.businessNotApproved,
+      'post_limit_reached' => MarketplaceErrorCode.postLimitReached,
       'not_found' => MarketplaceErrorCode.notFound,
       'not_owner' => MarketplaceErrorCode.notOwner,
       'not_admin' => MarketplaceErrorCode.notAdmin,

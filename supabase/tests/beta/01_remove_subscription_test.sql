@@ -29,8 +29,9 @@ select jt.expect_error(format($q$update alumni_profiles set subscription_status 
 -- Fields the app still edits keep working.
 update alumni_profiles set industry = 'Technology' where id = jt.pid('ahmad.ramadhan@example.com');
 
--- Marketplace posting is closed, even for a subscribed seller.
-select jt.expect_error(format($q$select marketplace_create_listing(%L, 'Title ok', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('siti.azizah@example.com')), 'posting_closed');
+-- Marketplace posting with the OLD signature is closed, even for a subscribed
+-- seller (the stage 6 migration removes that function, so either answer is fine).
+select jt.expect_error(format($q$select marketplace_create_listing(%L, 'Title ok', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('siti.azizah@example.com')), 'posting_closed|does not exist');
 -- Existing listings stay visible; edit and delete paths are untouched.
 select jt.assert(jt.count_of($q$select 1 from marketplace_listings$q$) > 0, 'approved seeded listings are still visible');
 

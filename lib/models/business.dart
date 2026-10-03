@@ -134,3 +134,32 @@ class BusinessInput {
   /// Only used when registering. The band cannot be changed afterwards.
   final BusinessBand? band;
 }
+
+/// How many products a business has, and how many it may have. Comes from the
+/// database function `business_my_usage` (the limit is data in the database,
+/// never a number in the app).
+class BusinessUsage {
+  const BusinessUsage({
+    required this.businessId,
+    required this.freeLimit,
+    required this.used,
+    required this.unlimitedActive,
+    required this.canPost,
+  });
+
+  final String businessId;
+  final int freeLimit;
+  final int used;
+  final bool unlimitedActive;
+  final bool canPost;
+
+  bool get overLimit => !unlimitedActive && used > freeLimit;
+
+  factory BusinessUsage.fromMap(Map<String, dynamic> m) => BusinessUsage(
+    businessId: m['business_id'] as String,
+    freeLimit: (m['free_post_limit'] as num?)?.toInt() ?? 0,
+    used: (m['products_used'] as num?)?.toInt() ?? 0,
+    unlimitedActive: m['unlimited_active'] == true,
+    canPost: m['can_post'] == true,
+  );
+}

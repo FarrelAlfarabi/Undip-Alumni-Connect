@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
+import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
@@ -20,15 +21,21 @@ class MyBusinessesScreen extends StatefulWidget {
 class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   late final BusinessRepository _repo =
       widget.repository ?? BusinessRepository();
-  late Future<List<Business>> _future;
+  late Future<(List<Business>, List<BusinessUsage>)> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = _repo.mine(widget.ownerId);
+    _future = _load();
   }
 
-  void _reload() => setState(() => _future = _repo.mine(widget.ownerId));
+  Future<(List<Business>, List<BusinessUsage>)> _load() async {
+    final mine = await _repo.mine(widget.ownerId);
+    final usage = await _repo.usage(widget.ownerId);
+    return (mine, usage);
+  }
+
+  void _reload() => setState(() => _future = _load());
 
   Future<void> _openForm([Business? existing]) async {
     await Navigator.of(context).push<Business>(
@@ -52,7 +59,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
         icon: const Icon(Icons.add_business_outlined),
         label: const Text('Register a business'),
       ),
-      body: FutureBuilder<List<Business>>(
+      body: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
         future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
@@ -79,7 +86,11 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
               ),
             );
           }
-          final items = snap.data ?? const [];
+          final items = snap.data?.$1 ?? const <Business>[];
+          final usage = {
+            for (final u in snap.data?.$2 ?? const <BusinessUsage>[])
+              u.businessId: u,
+          };
           if (items.isEmpty) {
             return const Center(
               child: Padding(
@@ -98,6 +109,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, i) => BusinessOwnerCard(
               business: items[i],
+              usage: usage[items[i].id],
               onEdit: () => _openForm(items[i]),
             ),
           );
@@ -109,9 +121,15 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
 
 /// One business as its owner sees it.
 class BusinessOwnerCard extends StatelessWidget {
-  const BusinessOwnerCard({super.key, required this.business, this.onEdit});
+  const BusinessOwnerCard({
+    super.key,
+    required this.business,
+    this.usage,
+    this.onEdit,
+  });
 
   final Business business;
+  final BusinessUsage? usage;
   final VoidCallback? onEdit;
 
   bool get _canEdit =>
@@ -164,6 +182,14 @@ class BusinessOwnerCard extends StatelessWidget {
                         '(an admin sets the approved band)',
               style: theme.textTheme.bodyMedium,
             ),
+            if (b.status == BusinessStatus.approved && usage != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                postingSummary(b, usage),
+                key: Key('usage-${b.id}'),
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
             if (b.status == BusinessStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(

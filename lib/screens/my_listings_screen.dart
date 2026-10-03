@@ -165,7 +165,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                        'You have no listings yet. Use "Post a listing" on '
+                        'You have no listings yet. Use "Add a product" on '
                         'the marketplace to add one.',
                         textAlign: TextAlign.center,
                       ),

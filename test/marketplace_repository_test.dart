@@ -97,9 +97,10 @@ void main() {
 
     test('create sends every field and parses the returned row', () async {
       api.rpcResult = listingMap(status: 'pending', approvedAt: null);
-      final l = await repo.create('s1', input);
+      final l = await repo.create('s1', 'biz1', input);
       final p = api.params['marketplace_create_listing']!;
       expect(p['p_seller'], 's1');
+      expect(p['p_business'], 'biz1');
       expect(p['p_price_idr'], 85000);
       expect(p['p_shop_url'], isNull);
       expect(p['p_contact_info'], 'WA 0800-0000-0000');
@@ -145,7 +146,10 @@ void main() {
 
     test('maps database error codes to MarketplaceErrorCode', () async {
       final cases = {
-        'posting_closed': MarketplaceErrorCode.postingClosed,
+        'post_limit_reached': MarketplaceErrorCode.postLimitReached,
+        'business_not_approved': MarketplaceErrorCode.businessNotApproved,
+        'business_not_found': MarketplaceErrorCode.businessNotFound,
+        'business_required': MarketplaceErrorCode.businessRequired,
         'not_owner': MarketplaceErrorCode.notOwner,
         'not_found': MarketplaceErrorCode.notFound,
         'invalid_state': MarketplaceErrorCode.invalidState,
@@ -154,7 +158,7 @@ void main() {
       for (final e in cases.entries) {
         api.throwOnCall = PostgrestException(message: e.key, code: 'P0001');
         await expectLater(
-          repo.create('s1', input),
+          repo.create('s1', 'biz1', input),
           throwsA(
             isA<MarketplaceException>().having((x) => x.code, 'code', e.value),
           ),

@@ -129,6 +129,17 @@ class BusinessRepository {
     return _list(rows);
   }
 
+  /// For each of the owner's businesses: free limit, products used, whether
+  /// unlimited posting is on, and whether a new product is allowed.
+  Future<List<BusinessUsage>> usage(String ownerId) async {
+    final rows = await _guard(
+      () => _api.rpc('business_my_usage', {'p_owner': ownerId}),
+    );
+    return (rows as List)
+        .map((r) => BusinessUsage.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   /// Approved businesses, for verified alumni.
   Future<List<Business>> directory(String viewerId) async {
     final rows = await _guard(

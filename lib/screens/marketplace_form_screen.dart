@@ -17,6 +17,7 @@ class MarketplaceFormScreen extends StatefulWidget {
     super.key,
     required this.sellerId,
     required this.repository,
+    this.businessId,
     this.existing,
     this.defaultCity,
     this.pickImage = pickListingImage,
@@ -24,6 +25,10 @@ class MarketplaceFormScreen extends StatefulWidget {
 
   final String sellerId;
   final MarketplaceRepository repository;
+
+  /// The approved business a NEW product is added to. Not needed when
+  /// editing.
+  final String? businessId;
 
   /// Set when editing.
   final MarketplaceListing? existing;
@@ -132,14 +137,21 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
       );
       final existing = widget.existing;
       final saved = existing == null
-          ? await widget.repository.create(widget.sellerId, input)
+          ? await widget.repository.create(
+              widget.sellerId,
+              widget.businessId!,
+              input,
+            )
           : await widget.repository.update(widget.sellerId, existing.id, input);
 
       final message = existing == null
           ? kSubmittedMessage
-          : (existing.status == ListingStatus.approved
-                ? kEditedApprovedMessage
-                : kEditedMessage);
+          : (existing.businessId != null &&
+                    existing.status == ListingStatus.approved
+                ? kEditedBusinessMessage
+                : (existing.status == ListingStatus.approved
+                      ? kEditedApprovedMessage
+                      : kEditedMessage));
       messenger.showSnackBar(
         SnackBar(content: Text(message), duration: const Duration(seconds: 7)),
       );
@@ -156,11 +168,14 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Only the old seed listings (no business) go back to review on edit.
     final editingApproved =
-        _isEdit && widget.existing!.status == ListingStatus.approved;
+        _isEdit &&
+        widget.existing!.status == ListingStatus.approved &&
+        widget.existing!.businessId == null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Edit listing' : 'Post a listing')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit product' : 'Add a product')),
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
@@ -288,9 +303,11 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           TextFormField(
                             controller: _contact,
                             enabled: !_saving,
+                            maxLength: 300,
                             decoration: const InputDecoration(
                               labelText: 'Contact info (optional)',
-                              hintText: 'WhatsApp, email, phone...',
+                              hintText:
+                                  'WhatsApp, phone, email, social media...',
                               border: OutlineInputBorder(),
                             ),
                           ),
@@ -325,9 +342,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                                     ),
                                   )
                                 : Text(
-                                    _isEdit
-                                        ? 'Save changes'
-                                        : 'Submit for approval',
+                                    _isEdit ? 'Save changes' : 'Post product',
                                   ),
                           ),
                         ],
