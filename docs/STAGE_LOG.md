@@ -27,3 +27,10 @@ If a session ends early, continue from the last entry here.
 - Checks: analyze clean, 244 tests pass, beta SQL checks pass.
 - Could not verify: the live database. The migration must be applied together with this app build.
 - Decision: a verified-poster check replaces the subscriber check on job_posts (kept some protection against anonymous inserts; reason: the old rule was the only DB guard on that table).
+
+## Stage 4: hide chat behind one switch
+- `lib/config/feature_flags.dart`: `const bool chatEnabled = false;`. When off: no Chat tab (3 tabs: Home, Directory, Profile), no Message button on profiles, no city group chat button on Nearby (WhatsApp invite stays). Chat tables and data untouched. The announcements feed stays.
+- No notification links to chat today. Stage 6E will respect the switch too.
+- `NearbyAlumniScreen` got an optional `fetchAlumni` so it can be tested without Supabase.
+- Tests: `test/chat_switch_test.dart` (new), `home_shell_test.dart` updated for both switch states.
+- Checks: analyze clean, 251 tests pass.

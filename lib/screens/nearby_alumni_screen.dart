@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../data/city_distances.dart';
 import '../widgets/nearby_map_view.dart';
+import '../config/feature_flags.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
 import '../util/friendly_error.dart';
@@ -46,9 +47,20 @@ class _CityCluster {
 /// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) —
 /// see alumni_screen.dart.
 class NearbyAlumniScreen extends StatefulWidget {
-  const NearbyAlumniScreen({super.key, required this.currentUser});
+  const NearbyAlumniScreen({
+    super.key,
+    required this.currentUser,
+    this.fetchAlumni,
+    this.chat = chatEnabled,
+  });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
+
+  /// Injectable for tests; defaults to the Supabase query.
+  final Future<List<Map<String, dynamic>>> Function()? fetchAlumni;
+
+  /// Whether city group chat is offered (the app-wide switch).
+  final bool chat;
 
   @override
   State<NearbyAlumniScreen> createState() => _NearbyAlumniScreenState();
@@ -65,6 +77,7 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
+    if (widget.fetchAlumni != null) return widget.fetchAlumni!();
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
         .select()
@@ -77,8 +90,11 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) =>
-          _CityClusterSheet(cluster: cluster, currentUser: widget.currentUser),
+      builder: (_) => _CityClusterSheet(
+        cluster: cluster,
+        currentUser: widget.currentUser,
+        chat: widget.chat,
+      ),
     );
   }
 
@@ -331,7 +347,14 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
 /// manually; WhatsApp has no API to auto-create a group, so this is
 /// honestly an invite/share action, not automated group creation).
 class _CityClusterSheet extends StatelessWidget {
-  const _CityClusterSheet({required this.cluster, required this.currentUser});
+  const _CityClusterSheet({
+    required this.cluster,
+    required this.currentUser,
+    required this.chat,
+  });
+
+  /// Whether the city group chat button shows (the app-wide switch).
+  final bool chat;
 
   final _CityCluster cluster;
   final ValueNotifier<Map<String, dynamic>> currentUser;
@@ -377,22 +400,24 @@ class _CityClusterSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Text('Network with the group', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
-            FilledButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => CityGroupChatScreen(
-                      city: cluster.city,
-                      currentUser: currentUser,
+            if (chat) ...[
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CityGroupChatScreen(
+                        city: cluster.city,
+                        currentUser: currentUser,
+                      ),
                     ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.forum_outlined),
-              label: Text('Open ${cluster.city} Group Chat'),
-            ),
-            const SizedBox(height: 8),
+                  );
+                },
+                icon: const Icon(Icons.forum_outlined),
+                label: Text('Open ${cluster.city} Group Chat'),
+              ),
+              const SizedBox(height: 8),
+            ],
             OutlinedButton.icon(
               onPressed: () => _inviteViaWhatsApp(context),
               icon: const Icon(Icons.chat_outlined),

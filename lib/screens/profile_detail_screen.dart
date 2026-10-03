@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/feature_flags.dart';
 import '../lock/session.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
@@ -25,7 +26,11 @@ class ProfileDetailScreen extends StatefulWidget {
     required this.profile,
     required this.currentUser,
     this.showEditButton = true,
+    this.chat = chatEnabled,
   });
+
+  /// Whether the Message button shows (the app-wide chat switch).
+  final bool chat;
 
   /// The profile being displayed — own or someone else's.
   final Map<String, dynamic> profile;
@@ -240,7 +245,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
                     ),
-                  ] else if (!_isOwnProfile) ...[
+                  ] else if (!_isOwnProfile && widget.chat) ...[
                     const SizedBox(height: 20),
                     FilledButton.icon(
                       onPressed: _messaging ? null : _messageThisAlumnus,

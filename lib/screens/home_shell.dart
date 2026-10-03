@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../config/feature_flags.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_repository.dart';
 import 'home_pages.dart';
 import 'home_screen.dart';
 
-/// App shell with a 4-item bottom navigation: Home, Directory, Chat,
-/// Profile. Lands on Home after verification. Jobs, News, Marketplace and
+/// App shell with a bottom navigation: Home, Directory, Profile (and Chat
+/// when [chatEnabled] is on). Lands on Home after verification. Jobs, News, Marketplace and
 /// Nearby Alumni are opened from the Home hub (tiles, banners, "See all
 /// announcements") as pushed screens with a back arrow.
 ///
@@ -22,7 +23,12 @@ class HomeShell extends StatefulWidget {
     this.homeApi,
     this.marketplaceRepository,
     this.autoAdvance = const Duration(seconds: 5),
+    this.chat = chatEnabled,
   });
+
+  /// Whether the Chat tab exists. Defaults to the app-wide [chatEnabled]
+  /// switch; tests pass it to check both states.
+  final bool chat;
 
   final Map<String, dynamic> profile;
 
@@ -34,8 +40,6 @@ class HomeShell extends StatefulWidget {
 
   static const homeTab = 0;
   static const directoryTab = 1;
-  static const chatTab = 2;
-  static const profileTab = 3;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -67,10 +71,13 @@ class _HomeShellState extends State<HomeShell> {
     super.dispose();
   }
 
+  // Tab order: Home, Directory, [Chat], Profile.
+  int get _chatTab => widget.chat ? 2 : -1;
+
   void _select(int i) {
     setState(() {
       if (i == HomeShell.homeTab && _index != HomeShell.homeTab) _homeEpoch++;
-      if (i == HomeShell.chatTab && _index != HomeShell.chatTab) _chatEpoch++;
+      if (i == _chatTab && _index != _chatTab) _chatEpoch++;
       _index = i;
     });
   }
@@ -96,10 +103,11 @@ class _HomeShellState extends State<HomeShell> {
         autoAdvance: widget.autoAdvance,
       ),
       pages.directory(_currentUser),
-      KeyedSubtree(
-        key: ValueKey('chat-$_chatEpoch'),
-        child: pages.chat(_currentUser),
-      ),
+      if (widget.chat)
+        KeyedSubtree(
+          key: ValueKey('chat-$_chatEpoch'),
+          child: pages.chat(_currentUser),
+        ),
       pages.profile(widget.profile, _currentUser),
     ];
 
@@ -111,23 +119,24 @@ class _HomeShellState extends State<HomeShell> {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: _select,
-          destinations: const [
-            NavigationDestination(
+          destinations: [
+            const NavigationDestination(
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home),
               label: 'Home',
             ),
-            NavigationDestination(
+            const NavigationDestination(
               icon: Icon(Icons.people_outline),
               selectedIcon: Icon(Icons.people),
               label: 'Directory',
             ),
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              selectedIcon: Icon(Icons.chat_bubble),
-              label: 'Chat',
-            ),
-            NavigationDestination(
+            if (widget.chat)
+              const NavigationDestination(
+                icon: Icon(Icons.chat_bubble_outline),
+                selectedIcon: Icon(Icons.chat_bubble),
+                label: 'Chat',
+              ),
+            const NavigationDestination(
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person),
               label: 'Profile',
