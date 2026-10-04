@@ -142,7 +142,12 @@ void main() {
       expect(find.text('Sambal Roa'), findsOneWidget);
       expect(find.text('Desain Undangan'), findsOneWidget);
       expect(find.text('By Bunga Citra Ayu'), findsNWidgets(2));
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
       // No passphrase prompt any more: the queue is shown straight away.
       expect(find.text('Admin passphrase'), findsNothing);
     });

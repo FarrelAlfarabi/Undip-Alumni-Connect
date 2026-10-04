@@ -126,8 +126,8 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
                   Text(
-                    'Demo build with dummy data. Placeholder visual '
-                    'identity — not UNDIP\'s or Ikafe\'s official branding.',
+                    'Closed beta. Placeholder visual identity, not UNDIP\'s or '
+                    'Ikafe\'s official branding.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant.withValues(

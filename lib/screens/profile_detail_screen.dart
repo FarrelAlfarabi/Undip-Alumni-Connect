@@ -19,6 +19,7 @@ import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
 import '../widgets/error_view.dart';
+import '../widgets/feedback_sheet.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -473,6 +474,13 @@ class _ProfileMenu extends StatelessWidget {
             Icons.privacy_tip_outlined,
             'Privacy policy and community rules',
             onPolicy,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-feedback'),
+            Icons.feedback_outlined,
+            'Send feedback',
+            () => showFeedbackSheet(context, error: null, screen: 'Profile'),
           ),
           const Divider(height: 1),
           tile(

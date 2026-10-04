@@ -190,7 +190,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
     setState(() {
       _state = _VerificationState.idle;
       _errorMessage = null;
-      _emailController.clear();
     });
   }
 
@@ -291,8 +290,8 @@ class _VerificationForm extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter the email on file with UNDIP to confirm your alumni '
-            'record. This is a demo check against seeded sample data.',
+            'Enter the email the Ikafe team has on file for you to confirm '
+            'your alumni record.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -371,9 +370,8 @@ class _NotFoundResult extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'We couldn\'t find an alumni record for "$email" in the demo '
-          'dataset. Double-check the email, or try one of the sample demo '
-          'accounts.',
+          'We couldn\'t find an alumni record for "$email". Use the email '
+          'the Ikafe team has for you, or contact the beta team.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

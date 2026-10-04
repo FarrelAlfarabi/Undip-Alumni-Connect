@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 class MarketplaceDemoNotice extends StatelessWidget {
   const MarketplaceDemoNotice({super.key});
 
-  static const text = 'Demo only, no real payments';
+  static const text =
+      'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.';
 
   @override
   Widget build(BuildContext context) {

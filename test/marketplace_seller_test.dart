@@ -324,7 +324,12 @@ void main() {
       expect(find.text('Rejected'), findsOneWidget);
       expect(find.text('Sold'), findsOneWidget);
       expect(find.text('Rejected: Foto kurang jelas'), findsOneWidget);
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
       // Edit: pending, approved, rejected (not sold). Mark as sold: approved only.
       expect(find.text('Edit'), findsNWidgets(3));
       expect(find.text('Mark as sold'), findsOneWidget);

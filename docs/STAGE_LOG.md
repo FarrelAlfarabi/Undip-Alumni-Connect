@@ -113,3 +113,11 @@ If a session ends early, continue from the last entry here.
 - Tests: `test/nearby_map_dark_test.dart` (light and dark pump, label color, contrast numbers for labels, markers and initials).
 - Checks: analyze clean, all tests pass. No SQL change.
 - Could not verify: how it looks on a real phone in dark mode.
+
+## Stage 8: UX review
+- Full review of every screen (code reading, not tested on a real phone): `docs/UX_REVIEW.md`, 41 rows with severity and fix. 7 High.
+- Fixed (High, small, low risk): the marketplace banner now says "Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay." (the constant `MarketplaceDemoNotice.text` stays, tests read the new text); Verify and Welcome copy no longer says demo, dummy data or sample accounts; a wrong email no longer clears the field on Try again; Profile has a "Send feedback" row so testers can report a confusing screen without an error.
+- Left open (High): placeholders in the policy (you must fill them in), no proof of email ownership (needs real login), Nearby has no way to add a city, Requests card shows only a name (both medium effort).
+- Tap targets: the only compact items are display chips, buttons use Material defaults (48 dp). No change needed.
+- Tests: `test/stage8_test.dart`; the Visit shop test now scrolls to the button because the banner is two lines.
+- Checks: analyze clean, all tests pass. No SQL change.
