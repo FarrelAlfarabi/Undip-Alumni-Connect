@@ -71,7 +71,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'A verified alumni directory,\nbuilt to move people forward.',
+                    'An alumni directory checked against the Ikafe list,\nbuilt to move people forward.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       height: 1.15,

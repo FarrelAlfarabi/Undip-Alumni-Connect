@@ -9,7 +9,13 @@ class AppTheme {
   AppTheme._();
 
   static const indigo = Color(0xFF2E2A5C);
-  static const gold = Color(0xFF9C6E22);
+  // Darker brass: the old 0xFF9C6E22 was 4.06:1 on the paper background and
+  // 4.16:1 under the light button text (WCAG AA needs 4.5:1).
+  static const gold = Color(0xFF7F5815);
+
+  /// The original brighter brass. Only for decoration on the dark lock
+  /// screen, never for text on a light background.
+  static const goldBright = Color(0xFF9C6E22);
   static const paper = Color(0xFFF7F3E8);
   static const paperRaised = Color(0xFFEDE6D2);
   static const ink = Color(0xFF211D3C);

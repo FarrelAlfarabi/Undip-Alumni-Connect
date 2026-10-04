@@ -428,10 +428,17 @@ class _PhotoPicker extends StatelessWidget {
     if (picked != null) {
       preview = AspectRatio(
         aspectRatio: 3 / 2,
-        child: Image.memory(picked!.bytes, fit: BoxFit.cover),
+        child: Image.memory(
+          picked!.bytes,
+          fit: BoxFit.cover,
+          semanticLabel: 'Photo you picked',
+        ),
       );
     } else if (hasExisting) {
-      preview = ListingImage(url: existingUrl!);
+      preview = ListingImage(
+        url: existingUrl!,
+        semanticLabel: 'Current photo of this listing',
+      );
     } else {
       preview = AspectRatio(
         aspectRatio: 3 / 2,

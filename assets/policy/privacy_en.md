@@ -18,6 +18,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Reports, blocks and notifications: what you report and why, who you block, and the in-app notifications about your account.
 - Feedback: when you tap "Send feedback" we receive a short cleaned error summary, the screen name, the app version, your device type, the optional text you write, and your profile if you are signed in.
 - Your consent: which version of this text you accepted, and when.
+- Why we may use it (legal basis): your consent when you accept this text, our legitimate interest in running a safe alumni network, and your request when you ask for something in the app (for example a job application). Under the Indonesian and Indian laws, the basis is your consent.
 
 ## 3. What we do not collect
 - No GPS and no live location. "Nearby alumni" uses the city in your profile and a fixed distance table.
@@ -30,6 +31,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Your email, phone number and contact text are shown only where you chose to give them: a job's contact text, an application you send (to the person who posted the job), or what you share when you accept a contact request (to that person only).
 - Businesses and products are visible to verified alumni. Admins can hide them.
 - The Ikafe admins (a small named group) can see reports, feedback and businesses waiting for review.
+- Service providers who store or deliver the app for us: Supabase (database and file storage, server region Singapore), Vercel (web hosting, mainly the United States), GitHub (code and test builds, no user data) and Google Fonts (fonts for the web and app). Your data is therefore processed outside Indonesia, the EU and India. We have a contract or the standard terms of each provider, and we share only what each one needs to do its job.
 - Product photos and CV files are kept in public storage. Anyone who has the exact link can open them.
 - Honest limit of this beta: the app does not use real sign in yet. The database still sends full profile rows, including email and NIM, to the app, so someone with technical skill and the app's public key could read them. This is a known gap. It must be fixed before the app is opened to more people.
 
@@ -39,7 +41,8 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Signing out keeps your PIN on this phone for you. "Switch account", "Forgot PIN", 5 wrong PINs and deleting your account remove everything.
 
 ## 6. How long we keep data
-- Until you delete your account.
+- Until you delete your account. We then remove or empty it as described in section 7.
+- Nothing is deleted automatically yet. Feedback reports and declined contact requests stay until an admin removes them by hand or you delete your account.
 - Reports you filed, or that were filed about others, are kept for moderation without your personal details.
 - There are no backups yet.
 - Photos and CV files may stay in storage until an admin removes them. The app tries to remove them when you delete your account, but may not be allowed to.
@@ -49,8 +52,18 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - We remove your businesses, products, job posts, job applications, contact requests (sent and received), notifications, blocks and feedback. Your profile keeps only the name "Deleted user" and no personal details.
 - After this you cannot verify again with the same email. If you change your mind, ask the Ikafe team to restore you from the alumni list.
 
-## 8. Your choices and contact
-- Email {{CONTACT_EMAIL}} to ask what we hold about you, to correct it, or to have it deleted.
+## 8. Your rights and contact
+- Email {{CONTACT_EMAIL}} for any of the following. We answer within 30 days. We may ask you to prove who you are first.
+- Access: ask what we hold about you and get a copy.
+- Correction: ask us to fix data that is wrong. You can also edit your employment details in the app.
+- Deletion: use "Delete my account" in the app, or email us.
+- Withdraw consent: you can stop at any time by deleting your account. This does not change what we did before.
+- Objection and restriction: ask us to stop or limit using your data in a way you object to.
+- Data copy (portability): ask for your data in a common file format.
+- Complaint: if you are in the EU or the UK you may complain to your local data protection authority. In Indonesia, the authority named under the Personal Data Protection Law (UU PDP No. 27 of 2022) may receive complaints once it is set up. In India you may contact the Data Protection Board under the DPDP Act 2023, after first writing to us. In California you have the right to know, delete and correct your data, and not to be treated worse for using these rights.
+- We do not sell or share your personal data for advertising.
+- Grievance contact (India DPDP Act, Indonesia UU PDP): {{CONTACT_EMAIL}}.
+- Children: the app is only for alumni who are 18 or older. We do not knowingly collect data from children.
 
 ## 9. Community rules
 - No spam, no scams, no fake businesses.

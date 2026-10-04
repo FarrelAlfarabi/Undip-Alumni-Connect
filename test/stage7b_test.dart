@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/config/policy_config.dart';
 import 'package:undip_alumni_connect/data/feedback_repository.dart';
 import 'package:undip_alumni_connect/screens/about_screen.dart';
 import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
@@ -64,5 +65,17 @@ void main() {
     final r = await FeedbackRepository.build(error: 'x', screen: 'Home');
     expect(r.appVersion, '0.9.0');
     expect(r.buildNumber, '7');
+  });
+
+  testWidgets('About shows the operator name, address and email', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
+    await tester.pumpAndSettle();
+    final text = tester.widget<Text>(find.byKey(const Key('about-operator')));
+    final shown = text.data!;
+    expect(shown, contains(kOperatorName));
+    expect(shown, contains(kOperatorAddress));
+    expect(shown, contains(kContactEmail));
   });
 }

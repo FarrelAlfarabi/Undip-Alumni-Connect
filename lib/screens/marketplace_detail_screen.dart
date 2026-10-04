@@ -145,7 +145,10 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: ListingImage(url: _l.imageUrl),
+                          child: ListingImage(
+                            url: _l.imageUrl,
+                            semanticLabel: 'Photo of ${_l.title}',
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(

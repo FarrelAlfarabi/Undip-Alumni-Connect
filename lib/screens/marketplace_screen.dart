@@ -458,7 +458,11 @@ class _ListingCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListingImage(url: listing.imageUrl, size: 104),
+            ListingImage(
+              url: listing.imageUrl,
+              size: 104,
+              semanticLabel: 'Photo of ${listing.title}',
+            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -509,9 +513,14 @@ class ListingImage extends StatelessWidget {
     required this.url,
     this.size,
     this.aspectRatio,
+    this.semanticLabel,
   });
 
   final String url;
+
+  /// Text alternative for screen readers (the listing title). When null the
+  /// image is treated as decorative.
+  final String? semanticLabel;
 
   /// Square size; when null the image fills the width at [aspectRatio].
   final double? size;
@@ -534,6 +543,8 @@ class ListingImage extends StatelessWidget {
         : Image.network(
             url,
             fit: BoxFit.cover,
+            semanticLabel: semanticLabel,
+            excludeFromSemantics: semanticLabel == null,
             errorBuilder: (_, _, _) => placeholder(),
             loadingBuilder: (context, child, progress) =>
                 progress == null ? child : placeholder(),

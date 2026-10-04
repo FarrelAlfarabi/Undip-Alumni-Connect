@@ -222,7 +222,11 @@ class _MyListingCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: ListingImage(url: l.imageUrl, size: 72),
+                  child: ListingImage(
+                    url: l.imageUrl,
+                    size: 72,
+                    semanticLabel: 'Photo of ${l.title}',
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
