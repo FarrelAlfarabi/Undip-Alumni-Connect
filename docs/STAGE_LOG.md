@@ -106,3 +106,10 @@ If a session ends early, continue from the last entry here.
 - Tests first: `test/stage7b_test.dart` with mocked package info (pubspec version, About, Profile row, Welcome, feedback report version).
 - Checks: analyze clean, 422 tests pass. No SQL change.
 - Could not verify: the real build number on a phone (needs the CI APK).
+
+## Stage 7C: dark mode for the Nearby map
+- The map has no map package and the app has no dark theme, so only the painted map follows the system brightness. New `MapPalette` (light and dark) for land, water, water line, avenues, grid, city label text and halo, marker ring. Markers keep the theme fill with white initials; the ring turns light grey on the dark map.
+- Not changed: the rest of the Nearby page stays light (no app dark theme). Search box, buttons and popups are on that light page, so their contrast is unchanged.
+- Tests: `test/nearby_map_dark_test.dart` (light and dark pump, label color, contrast numbers for labels, markers and initials).
+- Checks: analyze clean, all tests pass. No SQL change.
+- Could not verify: how it looks on a real phone in dark mode.

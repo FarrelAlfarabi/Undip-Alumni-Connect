@@ -10,6 +10,57 @@ class AlumniPin {
   final int km;
 }
 
+/// Colors of the hand-painted map. The app has no dark theme, so only the
+/// map follows the system brightness (see DECISIONS.md).
+class MapPalette {
+  const MapPalette._({
+    required this.land,
+    required this.water,
+    required this.waterLine,
+    required this.avenue,
+    required this.grid,
+    required this.labelText,
+    required this.labelHalo,
+    required this.markerBorder,
+  });
+
+  final Color land;
+  final Color water;
+  final Color waterLine;
+  final Color avenue;
+  final Color grid;
+  final Color labelText;
+  final Color labelHalo;
+  final Color markerBorder;
+
+  static const light = MapPalette._(
+    land: Color(0xFFE8E2D4),
+    water: Color(0xFFAFD8E8),
+    waterLine: Color(0xFF8FC4D9),
+    avenue: Color(0x8CFFFFFF),
+    grid: Color(0x0A000000),
+    labelText: Color(0xDD000000),
+    labelHalo: Colors.white,
+    markerBorder: Colors.white,
+  );
+
+  static const dark = MapPalette._(
+    land: Color(0xFF232733),
+    water: Color(0xFF173247),
+    waterLine: Color(0xFF2F5B7C),
+    avenue: Color(0x24FFFFFF),
+    grid: Color(0x0DFFFFFF),
+    labelText: Color(0xFFF2F2F2),
+    labelHalo: Color(0xFF14161D),
+    markerBorder: Color(0xFFF2F2F2),
+  );
+
+  static MapPalette of(BuildContext context) =>
+      MediaQuery.platformBrightnessOf(context) == Brightness.dark
+      ? dark
+      : light;
+}
+
 const double _kViewportHeight = 340;
 const double _kPadding = 44;
 const double _kMarkerSpacing = 38;
@@ -53,11 +104,13 @@ class NearbyMapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = MapPalette.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Container(
+        key: const Key('nearby-map'),
         height: _kViewportHeight,
-        color: const Color(0xFFE8E2D4),
+        color: palette.land,
         child: LayoutBuilder(
           builder: (context, constraints) {
             // The un-zoomed canvas exactly fills the viewport, so the
@@ -81,12 +134,17 @@ class NearbyMapView extends StatelessWidget {
                   children: [
                     CustomPaint(
                       size: mapSize,
-                      painter: _MapBackgroundPainter(),
+                      painter: _MapBackgroundPainter(palette),
                     ),
-                    for (final marker in layout.markers) _buildMarker(marker),
-                    _buildMarker(layout.myMarker),
+                    for (final marker in layout.markers)
+                      _buildMarker(marker, palette),
+                    _buildMarker(layout.myMarker, palette),
                     for (final label in layout.labels)
-                      _CityLabel(city: label.city, position: label.position),
+                      _CityLabel(
+                        city: label.city,
+                        position: label.position,
+                        palette: palette,
+                      ),
                   ],
                 ),
               ),
@@ -97,9 +155,13 @@ class NearbyMapView extends StatelessWidget {
     );
   }
 
-  Widget _buildMarker(_MarkerSpec marker) {
+  Widget _buildMarker(_MarkerSpec marker, MapPalette palette) {
     final size = marker.isMe ? 40.0 : 32.0;
-    final child = _PersonMarker(initials: marker.initials, isMe: marker.isMe);
+    final child = _PersonMarker(
+      initials: marker.initials,
+      isMe: marker.isMe,
+      borderColor: palette.markerBorder,
+    );
 
     return Positioned(
       left: marker.position.dx - size / 2,
@@ -281,10 +343,15 @@ class _MapLayout {
 }
 
 class _PersonMarker extends StatelessWidget {
-  const _PersonMarker({required this.initials, required this.isMe});
+  const _PersonMarker({
+    required this.initials,
+    required this.isMe,
+    required this.borderColor,
+  });
 
   final String initials;
   final bool isMe;
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -297,7 +364,7 @@ class _PersonMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: isMe ? theme.colorScheme.primary : theme.colorScheme.error,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2.5),
+        border: Border.all(color: borderColor, width: 2.5),
         boxShadow: const [
           BoxShadow(color: Colors.black38, blurRadius: 5, offset: Offset(0, 2)),
         ],
@@ -318,20 +385,25 @@ class _PersonMarker extends StatelessWidget {
 }
 
 class _CityLabel extends StatelessWidget {
-  const _CityLabel({required this.city, required this.position});
+  const _CityLabel({
+    required this.city,
+    required this.position,
+    required this.palette,
+  });
 
   final String city;
   final Offset position;
+  final MapPalette palette;
 
-  // A white text halo (real Google Maps' label style) instead of a
-  // boxed pill — reads clearly over both land and water without a
-  // background shape competing with the markers for visual weight.
-  static const _haloShadows = [
-    Shadow(color: Colors.white, offset: Offset(-1.2, -1.2)),
-    Shadow(color: Colors.white, offset: Offset(1.2, -1.2)),
-    Shadow(color: Colors.white, offset: Offset(-1.2, 1.2)),
-    Shadow(color: Colors.white, offset: Offset(1.2, 1.2)),
-    Shadow(color: Colors.white, blurRadius: 3),
+  // A text halo (real Google Maps' label style) instead of a boxed pill.
+  // The halo color follows the map palette so labels stay readable on
+  // both the light and the dark map.
+  List<Shadow> get _haloShadows => [
+    Shadow(color: palette.labelHalo, offset: const Offset(-1.2, -1.2)),
+    Shadow(color: palette.labelHalo, offset: const Offset(1.2, -1.2)),
+    Shadow(color: palette.labelHalo, offset: const Offset(-1.2, 1.2)),
+    Shadow(color: palette.labelHalo, offset: const Offset(1.2, 1.2)),
+    Shadow(color: palette.labelHalo, blurRadius: 3),
   ];
 
   @override
@@ -345,8 +417,8 @@ class _CityLabel extends StatelessWidget {
           child: Text(
             city,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.black87,
+            style: TextStyle(
+              color: palette.labelText,
               fontWeight: FontWeight.w700,
               fontSize: 13,
               shadows: _haloShadows,
@@ -363,14 +435,18 @@ class _CityLabel extends StatelessWidget {
 /// edge-anchored water shapes with a soft coastline stroke — purely
 /// decorative, not a real geographic rendering.
 class _MapBackgroundPainter extends CustomPainter {
+  _MapBackgroundPainter(this.palette);
+
+  final MapPalette palette;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final land = Paint()..color = const Color(0xFFE8E2D4);
+    final land = Paint()..color = palette.land;
     canvas.drawRect(Offset.zero & size, land);
 
-    final water = Paint()..color = const Color(0xFFAFD8E8);
+    final water = Paint()..color = palette.water;
     final waterStroke = Paint()
-      ..color = const Color(0xFF8FC4D9)
+      ..color = palette.waterLine
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     final corner1 = Rect.fromLTWH(
@@ -391,7 +467,7 @@ class _MapBackgroundPainter extends CustomPainter {
     canvas.drawOval(corner2, waterStroke);
 
     final avenue = Paint()
-      ..color = Colors.white.withValues(alpha: 0.55)
+      ..color = palette.avenue
       ..strokeWidth = 3;
     canvas.drawLine(
       Offset(size.width * 0.15, 0),
@@ -405,7 +481,7 @@ class _MapBackgroundPainter extends CustomPainter {
     );
 
     final grid = Paint()
-      ..color = Colors.black.withValues(alpha: 0.04)
+      ..color = palette.grid
       ..strokeWidth = 1;
     const step = 40.0;
     for (double x = 0; x < size.width; x += step) {
@@ -417,5 +493,6 @@ class _MapBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MapBackgroundPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MapBackgroundPainter oldDelegate) =>
+      oldDelegate.palette != palette;
 }

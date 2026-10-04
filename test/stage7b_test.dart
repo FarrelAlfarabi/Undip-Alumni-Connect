@@ -16,8 +16,10 @@ void main() {
 
   test('pubspec version is 0.9.0+1', () {
     expect(
-      RegExp(r'^version: 0\.9\.0\+1$', multiLine: true)
-          .hasMatch(File('pubspec.yaml').readAsStringSync()),
+      RegExp(
+        r'^version: 0\.9\.0\+1$',
+        multiLine: true,
+      ).hasMatch(File('pubspec.yaml').readAsStringSync()),
       isTrue,
     );
   });
@@ -38,7 +40,10 @@ void main() {
       MaterialApp(
         home: ProfileDetailScreen(
           profile: {'id': 'me', 'name': 'Ahmad', 'email': 'a@example.com'},
-          currentUser: ValueNotifier<Map<String, dynamic>>({'id': 'me', 'name': 'Ahmad'}),
+          currentUser: ValueNotifier<Map<String, dynamic>>({
+            'id': 'me',
+            'name': 'Ahmad',
+          }),
           adminCheck: (_) async => false,
         ),
       ),
@@ -52,10 +57,7 @@ void main() {
   testWidgets('Welcome shows Beta and the version', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: WelcomeScreen()));
     await tester.pumpAndSettle();
-    expect(
-      find.text('BETA · v0.9.0 (build 7)'),
-      findsOneWidget,
-    );
+    expect(find.text('BETA · v0.9.0 (build 7)'), findsOneWidget);
   });
 
   test('feedback reports read the version from the same place', () async {

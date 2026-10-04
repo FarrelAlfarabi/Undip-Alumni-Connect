@@ -479,9 +479,8 @@ class _ProfileMenu extends StatelessWidget {
             const Key('profile-about'),
             Icons.info_outline,
             'About',
-            () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            ),
+            () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const AboutScreen())),
           ),
           FutureBuilder<bool>(
             future: adminFuture,
