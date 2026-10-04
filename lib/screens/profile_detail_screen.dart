@@ -9,6 +9,7 @@ import '../lock/session.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
 import '../policy/policy_screen.dart';
+import 'about_screen.dart';
 import 'admin_screen.dart';
 import 'delete_account_screen.dart';
 import 'my_businesses_screen.dart';
@@ -472,6 +473,15 @@ class _ProfileMenu extends StatelessWidget {
             Icons.privacy_tip_outlined,
             'Privacy policy and community rules',
             onPolicy,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-about'),
+            Icons.info_outline,
+            'About',
+            () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AboutScreen()),
+            ),
           ),
           FutureBuilder<bool>(
             future: adminFuture,

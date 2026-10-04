@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
+import '../util/app_info.dart';
 import 'verification_screen.dart';
 
 /// The app's actual entry screen — a proper branded landing moment in
@@ -108,6 +109,19 @@ class WelcomeScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  FutureBuilder<AppInfo>(
+                    future: AppInfo.load(),
+                    builder: (context, snap) => Text(
+                      'BETA${snap.data == null ? '' : ' · ${snap.data!.short}'}',
+                      key: const Key('welcome-version'),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 40),
