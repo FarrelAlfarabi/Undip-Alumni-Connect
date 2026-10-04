@@ -121,3 +121,8 @@ If a session ends early, continue from the last entry here.
 - Tap targets: the only compact items are display chips, buttons use Material defaults (48 dp). No change needed.
 - Tests: `test/stage8_test.dart`; the Visit shop test now scrolls to the button because the banner is two lines.
 - Checks: analyze clean, all tests pass. No SQL change.
+
+## Stage 9: docs and PR
+- Updated `PROJECT_NOTES.md` (new entry), `README.md`, `DEMO_SCRIPT.md`, `MARKETPLACE_CHECKLIST.md`, `docs/hub/CLICK_TEST_CHECKLIST.md`. Added section 11 "Known gaps for the closed beta" to `SECURITY_AUDIT.md`. The master plan was not touched.
+- PR description written (migration order, secrets, admin SQL, "I must fill in", decisions, gaps, warning). PR marked ready for review. Not merged. Vercel not touched.
+- Final checks: analyze clean, all tests pass, beta SQL checks pass (run at Stage 7).

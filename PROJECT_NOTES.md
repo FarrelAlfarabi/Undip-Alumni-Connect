@@ -910,3 +910,11 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Not verified:** the deployed site with the CDN path, real Supabase Storage and pgcrypto behaviour, real devices.
 **Open:** everything that needs real Supabase Auth (see `SECURITY_AUDIT.md`).
 
+
+## 2026-10-04 — Free launch for the closed beta (Stages 0 to 9)
+
+**Done:** audit, Android debug APK in CI, PIN bug fix, subscription removed, chat hidden behind one switch, business directory with UMKM bands, marketplace products from approved businesses with free limits by band, request to contact, admins from a table, report and block, in-app notifications, "Send feedback" on errors, account deletion with privacy policy and consent, four tabs (Home, Directory, Market, Profile), app version and BETA label, dark map for Nearby, a UX review (`docs/UX_REVIEW.md`), and updated docs. One commit per stage; details in `docs/STAGE_LOG.md`.
+**Decided:** free, no payment in the app; admins are rows in `app_admins` (the old passphrase is ignored); dark mode only for the Nearby map because the app has no dark theme; nothing merged and the Vercel deploy left alone. Full list: `docs/DECISIONS.md`.
+**Verified:** analyze clean, 427 tests pass, local throwaway Postgres checks (`supabase/tests/run_beta_local.sh`) pass including anon-role tests, rollbacks and re-apply.
+**Not verified:** the live Supabase project (nothing was applied), real phones, the CI APK build with the real secrets, the web build.
+**Open:** nine new migrations are unapplied (order in PR 9); fill in the policy operator name and contact email in `lib/config/policy_config.dart`; add the admins; no real login yet (see `SECURITY_AUDIT.md` section 11); the policy needs review before a public launch.
