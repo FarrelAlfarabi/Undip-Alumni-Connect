@@ -88,61 +88,69 @@ class _ConsentScreenState extends State<ConsentScreen> {
           children: [
             Expanded(child: PolicyReader(bundle: widget.bundle)),
             const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CheckboxListTile(
-                    key: const Key('consent-checkbox'),
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    value: _checked,
-                    onChanged: _saving
-                        ? null
-                        : (v) => setState(() => _checked = v ?? false),
-                    title: const Text(
-                      'I have read and accept the privacy policy and community '
-                      'rules. (Saya sudah membaca dan menyetujui kebijakan '
-                      'privasi dan aturan komunitas.)',
-                    ),
-                  ),
-                  if (_error != null)
-                    InlineError(
-                      message: _error!,
-                      screen: 'Consent',
-                      error: _lastError,
-                      textKey: const Key('consent-error'),
-                    ),
-                  const SizedBox(height: 4),
-                  FilledButton(
-                    key: const Key('consent-continue'),
-                    onPressed: (_checked && !_saving) ? _continue : null,
-                    child: _saving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2.5),
-                          )
-                        : const Text('Continue'),
-                  ),
-                  TextButton(
-                    key: const Key('consent-back'),
-                    onPressed: _saving
-                        ? null
-                        : () => signOutTo(
-                            context,
-                            const WelcomeScreen(),
-                            lock: widget.lock,
-                          ),
-                    child: Text(
-                      'Back and sign out',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
+            // Scrolls when the text is very large, so Continue is never cut off.
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.6,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CheckboxListTile(
+                      key: const Key('consent-checkbox'),
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: _checked,
+                      onChanged: _saving
+                          ? null
+                          : (v) => setState(() => _checked = v ?? false),
+                      title: const Text(
+                        'I have read and accept the privacy policy and community '
+                        'rules. (Saya sudah membaca dan menyetujui kebijakan '
+                        'privasi dan aturan komunitas.)',
                       ),
                     ),
-                  ),
-                ],
+                    if (_error != null)
+                      InlineError(
+                        message: _error!,
+                        screen: 'Consent',
+                        error: _lastError,
+                        textKey: const Key('consent-error'),
+                      ),
+                    const SizedBox(height: 4),
+                    FilledButton(
+                      key: const Key('consent-continue'),
+                      onPressed: (_checked && !_saving) ? _continue : null,
+                      child: _saving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : const Text('Continue'),
+                    ),
+                    TextButton(
+                      key: const Key('consent-back'),
+                      onPressed: _saving
+                          ? null
+                          : () => signOutTo(
+                              context,
+                              const WelcomeScreen(),
+                              lock: widget.lock,
+                            ),
+                      child: Text(
+                        'Back and sign out',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

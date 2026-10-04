@@ -151,10 +151,15 @@ class BusinessOwnerCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Chip(
-                  key: Key('status-${b.id}'),
-                  label: Text(b.status.label),
-                  visualDensity: VisualDensity.compact,
+                Flexible(
+                  child: Chip(
+                    key: Key('status-${b.id}'),
+                    label: Text(
+                      b.status.label,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
               ],
             ),

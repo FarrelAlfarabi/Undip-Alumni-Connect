@@ -126,3 +126,9 @@ If a session ends early, continue from the last entry here.
 - Updated `PROJECT_NOTES.md` (new entry), `README.md`, `DEMO_SCRIPT.md`, `MARKETPLACE_CHECKLIST.md`, `docs/hub/CLICK_TEST_CHECKLIST.md`. Added section 11 "Known gaps for the closed beta" to `SECURITY_AUDIT.md`. The master plan was not touched.
 - PR description written (migration order, secrets, admin SQL, "I must fill in", decisions, gaps, warning). PR marked ready for review. Not merged. Vercel not touched.
 - Final checks: analyze clean, all tests pass, beta SQL checks pass (run at Stage 7).
+
+## Stage 8B: layout stress tests
+- New `test/layout_stress_test.dart`: about 25 screens (normal, empty, error states) at 320x568 text 1.0 and 360x640 text 1.6, Nearby map in dark mode, tap targets of at least 48 dp and tooltips on icon buttons. Uses Roboto from the Flutter SDK (the default test font is far too wide and gives false overflows).
+- Result: no failures at those sizes. A stricter check at 320 wide with text 2.0 found two real problems, both fixed: the consent screen's bottom panel (Continue could be cut off) now scrolls, and the policy banner and language switch now scroll with the text; the status chip on My businesses can shrink.
+- Not covered: InkWell tap areas, popup menus, SegmentedButton; real IBM Plex Sans (slightly wider than Roboto); real phones.
+- Checks: analyze clean, 535 tests pass. No SQL change.

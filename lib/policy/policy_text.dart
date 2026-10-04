@@ -156,49 +156,58 @@ class _PolicyReaderState extends State<PolicyReader> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        PolicyDraftBanner(language: _language),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: SegmentedButton<PolicyLanguage>(
-            segments: const [
-              ButtonSegment(
-                value: PolicyLanguage.id,
-                label: Text('Bahasa Indonesia'),
-              ),
-              ButtonSegment(value: PolicyLanguage.en, label: Text('English')),
-            ],
-            selected: {_language},
-            onSelectionChanged: (s) => _set(s.first),
-          ),
-        ),
-        Expanded(
-          child: FutureBuilder<String>(
-            future: _text!,
-            builder: (context, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snap.hasError) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      "Couldn't load the text. Please try again later.",
+    // The banner and the language switch scroll with the text, so very large
+    // text never pushes the policy out of view.
+    return FutureBuilder<String>(
+      future: _text!,
+      builder: (context, snap) {
+        final Widget content;
+        if (snap.connectionState != ConnectionState.done) {
+          content = const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snap.hasError) {
+          content = const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(
+              child: Text("Couldn't load the text. Please try again later."),
+            ),
+          );
+        } else {
+          content = Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: PolicyBody(text: snap.data ?? ''),
+          );
+        }
+        return SingleChildScrollView(
+          key: const Key('policy-scroll'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PolicyDraftBanner(language: _language),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: SegmentedButton<PolicyLanguage>(
+                  segments: const [
+                    ButtonSegment(
+                      value: PolicyLanguage.id,
+                      label: Text('Bahasa Indonesia'),
                     ),
-                  ),
-                );
-              }
-              return SingleChildScrollView(
-                key: const Key('policy-scroll'),
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                child: PolicyBody(text: snap.data ?? ''),
-              );
-            },
+                    ButtonSegment(
+                      value: PolicyLanguage.en,
+                      label: Text('English'),
+                    ),
+                  ],
+                  selected: {_language},
+                  onSelectionChanged: (s) => _set(s.first),
+                ),
+              ),
+              content,
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
