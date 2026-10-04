@@ -287,3 +287,31 @@ This is the only thing that removes the Critical findings. It is a separate, lar
 4. Check that `SUPABASE_ANON_KEY` on Vercel is the publishable/anon key (the build now refuses anything else).
 5. Decide on SA-08 (real emails in the public repo).
 
+
+---
+
+## 11. Known gaps for the closed beta (2026-10-04)
+
+Added after the free-launch work (Stages 0 to 9, branch `feat/free-launch-business-directory`). These are the gaps that remain on purpose for a closed beta of about 15 people. None of them is fixed by the new migrations. Do not open the app to the public until the first three are closed.
+
+**Not safe for a public launch**
+1. **No real login.** Verification is still an email match, not a Supabase Auth session. Anyone who knows an email or a profile id can act as that person. That includes admins (rows in `app_admins`), requests, reports, blocks and **account deletion** (`account_delete`). The typed HAPUS and the final confirm only stop accidents.
+2. **The directory still sends every person's email and NIM to every client.** Hiding them needs a view and Auth (section 9).
+3. **The public web version uses the same database.** Anyone with the site address can reach the same data and functions.
+4. **The privacy policy is self-written.** It says what the code stores. It needs a lawyer's review (UU PDP) before a public launch. Operator name and contact email are still placeholders in `lib/config/policy_config.dart`.
+
+**What the new migrations do protect (proven with anon-role tests, `supabase/tests/run_beta_local.sh`)**
+- Business status, approved band, `unlimited_until`, post limits, shared contacts, admin rights, notifications and feedback rows cannot be edited with the anon key. They are changed only through the checked functions or in the dashboard.
+- The app role can only insert feedback (no read, no update, no delete). 10 per profile per day.
+- This is protection against accidents and casual abuse. Because of gap 1, a person who knows another person's profile id can still call the checked functions as that person.
+
+**Missing**
+- Push notifications (in-app only).
+- Release signing (testers get a debug APK), store accounts.
+- Database backups (the free plan has none; export from the dashboard by hand).
+- Files of a deleted account (product photos, CVs) are only queued in `storage_cleanup_queue`; the buckets do not let the app delete files. Clean them in the dashboard.
+- The old seed data still holds real names and emails (SA-08).
+- Fonts load from Google Fonts at run time (told in the policy).
+
+**Not verified**
+- Anything against the live Supabase project, real phones, the CI APK build with the real secrets, the web build.

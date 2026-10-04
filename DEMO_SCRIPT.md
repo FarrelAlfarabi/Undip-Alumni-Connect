@@ -1,110 +1,79 @@
-# Demo Script — Lingkaran (for Mas Gilang / Ikafe)
+# Demo Script: Lingkaran closed beta
 
-Written for the Sep 23 demo. Assumes the app is already running (see README/PROJECT_NOTES for how to launch it — Flutter web via `flutter run -d web-server` or `flutter build web` + a static server, with the real `.env` credentials in place).
+For showing the closed beta to Mas Gilang, Maria and the first testers. Run it against a demo database, never the live project. Test emails are in `supabase/seed.sql` (for example `ahmad.ramadhan@example.com`).
 
-**Everything below uses dummy/seed data. No real alumni, no real payment, no real NIM verification — say this up front if it isn't obvious from context.**
+Say this first: **this is a closed beta. It is free, there is no payment in the app, and there is no real login yet.**
 
 ---
 
 ## 0. Before you start
 
-- Confirm you're on branch `main` and have pulled the latest.
-- Confirm `.env` has the real Supabase URL/anon key (ask if you don't have them).
-- Have this test email ready: **`ahmad.ramadhan@example.com`** — seeded as `free`, not subscribed, so the paywall demo works live. Don't use `bunga.ayu@example.com` for the main walkthrough; she's pre-subscribed and would skip the paywall moment.
-- Optional second test email if you want to show the "no match" rejection path: anything not in the seed data, e.g. `notreal@example.com`.
+- You need the debug APK (GitHub Actions artifact) or `flutter run`, with a `.env` that points to a demo database.
+- The demo database needs all migrations up to `20261003170000` applied, and at least one admin row (see the header of `20261003130000_app_admins.sql`).
+- Two phones or two sign-ins help: one person with a business, one visitor.
+
+## 1. Welcome and verification
+
+1. The app opens on Welcome. Point at the small **BETA** label and the version.
+2. Tap **Get Started**, verify with a seed email.
+3. Read the privacy policy summary on the **consent** screen, tick the box, continue.
+4. Optional: set a PIN. Say plainly that the PIN is a phone lock, not real security.
+
+## 2. Navigation
+
+Four tabs: **Home, Directory, Market, Profile**. Chat is hidden. The bell (notifications) and **Requests** are on Home.
+
+## 3. Directory and Nearby
+
+1. **Directory**: search by name or company, filter by major, year, industry.
+2. Open a profile. Instead of messaging there is **Request contact**: the person decides whether to share a contact.
+3. **Nearby** is simulated from each profile's city, not real GPS. Switch the phone to dark mode to show the dark map.
+
+## 4. Register a business (the new core)
+
+1. **Profile > My business** (or the card on Home) > **Register a business**.
+2. Fill in name, description, category, optional links, and **Yearly sales**. Explain the UMKM bands: micro up to Rp 2 miliar, small over 2 to 15, medium over 15 to 50, large over 50 (PP 7/2021 Art. 35).
+3. Submit. The status is **Pending**. An admin must approve it.
+4. Sign in as an admin (**Profile > Admin > Businesses**): approve it. The owner gets an in-app notification.
+
+## 5. Market
+
+1. **Market > Businesses**: the approved business is in the directory.
+2. **Market > Products**: as the owner tap **Add a product**, pick the business, fill in, submit. It goes live at once.
+3. Show the free limit for the band (for example "2 of 5 used"). Hit the limit to show the message.
+4. Explain: unlimited posting is switched on by the team in the dashboard (`unlimited_until`), never inside the app. Nothing is paid in the app.
+
+## 6. Contact, report, block
+
+1. As a visitor, open a product or profile and tap **Request contact**. The owner sees it under **Requests**, can accept (shares the contact) or decline.
+2. Use the **...** menu on a product or profile: **Report** (with a reason) or **Block**. Blocked people disappear from every list. **Profile > Blocked users** undoes it.
+3. As admin, **Admin > Reports** shows the report.
+
+## 7. Jobs and News
+
+- **Jobs**: anyone verified can post a job and apply. There is no subscriber gate.
+- **News**: Ikafe announcements, one way.
+
+## 8. Feedback, About, delete
+
+1. Cause an error (turn the network off, open a list). Show **Send feedback**. Admins read it in **Admin > Feedback**.
+2. **Profile > About** shows "Lingkaran v0.9.0 (build N) BETA".
+3. **Profile > Delete my account** explains what is removed. Do not run it on a real account.
 
 ---
 
-## 1. Verification (the "core wedge": verified identity)
+## Say these explicitly
 
-1. Launch the app — it opens directly on the **Verify Your Alumni Status** screen.
-2. Enter `ahmad.ramadhan@example.com` → tap **Verify**.
-3. Narrate: *"This checks against Ikafe's alumni records. For the demo it's an exact-match against sample data — in production this becomes a real NIM cross-check against Ikafe's official graduate list."*
-4. You land on the **Profile** tab automatically — Ahmad's academic info (NIM, faculty, major, graduation year) and employment info (employer, role, industry, company) are shown.
-5. Point out: academic fields came from verification and aren't editable. Employment fields are, via **Edit Employment Info**.
-
-**Optional — show the rejection path:** go back, enter a made-up email, show the "No Matching Record" state. Demonstrates the gate actually gates.
-
----
-
-## 2. Bottom navigation
-
-Point out the 4 tabs: **Home, Directory, Chat, Profile** (Jobs, News, Marketplace and Nearby open from Home) — this differs from the Alumni/Jobs/Chat/News bottom nav on the pitch deck slides already shown to Gilang, so say so.
-
----
-
-## 3. Alumni Directory
-
-1. Tap **Alumni**. Note the two tabs under the header: **Directory** and **Nearby** — you land on Directory.
-2. Show the search box — type a company name, e.g. "Tokopedia" or "Gojek".
-3. Show the three filter dropdowns — filter by **Major**, **Graduation Year**, **Industry**. Combine two filters to show it's a real AND filter, not just search. *"This app is scoped to one faculty — Ikafe — so filtering by faculty wouldn't mean anything; major is the useful axis here."*
-4. Tap any alumnus's row → their profile opens read-only. Point out: email is hidden here (only visible on your own profile) — browsing is free, but you don't get everyone's contact info for free, that's the subscription's job.
-5. At the bottom of another alumnus's profile: the **Subscribe to Message** button. Don't tap it yet — save the paywall moment for Jobs, it's the same mechanism and you only need to show it working once.
-6. Back out to the Directory tab, then tap the **Nearby** tab next to it. Explain clearly: this is simulated from each profile's city, not real GPS — the app never asks for or tracks anyone's location. It's here to show the concept for later, not something live today.
-7. Tap the **Map** toggle (next to List) — a Google-Maps-styled view laid out over real relative positions of the seed cities, with one marker per alumnus (a small initials bubble, same visual language as Google Maps' live people-sharing) plus a blue "You" marker. Pinch/drag to zoom and pan. *"Positions are simulated from each profile's city, same as the list — still no real GPS, no map tiles, no Google Maps API key involved."*
-8. Hover (or long-press) a marker for a quick name + distance preview; tap it to open that alumnus's profile, same as tapping a row in List view.
-9. Below the map, tap a **city chip** (e.g. "Semarang (4)") → a sheet opens with who's there and two networking actions: **Open [City] Group Chat** (a real in-app group chat, not gated behind subscription) and **Invite via WhatsApp** (opens WhatsApp with a prefilled invite message you'd send yourself — WhatsApp has no way to auto-create a group from a link, say this plainly if asked). *"This is the answer to 'don't make me message 20 people one by one' — a whole city's alumni in one place."*
-10. Back out to Profile.
-
----
-
-## 4. Job Board — the monetization moment
-
-This is the most important part of the demo. Take it slow.
-
-1. Tap **Jobs**. Three seeded postings are visible: Product Manager @ Gojek, Business Analyst @ Bank Mandiri, Backend Engineer @ Tokopedia.
-2. (Optional) Show search + filters: type part of a title/company/description into the search box, or use the **Industry**/**Company** dropdowns — the list narrows live.
-3. Tap into any job's card → full detail view opens.
-4. Point at the contact line: *"Anyone can browse a posting, see how to reach the poster and apply for free. Job seekers never pay. The paid action is posting a job, shown in section 5."*
-5. Tap **Apply to this Job**. This opens a 3-step flow, like LinkedIn's Easy Apply: **Details** (name/email prefilled; LinkedIn/portfolio/CV/cover note are optional unless the poster marked them required, and required ones are clearly labeled) → **Review** (a read-only summary of everything you entered) → **Confirm & Submit** → **Done**, an explicit on-screen confirmation that the application was sent and will be reviewed. *"Applying goes into a real applications table the poster can review, and the applicant gets a clear confirmation it was received, not just a toast that disappears."*
-
----
-
-## 5. Post a Job
-
-1. Back on the **Jobs** tab, tap the **Post a Job** floating button. A free user sees a short **Subscribers only** dialog; tap **Subscribe** → the paywall screen appears, showing the pricing (Rp 99.000/year, annual plan only, no monthly plan; say clearly this number is a placeholder, the final price is announced when the closed beta opens). Tap **Subscribe Now (Demo)** and note out loud: *"This is a demo button, no real payment happens. In production this becomes Midtrans or Xendit."* You land back on the job board; tap **Post a Job** again to open the form. *"Posting is the paid action. Job seekers are never charged."*
-2. Fill in a quick example (e.g. Title: "Marketing Intern", Company: "Ikafe", Industry: "Nonprofit", Description: one line, Contact: an email).
-3. Point out the **"Notify me when someone applies"** toggle — on by default. *"In this demo that's an in-app applicant count on the job's own page, not a real push or email notification — that's a post-demo build item."*
-4. Point out the **"Require applicants to provide"** checklist below it (CV, LinkedIn URL, Portfolio, Cover note) — check one or two. *"The poster decides which parts of the application are mandatory — an applicant can't submit without them."*
-5. Tap **Post Job** — it appears at the top of the list immediately (newest first).
-6. (Optional) Open the job you just posted — as its owner you see an applicant-count banner instead of the Apply button, with a **View Applicants** link showing everyone who applied (name, contact, LinkedIn/Portfolio/CV chips).
-
----
-
-## 6. Messaging
-
-1. Go to **Alumni**, tap into any other alumnus's profile.
-2. Since you're already subscribed (from step 4), the button now says **Message** instead of **Subscribe to Message** — tap it.
-3. A conversation opens. Type a message, send it — it appears immediately in the thread.
-4. Go to the **Chat** tab — the conversation you just started is listed there.
-5. (Optional, once you have 2+ conversations) Show search + filter: type part of a name into the search box, or use the **Faculty** dropdown — narrows the conversation list live.
-6. Note: no realtime push yet — the thread refetches after you send, and the refresh icon in the chat's top bar pulls in the other side's replies. Fine for a demo, call it out only if asked.
-
-**Optional — show both sides of a conversation:** tap the sign-out icon (top right of the Profile tab), verify as the alumnus you messaged (e.g. `siti.azizah@example.com`), open **Chat** — the conversation is there from their side. Reply, sign out, come back as Ahmad, hit refresh in the thread.
-
----
-
-## 7. Announcements
-
-1. Tap **News**.
-2. Three seeded Ikafe announcements are shown (Reuni Akbar, mentoring beasiswa, jadwal temu alumni per fakultas) — one-way broadcast, source labeled "Ikafe", no comment/reply UI. Point out this needs no moderation from Farrel — Ikafe posts, alumni read.
-
----
-
-## 8. Closing points (say these explicitly, don't assume they're obvious)
-
-- Everything shown is **dummy data** — 24 seed alumni, 3 seed jobs, 3 seed announcements. No real Ikafe data is connected yet.
-- **No real payment** — the subscribe button is a visual demo only.
-- **No real NIM verification** — email exact-match stands in for it in this build.
-- **Known open items**, worth surfacing to Gilang directly rather than waiting to be asked:
-  - Whether Ikafe actually has a usable path to NIM data at all is still unconfirmed (see Master Plan doc — this is the single biggest blocker to the *production* version, not the demo).
-  - Nearby Alumni (list, map, and group chat/WhatsApp invite) is in this demo, but as a concept mockup only — simulated from each profile's city, not real GPS. Real location-sharing has no safety design yet (opt-in, granularity, data retention all undecided) and isn't something to promise a date for.
-  - No real security hardening (RLS is off on the database) — fine for a closed demo, not fine to leave that way past this point.
-
----
+- Closed beta only, about 15 testers.
+- No real login. Anyone who knows an email or a profile id can act as that person, admins and account deletion included.
+- The directory still sends everyone's email and NIM to every client.
+- No push notifications (in-app only), no release signing, no store account, no backups.
+- The privacy policy is written by us and needs review before a public launch.
+- No fee or revenue share for Ikafe is built.
 
 ## If something breaks live
 
-- **"No matching record" for a real test email** — you likely mistyped it or are using a stale `.env`. Fall back to `ahmad.ramadhan@example.com`, `siti.azizah@example.com`, `bagas.prasetyo@example.com`, `clara.putri@example.com`, or `rizky.yusuf@example.com` — all five are seeded `free` (so all show the paywall live) and verified.
-- **Blank/error screens** — check the terminal for the actual error before improvising; don't guess out loud in front of Gilang.
-- **Subscribe button doesn't seem to unlock anything** — confirm you're looking at a job/profile that was reloaded after subscribing (opening the exact same screen instance from before you subscribed won't retroactively re-render unless it was already listening — which job detail and messaging screens now are, so this should not happen; if it does, note it and move on, don't debug live).
+- **"No matching record"**: wrong email or old `.env`. Use another seeded email.
+- **Business stays Pending**: nobody with an admin row has approved it. Check `app_admins`.
+- **Posting a job fails**: the Stage 3 migration (`20261003090000`) and the new app build must go together.
+- **Blank or error screen**: use **Send feedback**, read the error before improvising.
