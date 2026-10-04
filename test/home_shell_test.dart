@@ -6,6 +6,7 @@ import 'package:undip_alumni_connect/screens/alumni_screen.dart';
 import 'package:undip_alumni_connect/screens/home_pages.dart';
 import 'package:undip_alumni_connect/screens/home_shell.dart';
 import 'package:undip_alumni_connect/screens/job_board_screen.dart';
+import 'package:undip_alumni_connect/screens/market_screen.dart';
 import 'package:undip_alumni_connect/screens/marketplace_screen.dart';
 import 'package:undip_alumni_connect/screens/announcements_screen.dart';
 import 'package:undip_alumni_connect/screens/messages_list_screen.dart';
@@ -72,7 +73,7 @@ void main() {
     expect(chatEnabled, isFalse);
   });
 
-  testWidgets('switch off: bottom navigation has Home, Directory, Profile', (
+  testWidgets('bottom navigation has Home, Directory, Market, Profile', (
     tester,
   ) async {
     await pumpShell(tester, chat: false);
@@ -82,6 +83,7 @@ void main() {
     expect(destinations.map((d) => d.label).toList(), [
       'Home',
       'Directory',
+      'Market',
       'Profile',
     ]);
     expect(find.text('Chat'), findsNothing);
@@ -92,7 +94,7 @@ void main() {
     expect(find.text('PAGE Profile'), findsOneWidget);
   });
 
-  testWidgets('switch on: Home, Directory, Chat, Profile come back', (
+  testWidgets('switch on: Chat comes back between Market and Profile', (
     tester,
   ) async {
     await pumpShell(tester, chat: true);
@@ -102,6 +104,7 @@ void main() {
     expect(destinations.map((d) => d.label).toList(), [
       'Home',
       'Directory',
+      'Market',
       'Chat',
       'Profile',
     ]);
@@ -112,7 +115,7 @@ void main() {
       tester,
     ) async {
       await pumpShell(tester, chat: true);
-      for (final tab in ['Directory', 'Chat', 'Profile']) {
+      for (final tab in ['Directory', 'Market', 'Chat', 'Profile']) {
         await tapNav(tester, tab);
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -134,17 +137,17 @@ void main() {
   ) async {
     final users = <ValueNotifier<Map<String, dynamic>>>[];
     await pumpShell(tester, users: users, chat: true);
-    for (final tab in ['Directory', 'Chat', 'Profile']) {
+    for (final tab in ['Directory', 'Market', 'Chat', 'Profile']) {
       await tapNav(tester, tab);
     }
     await tapNav(tester, 'Home');
-    for (final tile in ['tile-jobs', 'tile-marketplace', 'tile-nearby']) {
+    for (final tile in ['tile-jobs', 'tile-nearby']) {
       await tester.tap(find.byKey(Key(tile)));
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
     }
-    expect(users.length, greaterThanOrEqualTo(6));
+    expect(users.length, greaterThanOrEqualTo(5));
     expect(users.every((u) => identical(u, users.first)), isTrue);
   });
 
@@ -178,7 +181,6 @@ void main() {
       await pumpShell(tester);
       final routes = {
         'tile-jobs': 'Jobs',
-        'tile-marketplace': 'Marketplace',
         'tile-nearby': 'Nearby',
         'see-all-announcements': 'Announcements',
       };
@@ -206,6 +208,7 @@ void main() {
       final user = ValueNotifier<Map<String, dynamic>>({'id': 'me'});
       expect(pages.profile(profile, user), isA<ProfileDetailScreen>());
       expect(pages.chat(user), isA<MessagesListScreen>());
+      expect(pages.market(user, ValueNotifier(0)), isA<MarketScreen>());
       final dir = pages.directory(user) as AlumniScreen;
       expect(dir.showBack, isFalse);
       expect(dir.initialTab, 0);
@@ -215,6 +218,33 @@ void main() {
       expect((pages.jobs(user) as JobBoardScreen).showBack, isTrue);
       expect((pages.marketplace(user) as MarketplaceScreen).showBack, isTrue);
       expect((pages.announcements() as AnnouncementsScreen).showBack, isTrue);
+    });
+  });
+
+  group('Market tab', () {
+    testWidgets('opens on Products; the Home tiles switch tab and segment', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+      await tapNav(tester, 'Market');
+      expect(find.text('PAGE Market Products'), findsOneWidget);
+      await tapNav(tester, 'Home');
+      await tester.tap(find.byKey(const Key('tile-businesses')));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE Market Businesses'), findsOneWidget);
+      await tapNav(tester, 'Home');
+      await tester.tap(find.byKey(const Key('tile-marketplace')));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE Market Products'), findsOneWidget);
+    });
+
+    testWidgets('back from Market goes to Home first', (tester) async {
+      await pumpShell(tester);
+      await tapNav(tester, 'Market');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeShell), findsOneWidget);
+      expect(find.text('Hello, Ahmad'), findsOneWidget);
     });
   });
 }

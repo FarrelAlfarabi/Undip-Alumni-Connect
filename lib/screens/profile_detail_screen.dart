@@ -11,6 +11,7 @@ import '../widgets/content_actions_menu.dart';
 import '../policy/policy_screen.dart';
 import 'admin_screen.dart';
 import 'delete_account_screen.dart';
+import 'my_businesses_screen.dart';
 import 'blocked_users_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
@@ -302,32 +303,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
                     ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      key: const Key('profile-policy'),
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
-                      ),
-                      icon: const Icon(Icons.privacy_tip_outlined),
-                      label: const Text('Privacy policy and community rules'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      key: const Key('profile-delete'),
-                      onPressed: () => Navigator.of(context).push(
+                    const SizedBox(height: 20),
+                    _ProfileMenu(
+                      adminFuture: _isAdmin,
+                      onBusiness: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => DeleteAccountScreen(
-                            currentUser: widget.currentUser,
+                          builder: (_) => MyBusinessesScreen(
+                            ownerId: widget.currentUser.value['id'] as String,
                           ),
                         ),
                       ),
-                      icon: const Icon(Icons.delete_forever_outlined),
-                      label: const Text('Delete my account'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      key: const Key('profile-blocked'),
-                      onPressed: () => Navigator.of(context).push(
+                      onBlocked: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => BlockedUsersScreen(
                             currentUserId:
@@ -335,32 +321,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
-                      icon: const Icon(Icons.block),
-                      label: const Text('Blocked users'),
-                    ),
-                    FutureBuilder<bool>(
-                      future: _isAdmin,
-                      builder: (context, snap) {
-                        if (snap.data != true) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: OutlinedButton.icon(
-                            key: const Key('profile-admin'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => AdminScreen(
-                                  adminId:
-                                      widget.currentUser.value['id'] as String,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.admin_panel_settings_outlined,
-                            ),
-                            label: const Text('Admin'),
+                      onPolicy: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
+                      ),
+                      onAdmin: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AdminScreen(
+                            adminId: widget.currentUser.value['id'] as String,
                           ),
-                        );
-                      },
+                        ),
+                      ),
+                      onDelete: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DeleteAccountScreen(
+                            currentUser: widget.currentUser,
+                          ),
+                        ),
+                      ),
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
@@ -427,6 +404,100 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
           ),
           Expanded(child: Text(display, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The list under my own profile: My business, Blocked users, Privacy policy
+/// and community rules, Admin (admins only), and Delete my account last.
+class _ProfileMenu extends StatelessWidget {
+  const _ProfileMenu({
+    required this.adminFuture,
+    required this.onBusiness,
+    required this.onBlocked,
+    required this.onPolicy,
+    required this.onAdmin,
+    required this.onDelete,
+  });
+
+  final Future<bool>? adminFuture;
+  final VoidCallback onBusiness;
+  final VoidCallback onBlocked;
+  final VoidCallback onPolicy;
+  final VoidCallback onAdmin;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget tile(
+      Key key,
+      IconData icon,
+      String title,
+      VoidCallback onTap, {
+      Color? color,
+    }) => ListTile(
+      key: key,
+      leading: Icon(icon, color: color),
+      title: Text(title, style: TextStyle(color: color)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          tile(
+            const Key('profile-business'),
+            Icons.storefront_outlined,
+            'My business',
+            onBusiness,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-blocked'),
+            Icons.block,
+            'Blocked users',
+            onBlocked,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-policy'),
+            Icons.privacy_tip_outlined,
+            'Privacy policy and community rules',
+            onPolicy,
+          ),
+          FutureBuilder<bool>(
+            future: adminFuture,
+            builder: (context, snap) {
+              if (snap.data != true) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  const Divider(height: 1),
+                  tile(
+                    const Key('profile-admin'),
+                    Icons.admin_panel_settings_outlined,
+                    'Admin',
+                    onAdmin,
+                  ),
+                ],
+              );
+            },
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-delete'),
+            Icons.delete_forever_outlined,
+            'Delete my account',
+            onDelete,
+            color: theme.colorScheme.error,
+          ),
         ],
       ),
     );

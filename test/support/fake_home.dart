@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:undip_alumni_connect/data/home_repository.dart';
+import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/home_pages.dart';
 
 Map<String, dynamic> announcementMap(int n) => {
@@ -28,8 +29,14 @@ class FakeHomeApi implements HomeApi {
     this.jobsError,
     this.pendingRequests = 0,
     this.unreadNotifications = 0,
+    this.businesses = const [],
+    this.usage = const [],
+    this.businessesError,
   });
 
+  List<Business> businesses;
+  List<BusinessUsage> usage;
+  Object? businessesError;
   int pendingRequests;
   int unreadNotifications;
 
@@ -60,6 +67,15 @@ class FakeHomeApi implements HomeApi {
   @override
   Future<int> unreadNotificationCount(String profileId) async =>
       unreadNotifications;
+
+  @override
+  Future<List<Business>> myBusinesses(String profileId) async {
+    if (businessesError != null) throw businessesError!;
+    return businesses;
+  }
+
+  @override
+  Future<List<BusinessUsage>> myBusinessUsage(String profileId) async => usage;
 }
 
 /// A stand-in page that shows [label] so tests can tell where they landed.
@@ -109,6 +125,22 @@ HomePages fakePages({
     directory: (u) {
       note(u);
       return const MarkerPage('Directory');
+    },
+    market: (u, segment) {
+      note(u);
+      return ValueListenableBuilder<int>(
+        valueListenable: segment,
+        builder: (_, i, _) =>
+            MarkerPage(i == 0 ? 'Market Products' : 'Market Businesses'),
+      );
+    },
+    myBusinesses: (u) {
+      note(u);
+      return const MarkerPage('MyBusinesses');
+    },
+    registerBusiness: (u) {
+      note(u);
+      return const MarkerPage('RegisterBusiness');
     },
     notifications: (u) {
       note(u);

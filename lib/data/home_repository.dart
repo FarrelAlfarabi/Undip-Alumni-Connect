@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/business.dart';
+import 'business_repository.dart';
 import 'notification_repository.dart';
 
 /// How many banners the Home carousel shows at most.
@@ -23,6 +25,12 @@ abstract class HomeApi {
 
   /// Unread in-app notifications (the bell on Home).
   Future<int> unreadNotificationCount(String profileId);
+
+  /// The person's own businesses, in every status (the owner card).
+  Future<List<Business>> myBusinesses(String profileId);
+
+  /// Products used out of the free limit, per business (the owner card).
+  Future<List<BusinessUsage>> myBusinessUsage(String profileId);
 }
 
 class SupabaseHomeApi implements HomeApi {
@@ -63,4 +71,12 @@ class SupabaseHomeApi implements HomeApi {
   @override
   Future<int> unreadNotificationCount(String profileId) =>
       NotificationRepository().unreadCount(profileId);
+
+  @override
+  Future<List<Business>> myBusinesses(String profileId) =>
+      BusinessRepository().mine(profileId);
+
+  @override
+  Future<List<BusinessUsage>> myBusinessUsage(String profileId) =>
+      BusinessRepository().usage(profileId);
 }

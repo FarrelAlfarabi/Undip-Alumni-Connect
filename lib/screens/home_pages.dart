@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/business_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import 'alumni_screen.dart';
@@ -9,6 +10,9 @@ import 'business_directory_screen.dart';
 import 'job_board_screen.dart';
 import 'job_detail_screen.dart';
 import 'marketplace_detail_screen.dart';
+import 'business_form_screen.dart';
+import 'market_screen.dart';
+import 'my_businesses_screen.dart';
 import 'marketplace_screen.dart';
 import 'messages_list_screen.dart';
 import 'notifications_screen.dart';
@@ -29,6 +33,9 @@ class HomePages {
     this.chat = _chat,
     this.jobs = _jobs,
     this.marketplace = _marketplace,
+    this.market = _market,
+    this.myBusinesses = _myBusinesses,
+    this.registerBusiness = _registerBusiness,
     this.businesses = _businesses,
     this.requests = _requests,
     this.notifications = _notifications,
@@ -48,7 +55,17 @@ class HomePages {
   final UserPageBuilder chat;
   final UserPageBuilder jobs;
   final UserPageBuilder marketplace;
+
+  /// The Market tab (Products and Businesses). The notifier is the selected
+  /// segment: 0 Products, 1 Businesses.
+  final Widget Function(
+    ValueNotifier<Map<String, dynamic>> currentUser,
+    ValueNotifier<int> segment,
+  )
+  market;
   final UserPageBuilder businesses;
+  final UserPageBuilder myBusinesses;
+  final UserPageBuilder registerBusiness;
   final UserPageBuilder requests;
   final UserPageBuilder notifications;
   final UserPageBuilder nearby;
@@ -80,6 +97,17 @@ class HomePages {
   // Pushed from Home (back arrow on).
   static Widget _jobs(ValueNotifier<Map<String, dynamic>> user) =>
       JobBoardScreen(currentUser: user, showBack: true);
+  static Widget _myBusinesses(ValueNotifier<Map<String, dynamic>> user) =>
+      MyBusinessesScreen(ownerId: user.value['id'] as String);
+  static Widget _registerBusiness(ValueNotifier<Map<String, dynamic>> user) =>
+      BusinessFormScreen(
+        ownerId: user.value['id'] as String,
+        repository: BusinessRepository(),
+      );
+  static Widget _market(
+    ValueNotifier<Map<String, dynamic>> user,
+    ValueNotifier<int> segment,
+  ) => MarketScreen(currentUser: user, segment: segment);
   static Widget _marketplace(ValueNotifier<Map<String, dynamic>> user) =>
       MarketplaceScreen(currentUser: user, showBack: true);
   static Widget _businesses(ValueNotifier<Map<String, dynamic>> user) =>

@@ -7,10 +7,11 @@ import '../data/marketplace_repository.dart';
 import 'home_pages.dart';
 import 'home_screen.dart';
 
-/// App shell with a bottom navigation: Home, Directory, Profile (and Chat
-/// when [chatEnabled] is on). Lands on Home after verification. Jobs, News, Marketplace and
-/// Nearby Alumni are opened from the Home hub (tiles, banners, "See all
-/// announcements") as pushed screens with a back arrow.
+/// App shell with a bottom navigation: Home, Directory, Market, Profile (and
+/// Chat when [chatEnabled] is on). Lands on Home after verification. Market
+/// has two segments, Products and Businesses. Jobs, News, Nearby Alumni,
+/// Requests and Notifications are opened from the Home hub (tiles, banners,
+/// icons) as pushed screens with a back arrow.
 ///
 /// Owns the single [ValueNotifier] that represents "the logged-in user"
 /// for the whole session and passes the same reference to every tab (see
@@ -41,6 +42,7 @@ class HomeShell extends StatefulWidget {
 
   static const homeTab = 0;
   static const directoryTab = 1;
+  static const marketTab = 2;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -60,6 +62,9 @@ class _HomeShellState extends State<HomeShell> {
   int _homeEpoch = 0;
   int _chatEpoch = 0;
 
+  /// Which Market segment is showing: 0 Products, 1 Businesses.
+  final ValueNotifier<int> _marketSegment = ValueNotifier(0);
+
   @override
   void initState() {
     super.initState();
@@ -71,11 +76,17 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void dispose() {
     _currentUser.dispose();
+    _marketSegment.dispose();
     super.dispose();
   }
 
-  // Tab order: Home, Directory, [Chat], Profile.
-  int get _chatTab => widget.chat ? 2 : -1;
+  // Tab order: Home, Directory, Market, [Chat], Profile.
+  int get _chatTab => widget.chat ? 3 : -1;
+
+  void _openMarket(int segment) {
+    _marketSegment.value = segment;
+    _select(HomeShell.marketTab);
+  }
 
   void _select(int i) {
     setState(() {
@@ -100,12 +111,14 @@ class _HomeShellState extends State<HomeShell> {
         key: ValueKey('home-$_homeEpoch'),
         currentUser: _currentUser,
         onOpenDirectory: () => _select(HomeShell.directoryTab),
+        onOpenMarket: _openMarket,
         pages: pages,
         api: widget.homeApi,
         marketplaceRepository: widget.marketplaceRepository,
         autoAdvance: widget.autoAdvance,
       ),
       pages.directory(_currentUser),
+      pages.market(_currentUser, _marketSegment),
       if (widget.chat)
         KeyedSubtree(
           key: ValueKey('chat-$_chatEpoch'),
@@ -132,6 +145,11 @@ class _HomeShellState extends State<HomeShell> {
               icon: Icon(Icons.people_outline),
               selectedIcon: Icon(Icons.people),
               label: 'Directory',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.storefront_outlined),
+              selectedIcon: Icon(Icons.storefront),
+              label: 'Market',
             ),
             if (widget.chat)
               const NavigationDestination(

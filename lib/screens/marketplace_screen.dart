@@ -60,7 +60,11 @@ class MarketplaceScreen extends StatefulWidget {
     this.pickImage = pickListingImage,
     this.showBack = false,
     this.businessRepository,
+    this.embedded = false,
   });
+
+  /// True when shown inside the Market tab (no own app bar).
+  final bool embedded;
 
   /// Injectable for tests.
   final BusinessRepository? businessRepository;
@@ -269,17 +273,19 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Marketplace'),
-        automaticallyImplyLeading: widget.showBack,
-        actions: [
-          IconButton(
-            onPressed: _openMine,
-            icon: const Icon(Icons.inventory_2_outlined),
-            tooltip: 'My listings',
-          ),
-        ],
-      ),
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              title: const Text('Marketplace'),
+              automaticallyImplyLeading: widget.showBack,
+              actions: [
+                IconButton(
+                  onPressed: _openMine,
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  tooltip: 'My listings',
+                ),
+              ],
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
@@ -288,6 +294,16 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
+          if (widget.embedded)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('my-listings'),
+                onPressed: _openMine,
+                icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                label: const Text('My listings'),
+              ),
+            ),
           Expanded(
             child: FutureBuilder<List<MarketplaceListing>>(
               future: _future,

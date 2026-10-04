@@ -90,3 +90,11 @@ If a session ends early, continue from the last entry here.
 - Tests first: `supabase/tests/beta/09_account_deletion_test.sql` (function result, constraints, hidden from lists, cannot verify again, restore from the dashboard) and `test/account_test.dart` (policy text, consent gate for not accepted, accepted and changed version, device wipe, storage failure).
 - Checks: analyze clean, 401 tests pass, beta SQL checks pass.
 - Could not verify: real storage removal, the real secure storage wipe on a phone.
+
+## Stage 7: navigation and Home
+- 4 tabs: Home, Directory, Market, Profile (Chat tab replaced by Market; Chat returns as a 5th tab only if `chatEnabled` is turned on). Market has two segments, Products and Businesses. Back from any tab goes to Home first. Home tiles Marketplace and Businesses switch to the Market tab on the right segment. Jobs, News, Nearby, Requests and Notifications stay reachable from Home.
+- Home: business owner card (status, band, products used out of limit, unlimited days left), "Register your business" card for people with no business, Requests badge, notification bell with badge. A failed business load shows no card and does not block Home.
+- Profile list: My business, Blocked users, Privacy policy and community rules, Admin (admins only), Delete my account (last). About comes in Stage 7B.
+- No subscription code or chat entry points remain in the default app.
+- Tests: `test/stage7_test.dart` (new), `home_shell_test.dart` updated.
+- Checks: analyze clean, 417 tests pass.

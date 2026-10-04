@@ -198,7 +198,23 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
       label: const Text('Register a business'),
     );
     if (widget.embedded) {
-      return Scaffold(floatingActionButton: fab, body: _body());
+      return Scaffold(
+        floatingActionButton: fab,
+        body: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('my-businesses'),
+                onPressed: _openMine,
+                icon: const Icon(Icons.storefront_outlined, size: 18),
+                label: const Text('My businesses'),
+              ),
+            ),
+            Expanded(child: _body()),
+          ],
+        ),
+      );
     }
     return Scaffold(
       appBar: AppBar(
