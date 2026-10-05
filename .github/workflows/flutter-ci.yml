@@ -58,13 +58,13 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Write .env from secrets
+      - name: Write .env from variables or secrets
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "::error::The APK build needs the GitHub secrets SUPABASE_URL and SUPABASE_ANON_KEY (publishable key only). Add them under Settings > Secrets and variables > Actions, then re-run this job."
+            echo "::error::The APK build needs SUPABASE_URL and SUPABASE_ANON_KEY (publishable key only) as GitHub variables or secrets. Add them under Settings > Secrets and variables > Actions, then re-run this job."
             exit 1
           fi
           # Refuse anything but a publishable key (the key ends up inside the APK).
