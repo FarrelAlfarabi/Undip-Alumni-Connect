@@ -58,6 +58,10 @@ run_tests() {
     $PSQL -v ON_ERROR_STOP=1 -f "$t"
   done
   $PSQL -v ON_ERROR_STOP=1 -c "set client_min_messages = warning; drop schema if exists jt cascade" >/dev/null
+  echo "== live DB checks on the migrated database (every line must be ok)"
+  checks="$($PSQL -tA -F'|' -f "$ROOT/supabase/checks/live_db_checks.sql")"
+  echo "$checks"
+  if echo "$checks" | grep -q '|f|'; then echo "FAIL: live_db_checks.sql flags the fully migrated database"; exit 1; fi
 }
 run_tests
 
@@ -70,6 +74,9 @@ for ((i=${#MIGS[@]}-1; i>=0; i--)); do
   $PSQL -v ON_ERROR_STOP=1 -f "$rb" >/dev/null
   $PSQL -v ON_ERROR_STOP=1 -f "$rb" >/dev/null
 done
+echo "== live DB checks on the rolled back database (must flag problems)"
+rolled="$($PSQL -tA -F'|' -f "$ROOT/supabase/checks/live_db_checks.sql")"
+echo "$rolled" | grep '|f|' || { echo "FAIL: live_db_checks.sql found nothing wrong after rollbacks"; exit 1; }
 profiles="$($PSQL -tA -c "select count(*) from alumni_profiles")"
 [ "$profiles" -gt 0 ] || { echo "FAIL: rollback lost profiles"; exit 1; }
 echo "profiles still there after rollback: $profiles"

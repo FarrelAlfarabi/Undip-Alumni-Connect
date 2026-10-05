@@ -88,6 +88,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Fails while the operator name, contact email or address in
+      # lib/config/policy_config.dart still say [FILL IN: ...]. Testers accept
+      # that policy, so it must name who runs the app.
+      - name: Release gate (policy placeholders)
+        run: flutter test --dart-define=RELEASE_CHECK=true test/release_check_test.dart
+
       - name: Build debug APK
         run: flutter build apk --debug --build-number "${{ github.run_number }}"
 

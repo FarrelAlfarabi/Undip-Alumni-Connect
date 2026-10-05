@@ -21,3 +21,9 @@ const String kOperatorAddress = '[FILL IN: physical address]';
 /// them at any time; keep the {{...}} tokens where the values should go.
 const String kPolicyAssetId = 'assets/policy/privacy_id.md';
 const String kPolicyAssetEn = 'assets/policy/privacy_en.md';
+
+/// True when a policy value is empty or still has its `[FILL IN: ...]` text.
+/// The release gate (test/release_check_test.dart, run by the CI APK job) uses
+/// this so a build for testers cannot go out with an unfilled operator.
+bool hasPolicyPlaceholder(String value) =>
+    value.trim().isEmpty || value.contains('[FILL IN');
