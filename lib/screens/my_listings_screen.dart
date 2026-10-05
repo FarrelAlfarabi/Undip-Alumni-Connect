@@ -8,6 +8,7 @@ import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_form_screen.dart';
 import 'marketplace_screen.dart' show ListingImage;
+import '../widgets/error_view.dart';
 
 /// The seller's own listings in every status, with edit / mark as sold /
 /// delete.
@@ -49,6 +50,13 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       SnackBar(content: Text(message), duration: const Duration(seconds: 5)),
     );
   }
+
+  void _toastError(Object e) => showErrorSnackBar(
+    context,
+    message: marketplaceErrorMessage(e),
+    screen: 'My listings',
+    error: e,
+  );
 
   Future<bool> _confirm({
     required String title,
@@ -103,7 +111,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       _toast('Marked as sold.');
       _reload();
     } catch (e) {
-      if (mounted) _toast(marketplaceErrorMessage(e));
+      if (mounted) _toastError(e);
     }
   }
 
@@ -120,7 +128,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       _toast('Listing deleted.');
       _reload();
     } catch (e) {
-      if (mounted) _toast(marketplaceErrorMessage(e));
+      if (mounted) _toastError(e);
     }
   }
 
@@ -139,24 +147,12 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Could not load your listings. Try again.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _reload,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorView(
+                    message: 'Could not load your listings. Try again.',
+                    screen: 'My listings',
+                    error: snapshot.error,
+                    onRetry: _reload,
+                    retryLabel: 'Retry',
                   );
                 }
                 final items = snapshot.data ?? [];
@@ -165,7 +161,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                        'You have no listings yet. Use "Post a listing" on '
+                        'You have no listings yet. Use "Add a product" on '
                         'the marketplace to add one.',
                         textAlign: TextAlign.center,
                       ),
@@ -226,7 +222,11 @@ class _MyListingCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: ListingImage(url: l.imageUrl, size: 72),
+                  child: ListingImage(
+                    url: l.imageUrl,
+                    size: 72,
+                    semanticLabel: 'Photo of ${l.title}',
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -256,6 +256,17 @@ class _MyListingCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (l.isHidden) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Hidden by an admin${l.hiddenReason != null ? ': ${l.hiddenReason}' : ''}. '
+                'Other people cannot see this product.',
+                key: Key('hidden-${l.id}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
             if (l.status == ListingStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(

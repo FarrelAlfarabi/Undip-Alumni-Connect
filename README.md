@@ -2,11 +2,46 @@
 
 (Formerly "UNDIP Alumni Connect"; the repo, Dart package and Vercel project keep the old name.)
 
-Flutter + Supabase demo of a verified alumni directory with a job referral
-board, subscription-gated messaging, and an Ikafe announcements feed.
-**Dummy data only.** No real alumni, no real payment, no real NIM
-verification — see `PROJECT_NOTES.md` for the running log of what exists
-and why, and `DEMO_SCRIPT.md` for the walkthrough used on demo day.
+Flutter + Supabase app for FEB UNDIP alumni (via Ikafe): a verified alumni
+directory, a job board, a business directory with UMKM bands, a marketplace
+for products from approved businesses, requests to contact, and an Ikafe
+announcements feed. **Closed beta (about 15 testers).** It is free: there is
+no subscription and no payment in the app. Chat is hidden and replaced by
+"request to contact". There is no real login yet, so read "Closed beta
+warning" below before inviting anyone. `PROJECT_NOTES.md` is the running log,
+`docs/STAGE_LOG.md` and `docs/DECISIONS.md` cover the free-launch work, and
+`DEMO_SCRIPT.md` is the walkthrough.
+
+## Closed beta warning
+
+- Closed beta only. There is no real login (Supabase Auth). Anyone who knows
+  an email or a profile id can act as that person, including admins and
+  account deletion.
+- The directory still sends every person's email and NIM to every client.
+- The public web version uses the same database.
+- Push notifications, release signing, store accounts and backups are missing.
+- The privacy policy is self-written and needs review before a public launch.
+- Testers get the debug APK from the GitHub Actions run (artifact
+  `lingkaran-<version>+<run number>-debug`, kept 7 days). Secrets: `SUPABASE_URL`,
+  `SUPABASE_ANON_KEY`, optional `ANDROID_DEBUG_KEYSTORE_BASE64`.
+
+## Free launch features (Stages 1 to 8)
+
+- Four tabs: Home, Directory, Market (Products and Businesses), Profile.
+- Business directory: any alumnus can register a business (several allowed).
+  An admin approves, rejects or suspends it. Yearly sales pick a UMKM band
+  (PP 7/2021 Art. 35).
+- Marketplace: products only from approved businesses. Free limit by band;
+  `unlimited_until` is set in the dashboard only. Sold items do not count.
+- Request to contact (replaces chat), notifications inside the app only,
+  report and block, "Send feedback" on errors.
+- Admins come from the `app_admins` table (no passphrase). Add them in the
+  SQL editor, see the header of
+  `supabase/migrations/20261003130000_app_admins.sql`.
+- Account deletion, privacy policy and consent screen, BETA label and the
+  version in Profile > About and on the Welcome screen.
+- The Nearby map follows the system dark mode (the rest of the app is light).
+- Local SQL checks: `supabase/tests/run_beta_local.sh`.
 
 ## Running it
 
@@ -54,18 +89,20 @@ demo.
 
 ## Marketplace (demo)
 
-An alumni-to-alumni marketplace, opened from the **Marketplace** tile on Home. **Demo only: dummy
-data, no real payments, no checkout, nothing is charged.** Every marketplace screen
-shows a "Demo only, no real payments" notice.
+An alumni-to-alumni marketplace, the **Market** tab. No checkout, nothing is
+charged in the app. Every marketplace screen shows a short notice that payment
+is between buyer and seller.
 
-- Anyone can browse approved listings. Only **subscribers** can post.
-- A new or edited listing is `pending` until an **admin** approves it (or
-  rejects it with a reason the seller can see). Sellers can mark an approved
-  listing sold (hidden from browse) or delete their own listings.
+- Anyone can browse live products. Only the owner of an **approved
+  business** can post, up to the free limit of the business's band.
+- Products from an approved business go live at once. Admins can still
+  reject or hide a product, and anyone can report it. A suspended business
+  hides its products.
 - Buyers use the seller's shop link and/or contact info. There is no in-app
   checkout or messaging link.
 - Anyone can report an approved listing (spam, prohibited item, misleading,
-  other). Admins see report counts per listing. There is no block feature.
+  other). Admins see report counts per listing. People can also be blocked
+  (Profile > Blocked users).
 
 **Files:** migrations `supabase/migrations/20260930*_marketplace_*.sql`,
 seed `supabase/seed_marketplace.sql`, SQL checks in `supabase/tests/`,
@@ -79,15 +116,11 @@ order, `seed.sql`, then `seed_marketplace.sql`. The seed is idempotent
 `farrel.abi.saleh@gmail.com` the demo admin. To add another admin, insert
 its profile id into `marketplace_admins` from the dashboard.
 
-**Admin passphrase (after the security migrations).** The admin's profile id is
-public, so every admin action also needs a passphrase, checked in the
-database against a bcrypt hash. Nobody is admin until you set one from the SQL
-editor: `select marketplace_set_admin_key('<admin profile uuid>', '<16+
-character passphrase>');`. The Marketplace admin screen asks for it each time
-and keeps it only in memory. See `SECURITY_AUDIT.md` (SA-04). Never re-run only
-the original `20260930090*` marketplace migrations on a database that has the
-security migrations: they recreate the old id-only admin functions. Apply all
-`2026093*` migrations in order.
+**Admins.** The old admin passphrase is gone. Admins are rows in
+`app_admins` (migration `20261003130000`). See the header of that file for the
+SQL that adds an admin by email. Because there is no real login, an admin
+action is still only as safe as knowing the admin's profile id. See
+`SECURITY_AUDIT.md`, "Known gaps for the closed beta".
 
 **SQL/RLS checks (no Supabase needed).** `supabase/tests/run_local.sh`
 starts a throwaway local Postgres (needs the Postgres server binaries and
@@ -110,15 +143,9 @@ request reaches Postgres as `anon` and RLS cannot know who is calling.
   profile's id can post, edit, delete, read the pending/rejected listings
   of, or report as that person. Admin actions have the same weakness, and
   `marketplace_is_admin(id)` lets anyone test whether an id is an admin.
-- "Subscribers only" (job posting, marketplace posting) checks
-  `subscription_status`. A plain UPDATE of that column is now blocked, but
-  while `billing_settings.demo_subscriptions` is true any client can call
-  `demo_subscribe(<profile id>)` for any profile, so it is still a speed bump.
-  Before real payments run `update billing_settings set demo_subscriptions =
-  false;` and let only a payment webhook (service_role) set the status.
-  Apply `20261001090000_job_posting_requires_subscriber.sql` and ship the app
-  build that calls `demo_subscribe` together: either one alone breaks the
-  Subscribe button. Checks: `supabase/tests/run_job_gate_local.sh`.
+- There is no subscription any more. Job posting needs a verified poster
+  (migration `20261003090000`). Apply it together with the new app build,
+  or posting jobs breaks.
 - Contact info on approved listings is readable by anyone holding the anon
   key, not only signed-in members.
 - The `marketplace` image bucket allows uploads (images only, 2 MB) from
@@ -133,9 +160,10 @@ banner carousel of the latest Ikafe announcements (text cards, auto-advance,
 swipe, tap for the full text), quick tiles (Jobs, Marketplace, Directory,
 Nearby Alumni), a "Latest" strip (3 newest jobs, 3 newest approved
 marketplace listings) and an Upcoming section. The bottom navigation is
-Home, Directory, Chat, Profile. Jobs, News ("See all announcements"),
-Marketplace and Nearby open from Home with a back arrow. The Marketplace
-"Demo only, no real payments" notice still shows on every marketplace screen.
+Home, Directory, Market, Profile (Chat only returns if `chatEnabled` in
+`lib/config/feature_flags.dart` is turned on). Jobs, News ("See all
+announcements"), Requests, Notifications and Nearby open from Home with a back
+arrow.
 
 **Upcoming Preview tiles.** Events, Mentoring and Business directory are
 non-functional tiles marked "Preview". Tapping one only opens an info sheet.

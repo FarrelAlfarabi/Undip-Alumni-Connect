@@ -87,7 +87,12 @@ void main() {
       expect(find.text('Kopi Arabika'), findsOneWidget);
       expect(find.text('Rp 3.750.000'), findsOneWidget);
       expect(find.text('Electronics · Jakarta'), findsOneWidget);
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -169,7 +174,12 @@ void main() {
     ) async {
       await pumpMarket(tester, rows: []);
       expect(find.textContaining('No listings yet'), findsOneWidget);
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('loading state shows a spinner before data arrives', (
@@ -198,7 +208,12 @@ void main() {
         find.textContaining('Could not load the marketplace'),
         findsOneWidget,
       );
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
 
       api.throwOnCall = null;
       await tester.tap(find.text('Retry'));
@@ -248,7 +263,12 @@ void main() {
       expect(find.text('Posted 19 Sep 2026'), findsOneWidget);
       expect(find.text('Bunga Citra Ayu'), findsOneWidget);
       expect(find.textContaining('Class of 2016'), findsOneWidget);
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Report listing'), findsOneWidget);
     });
 
@@ -257,6 +277,7 @@ void main() {
         tester,
         listingMap(seller: sellerMap, shopUrl: 'https://example.com/toko'),
       );
+      await tester.ensureVisible(find.text('Visit shop'));
       await tester.tap(find.text('Visit shop'));
       await tester.pumpAndSettle();
       expect(opened.single.toString(), 'https://example.com/toko');

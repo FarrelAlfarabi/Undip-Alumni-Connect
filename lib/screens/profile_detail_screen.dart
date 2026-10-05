@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/feature_flags.dart';
+import '../data/admin_repository.dart';
+import '../data/contact_repository.dart';
+import '../data/report_repository.dart';
 import '../lock/session.dart';
+import '../util/friendly_error.dart';
+import '../widgets/content_actions_menu.dart';
+import '../policy/policy_screen.dart';
+import 'about_screen.dart';
+import 'admin_screen.dart';
+import 'delete_account_screen.dart';
+import 'my_businesses_screen.dart';
+import 'blocked_users_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
-import 'subscribe_screen.dart';
+import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
-import '../util/friendly_error.dart';
+import '../widgets/error_view.dart';
+import '../widgets/feedback_sheet.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -15,23 +28,32 @@ import '../util/friendly_error.dart';
 /// [showEditButton] controls whether this is "my profile" (verification
 /// flow — edit button shown; directory/jobs/messages/news are reached via
 /// HomeShell's bottom nav, not from here) or someone else's profile viewed
-/// from the directory (read-only, email hidden, subscription-gated
-/// "Message" button).
+/// from the directory (read-only, email hidden, "Message" button).
 ///
 /// [currentUser] is the logged-in user's profile as a shared
-/// [ValueNotifier], not a plain map — subscription_status is checked and
-/// mutated from several independent screens (job contact gate, messaging
-/// gate), and a plain map snapshot went stale across screens (subscribing
-/// via one job's detail view didn't unlock another job's contact info,
-/// since each screen held its own copy). Passing the same notifier
-/// reference everywhere means every screen reads the current value.
+/// [ValueNotifier], not a plain map, so every screen reads the current value
+/// after an edit made on another screen.
 class ProfileDetailScreen extends StatefulWidget {
   const ProfileDetailScreen({
     super.key,
     required this.profile,
     required this.currentUser,
     this.showEditButton = true,
+    this.chat = chatEnabled,
+    this.contactRepository,
+    this.adminCheck,
   });
+
+  /// Asks the database whether this profile is an admin. Injectable for
+  /// tests. Asked once per session (when the Profile tab is built) and
+  /// never cached on the device.
+  final Future<bool> Function(String profileId)? adminCheck;
+
+  /// Injectable for tests; defaults to the real repository.
+  final ContactRepository? contactRepository;
+
+  /// Whether the Message button shows (the app-wide chat switch).
+  final bool chat;
 
   /// The profile being displayed — own or someone else's.
   final Map<String, dynamic> profile;
@@ -45,11 +67,24 @@ class ProfileDetailScreen extends StatefulWidget {
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
   bool _messaging = false;
+  Future<bool>? _isAdmin;
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
+    if (widget.showEditButton) _isAdmin = _askAdmin();
+  }
+
+  // A failed check just hides the Admin entry.
+  Future<bool> _askAdmin() async {
+    try {
+      final id = widget.currentUser.value['id'] as String;
+      final check = widget.adminCheck ?? AdminRepository().isAdmin;
+      return await check(id);
+    } catch (_) {
+      return false;
+    }
   }
 
   bool get _isOwnProfile => _profile['id'] == widget.currentUser.value['id'];
@@ -66,17 +101,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
   }
 
-  Future<void> _messageThisAlumnus() async {
-    var viewer = widget.currentUser.value;
+  Future<void> _requestContact() async {
+    await showRequestContactSheet(
+      context,
+      repository: widget.contactRepository ?? ContactRepository(),
+      requesterId: widget.currentUser.value['id'] as String,
+      targetId: _profile['id'] as String,
+      targetName: _profile['name'] as String? ?? 'this alumnus',
+    );
+  }
 
-    if (viewer['subscription_status'] != 'subscribed') {
-      final updated = await Navigator.of(context).push<Map<String, dynamic>>(
-        MaterialPageRoute(builder: (_) => SubscribeScreen(profile: viewer)),
-      );
-      if (updated == null) return;
-      widget.currentUser.value = updated;
-      viewer = updated;
-    }
+  Future<void> _messageThisAlumnus() async {
+    final viewer = widget.currentUser.value;
 
     setState(() => _messaging = true);
     try {
@@ -113,8 +149,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(friendlyError(e))));
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Profile',
+          error: e,
+        );
       }
     } finally {
       if (mounted) setState(() => _messaging = false);
@@ -134,6 +174,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         // poster's name, etc.), where a back arrow is correct.
         automaticallyImplyLeading: !widget.showEditButton,
         actions: [
+          if (!widget.showEditButton)
+            ContentActionsMenu(
+              currentUserId: widget.currentUser.value['id'] as String,
+              ownerId: _profile['id'] as String?,
+              ownerName: _profile['name'] as String?,
+              reportType: ReportTarget.profile,
+              targetId: _profile['id'] as String?,
+              what: 'this profile',
+              onBlocked: () => Navigator.of(context).maybePop(),
+            ),
           if (widget.showEditButton)
             IconButton(
               tooltip: 'Sign out',
@@ -220,35 +270,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               ),
                             ],
                           ),
-                          if (widget.showEditButton) ...[
-                            const SizedBox(height: 12),
-                            ValueListenableBuilder<Map<String, dynamic>>(
-                              valueListenable: widget.currentUser,
-                              builder: (context, user, _) {
-                                if (user['subscription_status'] !=
-                                    'subscribed') {
-                                  return const SizedBox.shrink();
-                                }
-                                return Chip(
-                                  avatar: Icon(
-                                    Icons.workspace_premium_outlined,
-                                    size: 16,
-                                    color:
-                                        theme.colorScheme.onSecondaryContainer,
-                                  ),
-                                  label: const Text('Subscribed'),
-                                  backgroundColor:
-                                      theme.colorScheme.secondaryContainer,
-                                  labelStyle: TextStyle(
-                                    color:
-                                        theme.colorScheme.onSecondaryContainer,
-                                  ),
-                                  side: BorderSide.none,
-                                  visualDensity: VisualDensity.compact,
-                                );
-                              },
-                            ),
-                          ],
                           const Divider(height: 32),
                           _section(theme, 'Academic'),
                           _field(theme, 'NIM', _profile['nim']),
@@ -284,30 +305,66 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Edit Employment Info'),
                     ),
+                    const SizedBox(height: 20),
+                    _ProfileMenu(
+                      adminFuture: _isAdmin,
+                      onBusiness: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MyBusinessesScreen(
+                            ownerId: widget.currentUser.value['id'] as String,
+                          ),
+                        ),
+                      ),
+                      onBlocked: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => BlockedUsersScreen(
+                            currentUserId:
+                                widget.currentUser.value['id'] as String,
+                          ),
+                        ),
+                      ),
+                      onPolicy: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
+                      ),
+                      onAdmin: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AdminScreen(
+                            adminId: widget.currentUser.value['id'] as String,
+                          ),
+                        ),
+                      ),
+                      onDelete: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DeleteAccountScreen(
+                            currentUser: widget.currentUser,
+                          ),
+                        ),
+                      ),
+                    ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
-                    ValueListenableBuilder<Map<String, dynamic>>(
-                      valueListenable: widget.currentUser,
-                      builder: (context, user, _) {
-                        return FilledButton.icon(
-                          onPressed: _messaging ? null : _messageThisAlumnus,
-                          icon: _messaging
-                              ? const SizedBox(
-                                  height: 18,
-                                  width: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Icon(Icons.chat_bubble_outline),
-                          label: Text(
-                            user['subscription_status'] == 'subscribed'
-                                ? 'Message'
-                                : 'Subscribe to Message',
-                          ),
-                        );
-                      },
+                    FilledButton.icon(
+                      key: const Key('request-contact'),
+                      onPressed: _requestContact,
+                      icon: const Icon(Icons.person_add_alt_outlined),
+                      label: const Text('Request to contact'),
                     ),
+                    if (widget.chat) ...[
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: _messaging ? null : _messageThisAlumnus,
+                        icon: _messaging
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Message'),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -349,6 +406,115 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
           ),
           Expanded(child: Text(display, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The list under my own profile: My business, Blocked users, Privacy policy
+/// and community rules, Admin (admins only), and Delete my account last.
+class _ProfileMenu extends StatelessWidget {
+  const _ProfileMenu({
+    required this.adminFuture,
+    required this.onBusiness,
+    required this.onBlocked,
+    required this.onPolicy,
+    required this.onAdmin,
+    required this.onDelete,
+  });
+
+  final Future<bool>? adminFuture;
+  final VoidCallback onBusiness;
+  final VoidCallback onBlocked;
+  final VoidCallback onPolicy;
+  final VoidCallback onAdmin;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget tile(
+      Key key,
+      IconData icon,
+      String title,
+      VoidCallback onTap, {
+      Color? color,
+    }) => ListTile(
+      key: key,
+      leading: Icon(icon, color: color),
+      title: Text(title, style: TextStyle(color: color)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          tile(
+            const Key('profile-business'),
+            Icons.storefront_outlined,
+            'My business',
+            onBusiness,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-blocked'),
+            Icons.block,
+            'Blocked users',
+            onBlocked,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-policy'),
+            Icons.privacy_tip_outlined,
+            'Privacy policy and community rules',
+            onPolicy,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-feedback'),
+            Icons.feedback_outlined,
+            'Send feedback',
+            () => showFeedbackSheet(context, error: null, screen: 'Profile'),
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-about'),
+            Icons.info_outline,
+            'About',
+            () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const AboutScreen())),
+          ),
+          FutureBuilder<bool>(
+            future: adminFuture,
+            builder: (context, snap) {
+              if (snap.data != true) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  const Divider(height: 1),
+                  tile(
+                    const Key('profile-admin'),
+                    Icons.admin_panel_settings_outlined,
+                    'Admin',
+                    onAdmin,
+                  ),
+                ],
+              );
+            },
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-delete'),
+            Icons.delete_forever_outlined,
+            'Delete my account',
+            onDelete,
+            color: theme.colorScheme.error,
+          ),
         ],
       ),
     );

@@ -8,7 +8,6 @@ import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/data/marketplace_validation.dart';
 import 'package:undip_alumni_connect/models/marketplace_listing.dart';
 import 'package:undip_alumni_connect/screens/marketplace_form_screen.dart';
-import 'package:undip_alumni_connect/screens/marketplace_screen.dart';
 import 'package:undip_alumni_connect/screens/my_listings_screen.dart';
 
 import 'support/fake_marketplace_api.dart';
@@ -49,6 +48,7 @@ Future<Future<MarketplaceListing?> Function()> pumpFormLauncher(
                   MaterialPageRoute(
                     builder: (_) => MarketplaceFormScreen(
                       sellerId: 's1',
+                      businessId: existing == null ? 'biz1' : null,
                       repository: MarketplaceRepository(api),
                       existing: existing,
                       defaultCity: 'Jakarta',
@@ -156,8 +156,8 @@ void main() {
       await pumpFormLauncher(tester, api);
       await openForm(tester);
       // City is prefilled, so it is the only field without an error.
-      await tester.ensureVisible(find.text('Submit for approval'));
-      await tester.tap(find.text('Submit for approval'));
+      await tester.ensureVisible(find.text('Post product'));
+      await tester.tap(find.text('Post product'));
       await tester.pumpAndSettle();
       expect(
         find.text('Required'),
@@ -182,7 +182,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Online shop link (optional)'),
         'not a link',
       );
-      await tester.tap(find.text('Submit for approval'));
+      await tester.tap(find.text('Post product'));
       await tester.pumpAndSettle();
       expect(find.textContaining('valid link'), findsOneWidget);
       expect(api.calls, isEmpty);
@@ -217,20 +217,18 @@ void main() {
     ) async {
       useTallPhone(tester);
       final api = FakeApi()
-        ..rpcResults['marketplace_create_listing'] = listingMap(
-          status: 'pending',
-          approvedAt: null,
-        );
+        ..rpcResults['marketplace_create_listing'] = listingMap();
       final result = await pumpFormLauncher(tester, api);
       await openForm(tester);
       await fillValid(tester);
-      await tester.tap(find.text('Submit for approval'));
+      await tester.tap(find.text('Post product'));
       await tester.pumpAndSettle();
 
       expect(api.uploads.single, endsWith('foto.png|image/png'));
       expect(api.uploads.single, startsWith('s1/'));
       final p = api.params['marketplace_create_listing']!;
       expect(p['p_seller'], 's1');
+      expect(p['p_business'], 'biz1');
       expect(p['p_title'], 'Kopi Arabika');
       expect(p['p_price_idr'], 85000);
       expect(p['p_category'], 'Food & Drink');
@@ -242,7 +240,7 @@ void main() {
         startsWith('https://storage.example/s1/'),
       );
       expect(find.text(kSubmittedMessage), findsOneWidget);
-      expect((await result())?.status, ListingStatus.pending);
+      expect((await result())?.status, ListingStatus.approved);
     });
 
     testWidgets('unsupported and oversized photos are refused', (tester) async {
@@ -267,69 +265,13 @@ void main() {
       await openForm(tester);
       await fillValid(tester);
       api.throwOnCall = MarketplaceException(
-        MarketplaceErrorCode.subscriberRequired,
-        'subscriber_required',
+        MarketplaceErrorCode.postLimitReached,
+        'post_limit_reached',
       );
-      await tester.tap(find.text('Submit for approval'));
+      await tester.tap(find.text('Post product'));
       await tester.pumpAndSettle();
-      expect(find.text('Only subscribers can post listings.'), findsOneWidget);
-      expect(find.text('Submit for approval'), findsOneWidget);
-    });
-  });
-
-  group('subscriber gate', () {
-    Future<void> pumpMarket(
-      WidgetTester tester,
-      ValueNotifier<Map<String, dynamic>> u,
-    ) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      final api = FakeApi()..approved = [listingMap(seller: sellerMap)];
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MarketplaceScreen(
-            currentUser: u,
-            repository: MarketplaceRepository(api),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('free user gets an explanation, not the form', (tester) async {
-      await pumpMarket(tester, user('free'));
-      await tester.tap(find.text('Post a listing'));
-      await tester.pumpAndSettle();
-      expect(find.text('Subscribers only'), findsOneWidget);
-      expect(find.textContaining('Browsing stays free'), findsOneWidget);
-      expect(find.text('Submit for approval'), findsNothing);
-
-      await tester.tap(find.text('Not now'));
-      await tester.pumpAndSettle();
-      expect(find.text('Subscribers only'), findsNothing);
-      expect(find.text('Submit for approval'), findsNothing);
-    });
-
-    testWidgets(
-      'free user who accepts lands on the existing Subscribe screen',
-      (tester) async {
-        await pumpMarket(tester, user('free'));
-        await tester.tap(find.text('Post a listing'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(FilledButton, 'Subscribe'));
-        await tester.pumpAndSettle();
-        expect(find.text('Subscribe Now (Demo)'), findsOneWidget);
-        expect(find.text('Rp 99.000/year'), findsOneWidget);
-      },
-    );
-
-    testWidgets('subscriber goes straight to the form', (tester) async {
-      await pumpMarket(tester, user('subscribed'));
-      await tester.tap(find.text('Post a listing'));
-      await tester.pumpAndSettle();
-      expect(find.text('Subscribers only'), findsNothing);
-      expect(find.text('Submit for approval'), findsOneWidget);
+      expect(find.text(kPostLimitMessage), findsOneWidget);
+      expect(find.text('Post product'), findsOneWidget);
     });
   });
 
@@ -382,7 +324,12 @@ void main() {
       expect(find.text('Rejected'), findsOneWidget);
       expect(find.text('Sold'), findsOneWidget);
       expect(find.text('Rejected: Foto kurang jelas'), findsOneWidget);
-      expect(find.text('Demo only, no real payments'), findsOneWidget);
+      expect(
+        find.text(
+          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+        ),
+        findsOneWidget,
+      );
       // Edit: pending, approved, rejected (not sold). Mark as sold: approved only.
       expect(find.text('Edit'), findsNWidgets(3));
       expect(find.text('Mark as sold'), findsOneWidget);

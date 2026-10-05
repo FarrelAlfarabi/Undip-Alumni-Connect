@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
+import '../util/app_info.dart';
 import 'verification_screen.dart';
 
 /// The app's actual entry screen — a proper branded landing moment in
@@ -70,7 +71,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'A verified alumni directory,\nbuilt to move people forward.',
+                    'An alumni directory checked against the Ikafe list,\nbuilt to move people forward.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       height: 1.15,
@@ -110,10 +111,23 @@ class WelcomeScreen extends StatelessWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  FutureBuilder<AppInfo>(
+                    future: AppInfo.load(),
+                    builder: (context, snap) => Text(
+                      'BETA${snap.data == null ? '' : ' · ${snap.data!.short}'}',
+                      key: const Key('welcome-version'),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 40),
                   Text(
-                    'Demo build with dummy data. Placeholder visual '
-                    'identity — not UNDIP\'s or Ikafe\'s official branding.',
+                    'Closed beta. Placeholder visual identity, not UNDIP\'s or '
+                    'Ikafe\'s official branding.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant.withValues(

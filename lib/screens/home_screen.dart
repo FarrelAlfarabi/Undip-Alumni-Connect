@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
+import '../data/posting_text.dart';
+import '../models/business.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 
@@ -23,6 +27,7 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.currentUser,
     required this.onOpenDirectory,
+    this.onOpenMarket,
     this.pages = const HomePages(),
     this.api,
     this.marketplaceRepository,
@@ -33,6 +38,10 @@ class HomeScreen extends StatefulWidget {
 
   /// Switches the shell to the Directory tab (the Directory tile).
   final VoidCallback onOpenDirectory;
+
+  /// Switches the shell to the Market tab: 0 Products, 1 Businesses. When
+  /// null (tests) the tiles push the pages instead.
+  final void Function(int segment)? onOpenMarket;
 
   final HomePages pages;
 
@@ -52,6 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Map<String, dynamic>>> _announcements;
   late Future<List<Map<String, dynamic>>> _jobs;
   late Future<List<MarketplaceListing>> _listings;
+  late Future<int> _pendingRequests;
+  late Future<int> _unreadNotifications;
+  late Future<_BusinessSummary> _business;
 
   @override
   void initState() {
@@ -63,12 +75,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _load() {
     _announcements = _api.latestAnnouncements(kHomeBannerLimit);
-    _jobs = _api.latestJobs(kHomeLatestLimit);
+    _jobs = _latestJobs();
     _listings = _fetchListings();
+    _pendingRequests = _api
+        .pendingRequestCount(_user.value['id'] as String)
+        .catchError((_) => 0);
+    _unreadNotifications = _api
+        .unreadNotificationCount(_user.value['id'] as String)
+        .catchError((_) => 0);
+    _business = _loadBusiness();
+  }
+
+  Future<_BusinessSummary> _loadBusiness() async {
+    final id = _user.value['id'] as String;
+    final mine = await _api.myBusinesses(id);
+    final usage = await _api
+        .myBusinessUsage(id)
+        .catchError((_) => <BusinessUsage>[]);
+    return _BusinessSummary(mine, {for (final u in usage) u.businessId: u});
+  }
+
+  Future<List<Map<String, dynamic>>> _latestJobs() async {
+    final jobs = await _api.latestJobs(kHomeLatestLimit);
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(jobs, (j) => j['posted_by'] as String?);
   }
 
   Future<List<MarketplaceListing>> _fetchListings() async {
-    final all = await _market.fetchApproved();
+    final all = await _market.fetchApproved(); // already without blocked people
     final sorted = [...all]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.take(kHomeLatestLimit).toList();
   }
@@ -86,6 +120,15 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 
+  Future<void> _pushThenRefresh(Widget page) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    if (mounted) {
+      setState(() {
+        _business = _loadBusiness();
+      });
+    }
+  }
+
   ValueNotifier<Map<String, dynamic>> get _user => widget.currentUser;
 
   @override
@@ -97,6 +140,68 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Lingkaran'),
         automaticallyImplyLeading: false,
+        actions: [
+          FutureBuilder<int>(
+            future: _unreadNotifications,
+            builder: (context, snap) {
+              final n = snap.data ?? 0;
+              return IconButton(
+                key: const Key('home-notifications'),
+                tooltip: n > 0 ? 'Notifications ($n new)' : 'Notifications',
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => widget.pages.notifications(_user),
+                    ),
+                  );
+                  if (mounted) {
+                    setState(() {
+                      _unreadNotifications = _api
+                          .unreadNotificationCount(_user.value['id'] as String)
+                          .catchError((_) => 0);
+                    });
+                  }
+                },
+                icon: Badge(
+                  key: const Key('notifications-badge'),
+                  isLabelVisible: n > 0,
+                  label: Text('$n'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+              );
+            },
+          ),
+          FutureBuilder<int>(
+            future: _pendingRequests,
+            builder: (context, snap) {
+              final n = snap.data ?? 0;
+              return IconButton(
+                key: const Key('home-requests'),
+                tooltip: n > 0 ? 'Requests ($n waiting)' : 'Requests',
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => widget.pages.requests(_user),
+                    ),
+                  );
+                  if (mounted) {
+                    setState(() {
+                      _pendingRequests = _api
+                          .pendingRequestCount(_user.value['id'] as String)
+                          .catchError((_) => 0);
+                    });
+                  }
+                },
+                icon: Badge(
+                  key: const Key('requests-badge'),
+                  isLabelVisible: n > 0,
+                  label: Text('$n'),
+                  child: const Icon(Icons.handshake_outlined),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -124,10 +229,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 _bannerSection(theme),
+                const SizedBox(height: 16),
+                _BusinessEntry(
+                  future: _business,
+                  onOpenMine: () =>
+                      _pushThenRefresh(widget.pages.myBusinesses(_user)),
+                  onRegister: () =>
+                      _pushThenRefresh(widget.pages.registerBusiness(_user)),
+                ),
                 const SizedBox(height: 20),
                 _QuickActions(
                   onJobs: () => _push(widget.pages.jobs(_user)),
-                  onMarketplace: () => _push(widget.pages.marketplace(_user)),
+                  onMarketplace: () => widget.onOpenMarket != null
+                      ? widget.onOpenMarket!(0)
+                      : _push(widget.pages.marketplace(_user)),
+                  onBusinesses: () => widget.onOpenMarket != null
+                      ? widget.onOpenMarket!(1)
+                      : _push(widget.pages.businesses(_user)),
                   onDirectory: widget.onOpenDirectory,
                   onNearby: () => _push(widget.pages.nearby(_user)),
                 ),
@@ -141,8 +259,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   emptyIcon: Icons.work_outline,
                   emptyText:
                       'No jobs posted yet. New openings will show up here.',
-                  onRetry: () =>
-                      setState(() => _jobs = _api.latestJobs(kHomeLatestLimit)),
+                  onRetry: () => setState(() {
+                    _jobs = _latestJobs();
+                  }),
                   tileBuilder: (job) => _LatestTile(
                     icon: Icons.work_outline,
                     title: job['title'] as String? ?? '',
@@ -214,6 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load announcements.",
                 actionLabel: 'Try again',
+                feedbackScreen: 'Home',
+                error: snap.error,
                 onAction: () => setState(() {
                   _announcements = _api.latestAnnouncements(kHomeBannerLimit);
                 }),
@@ -245,12 +366,14 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onJobs,
     required this.onMarketplace,
+    required this.onBusinesses,
     required this.onDirectory,
     required this.onNearby,
   });
 
   final VoidCallback onJobs;
   final VoidCallback onMarketplace;
+  final VoidCallback onBusinesses;
   final VoidCallback onDirectory;
   final VoidCallback onNearby;
 
@@ -280,6 +403,12 @@ class _QuickActions extends StatelessWidget {
           icon: Icons.storefront_outlined,
           label: 'Marketplace',
           onTap: onMarketplace,
+        ),
+        _Tile(
+          key: const Key('tile-businesses'),
+          icon: Icons.business_center_outlined,
+          label: 'Businesses',
+          onTap: onBusinesses,
         ),
         _Tile(
           key: const Key('tile-directory'),
@@ -401,6 +530,8 @@ class _LatestBlock<T> extends StatelessWidget {
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load this right now.",
                 actionLabel: 'Try again',
+                feedbackScreen: 'Home',
+                error: snap.error,
                 onAction: onRetry,
               );
             }
@@ -499,12 +630,18 @@ class _MessageCard extends StatelessWidget {
     required this.text,
     this.actionLabel,
     this.onAction,
+    this.feedbackScreen,
+    this.error,
   });
 
   final IconData icon;
   final String text;
   final String? actionLabel;
   final VoidCallback? onAction;
+
+  /// When set, an error card: adds a "Send feedback" button for this screen.
+  final String? feedbackScreen;
+  final Object? error;
 
   @override
   Widget build(BuildContext context) {
@@ -515,22 +652,178 @@ class _MessageCard extends StatelessWidget {
         color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+          Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (actionLabel != null && feedbackScreen == null)
+                TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
+          ),
+          if (feedbackScreen != null)
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              children: [
+                if (actionLabel != null)
+                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                TextButton(
+                  key: const Key('send-feedback'),
+                  onPressed: () => showFeedbackSheet(
+                    context,
+                    error: error,
+                    screen: feedbackScreen!,
+                  ),
+                  child: const Text('Send feedback'),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BusinessSummary {
+  const _BusinessSummary(this.businesses, this.usage);
+  final List<Business> businesses;
+  final Map<String, BusinessUsage> usage;
+}
+
+/// The business card on Home: for an owner their status, band, products used
+/// out of the limit and unlimited days left; for everyone else a "register
+/// your business" card. A failed load shows nothing (Home is not blocked).
+class _BusinessEntry extends StatelessWidget {
+  const _BusinessEntry({
+    required this.future,
+    required this.onOpenMine,
+    required this.onRegister,
+  });
+
+  final Future<_BusinessSummary> future;
+  final VoidCallback onOpenMine;
+  final VoidCallback onRegister;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FutureBuilder<_BusinessSummary>(
+      future: future,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done || snap.hasError) {
+          return const SizedBox.shrink();
+        }
+        final summary = snap.data!;
+        final all = summary.businesses;
+        if (all.isEmpty) {
+          return Card(
+            key: const Key('business-register-card'),
+            elevation: 0,
+            color: theme.colorScheme.secondaryContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Own a business?',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Register it so other alumni can find it, and add your '
+                    'products to the marketplace.',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    key: const Key('business-register-button'),
+                    onPressed: onRegister,
+                    child: const Text('Register your business'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        // Show the approved one first, else the newest.
+        final b = all.firstWhere((x) => x.isApproved, orElse: () => all.first);
+        final u = summary.usage[b.id];
+        final lines = <String>[
+          b.approvedBand != null
+              ? 'Band: ${b.approvedBand!.label}'
+              : 'Band you chose: ${b.requestedBand?.label ?? '-'}',
+          if (b.isApproved && u != null) postingSummary(b, u),
+          if (b.status == BusinessStatus.rejected && b.rejectionReason != null)
+            'Reason: ${b.rejectionReason}',
+          if (all.length > 1) '+ ${all.length - 1} more',
+        ];
+        return Card(
+          key: const Key('business-owner-card'),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: theme.colorScheme.outlineVariant),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onOpenMine,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          b.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Chip(
+                        key: const Key('business-status-chip'),
+                        label: Text(b.status.label),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                  for (final l in lines)
+                    Text(
+                      l,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-          if (actionLabel != null)
-            TextButton(onPressed: onAction, child: Text(actionLabel!)),
-        ],
-      ),
+        );
+      },
     );
   }
 }

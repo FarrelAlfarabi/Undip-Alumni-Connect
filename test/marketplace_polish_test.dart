@@ -12,7 +12,8 @@ import 'package:undip_alumni_connect/screens/my_listings_screen.dart';
 
 import 'support/fake_marketplace_api.dart';
 
-const notice = 'Demo only, no real payments';
+const notice =
+    'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.';
 
 final longTitle =
     'Laptop Bekas Core i5 Generasi Kedelapan dengan RAM 8 GB dan SSD 256 GB '
@@ -52,8 +53,7 @@ FakeApi richApi() => FakeApi()
   ]
   ..rpcResults['marketplace_report_counts'] = [
     {'listing_id': 'a', 'report_count': 12},
-  ]
-  ..rpcResults['marketplace_is_admin'] = true;
+  ];
 
 /// Narrowest phone we care about, with the OS text size cranked up.
 Future<void> pumpNarrow(WidgetTester tester, Widget home) async {
@@ -138,7 +138,6 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
-          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );
@@ -197,7 +196,6 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
-          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );
@@ -208,7 +206,6 @@ void main() {
         tester,
         MarketplaceAdminScreen(
           adminId: 'a',
-          adminKey: 'k',
           repository: MarketplaceRepository(richApi()),
         ),
       );

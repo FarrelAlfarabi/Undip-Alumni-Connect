@@ -4,14 +4,18 @@ import 'marketplace_repository.dart';
 String marketplaceErrorMessage(Object error) {
   if (error is MarketplaceException) {
     switch (error.code) {
-      case MarketplaceErrorCode.subscriberRequired:
-        return 'Only subscribers can post listings.';
+      case MarketplaceErrorCode.postLimitReached:
+        return kPostLimitMessage;
+      case MarketplaceErrorCode.businessRequired:
+      case MarketplaceErrorCode.businessNotFound:
+      case MarketplaceErrorCode.businessNotApproved:
+        return kProductsNeedBusinessMessage;
       case MarketplaceErrorCode.notOwner:
         return 'You can only change your own listings.';
       case MarketplaceErrorCode.notFound:
         return 'This listing no longer exists.';
       case MarketplaceErrorCode.notAdmin:
-        return 'Wrong admin passphrase, or you are not an admin.';
+        return 'You are not an admin.';
       case MarketplaceErrorCode.reasonRequired:
         return 'Give a reason for rejecting.';
       case MarketplaceErrorCode.duplicateReport:
@@ -25,9 +29,21 @@ String marketplaceErrorMessage(Object error) {
   return 'Something went wrong. Please try again.';
 }
 
+/// Products can only be added by owners of approved businesses.
+const kProductsNeedBusinessMessage =
+    'Adding products is for owners of approved businesses. Register your '
+    'business first and wait for approval.';
+
+/// At the free limit. No payment instructions on purpose.
+const kPostLimitMessage =
+    'You have reached the free product limit for this business. Your '
+    'products stay visible and you can still edit or delete them. To add '
+    'more, please contact an admin about unlimited posting.';
+
 const kSubmittedMessage =
-    'Listing submitted. It will appear in the marketplace once an admin '
-    'approves it.';
+    'Product posted. It is now visible in the marketplace.';
+
+const kEditedBusinessMessage = 'Changes saved.';
 
 const kEditedApprovedMessage =
     'Changes saved. Your listing is back in review and hidden until an '

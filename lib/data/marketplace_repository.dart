@@ -3,11 +3,15 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/marketplace_listing.dart';
+import 'block_list.dart';
 
 /// Error codes raised by the marketplace SQL functions (see
 /// supabase/migrations/20260930090200_marketplace_functions.sql).
 enum MarketplaceErrorCode {
-  subscriberRequired,
+  businessRequired,
+  businessNotFound,
+  businessNotApproved,
+  postLimitReached,
   notFound,
   notOwner,
   notAdmin,
@@ -131,32 +135,27 @@ class MarketplaceRepository {
 
   /// Approved listings, newest first. Search/filter/sort happen client-side
   /// (same pattern as the job board).
-  Future<List<MarketplaceListing>> fetchApproved() async {
+  ///
+  /// Products of people I blocked are left out (the shared block helper).
+  /// Admin screens pass [applyBlocks] false and see everything.
+  Future<List<MarketplaceListing>> fetchApproved({
+    bool applyBlocks = true,
+  }) async {
     final rows = await _guard(() => _api.selectApprovedListings());
-    return rows.map(MarketplaceListing.fromMap).toList();
+    final all = rows.map(MarketplaceListing.fromMap).toList();
+    if (!applyBlocks) return all;
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(all, (l) => l.sellerId);
   }
 
-  // ---- admin (demo): see the auth caveat above; admin ids are not
-  // authenticated either.
+  // ---- admin: the database checks the admin id against app_admins (see
+  // supabase/migrations/20261003130000_app_admins.sql). The id is not
+  // authenticated, see the auth caveat above.
 
-  Future<bool> isAdmin(String profileId) async {
-    final result = await _guard(
-      () => _api.rpc('marketplace_is_admin', {'p_profile': profileId}),
-    );
-    return result == true;
-  }
-
-  /// Pending listings, oldest first, with seller info attached. Needs the
-  /// admin passphrase as well as the id: the id alone is public (audit SA-04).
-  Future<List<MarketplaceListing>> fetchPending(
-    String adminId,
-    String adminKey,
-  ) async {
+  /// Pending listings, oldest first, with seller info attached.
+  Future<List<MarketplaceListing>> fetchPending(String adminId) async {
     final rows = await _guard(
-      () => _api.rpc('marketplace_admin_pending', {
-        'p_admin': adminId,
-        'p_key': adminKey,
-      }),
+      () => _api.rpc('marketplace_admin_pending', {'p_admin': adminId}),
     );
     final listings = _listings(rows);
     if (listings.isEmpty) return listings;
@@ -174,7 +173,6 @@ class MarketplaceRepository {
   /// Approves, or rejects with a required [reason].
   Future<MarketplaceListing> review({
     required String adminId,
-    required String adminKey,
     required String listingId,
     required bool approve,
     String? reason,
@@ -185,21 +183,14 @@ class MarketplaceRepository {
         'p_listing': listingId,
         'p_decision': approve ? 'approved' : 'rejected',
         'p_reason': approve ? null : reason?.trim(),
-        'p_key': adminKey,
       }),
     );
     return MarketplaceListing.fromMap(_single(row));
   }
 
-  Future<List<ReportCount>> fetchReportCounts(
-    String adminId,
-    String adminKey,
-  ) async {
+  Future<List<ReportCount>> fetchReportCounts(String adminId) async {
     final rows = await _guard(
-      () => _api.rpc('marketplace_report_counts', {
-        'p_admin': adminId,
-        'p_key': adminKey,
-      }),
+      () => _api.rpc('marketplace_report_counts', {'p_admin': adminId}),
     );
     return (rows as List)
         .map((r) => ReportCount.fromMap(Map<String, dynamic>.from(r as Map)))
@@ -233,15 +224,19 @@ class MarketplaceRepository {
     return _listings(rows);
   }
 
-  /// Creates a listing in `pending`. Throws
-  /// [MarketplaceErrorCode.subscriberRequired] for non-subscribers.
+  /// Adds a product to an approved business. It is approved at creation.
+  /// Throws [MarketplaceErrorCode.postLimitReached] at the free limit and
+  /// [MarketplaceErrorCode.businessNotApproved] for a business that is not
+  /// approved.
   Future<MarketplaceListing> create(
     String sellerId,
+    String businessId,
     MarketplaceListingInput input,
   ) async {
     final row = await _guard(
       () => _api.rpc('marketplace_create_listing', {
         'p_seller': sellerId,
+        'p_business': businessId,
         ..._inputParams(input),
       }),
     );
@@ -343,7 +338,10 @@ class MarketplaceRepository {
       return MarketplaceException(MarketplaceErrorCode.duplicateReport, msg);
     }
     final code = switch (msg) {
-      'subscriber_required' => MarketplaceErrorCode.subscriberRequired,
+      'business_required' => MarketplaceErrorCode.businessRequired,
+      'business_not_found' => MarketplaceErrorCode.businessNotFound,
+      'business_not_approved' => MarketplaceErrorCode.businessNotApproved,
+      'post_limit_reached' => MarketplaceErrorCode.postLimitReached,
       'not_found' => MarketplaceErrorCode.notFound,
       'not_owner' => MarketplaceErrorCode.notOwner,
       'not_admin' => MarketplaceErrorCode.notAdmin,

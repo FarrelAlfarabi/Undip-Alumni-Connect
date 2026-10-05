@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../data/business_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_image_picker.dart';
+import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
+import '../models/business.dart';
 import '../models/marketplace_listing.dart';
+import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/marketplace_demo_notice.dart';
-import 'marketplace_admin_screen.dart';
-import 'marketplace_detail_screen.dart';
+import 'business_form_screen.dart';
 import 'marketplace_form_screen.dart';
-import 'marketplace_gate.dart';
+import 'marketplace_detail_screen.dart';
 import 'my_listings_screen.dart';
+import '../widgets/error_view.dart';
 
 enum MarketplaceSort {
   newest('Newest'),
@@ -47,7 +51,7 @@ List<MarketplaceListing> applyMarketplaceFilters(
 }
 
 /// Alumni-to-alumni marketplace (demo): browse approved listings. Free for
-/// everyone; posting is gated to subscribers in a later screen.
+/// everyone; adding a product needs an approved business (see [_post]).
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({
     super.key,
@@ -55,7 +59,15 @@ class MarketplaceScreen extends StatefulWidget {
     this.repository,
     this.pickImage = pickListingImage,
     this.showBack = false,
+    this.businessRepository,
+    this.embedded = false,
   });
+
+  /// True when shown inside the Market tab (no own app bar).
+  final bool embedded;
+
+  /// Injectable for tests.
+  final BusinessRepository? businessRepository;
 
   /// True when pushed from the Home hub (shows a back arrow).
   final bool showBack;
@@ -75,7 +87,6 @@ class MarketplaceScreen extends StatefulWidget {
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   late final MarketplaceRepository _repo;
   late Future<List<MarketplaceListing>> _future;
-  late final Future<bool> _isAdmin;
 
   final _searchController = TextEditingController();
   String _category = kAllFilter;
@@ -86,8 +97,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     super.initState();
     _repo = widget.repository ?? MarketplaceRepository();
     _future = _repo.fetchApproved();
-    // Failing the admin check just hides the admin entry.
-    _isAdmin = _repo.isAdmin(_myId).catchError((_) => false);
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -118,29 +127,132 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   String get _myId => widget.currentUser.value['id'] as String;
 
+  late final BusinessRepository _bizRepo =
+      widget.businessRepository ?? BusinessRepository();
+  bool _checkingPost = false;
+
+  Future<void> _info(
+    String title,
+    String body, {
+    String? action,
+    VoidCallback? onAction,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(action == null ? 'OK' : 'Not now'),
+          ),
+          if (action != null)
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                onAction?.call();
+              },
+              child: Text(action),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<Business?> _pickBusiness(List<Business> approved) async {
+    if (approved.length == 1) return approved.first;
+    return showModalBottomSheet<Business>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text('Add a product to which business?'),
+            ),
+            for (final b in approved)
+              ListTile(
+                key: Key('pick-${b.id}'),
+                title: Text(b.name),
+                subtitle: Text(b.category),
+                onTap: () => Navigator.of(ctx).pop(b),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Only owners of approved businesses can add products, up to the limit the
+  // database reports. The database enforces both rules too.
   Future<void> _post() async {
-    if (!await ensureSubscriber(context, widget.currentUser)) return;
+    if (_checkingPost) return;
+    setState(() => _checkingPost = true);
+    List<Business> approved;
+    Map<String, BusinessUsage> usage;
+    try {
+      final mine = await _bizRepo.mine(_myId);
+      final u = await _bizRepo.usage(_myId);
+      approved = mine.where((b) => b.isApproved).toList();
+      usage = {for (final x in u) x.businessId: x};
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Marketplace',
+          error: e,
+        );
+      }
+      return;
+    } finally {
+      if (mounted) setState(() => _checkingPost = false);
+    }
     if (!mounted) return;
+
+    if (approved.isEmpty) {
+      await _info(
+        'Add a product',
+        kProductsNeedBusinessMessage,
+        action: 'Register a business',
+        onAction: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                BusinessFormScreen(ownerId: _myId, repository: _bizRepo),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final business = await _pickBusiness(approved);
+    if (business == null || !mounted) return;
+
+    final u = usage[business.id];
+    if (u != null && !u.canPost) {
+      await _info(
+        'Free limit reached',
+        'You have used ${u.used} of ${u.freeLimit} free products for '
+            '${business.name}.\n\n$kPostLimitMessage',
+      );
+      return;
+    }
+
     await Navigator.of(context).push<MarketplaceListing>(
       MaterialPageRoute(
         builder: (_) => MarketplaceFormScreen(
           sellerId: _myId,
+          businessId: business.id,
           repository: _repo,
           defaultCity: widget.currentUser.value['city'] as String?,
           pickImage: widget.pickImage,
         ),
       ),
     );
-    // A new listing is pending, so browse does not change until approval.
-  }
-
-  Future<void> _openAdmin() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            MarketplaceAdminScreen(adminId: _myId, repository: _repo),
-      ),
-    );
+    // The product is approved at creation, so show it right away.
     if (mounted) _reload();
   }
 
@@ -161,35 +273,37 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Marketplace'),
-        automaticallyImplyLeading: widget.showBack,
-        actions: [
-          FutureBuilder<bool>(
-            future: _isAdmin,
-            builder: (context, snapshot) => snapshot.data == true
-                ? IconButton(
-                    onPressed: _openAdmin,
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    tooltip: 'Admin review',
-                  )
-                : const SizedBox.shrink(),
-          ),
-          IconButton(
-            onPressed: _openMine,
-            icon: const Icon(Icons.inventory_2_outlined),
-            tooltip: 'My listings',
-          ),
-        ],
-      ),
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              title: const Text('Marketplace'),
+              automaticallyImplyLeading: widget.showBack,
+              actions: [
+                IconButton(
+                  onPressed: _openMine,
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  tooltip: 'My listings',
+                ),
+              ],
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Post a listing'),
+        label: const Text('Add a product'),
       ),
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
+          if (widget.embedded)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('my-listings'),
+                onPressed: _openMine,
+                icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                label: const Text('My listings'),
+              ),
+            ),
           Expanded(
             child: FutureBuilder<List<MarketplaceListing>>(
               future: _future,
@@ -198,25 +312,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Could not load the marketplace. Check your '
-                            'connection and try again.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _reload,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
+                  return ErrorView(
+                    message:
+                        'Could not load the marketplace. Check your '
+                        'connection and try again.',
+                    screen: 'Marketplace',
+                    error: snapshot.error,
+                    onRetry: _reload,
+                    retryLabel: 'Retry',
                   );
                 }
 
@@ -355,7 +458,11 @@ class _ListingCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListingImage(url: listing.imageUrl, size: 104),
+            ListingImage(
+              url: listing.imageUrl,
+              size: 104,
+              semanticLabel: 'Photo of ${listing.title}',
+            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -406,9 +513,14 @@ class ListingImage extends StatelessWidget {
     required this.url,
     this.size,
     this.aspectRatio,
+    this.semanticLabel,
   });
 
   final String url;
+
+  /// Text alternative for screen readers (the listing title). When null the
+  /// image is treated as decorative.
+  final String? semanticLabel;
 
   /// Square size; when null the image fills the width at [aspectRatio].
   final double? size;
@@ -431,6 +543,8 @@ class ListingImage extends StatelessWidget {
         : Image.network(
             url,
             fit: BoxFit.cover,
+            semanticLabel: semanticLabel,
+            excludeFromSemantics: semanticLabel == null,
             errorBuilder: (_, _, _) => placeholder(),
             loadingBuilder: (context, child, progress) =>
                 progress == null ? child : placeholder(),

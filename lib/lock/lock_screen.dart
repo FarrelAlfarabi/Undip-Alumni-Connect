@@ -176,7 +176,7 @@ class _LockScreenState extends State<LockScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!compact) ...[
-                    const KawungMark(size: 32, color: AppTheme.gold),
+                    const KawungMark(size: 32, color: AppTheme.goldBright),
                     const SizedBox(height: 6),
                   ],
                   Text(

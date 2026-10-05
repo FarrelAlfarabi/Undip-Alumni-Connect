@@ -1,6 +1,6 @@
 # Lingkaran home hub: manual click-test checklist
 
-Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a demo database, never the shared live project. Accounts are in `supabase/seed.sql`: free user `ahmad.ramadhan@example.com`, subscriber `bunga.ayu@example.com`, admin `farrel.abi.saleh@gmail.com` (see the security audit about that address). Tick each box when it behaves as written. Also try a narrow window (320 px wide) and large system text.
+Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a demo database, never the shared live project. Accounts are in `supabase/seed.sql`: visitor `ahmad.ramadhan@example.com`, business owner `bunga.ayu@example.com`, admin: any profile with a row in `app_admins`. Tick each box when it behaves as written. Also try a narrow window (320 px wide) and large system text.
 
 ## A. New user (first time on this device)
 - [ ] App opens on Welcome ("Get Started"), not the lock screen.
@@ -10,14 +10,14 @@ Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a d
 - [ ] If the phone has fingerprint/face: a second step offers it. Turning it on asks for one real scan.
 
 ## B. Home hub
-- [ ] Bottom bar shows exactly Home, Directory, Chat, Profile.
+- [ ] Bottom bar shows exactly Home, Directory, Market, Profile (no Chat).
 - [ ] Banner shows the latest announcements, changes by itself every few seconds, swipes, dots follow. Tap opens the full text with a back arrow.
 - [ ] "See all announcements" opens the News list with a back arrow.
 - [ ] Tiles: Jobs, Marketplace, Nearby Alumni open with a back arrow. Directory switches to the Directory tab.
-- [ ] Latest: 3 newest jobs and 3 newest listings; each opens its detail screen. No fee wording. The Marketplace screens still show "Demo only, no real payments".
-- [ ] Upcoming: Events, Mentoring, Business directory show "Preview" and are muted. Tapping opens a sheet saying it is a preview and not available yet. Nothing else happens.
-- [ ] Back button: from Directory, Chat or Profile it returns to Home. From Home it leaves the app.
-- [ ] Nothing was lost: Profile (edit, subscribe, sign out), Directory and Nearby (city chat opens from Nearby), Jobs (detail, apply, post, notifications), Chat, Marketplace (detail, post, My listings, report).
+- [ ] Latest: 3 newest jobs and 3 newest listings; each opens its detail screen. No fee wording. The Marketplace screens show the short notice that payment is between buyer and seller.
+- [ ] Upcoming: the tiles that are still previews show "Preview" and are muted. Tapping opens a sheet saying it is a preview and not available yet. Nothing else happens.
+- [ ] Back button: from Directory, Market or Profile it returns to Home. From Home it leaves the app.
+- [ ] Nothing was lost: Profile (edit, sign out), Directory and Nearby, Jobs (detail, apply, post, notifications), Marketplace (detail, post, My listings, report).
 
 ## C. Returning user with a PIN
 - [ ] Close the app fully and reopen: dark lock screen, "Welcome back, <first name>", masked email like `a***@example.com` (never the full address), PIN pad.
@@ -42,8 +42,8 @@ Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a d
 - [ ] While locked, the app content is not visible or tappable.
 
 ## G. Admin and non-admin
-- [ ] Non-admin (Ahmad): Marketplace has no admin entry. Cannot post (needs to subscribe).
-- [ ] Admin: the Marketplace admin icon asks for the admin passphrase (wrong one refused, right one opens the queue); approve and reject (with reason) work. Only after the security migrations and `marketplace_set_admin_key` were run on the demo database.
+- [ ] Non-admin (Ahmad): Profile has no Admin entry. Cannot add a product until he owns an approved business.
+- [ ] Admin (a row in `app_admins`): Profile > Admin opens with no passphrase. Businesses, Reports, Feedback and Marketplace review work; reject asks for a reason.
 - [ ] Sign out on the Profile tab, then verify as the other role: the old PIN is gone and you are asked to set a new one.
 
 ## H. Empty announcements
@@ -53,3 +53,13 @@ Run on a real phone (Android and iOS if you can) plus a desktop browser. Use a d
 ## I. Web
 - [ ] Every visit starts at Welcome (there is no lock screen on web, by design).
 - [ ] No layout overflow at phone width; no yellow/black stripes anywhere.
+
+## J. Free launch additions (closed beta)
+- [ ] Welcome shows a small BETA label and the version. Profile > About shows "Lingkaran v0.9.0 (build N) BETA".
+- [ ] After verifying, the consent screen shows once; Continue stays off until the box is ticked. It does not show again on the next launch.
+- [ ] Sign out keeps the PIN for the same person; a different person gets a new PIN setup.
+- [ ] Home shows the Requests badge and the notification bell with counts; both open their screens.
+- [ ] Home shows the business card (status, band, products used) or "Register your business".
+- [ ] Force a load error (network off): the error screen offers Try again and Send feedback. Sending shows a thank you; an admin sees it under Admin > Feedback.
+- [ ] Profile > Blocked users, Privacy policy and community rules, About and Delete my account (last, red) open. Delete asks you to type HAPUS or your first name, then confirms. Do not run it on a real account.
+- [ ] Nearby map: switch the phone to dark mode; the map, city names and markers stay readable.

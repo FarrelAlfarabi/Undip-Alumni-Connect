@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
+import '../policy/consent_screen.dart';
 import '../lock/pin_setup_screen.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
+import '../widgets/feedback_sheet.dart';
 
 /// Looks up the alumni profile whose email matches and marks it verified.
 /// Returns null when there is no match.
@@ -44,7 +47,11 @@ class VerificationScreen extends StatefulWidget {
     this.lock,
     this.verifyEmail = defaultVerifyEmail,
     this.homeBuilder = defaultHomeBuilder,
+    this.accountRepository,
   });
+
+  /// Injectable for tests (consent is saved through it).
+  final AccountRepository? accountRepository;
 
   /// Injectable for tests; defaults to the real [HomeShell].
   final HomeBuilder homeBuilder;
@@ -67,6 +74,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   _VerificationState _state = _VerificationState.idle;
   String? _errorMessage;
+  Object? _lastError;
 
   @override
   void dispose() {
@@ -99,6 +107,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       setState(() {
         _state = _VerificationState.error;
         _errorMessage = friendlyError(e);
+        _lastError = e;
       });
     }
   }
@@ -126,11 +135,41 @@ class _VerificationScreenState extends State<VerificationScreen> {
       offerPin = false;
     }
     if (!mounted) return;
-    if (!offerPin) {
-      enterApp(context, profile, lock: lock, homeBuilder: widget.homeBuilder);
+    // First run: Welcome, verify, consent, PIN offer, app.
+    if (needsConsent(profile)) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ConsentScreen(
+            profile: profile,
+            lock: lock,
+            repository: widget.accountRepository,
+            onAccepted: (ctx, accepted) =>
+                _continueAfterConsent(ctx, accepted, lock, offerPin),
+          ),
+        ),
+      );
       return;
     }
-    Navigator.of(context).pushReplacement(
+    _continueAfterConsent(context, profile, lock, offerPin);
+  }
+
+  void _continueAfterConsent(
+    BuildContext ctx,
+    Map<String, dynamic> profile,
+    LockService lock,
+    bool offerPin,
+  ) {
+    if (!offerPin) {
+      enterApp(
+        ctx,
+        profile,
+        lock: lock,
+        homeBuilder: widget.homeBuilder,
+        accountRepository: widget.accountRepository,
+      );
+      return;
+    }
+    Navigator.of(ctx).pushReplacement(
       MaterialPageRoute(
         builder: (_) => PinSetupScreen(
           lock: lock,
@@ -140,6 +179,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
             profile,
             lock: lock,
             homeBuilder: widget.homeBuilder,
+            accountRepository: widget.accountRepository,
           ),
         ),
       ),
@@ -150,7 +190,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
     setState(() {
       _state = _VerificationState.idle;
       _errorMessage = null;
-      _emailController.clear();
     });
   }
 
@@ -194,7 +233,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
           onTryAgain: _reset,
         );
       case _VerificationState.error:
-        return _ErrorResult(message: _errorMessage!, onTryAgain: _reset);
+        return _ErrorResult(
+          message: _errorMessage!,
+          error: _lastError,
+          onTryAgain: _reset,
+        );
       case _VerificationState.idle:
       case _VerificationState.loading:
         return _VerificationForm(
@@ -247,8 +290,8 @@ class _VerificationForm extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter the email on file with UNDIP to confirm your alumni '
-            'record. This is a demo check against seeded sample data.',
+            'Enter the email the Ikafe team has on file for you to confirm '
+            'your alumni record.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -327,9 +370,8 @@ class _NotFoundResult extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'We couldn\'t find an alumni record for "$email" in the demo '
-          'dataset. Double-check the email, or try one of the sample demo '
-          'accounts.',
+          'We couldn\'t find an alumni record for "$email". Use the email '
+          'the Ikafe team has for you, or contact the beta team.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -342,8 +384,13 @@ class _NotFoundResult extends StatelessWidget {
 }
 
 class _ErrorResult extends StatelessWidget {
-  const _ErrorResult({required this.message, required this.onTryAgain});
+  const _ErrorResult({
+    required this.message,
+    required this.onTryAgain,
+    this.error,
+  });
 
+  final Object? error;
   final String message;
   final VoidCallback onTryAgain;
 
@@ -379,6 +426,12 @@ class _ErrorResult extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         FilledButton(onPressed: onTryAgain, child: const Text('Try again')),
+        TextButton(
+          key: const Key('send-feedback'),
+          onPressed: () =>
+              showFeedbackSheet(context, error: error, screen: 'Verification'),
+          child: const Text('Send feedback'),
+        ),
       ],
     );
   }

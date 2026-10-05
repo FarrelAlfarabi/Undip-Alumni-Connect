@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
+import '../widgets/error_view.dart';
 
 /// A small curated set of common titles for the roles Ikafe/FEB alumni
 /// actually post (business, finance, and adjacent tech roles — matches
@@ -58,6 +59,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
 
   bool _saving = false;
   String? _error;
+  Object? _lastError;
 
   List<String> _titleOptions = _commonJobTitles;
 
@@ -127,6 +129,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
       setState(() {
         _saving = false;
         _error = friendlyError(e);
+        _lastError = e;
       });
     }
   }
@@ -274,11 +277,10 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),
-                      Text(
-                        'Post failed. $_error',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      InlineError(
+                        message: 'Post failed. $_error',
+                        screen: 'Post a job',
+                        error: _lastError,
                       ),
                     ],
                     const SizedBox(height: 24),
