@@ -19,43 +19,32 @@ class SupabaseNotificationApi implements NotificationApi {
     : _client = client ?? Supabase.instance.client;
   final SupabaseClient _client;
 
+  // The notifications table is closed to the app. These three functions return
+  // only what the screen needs (see 20261005100000_close_anon_reads.sql).
   @override
   Future<List<Map<String, dynamic>>> list(String recipientId) async {
-    final rows = await _client
-        .from('notifications')
-        .select()
-        .eq('recipient_id', recipientId)
-        .order('created_at', ascending: false);
+    final rows = await _client.rpc(
+      'notifications_list',
+      params: {'p_recipient': recipientId},
+    );
     return List<Map<String, dynamic>>.from(rows as List);
   }
 
   @override
   Future<int> unreadCount(String recipientId) async {
-    final rows = await _client
-        .from('notifications')
-        .select('id, type, target_type')
-        .eq('recipient_id', recipientId)
-        .filter('read_at', 'is', null);
-    return (rows as List)
-        .map(
-          (r) => AppNotification.fromMap({
-            'id': r['id'],
-            'created_at': null,
-            'type': r['type'],
-            'target_type': r['target_type'],
-          }),
-        )
-        .where((n) => chatEnabled || !n.isChat)
-        .length;
+    final count = await _client.rpc(
+      'notifications_unread_count',
+      params: {'p_recipient': recipientId, 'p_include_chat': chatEnabled},
+    );
+    return (count as num?)?.toInt() ?? 0;
   }
 
   @override
   Future<void> markAllRead(String recipientId) async {
-    await _client
-        .from('notifications')
-        .update({'read_at': DateTime.now().toUtc().toIso8601String()})
-        .eq('recipient_id', recipientId)
-        .filter('read_at', 'is', null);
+    await _client.rpc(
+      'notifications_mark_read',
+      params: {'p_recipient': recipientId},
+    );
   }
 
   @override

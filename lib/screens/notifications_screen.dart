@@ -7,7 +7,6 @@ import '../models/app_notification.dart';
 import '../util/friendly_error.dart';
 import 'admin_reports_screen.dart';
 import 'admin_screen.dart';
-import 'email_log_screen.dart';
 import 'job_applicants_screen.dart';
 import 'my_businesses_screen.dart';
 import 'my_listings_screen.dart';
@@ -230,23 +229,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => EmailLogScreen(
-                  recipientEmail:
-                      widget.currentUser.value['email'] as String? ?? '',
-                ),
-              ),
-            ),
-            icon: const Icon(Icons.mail_outline),
-            tooltip: 'Emails (simulated)',
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
       body: FutureBuilder<List<AppNotification>>(
         future: _future,
         builder: (context, snap) {

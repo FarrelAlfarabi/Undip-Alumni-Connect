@@ -8,7 +8,11 @@ import 'package:undip_alumni_connect/screens/verification_screen.dart';
 void main() {
   group('profileFromVerifyResult', () {
     test('a verified row comes back as the profile', () {
-      final row = {'id': 'a', 'name': 'Siti', 'verification_status': 'verified'};
+      final row = {
+        'id': 'a',
+        'name': 'Siti',
+        'verification_status': 'verified',
+      };
       expect(profileFromVerifyResult([row]), row);
     });
 
@@ -35,10 +39,11 @@ void main() {
 
   test('no screen or repository writes verification_status', () {
     final offenders = <String>[];
-    for (final f in Directory('lib')
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart'))) {
+    for (final f
+        in Directory('lib')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))) {
       final text = f.readAsStringSync();
       if (RegExp(r"\.update\(\s*\{[^}]*verification_status").hasMatch(text)) {
         offenders.add(f.path);
@@ -48,8 +53,8 @@ void main() {
   });
 
   test('the verify screen calls the server function', () {
-    final text =
-        File('lib/screens/verification_screen.dart').readAsStringSync();
-    expect(text, contains("rpc('verify_alumni_email'"));
+    final text = File('lib/screens/verification_screen.dart')
+        .readAsStringSync();
+    expect(RegExp(r"rpc\(\s*'verify_alumni_email'").hasMatch(text), isTrue);
   });
 }

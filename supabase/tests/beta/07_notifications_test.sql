@@ -167,10 +167,11 @@ select jt.assert(notify_create(jt.pid('ahmad.ramadhan@example.com'), null, 'test
 select jt.assert((select count(*) from notifications where event_key = 'same-key') = 1, 'one row');
 
 -- ------------------------------------------------ the app can mark as read ---
+-- Not by a direct UPDATE any more (see 11_close_anon_reads_test.sql), but through the function.
 set role anon;
-update notifications set read_at = now() where recipient_id = jt.pid('ahmad.ramadhan@example.com');
-select jt.assert((select count(*) from notifications where recipient_id = jt.pid('ahmad.ramadhan@example.com') and read_at is null) = 0, 'read_at can be set');
+select notifications_mark_read(jt.pid('ahmad.ramadhan@example.com'));
 reset role;
+select jt.assert((select count(*) from notifications where recipient_id = jt.pid('ahmad.ramadhan@example.com') and read_at is null) = 0, 'read_at can be set');
 
 rollback;
 \o

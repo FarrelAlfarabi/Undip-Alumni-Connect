@@ -16,8 +16,10 @@ typedef EmailVerifier = Future<Map<String, dynamic>?> Function(String email);
 /// The server function verify_alumni_email() does the match and sets the
 /// status. The app can no longer write verification_status itself.
 Future<Map<String, dynamic>?> defaultVerifyEmail(String email) async {
-  final result = await Supabase.instance.client
-      .rpc('verify_alumni_email', params: {'p_email': email});
+  final result = await Supabase.instance.client.rpc(
+    'verify_alumni_email',
+    params: {'p_email': email},
+  );
   return profileFromVerifyResult(result);
 }
 
