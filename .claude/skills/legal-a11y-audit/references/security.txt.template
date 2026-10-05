@@ -1,6 +1,0 @@
-# Save as: web/.well-known/security.txt (served at https://<your domain>/.well-known/security.txt)
-# Replace the two values below, and renew Expires at least once a year.
-# Do not publish this file with the REPLACE markers still in it.
-Contact: mailto:<<REPLACE: security contact email>>
-Expires: <<REPLACE: a date about 12 months ahead, format 2027-10-04T00:00:00.000Z>>
-Preferred-Languages: id, en
