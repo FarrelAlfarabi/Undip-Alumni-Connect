@@ -166,6 +166,7 @@ class _IncomingCard extends StatelessWidget {
     );
     if (text == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     try {
       await repository.accept(
         targetId: myId,
@@ -182,6 +183,7 @@ class _IncomingCard extends StatelessWidget {
     } catch (e) {
       showErrorSnackBarOn(
         messenger,
+        navigator: navigator,
         message: contactErrorMessage(e),
         screen: 'Requests',
         error: e,
@@ -192,6 +194,7 @@ class _IncomingCard extends StatelessWidget {
 
   Future<void> _reject(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     try {
       await repository.reject(targetId: myId, requestId: request.id);
       messenger.showSnackBar(
@@ -200,6 +203,7 @@ class _IncomingCard extends StatelessWidget {
     } catch (e) {
       showErrorSnackBarOn(
         messenger,
+        navigator: navigator,
         message: contactErrorMessage(e),
         screen: 'Requests',
         error: e,

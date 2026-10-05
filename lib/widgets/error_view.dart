@@ -108,21 +108,24 @@ void showErrorSnackBar(
   Object? error,
 }) => showErrorSnackBarOn(
   ScaffoldMessenger.of(context),
+  navigator: Navigator.of(context),
   message: message,
   screen: screen,
   error: error,
 );
 
 /// Same, for code that already holds the [ScaffoldMessengerState] (after an
-/// await, when the screen's own context may be gone). The messenger outlives
-/// the screen, so the feedback sheet still opens.
+/// await, when the screen's own context may be gone). Hold the
+/// [NavigatorState] too: the messenger sits ABOVE the Navigator, so a sheet
+/// cannot be opened from the messenger's own context (that was the bug: the
+/// "Send feedback" action threw "context does not include a Navigator").
 void showErrorSnackBarOn(
   ScaffoldMessengerState messenger, {
+  required NavigatorState navigator,
   required String message,
   required String screen,
   Object? error,
 }) {
-  final sheetContext = messenger.context;
   messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -131,8 +134,10 @@ void showErrorSnackBarOn(
         duration: const Duration(seconds: 7),
         action: SnackBarAction(
           label: 'Send feedback',
-          onPressed: () =>
-              showFeedbackSheet(sheetContext, error: error, screen: screen),
+          onPressed: () {
+            if (!navigator.mounted) return;
+            showFeedbackSheet(navigator.context, error: error, screen: screen);
+          },
         ),
       ),
     );

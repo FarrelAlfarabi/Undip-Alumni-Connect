@@ -77,6 +77,7 @@ class ContentActionsMenu extends StatelessWidget {
     );
     if (ok != true || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     try {
       await (blockList ?? BlockList.shared).block(currentUserId, ownerId!);
       messenger.showSnackBar(SnackBar(content: Text('Blocked $name.')));
@@ -84,6 +85,7 @@ class ContentActionsMenu extends StatelessWidget {
     } catch (e) {
       showErrorSnackBarOn(
         messenger,
+        navigator: navigator,
         message: 'Could not block. Please try again.',
         screen: 'Block person',
         error: e,

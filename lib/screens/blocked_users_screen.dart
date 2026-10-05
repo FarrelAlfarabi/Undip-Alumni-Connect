@@ -39,6 +39,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   Future<void> _unblock(BlockedPerson p) async {
     setState(() => _busy.add(p.id));
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     try {
       await (widget.blockList ?? BlockList.shared).unblock(
         widget.currentUserId,
@@ -50,6 +51,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
     } catch (e) {
       showErrorSnackBarOn(
         messenger,
+        navigator: navigator,
         message: friendlyError(e),
         screen: 'Blocked users',
         error: e,
