@@ -55,7 +55,7 @@ None. `grep` finds no test referencing `HomeShell`, `WelcomeScreen`, `Navigation
 4. `JobBoardScreen`, `AlumniScreen` (with its two inner tabs), `MarketplaceScreen` and `AnnouncementsScreen` all set `automaticallyImplyLeading: false`. Pushed from the Home tiles they would have no back arrow. Plan: wrap them in a small pushed-page host that provides a back arrow, without editing those screens more than needed.
 5. Marketplace admin check `isAdmin` runs on every `MarketplaceScreen` mount. Fine.
 6. `PROJECT_NOTES.md` has no entry for marketplace stages 1 to 5; backfilled in the Stage 1 commit (see Decisions log D-2).
-7. The seeds make `farrel.abi.saleh@gmail.com` (a real-looking personal email) the demo admin in a public repo. Recorded here, audited in Stage 5.
+7. The seeds make `demo.admin@example.com` (a real-looking personal email) the demo admin in a public repo. Recorded here, audited in Stage 5.
 
 ### Stage plan adjustments
 None needed. Everything in Stages 1 to 5 is possible on this repo.
@@ -379,7 +379,7 @@ Reasoning to verify on a real Supabase database, because the local stub does not
 - **D-24 (Testing seams).** `LockStore`, `BiometricProvider`, clock, `ProfileFetcher`, `EmailVerifier` and `HomeBuilder` are injected so tests run without plugins or Supabase.
 - **D-25 (Audit fixtures).** The audit does not load `seed.sql` or `seed_marketplace.sql`, so the local database holds only synthetic `example.com` people. Rejected: reusing the seed admin (a real person's address) for the admin-takeover proof.
 - **D-26 (Proof test style).** Proof tests assert the weakness is present (they pass today) and are flipped in Part B, so the same check fails before a fix and passes after. Rejected: tests that fail today (would break every CI run for findings that cannot be fixed without auth).
-- **D-27 (Real emails in the report).** The report masks real-looking addresses (`f***@gmail.com`) and gives file and line instead of the value.
+- **D-27 (Real emails in the report).** The report masks real-looking addresses (`s***@example.com`) and gives file and line instead of the value.
 - **D-28 (pub.dev lookup).** I queried pub.dev's public advisory endpoint for the locked packages. It is a public read-only list, not a probe of a system under test, but it is an outside call, so it is logged here.
 - **D-29 (CSP shape).** `style-src` keeps `'unsafe-inline'` because Flutter web injects inline styles; scripts have no `'unsafe-inline'` and no `'unsafe-eval'` (only `'wasm-unsafe-eval'` for CanvasKit). `img-src` allows any `https:` because marketplace photos can come from any host (seed uses an image service). Rejected: a hash-based or nonce CSP (Flutter's bootstrap is generated at build time; higher risk of breaking the deploy).
 - **D-30 (Key check accepts both key formats).** New `sb_publishable_` keys and legacy anon JWTs are both accepted; anything else fails the build.

@@ -1,3 +1,5 @@
+import '../widgets/closed_test_notice.dart';
+
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
@@ -103,6 +105,8 @@ class WelcomeScreen extends StatelessWidget {
                       child: const Text('Get Started'),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  const ClosedTestNotice(),
                   const SizedBox(height: 12),
                   Text(
                     'Closed beta · seeded from Ikafe\'s member base',

@@ -14,6 +14,13 @@ warning" below before inviting anyone. `PROJECT_NOTES.md` is the running log,
 
 ## Closed beta warning
 
+Read `docs/BETA_RULES.md` before inviting anyone (operator checklist and what
+testers are told). The plan for real login is `docs/AUTH_MIGRATION_PLAN.md`.
+After the beta hardening migrations (`20261005*`), `verification_status` can no
+longer be set by the app, and `email_log`, the chat tables and the notifications
+table are closed to the public key. Everything below that is still true stays
+true until login ships.
+
 - Closed beta only. There is no real login (Supabase Auth). Anyone who knows
   an email or a profile id can act as that person, including admins and
   account deletion.
@@ -113,7 +120,7 @@ project the `main`/`demo` branches use. Use a separate project or a
 Supabase branch database, then apply the four `marketplace_*` migrations in
 order, `seed.sql`, then `seed_marketplace.sql`. The seed is idempotent
 (fixed ids, safe to run twice) and makes the profile
-`farrel.abi.saleh@gmail.com` the demo admin. To add another admin, insert
+`demo.admin@example.com` the demo admin. To add another admin, insert
 its profile id into `marketplace_admins` from the dashboard.
 
 **Admins.** The old admin passphrase is gone. Admins are rows in
@@ -171,7 +178,7 @@ No data, no dates, no tracking, no money features.
 
 **Lock screen (Android and iOS only).** After the first successful
 verification the app remembers, on that device only, the profile id, a
-display name and a masked email hint (`f***@gmail.com`), all in the
+display name and a masked email hint (`s***@example.com`), all in the
 platform secure storage (Keychain / Keystore). It then offers a 6-digit PIN
 (and fingerprint or face, if the device has it). On the next launch a
 remembered person sees a lock screen instead of the Welcome screen; new users

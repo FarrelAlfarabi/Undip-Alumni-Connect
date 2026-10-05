@@ -82,35 +82,34 @@ values
 on conflict (nim) do update set email = excluded.email, faculty = excluded.faculty, major = excluded.major;
 
 -- ----------------------------------------------------------------------------
--- Demo account for the project owner — real email, made-up profile details
--- (employer/role/etc. are fabricated for the demo, not real information).
--- Use this email to log in as "yourself" when demoing.
+-- Demo admin account. Everything here is made up (name, NIM, employer). Use
+-- this email to log in as the demo admin. It is the one seed_marketplace.sql
+-- makes an admin. On a real project add your own admin row instead (see the
+-- header of supabase/migrations/20261003130000_app_admins.sql).
 -- ----------------------------------------------------------------------------
 insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('24010119130099', 'Farrel Alfarabi Saleh', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2020, 'Bank Central Asia', 'Product Manager', 'Banking & Finance', 'Bank Central Asia', 'verified', 'free', 'farrel.abi.saleh@gmail.com')
+  ('99010119130001', 'Demo Admin', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2020, 'Bank Central Asia', 'Product Manager', 'Banking & Finance', 'Bank Central Asia', 'verified', 'free', 'demo.admin@example.com')
 on conflict (nim) do update set email = excluded.email, faculty = excluded.faculty, major = excluded.major;
 
 -- ----------------------------------------------------------------------------
--- Demo account for Gilang (Ikafe) — real email, made-up profile
--- details (employer/role/etc. are fabricated for the demo). Lets him log
--- in as a seeded alumnus during the live demo if he wants to try it
--- himself, rather than only watching over screen-share.
+-- Demo account for the Ikafe chair role. Everything here is made up. Lets
+-- the chair try the app as a seeded alumnus during a demo.
 -- ----------------------------------------------------------------------------
 insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('24020110130098', 'Gilang Wahyu Prawirasani', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'gwprawirasani@gmail.com')
+  ('99020110130002', 'Demo Ketua Ikafe', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'ketua.demo@example.com')
 on conflict (nim) do update set email = excluded.email;
 
 -- ----------------------------------------------------------------------------
--- Demo account for Maria — real email, made-up profile details.
+-- Demo account for a second made-up alumnus.
 -- ----------------------------------------------------------------------------
 insert into alumni_profiles
   (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('24050112130097', 'Maria Graffeliesta', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2018, 'Traveloka', 'Marketing Specialist', 'Technology', 'Traveloka', 'verified', 'free', 'maria.graffeliesta@gmail.com')
+  ('99050112130003', 'Maya Kusuma', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2018, 'Traveloka', 'Marketing Specialist', 'Technology', 'Traveloka', 'verified', 'free', 'maya.kusuma@example.com')
 on conflict (nim) do update set email = excluded.email, name = excluded.name, faculty = excluded.faculty, major = excluded.major;
 
 -- Note: the non-matching signup path needs no seed data — any email that
@@ -148,9 +147,9 @@ update alumni_profiles set city = case email
   when 'sari.permata@example.com' then 'Jakarta'
   when 'fahmi.alamsyah@example.com' then 'Semarang'
   when 'vina.tan@example.com' then 'Jakarta'
-  when 'farrel.abi.saleh@gmail.com' then 'Yogyakarta'
-  when 'gwprawirasani@gmail.com' then 'Jakarta'
-  when 'maria.graffeliesta@gmail.com' then 'Jakarta'
+  when 'demo.admin@example.com' then 'Yogyakarta'
+  when 'ketua.demo@example.com' then 'Jakarta'
+  when 'maya.kusuma@example.com' then 'Jakarta'
 end
 where email in (
   'ahmad.ramadhan@example.com','dewi.sari@example.com','muhammad.hakim@example.com',
@@ -161,7 +160,7 @@ where email in (
   'melati.ningrum@example.com','bunga.ayu@example.com','dimas.wicaksono@example.com',
   'kevin.halim@example.com','putri.maharani@example.com','aditya.kurniawan@example.com',
   'sari.permata@example.com','fahmi.alamsyah@example.com','vina.tan@example.com',
-  'farrel.abi.saleh@gmail.com','gwprawirasani@gmail.com','maria.graffeliesta@gmail.com'
+  'demo.admin@example.com','ketua.demo@example.com','maya.kusuma@example.com'
 );
 
 alter table alumni_profiles enable trigger alumni_profiles_restrict_update_trigger;

@@ -322,7 +322,7 @@ User asked for a fresh pass over all code with bug fixes, then a business-point-
 
 User asked to (1) seed a dummy alumni account under their own real email with made-up profile details, and (2) deploy the app publicly on Vercel for the demo.
 
-**Seeded account:** `farrel.abi.saleh@gmail.com`, NIM `24010119130099`, "Farrel Alfarabi Saleh" — employer/role/industry are fabricated for the demo. Added to `supabase/seed.sql` and inserted live.
+**Seeded account:** `demo.admin@example.com`, NIM `99010119130001`, "Demo Admin" — employer/role/industry are fabricated for the demo. Added to `supabase/seed.sql` and inserted live.
 
 **RLS — added, but scoped honestly:** Before deploying publicly, checked whether RLS could actually protect alumni data. It can't, on this codebase as it stands: `verification_screen.dart` never creates a real Supabase Auth session — "verification" is a plain email match, and every request (app or otherwise) hits Postgres as the same anon principal. RLS can't distinguish "the app" from "any visitor with the anon key." Flagged this to the user with the real tradeoff (cheap guardrails now vs. build real auth first vs. deploy fully open) — they chose cheap guardrails now.
 
@@ -360,7 +360,7 @@ User asked for the Nearby Alumni feature for the demo. This was flagged in Sessi
 
 ## 2026-09-17 — Session 16: Vercel actually building + dashboard edit access
 
-Deployed via GitHub → Vercel auto-deploy this session (`vercel.json` + `scripts/vercel-build.sh`, added after discovering the auto-imported project had no Flutter build step at all and was likely serving raw source). Added demo accounts for both the project owner and Gilang (`gilang.modcart@gmail.com`) with fabricated profile details, same pattern as before — see the seed.sql history for both.
+Deployed via GitHub → Vercel auto-deploy this session (`vercel.json` + `scripts/vercel-build.sh`, added after discovering the auto-imported project had no Flutter build step at all and was likely serving raw source). Added demo accounts for both the project owner and Gilang (`ketua.demo@example.com`) with fabricated profile details, same pattern as before — see the seed.sql history for both.
 
 Nearby Alumni's only entry point (a small icon in the Directory app bar) turned out to be too easy to miss — added a clearly labeled card on the Profile tab as the primary way in.
 
@@ -421,7 +421,7 @@ User gave four numbered revision notes. Points 3 (nearby-alumni map + networking
 
 **Point 1 — Iluni → Ikafe rename.** The partner org is UNDIP's Faculty of Economics alumni association (Ikatan Alumni Fakultas Ekonomi), not a university-wide "Iluni UNDIP" body — a factual correction, not a rebrand. Renamed every user-facing and doc-comment occurrence: `announcements_screen.dart`, `theme.dart`, `welcome_screen.dart`, `README.md`, `DEMO_SCRIPT.md`, `supabase/seed.sql` (Gilang's employer/company fields), `supabase/seed_announcements.sql` (rewritten with Ikafe wording). Also synced the **live** Supabase DB to match, since seed.sql only affects a fresh reset: updated Gilang's `current_employer`/`company` and both ILUNI-mentioning announcement bodies via direct UPDATEs, confirmed with SELECT.
 
-**Live-data drift caught along the way:** Gilang's seeded login email (`gilang.modcart@gmail.com`) doesn't match his live row anymore — the live email is `gwprawirasani@gmail.com`, presumably changed directly via the Supabase dashboard access granted earlier. Re-targeted the UPDATE by `nim` instead of `email` once this was discovered. Did **not** touch `seed.sql`'s email value — that still documents the original demo login. Flagging here in case the demo login instructions need to reference the new email instead.
+**Live-data drift caught along the way:** Gilang's seeded login email (`ketua.demo@example.com`) doesn't match his live row anymore — the live email is `ketua.demo@example.com`, presumably changed directly via the Supabase dashboard access granted earlier. Re-targeted the UPDATE by `nim` instead of `email` once this was discovered. Did **not** touch `seed.sql`'s email value — that still documents the original demo login. Flagging here in case the demo login instructions need to reference the new email instead.
 
 **Point 2 — Job application feature.** New table `job_applications` (full name, email, phone, LinkedIn, portfolio, cover note, `cv_path`) plus a `cvs` public storage bucket, both in `supabase/migrations/20260917100000_add_job_applications.sql`. RLS follows the same "guardrail not access control" pattern as the rest of this schema (open select/insert, no update/delete, documented in the migration's own comments) since there's no real Supabase Auth login to scope access by. `job_posts` gained a `notify_on_apply` boolean (default true).
 
@@ -848,7 +848,7 @@ Backfilled on 2026-09-30 from the git log of `claude/beautiful-cori-mntun6` and 
 - Stage 4: admin review queue (approve/reject with reason), report sheet, report counts.
 - Stage 5: polish, regression guards, README section, a click-test checklist (`MARKETPLACE_CHECKLIST.md`), and a tested rollback script (`supabase/rollback_marketplace.sql`).
 
-**Decisions recorded in the README:** demo only, no real payments, no fees; posting is for subscribers; new or edited listings are `pending` until an admin approves; the seed makes `farrel.abi.saleh@gmail.com` the demo admin; do not apply the marketplace migrations to the shared live project (use a separate project or branch database).
+**Decisions recorded in the README:** demo only, no real payments, no fees; posting is for subscribers; new or edited listings are `pending` until an admin approves; the seed makes `demo.admin@example.com` the demo admin; do not apply the marketplace migrations to the shared live project (use a separate project or branch database).
 
 **Known gaps (from the README):** no real auth, so profile ids sent by the app are not authenticated; `marketplace_is_admin(id)` can be used to test admin ids; `subscription_status` is client-settable; contact info on approved listings is readable with the anon key; the image bucket accepts uploads from anyone with the anon key.
 

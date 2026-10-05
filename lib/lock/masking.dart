@@ -1,4 +1,4 @@
-/// `farrel@gmail.com` -> `f***@gmail.com`. Shows the first letter of the
+/// `siti@example.com` -> `s***@example.com`. Shows the first letter of the
 /// local part and the domain, nothing else. A one-letter local part shows
 /// only `*`. Input without a usable `@` gives `***`.
 String maskEmail(String email) {

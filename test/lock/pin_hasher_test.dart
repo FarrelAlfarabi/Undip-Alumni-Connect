@@ -73,7 +73,7 @@ void main() {
 
   group('masking', () {
     test('shows first letter and domain only', () {
-      expect(maskEmail('farrel@gmail.com'), 'f***@gmail.com');
+      expect(maskEmail('siti@example.com'), 's***@example.com');
       expect(maskEmail('ahmad.ramadhan@example.com'), 'a***@example.com');
     });
 

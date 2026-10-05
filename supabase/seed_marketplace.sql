@@ -93,5 +93,5 @@ on conflict (id) do nothing;
 -- Demo admin: the project owner's own dummy-data profile from seed.sql.
 -- Add more rows here (or in the dashboard) to make other profiles admins.
 insert into marketplace_admins (profile_id)
-select id from alumni_profiles where email = 'farrel.abi.saleh@gmail.com'
+select id from alumni_profiles where email = 'demo.admin@example.com'
 on conflict (profile_id) do nothing;
