@@ -13,23 +13,25 @@ import '../widgets/feedback_sheet.dart';
 /// Returns null when there is no match.
 typedef EmailVerifier = Future<Map<String, dynamic>?> Function(String email);
 
+/// The server function verify_alumni_email() does the match and sets the
+/// status. The app can no longer write verification_status itself.
 Future<Map<String, dynamic>?> defaultVerifyEmail(String email) async {
-  final client = Supabase.instance.client;
-  final match = await client
-      .from('alumni_profiles')
-      .select()
-      .eq('email', email)
-      .maybeSingle();
-  if (match == null) return null;
+  final result = await Supabase.instance.client
+      .rpc('verify_alumni_email', params: {'p_email': email});
+  return profileFromVerifyResult(result);
+}
 
-  if (match['verification_status'] != 'verified') {
-    await client
-        .from('alumni_profiles')
-        .update({'verification_status': 'verified'})
-        .eq('id', match['id']);
-    match['verification_status'] = 'verified';
+/// Turns the function's result into a profile, or null when there is no match
+/// or the person is not verified (for example an admin marked them failed).
+Map<String, dynamic>? profileFromVerifyResult(Object? result) {
+  Object? row = result;
+  if (result is List) {
+    if (result.isEmpty) return null;
+    row = result.first;
   }
-  return match;
+  if (row is! Map) return null;
+  final profile = Map<String, dynamic>.from(row);
+  return profile['verification_status'] == 'verified' ? profile : null;
 }
 
 /// Demo email-verification screen (scope change 14 Sep: was NIM exact-match,
@@ -38,8 +40,8 @@ Future<Map<String, dynamic>?> defaultVerifyEmail(String email) async {
 /// DEMO SCOPE: this is a plain exact-string-match against seeded dummy
 /// data in `alumni_profiles.email`. No real auth account is created, no
 /// OTP or confirmation email is sent — same dummy-data demo scope as the
-/// rest of the project. On a match, verification_status is set to
-/// 'verified' directly on the matched row, then the user lands in the app
+/// rest of the project. On a match, the server function verify_alumni_email()
+/// sets verification_status to 'verified', then the user lands in the app
 /// shell (HomeShell) — see PROJECT_NOTES.md Sessions 5 and 9.
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({
