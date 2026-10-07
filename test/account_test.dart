@@ -37,6 +37,7 @@ class FakeAccountApi implements AccountApi {
   final calls = <String>[];
   final params = <String, Map<String, dynamic>>{};
   Object? failOn;
+  String failMessage = 'boom';
   Object? failRemove;
   Set<String>? removeOnly;
   List<Map<String, dynamic>> files = const [];
@@ -46,7 +47,7 @@ class FakeAccountApi implements AccountApi {
     calls.add(function);
     params[function] = p;
     if (failOn == function) {
-      throw PostgrestException(message: 'boom', code: 'P0001');
+      throw PostgrestException(message: failMessage, code: 'P0001');
     }
     if (function == 'account_files') return files;
     if (function == 'account_delete') {
@@ -320,9 +321,9 @@ void main() {
       final result = await AccountRepository(api).deleteAccount('u1');
       expect(api.calls, [
         'account_files',
+        'account_delete',
         'remove:marketplace',
         'remove:cvs',
-        'account_delete',
       ]);
       expect(api.params['account_delete'], {'p_profile': 'u1'});
       expect(result.removed, {'businesses': 1, 'products': 2});
@@ -337,7 +338,7 @@ void main() {
         ]
         ..failRemove = Exception('not allowed');
       final result = await AccountRepository(api).deleteAccount('u1');
-      expect(api.calls.last, 'account_delete');
+      expect(api.calls.contains('account_delete'), isTrue);
       expect(result.failedPaths, ['marketplace/u1/a.png', 'cvs/u1/cv.pdf']);
     });
 
@@ -354,6 +355,41 @@ void main() {
         expect(result.failedPaths, ['marketplace/b.png']);
       },
     );
+
+    test('if the database call fails, no file has been removed', () async {
+      final api = FakeAccountApi()
+        ..files = [
+          {'bucket': 'cvs', 'path': 'u1/cv.pdf'},
+        ]
+        ..failOn = 'account_delete';
+      await expectLater(
+        AccountRepository(api).deleteAccount('u1'),
+        throwsA(isA<AccountException>()),
+      );
+      expect(api.calls.any((c) => c.startsWith('remove:')), isFalse);
+    });
+
+    test(
+      'not_found on a retry means it was already deleted: success',
+      () async {
+        final api = FakeAccountApi()
+          ..failOn = 'account_delete'
+          ..failMessage = 'not_found';
+        final result = await AccountRepository(api).deleteAccount('u1');
+        expect(result.removed, isEmpty);
+        expect(result.failedPaths, isEmpty);
+      },
+    );
+
+    test('other database errors still surface', () async {
+      final api = FakeAccountApi()
+        ..failOn = 'account_delete'
+        ..failMessage = 'permission denied';
+      await expectLater(
+        AccountRepository(api).deleteAccount('u1'),
+        throwsA(isA<AccountException>()),
+      );
+    });
 
     test('a database failure surfaces as an AccountException', () async {
       final api = FakeAccountApi()..failOn = 'account_delete';

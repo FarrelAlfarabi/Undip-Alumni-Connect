@@ -442,10 +442,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Your application for "${widget.job['title'] as String? ?? ''}" '
-          'at ${widget.job['company'] as String? ?? ''} has been sent to '
-          'the poster and will be reviewed. You can check its status any '
-          'time from this job.',
+          applicationSubmittedMessage(widget.job),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -528,4 +525,15 @@ class _ReviewRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What the Done step says. There is no application status in the app, so it
+/// only says what is true: the poster has it and may write to the email given,
+/// and the job now shows "Applied".
+String applicationSubmittedMessage(Map<String, dynamic> job) {
+  final title = job['title'] as String? ?? '';
+  final company = job['company'] as String? ?? '';
+  return 'Your application for "$title" at $company has been sent to the '
+      'poster. If they want to talk to you they will write to the email you '
+      'gave. This job will now show "Applied".';
 }

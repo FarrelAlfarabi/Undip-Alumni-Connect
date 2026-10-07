@@ -115,6 +115,8 @@ class _CountingPageState extends State<CountingPage> {
 HomePages fakePages({
   List<ValueNotifier<Map<String, dynamic>>>? users,
   List<int>? chatBuilds,
+  List<int>? directoryBuilds,
+  List<int>? marketBuilds,
 }) {
   void note(ValueNotifier<Map<String, dynamic>> u) => users?.add(u);
   return HomePages(
@@ -124,10 +126,13 @@ HomePages fakePages({
     },
     directory: (u) {
       note(u);
-      return const MarkerPage('Directory');
+      return directoryBuilds == null
+          ? const MarkerPage('Directory')
+          : CountingPage('Directory', directoryBuilds);
     },
     market: (u, segment) {
       note(u);
+      if (marketBuilds != null) return CountingPage('Market', marketBuilds);
       return ValueListenableBuilder<int>(
         valueListenable: segment,
         builder: (_, i, _) =>

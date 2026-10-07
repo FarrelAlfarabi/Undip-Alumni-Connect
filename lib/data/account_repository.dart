@@ -62,9 +62,15 @@ class AccountRepository {
     }
   }
 
-  /// Deletes the account: removes the person's files from storage (best
-  /// effort, before the database call), then calls `account_delete`, which
-  /// does everything else in one transaction.
+  /// Deletes the account: lists the person's files, calls `account_delete`
+  /// (one transaction, which also queues the files in storage_cleanup_queue),
+  /// and only then removes the files from storage, best effort. This order
+  /// matters: if the database call fails, nothing has been destroyed yet and
+  /// the person can try again.
+  ///
+  /// `not_found` from the database means the account is already deleted (for
+  /// example the first call worked but its answer was lost), so it counts as
+  /// success and the device can be wiped.
   Future<DeleteResult> deleteAccount(String profileId) async {
     final failed = <String>[];
     try {
@@ -76,24 +82,31 @@ class AccountRepository {
             .putIfAbsent(m['bucket'] as String, () => [])
             .add(m['path'] as String);
       }
+
+      final removed = <String, int>{};
+      try {
+        final result = await _api.rpc('account_delete', {
+          'p_profile': profileId,
+        });
+        final counts = Map<String, dynamic>.from(result as Map)['removed'];
+        if (counts is Map) {
+          counts.forEach((k, v) => removed['$k'] = (v as num).toInt());
+        }
+      } on PostgrestException catch (e) {
+        if (!e.message.contains('not_found')) rethrow;
+      }
+
       for (final e in byBucket.entries) {
         try {
-          final removed = (await _api.removeFiles(e.key, e.value)).toSet();
+          final done = (await _api.removeFiles(e.key, e.value)).toSet();
           for (final p in e.value) {
-            if (!removed.contains(p)) failed.add('${e.key}/$p');
+            if (!done.contains(p)) failed.add('${e.key}/$p');
           }
         } catch (_) {
           for (final p in e.value) {
             failed.add('${e.key}/$p');
           }
         }
-      }
-      final result = await _api.rpc('account_delete', {'p_profile': profileId});
-      final removed = <String, int>{};
-      final map = Map<String, dynamic>.from(result as Map);
-      final counts = map['removed'];
-      if (counts is Map) {
-        counts.forEach((k, v) => removed['$k'] = (v as num).toInt());
       }
       return DeleteResult(removed: removed, failedPaths: failed);
     } on PostgrestException catch (e) {

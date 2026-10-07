@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 
 import '../config/feature_flags.dart';
@@ -61,6 +62,11 @@ class _HomeShellState extends State<HomeShell> {
   // refetch) every time they are opened.
   int _homeEpoch = 0;
   int _chatEpoch = 0;
+  // Directory and Market fetch once per State. Same trick: a new key on entry,
+  // and when the people I blocked change, so a block shows at once.
+  int _directoryEpoch = 0;
+  int _marketEpoch = 0;
+  Set<String> _lastBlocked = const {};
 
   /// Which Market segment is showing: 0 Products, 1 Businesses.
   final ValueNotifier<int> _marketSegment = ValueNotifier(0);
@@ -71,10 +77,25 @@ class _HomeShellState extends State<HomeShell> {
     _currentUser = ValueNotifier(widget.profile);
     // Who I blocked: asked once per session, used by every list.
     BlockList.shared.load(widget.profile['id'] as String);
+    _lastBlocked = {...BlockList.shared.blocked.value};
+    BlockList.shared.blocked.addListener(_onBlockedChanged);
+  }
+
+  void _onBlockedChanged() {
+    final now = BlockList.shared.blocked.value;
+    if (setEquals(now, _lastBlocked)) return;
+    _lastBlocked = {...now};
+    if (!mounted) return;
+    setState(() {
+      _homeEpoch++;
+      _directoryEpoch++;
+      _marketEpoch++;
+    });
   }
 
   @override
   void dispose() {
+    BlockList.shared.blocked.removeListener(_onBlockedChanged);
     _currentUser.dispose();
     _marketSegment.dispose();
     super.dispose();
@@ -92,6 +113,12 @@ class _HomeShellState extends State<HomeShell> {
     setState(() {
       if (i == HomeShell.homeTab && _index != HomeShell.homeTab) _homeEpoch++;
       if (i == _chatTab && _index != _chatTab) _chatEpoch++;
+      if (i == HomeShell.directoryTab && _index != HomeShell.directoryTab) {
+        _directoryEpoch++;
+      }
+      if (i == HomeShell.marketTab && _index != HomeShell.marketTab) {
+        _marketEpoch++;
+      }
       _index = i;
     });
   }
@@ -117,8 +144,14 @@ class _HomeShellState extends State<HomeShell> {
         marketplaceRepository: widget.marketplaceRepository,
         autoAdvance: widget.autoAdvance,
       ),
-      pages.directory(_currentUser),
-      pages.market(_currentUser, _marketSegment),
+      KeyedSubtree(
+        key: ValueKey('directory-$_directoryEpoch'),
+        child: pages.directory(_currentUser),
+      ),
+      KeyedSubtree(
+        key: ValueKey('market-$_marketEpoch'),
+        child: pages.market(_currentUser, _marketSegment),
+      ),
       if (widget.chat)
         KeyedSubtree(
           key: ValueKey('chat-$_chatEpoch'),
