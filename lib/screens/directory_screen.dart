@@ -7,10 +7,15 @@ import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'profile_detail_screen.dart';
 
+/// Most alumni rows one load brings in, so the list does not grow without
+/// bound as people join. Rows are ordered by name, so past this many the last
+/// names are cut off until search is done on the server.
+const int kDirectoryMaxRows = 500;
+
 /// Searchable alumni directory: filter by major, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
-/// all verified alumni_profiles rows once and filters client-side — fine
-/// for ~24 seed rows, not meant to scale past the demo.
+/// verified alumni_profiles rows once (at most [kDirectoryMaxRows]) and
+/// filters client-side — fine for the beta, not meant to scale past it.
 ///
 /// Faculty is not a filter here: this app is scoped to a single faculty
 /// (Fakultas Ekonomika dan Bisnis / Ikafe), not campus-wide UNDIP, so
@@ -65,7 +70,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         .from('alumni_profiles')
         .select()
         .eq('verification_status', 'verified')
-        .order('name', ascending: true);
+        .order('name', ascending: true)
+        .limit(kDirectoryMaxRows);
     return withoutBlockedProfiles(
       List<Map<String, dynamic>>.from(rows as List),
     );

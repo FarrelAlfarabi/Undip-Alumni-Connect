@@ -87,6 +87,15 @@ void main() {
       expect(list.map((l) => l.id), ['a', 'b']);
     });
 
+    test('fetchApproved passes the limit to the query', () async {
+      api.approved = [for (var i = 0; i < 5; i++) listingMap(id: 'l$i')];
+      final list = await repo.fetchApproved(limit: 2);
+      expect(api.lastLimit, 2);
+      expect(list.length, 2);
+      await repo.fetchApproved();
+      expect(api.lastLimit, isNull);
+    });
+
     test('fetchMine calls the my_listings function', () async {
       api.rpcResult = [listingMap(status: 'pending', approvedAt: null)];
       final list = await repo.fetchMine('s1');

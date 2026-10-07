@@ -68,11 +68,17 @@ class FakeApi implements MarketplaceApi {
     'marketplace_report_counts',
   };
 
+  /// The limit the last select asked for (null: none).
+  int? lastLimit;
+
   @override
-  Future<List<Map<String, dynamic>>> selectApprovedListings() async {
+  Future<List<Map<String, dynamic>>> selectApprovedListings({
+    int? limit,
+  }) async {
     calls.add('select');
+    lastLimit = limit;
     if (throwOnCall != null) throw throwOnCall!;
-    return approved;
+    return limit == null ? approved : approved.take(limit).toList();
   }
 
   @override

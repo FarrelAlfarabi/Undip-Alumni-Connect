@@ -102,7 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<List<MarketplaceListing>> _fetchListings() async {
-    final all = await _market.fetchApproved(); // already without blocked people
+    final all = await _market.fetchApproved(
+      limit: kHomeListingFetchLimit,
+    ); // already without blocked people
     final sorted = [...all]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.take(kHomeLatestLimit).toList();
   }
