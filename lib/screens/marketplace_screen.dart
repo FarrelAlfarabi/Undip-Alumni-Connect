@@ -96,7 +96,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   void initState() {
     super.initState();
     _repo = widget.repository ?? MarketplaceRepository();
-    _future = _repo.fetchApproved();
+    _future = _repo.fetchApproved(limit: kMarketplaceMaxRows);
     _searchController.addListener(() => setState(() {}));
   }
 
@@ -108,7 +108,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   void _reload() {
     setState(() {
-      _future = _repo.fetchApproved();
+      _future = _repo.fetchApproved(limit: kMarketplaceMaxRows);
     });
   }
 

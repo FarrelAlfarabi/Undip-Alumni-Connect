@@ -360,6 +360,12 @@ class MarketplaceRepository {
 }
 
 /// Allowed listing photo extensions (matches the bucket policy).
+/// Most listings the Market tab loads in one go, newest first, so the list
+/// does not grow without bound. Search and filters work on these rows only,
+/// so past this many the oldest listings are cut off until they run on the
+/// server.
+const int kMarketplaceMaxRows = 500;
+
 const kListingImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 
 /// Bucket file size limit (2 MB).
