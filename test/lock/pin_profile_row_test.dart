@@ -40,6 +40,8 @@ void main() {
     tester,
   ) async {
     await pump(tester, shown: me, lockOn: true);
+    await tester.tap(find.byKey(const Key('profile-settings')));
+    await tester.pumpAndSettle();
     final row = find.byKey(const Key('profile-pin'));
     await tester.ensureVisible(row);
     await tester.tap(row);
@@ -49,7 +51,10 @@ void main() {
 
   testWidgets('no PIN lock row when there is no lock (web)', (tester) async {
     await pump(tester, shown: me, lockOn: false);
+    await tester.tap(find.byKey(const Key('profile-settings')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('profile-pin')), findsNothing);
+    expect(find.byKey(const Key('profile-blocked')), findsOneWidget);
   });
 
   testWidgets('someone else\'s profile has no PIN lock row', (tester) async {

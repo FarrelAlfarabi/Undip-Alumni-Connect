@@ -166,9 +166,15 @@ class _IncomingCard extends StatelessWidget {
   final VoidCallback onChanged;
 
   Future<void> _accept(BuildContext context) async {
+    // My saved default, else my email. A failed lookup just uses the email.
+    String? saved;
+    try {
+      saved = await repository.defaultContact(myId);
+    } catch (_) {}
+    if (!context.mounted) return;
     final text = await showDialog<String>(
       context: context,
-      builder: (ctx) => _ShareDialog(initial: defaultContact),
+      builder: (ctx) => _ShareDialog(initial: saved ?? defaultContact),
     );
     if (text == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -334,8 +340,10 @@ class _ShareDialogState extends State<_ShareDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Your email is filled in by default. Change it to a WhatsApp '
-            'number or anything else you prefer. Only this person will see it.',
+            'Your default contact is filled in (or your email if you have not '
+            'set one). Change it to anything you prefer: WhatsApp, Instagram, '
+            'phone, email... Only this person will see it. You can set your '
+            'default in Profile > Settings.',
           ),
           const SizedBox(height: 12),
           TextField(

@@ -192,7 +192,9 @@ class BusinessOwnerCard extends StatelessWidget {
               ],
             ),
             Text(
-              b.isPersonal ? '${b.category} · Personal business' : b.category,
+              b.isPersonal
+                  ? '${b.category} · Run by the owner only'
+                  : b.category,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

@@ -7,24 +7,20 @@ import '../data/admin_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
-import '../lock/pin_settings_screen.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
-import '../policy/policy_screen.dart';
-import 'about_screen.dart';
 import 'admin_screen.dart';
-import 'delete_account_screen.dart';
-import 'contact_admin_screen.dart';
 import 'my_businesses_screen.dart';
 import 'my_job_postings_screen.dart';
-import 'blocked_users_screen.dart';
+import 'help_screen.dart';
+import 'settings_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
 import '../widgets/error_view.dart';
-import '../widgets/feedback_sheet.dart';
+import '../widgets/menu_list.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -47,6 +43,7 @@ class ProfileDetailScreen extends StatefulWidget {
     this.chat = chatEnabled,
     this.contactRepository,
     this.adminCheck,
+    this.unseenReportsCheck,
     this.lock,
   });
 
@@ -57,6 +54,10 @@ class ProfileDetailScreen extends StatefulWidget {
   /// tests. Asked once per session (when the Profile tab is built) and
   /// never cached on the device.
   final Future<bool> Function(String profileId)? adminCheck;
+
+  /// Number of reports no admin has seen yet (the badge on Admin). Injectable
+  /// for tests.
+  final Future<int> Function(String profileId)? unseenReportsCheck;
 
   /// Injectable for tests; defaults to the real repository.
   final ContactRepository? contactRepository;
@@ -80,12 +81,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
   bool _messaging = false;
   Future<bool>? _isAdmin;
+  Future<int>? _unseenReports;
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
-    if (widget.showEditButton) _isAdmin = _askAdmin();
+    if (widget.showEditButton) {
+      _isAdmin = _askAdmin();
+      _unseenReports = _askUnseen();
+    }
   }
 
   // A failed check just hides the Admin entry.
@@ -96,6 +101,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       return await check(id);
     } catch (_) {
       return false;
+    }
+  }
+
+  // A failed lookup just shows no number.
+  Future<int> _askUnseen() async {
+    try {
+      final id = widget.currentUser.value['id'] as String;
+      final ask =
+          widget.unseenReportsCheck ?? AdminRepository().unseenReportsCount;
+      return await ask(id);
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -316,6 +333,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     const SizedBox(height: 16),
                     _ProfileMenu(
                       adminFuture: _isAdmin,
+                      unseenReports: _unseenReports,
                       onBusiness: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => MyBusinessesScreen(
@@ -330,51 +348,38 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
-                      onContactAdmin: () => Navigator.of(context).push(
+                      onSettings: () => Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const ContactAdminScreen(),
+                          builder: (_) => SettingsScreen(
+                            currentUser: widget.currentUser,
+                            lock: widget.lock,
+                            showPin: _lockOn,
+                            contactRepository: widget.contactRepository,
+                          ),
                         ),
                       ),
+                      onHelp: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const HelpScreen()),
+                      ),
+                      onAdmin: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AdminScreen(
+                              adminId: widget.currentUser.value['id'] as String,
+                            ),
+                          ),
+                        );
+                        // The number may have changed while in Admin.
+                        if (mounted) {
+                          setState(() => _unseenReports = _askUnseen());
+                        }
+                      },
                       // Back to verification with the whole shell torn down,
                       // so a second account starts from a clean state. Also
                       // forgets this device's remembered person and PIN
                       // (local only).
                       onSignOut: () =>
                           signOutTo(context, const VerificationScreen()),
-                      onBlocked: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => BlockedUsersScreen(
-                            currentUserId:
-                                widget.currentUser.value['id'] as String,
-                          ),
-                        ),
-                      ),
-                      onPolicy: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
-                      ),
-                      onAdmin: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => AdminScreen(
-                            adminId: widget.currentUser.value['id'] as String,
-                          ),
-                        ),
-                      ),
-                      onPin: _lockOn
-                          ? () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => PinSettingsScreen(
-                                  lock: widget.lock ?? LockService.shared,
-                                ),
-                              ),
-                            )
-                          : null,
-                      onDelete: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => DeleteAccountScreen(
-                            currentUser: widget.currentUser,
-                          ),
-                        ),
-                      ),
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
@@ -447,151 +452,109 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 }
 
-/// The list under my own profile: My business, My job postings, Blocked users, Privacy policy
-/// and community rules, Admin (admins only), and Delete my account last.
+/// Under my own profile: Admin (admins only, with the unseen reports count),
+/// then My business and My job postings, then Settings and Help, then Sign out.
+/// Rarely used things (PIN, blocked users, policy, delete account, contact
+/// admin, feedback, about) live inside Settings and Help.
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu({
     required this.adminFuture,
+    required this.unseenReports,
     required this.onBusiness,
     required this.onJobs,
-    required this.onContactAdmin,
-    required this.onSignOut,
-    required this.onBlocked,
-    required this.onPolicy,
+    required this.onSettings,
+    required this.onHelp,
     required this.onAdmin,
-    required this.onDelete,
-    this.onPin,
+    required this.onSignOut,
   });
 
-  /// Null where there is no lock (the public web build): no row.
-  final VoidCallback? onPin;
-
   final Future<bool>? adminFuture;
+  final Future<int>? unseenReports;
   final VoidCallback onBusiness;
   final VoidCallback onJobs;
-  final VoidCallback onContactAdmin;
-  final VoidCallback onSignOut;
-  final VoidCallback onBlocked;
-  final VoidCallback onPolicy;
+  final VoidCallback onSettings;
+  final VoidCallback onHelp;
   final VoidCallback onAdmin;
-  final VoidCallback onDelete;
+  final VoidCallback onSignOut;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    Widget tile(
-      Key key,
-      IconData icon,
-      String title,
-      VoidCallback onTap, {
-      Color? color,
-    }) => ListTile(
-      key: key,
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(color: color)),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
-    );
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        children: [
-          tile(
-            const Key('profile-business'),
-            Icons.storefront_outlined,
-            'My business',
-            onBusiness,
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-jobs'),
-            Icons.work_outline,
-            'My job postings',
-            onJobs,
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-blocked'),
-            Icons.block,
-            'Blocked users',
-            onBlocked,
-          ),
-          const Divider(height: 1),
-          if (onPin != null) ...[
-            tile(
-              const Key('profile-pin'),
-              Icons.pin_outlined,
-              'PIN lock',
-              onPin!,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FutureBuilder<bool>(
+          future: adminFuture,
+          builder: (context, snap) {
+            if (snap.data != true) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: FutureBuilder<int>(
+                future: unseenReports,
+                builder: (context, unseen) => MenuList(
+                  items: [
+                    MenuItem(
+                      key: const Key('profile-admin'),
+                      icon: Icons.admin_panel_settings_outlined,
+                      title: 'Admin',
+                      subtitle: (unseen.data ?? 0) > 0
+                          ? '${unseen.data} new reports'
+                          : null,
+                      badge: unseen.data ?? 0,
+                      onTap: onAdmin,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        MenuList(
+          items: [
+            MenuItem(
+              key: const Key('profile-business'),
+              icon: Icons.storefront_outlined,
+              title: 'My business',
+              onTap: onBusiness,
             ),
-            const Divider(height: 1),
+            MenuItem(
+              key: const Key('profile-jobs'),
+              icon: Icons.work_outline,
+              title: 'My job postings',
+              onTap: onJobs,
+            ),
           ],
-          tile(
-            const Key('profile-policy'),
-            Icons.privacy_tip_outlined,
-            'Privacy policy and community rules',
-            onPolicy,
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-contact-admin'),
-            Icons.support_agent_outlined,
-            'Contact admin',
-            onContactAdmin,
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-feedback'),
-            Icons.feedback_outlined,
-            'Send feedback',
-            () => showFeedbackSheet(context, error: null, screen: 'Profile'),
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-about'),
-            Icons.info_outline,
-            'About',
-            () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const AboutScreen())),
-          ),
-          FutureBuilder<bool>(
-            future: adminFuture,
-            builder: (context, snap) {
-              if (snap.data != true) return const SizedBox.shrink();
-              return Column(
-                children: [
-                  const Divider(height: 1),
-                  tile(
-                    const Key('profile-admin'),
-                    Icons.admin_panel_settings_outlined,
-                    'Admin',
-                    onAdmin,
-                  ),
-                ],
-              );
-            },
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-signout'),
-            Icons.logout,
-            'Sign out',
-            onSignOut,
-          ),
-          const Divider(height: 1),
-          tile(
-            const Key('profile-delete'),
-            Icons.delete_forever_outlined,
-            'Delete my account',
-            onDelete,
-            color: theme.colorScheme.error,
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        MenuList(
+          items: [
+            MenuItem(
+              key: const Key('profile-settings'),
+              icon: Icons.settings_outlined,
+              title: 'Settings',
+              subtitle: 'Default contact, PIN lock, blocked users, account',
+              onTap: onSettings,
+            ),
+            MenuItem(
+              key: const Key('profile-help'),
+              icon: Icons.help_outline,
+              title: 'Help',
+              subtitle: 'Contact admin, send feedback, about',
+              onTap: onHelp,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        MenuList(
+          items: [
+            MenuItem(
+              key: const Key('profile-signout'),
+              icon: Icons.logout,
+              title: 'Sign out',
+              onTap: onSignOut,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

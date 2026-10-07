@@ -10,6 +10,8 @@ import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/admin_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
 import 'package:undip_alumni_connect/screens/contact_admin_screen.dart';
+import 'package:undip_alumni_connect/screens/default_contact_screen.dart';
+import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
 import 'package:undip_alumni_connect/screens/my_job_postings_screen.dart';
 import 'package:undip_alumni_connect/screens/requests_screen.dart';
@@ -232,5 +234,96 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Analyst'), findsOneWidget);
     expect(find.text('Bank X · 2 applicants'), findsOneWidget);
+  });
+
+  group('default contact', () {
+    test('repository reads and saves it', () async {
+      final api = FakeContactApi()
+        ..results['contact_default_get'] = ' WA 0812 ';
+      final repo = ContactRepository(api);
+      expect(await repo.defaultContact('me'), 'WA 0812');
+      await repo.setDefaultContact('me', '  IG @ahmad ');
+      expect(api.params['contact_default_set'], {
+        'p_profile': 'me',
+        'p_contact': 'IG @ahmad',
+      });
+      api.results['contact_default_get'] = null;
+      expect(await repo.defaultContact('me'), isNull);
+    });
+
+    testWidgets('the screen shows the saved value and saves any text', (
+      tester,
+    ) async {
+      tall(tester);
+      final api = FakeContactApi()
+        ..results['contact_default_get'] = 't.me/ahmad';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DefaultContactScreen(
+            profileId: 'me',
+            repository: ContactRepository(api),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('t.me/ahmad'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('default-contact-field')),
+        'Signal +62 811, ahmad@work.id',
+      );
+      await tester.tap(find.byKey(const Key('default-contact-save')));
+      await tester.pumpAndSettle();
+      expect(
+        api.params['contact_default_set']!['p_contact'],
+        'Signal +62 811, ahmad@work.id',
+      );
+    });
+
+    testWidgets('accepting pre-fills the saved default, not the email', (
+      tester,
+    ) async {
+      tall(tester);
+      final api = FakeContactApi()
+        ..results['contact_requests_incoming'] = [incomingMap()]
+        ..results['contact_requests_outgoing'] = []
+        ..results['contact_default_get'] = 'WA 0812-1111';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestsScreen(
+            currentUser: ValueNotifier({'id': 'me', 'email': 'a@example.com'}),
+            repository: ContactRepository(api),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('accept-r1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Accept and share'));
+      await tester.pumpAndSettle();
+      expect(
+        api.params['contact_request_respond']!['p_shared'],
+        'WA 0812-1111',
+      );
+    });
+  });
+
+  testWidgets('Profile: Admin row shows the unseen reports number', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 2200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProfileDetailScreen(
+          profile: {'id': 'me', 'name': 'Ahmad'},
+          currentUser: ValueNotifier({'id': 'me'}),
+          adminCheck: (_) async => true,
+          unseenReportsCheck: (_) async => 4,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('4 new reports'), findsOneWidget);
   });
 }

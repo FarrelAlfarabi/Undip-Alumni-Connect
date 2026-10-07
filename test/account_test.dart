@@ -539,9 +539,13 @@ void main() {
         ),
       );
       await tester.pumpWidget(screen(true));
+      expect(find.byKey(const Key('profile-settings')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('profile-settings')));
+      await tester.pumpAndSettle();
       expect(find.byKey(const Key('profile-policy')), findsOneWidget);
       expect(find.byKey(const Key('profile-delete')), findsOneWidget);
       await tester.pumpWidget(screen(false));
+      expect(find.byKey(const Key('profile-settings')), findsNothing);
       expect(find.byKey(const Key('profile-policy')), findsNothing);
       expect(find.byKey(const Key('profile-delete')), findsNothing);
     });

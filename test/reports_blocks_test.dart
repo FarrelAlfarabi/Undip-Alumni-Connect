@@ -344,7 +344,7 @@ void main() {
       expect(find.byKey(const Key('content-menu')), findsOneWidget);
       await tester.pumpWidget(screen('me', true));
       expect(find.byKey(const Key('content-menu')), findsNothing);
-      expect(find.byKey(const Key('profile-blocked')), findsOneWidget);
+      expect(find.byKey(const Key('profile-settings')), findsOneWidget);
     });
 
     testWidgets('each received contact request has Report and Block', (

@@ -306,33 +306,54 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets(
-      'My business, Blocked users, Privacy policy, Delete my account',
-      (tester) async {
-        await pump(tester, admin: false);
-        for (final k in [
-          'profile-business',
-          'profile-blocked',
-          'profile-policy',
-          'profile-delete',
-        ]) {
-          expect(find.byKey(Key(k)), findsOneWidget, reason: k);
-        }
-        expect(find.byKey(const Key('profile-admin')), findsNothing);
-        expect(find.text('My business'), findsOneWidget);
-        expect(find.text('Blocked users'), findsOneWidget);
-        expect(find.text('Privacy policy and community rules'), findsOneWidget);
-      },
-    );
+    testWidgets('My business, My job postings, Settings, Help, Sign out', (
+      tester,
+    ) async {
+      await pump(tester, admin: false);
+      for (final k in [
+        'profile-business',
+        'profile-jobs',
+        'profile-settings',
+        'profile-help',
+        'profile-signout',
+      ]) {
+        expect(find.byKey(Key(k)), findsOneWidget, reason: k);
+      }
+      expect(find.byKey(const Key('profile-admin')), findsNothing);
+      // Rarely used rows are not on the main screen.
+      for (final k in ['profile-delete', 'profile-blocked', 'profile-pin']) {
+        expect(find.byKey(Key(k)), findsNothing, reason: k);
+      }
+    });
 
-    testWidgets('Admin only for admins, Delete is last', (tester) async {
+    testWidgets('Admin comes first for admins, Sign out is last', (
+      tester,
+    ) async {
       await pump(tester, admin: true);
       expect(find.byKey(const Key('profile-admin')), findsOneWidget);
       double y(String k) => tester.getTopLeft(find.byKey(Key(k))).dy;
-      expect(y('profile-business') < y('profile-blocked'), isTrue);
-      expect(y('profile-blocked') < y('profile-policy'), isTrue);
-      expect(y('profile-policy') < y('profile-admin'), isTrue);
-      expect(y('profile-admin') < y('profile-delete'), isTrue);
+      expect(y('profile-admin') < y('profile-business'), isTrue);
+      expect(y('profile-business') < y('profile-jobs'), isTrue);
+      expect(y('profile-jobs') < y('profile-settings'), isTrue);
+      expect(y('profile-settings') < y('profile-help'), isTrue);
+      expect(y('profile-help') < y('profile-signout'), isTrue);
     });
+
+    testWidgets(
+      'Settings holds the default contact, blocked users, policy and delete last',
+      (tester) async {
+        await pump(tester, admin: false);
+        await tester.tap(find.byKey(const Key('profile-settings')));
+        await tester.pumpAndSettle();
+        double y(String k) => tester.getTopLeft(find.byKey(Key(k))).dy;
+        expect(
+          find.byKey(const Key('settings-default-contact')),
+          findsOneWidget,
+        );
+        expect(y('settings-default-contact') < y('profile-blocked'), isTrue);
+        expect(y('profile-blocked') < y('profile-policy'), isTrue);
+        expect(y('profile-policy') < y('profile-delete'), isTrue);
+      },
+    );
   });
 }

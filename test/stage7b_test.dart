@@ -50,6 +50,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-help')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-about')));
     await tester.pumpAndSettle();
     expect(find.text('Lingkaran v0.9.0 (build 7) BETA'), findsOneWidget);

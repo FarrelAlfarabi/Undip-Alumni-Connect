@@ -233,8 +233,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Personal business'),
                       subtitle: const Text(
-                        'Run by one person (just you), with no employees or '
-                        'partners.',
+                        'Run only by you, the owner. It is still listed '
+                        'publicly like any other business.',
                       ),
                       value: _personal,
                       onChanged: _saving
