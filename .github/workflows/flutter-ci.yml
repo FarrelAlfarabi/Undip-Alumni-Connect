@@ -61,7 +61,11 @@ jobs:
       - name: Beta SQL tests, rollbacks, live checks
         run: bash supabase/tests/run_beta_local.sh
 
-  # Debug APK for closed beta testers. Runs only after analyze and tests pass.
+  # APK for closed beta testers. Runs only after analyze and tests pass.
+  # It is a RELEASE build (compiled ahead of time, no debug checks). A debug
+  # build is JIT compiled with assertions on and feels slow and laggy on a
+  # phone. The release config in android/app/build.gradle.kts is still signed
+  # with the debug key, so the keystore step below works the same.
   build-apk:
     needs: analyze-and-test
     runs-on: ubuntu-latest
@@ -116,15 +120,15 @@ jobs:
       - name: Release gate (policy placeholders)
         run: flutter test --dart-define=RELEASE_CHECK=true test/release_check_test.dart
 
-      - name: Build debug APK
-        run: flutter build apk --debug --build-number "${{ github.run_number }}"
+      - name: Build release APK
+        run: flutter build apk --release --build-number "${{ github.run_number }}"
 
       - name: Name the APK
         id: name
         run: |
           VERSION="$(grep -m1 '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9.]+).*/\1/')"
-          NAME="lingkaran-${VERSION}+${{ github.run_number }}-debug"
-          cp build/app/outputs/flutter-apk/app-debug.apk "${NAME}.apk"
+          NAME="lingkaran-${VERSION}+${{ github.run_number }}-release"
+          cp build/app/outputs/flutter-apk/app-release.apk "${NAME}.apk"
           echo "name=${NAME}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4

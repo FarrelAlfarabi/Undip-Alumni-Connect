@@ -918,3 +918,10 @@ Recon only, no code changes. Details in `docs/hub/STAGE_REPORTS.md`. Flutter was
 **Verified:** analyze clean, 427 tests pass, local throwaway Postgres checks (`supabase/tests/run_beta_local.sh`) pass including anon-role tests, rollbacks and re-apply.
 **Not verified:** the live Supabase project (nothing was applied), real phones, the CI APK build with the real secrets, the web build.
 **Open:** nine new migrations are unapplied (order in PR 9); fill in the policy operator name and contact email in `lib/config/policy_config.dart`; add the admins; no real login yet (see `SECURITY_AUDIT.md` section 11); the policy needs review before a public launch.
+
+## 2026-10-07 — Performance pass for the laggy beta APK
+
+**Done:** (1) CI now builds a release APK; testers had a debug build, which is JIT compiled with assertions on and is slow on any phone. (2) Tabs are built when first opened, not all at launch, so the first screen no longer competes with four other screens' network calls. (3) A tab you come back to is refetched only if you were away 2 minutes or more (`HomeShell.refreshAfter`), not on every tap; blocking someone still refreshes at once. (4) IBM Plex Sans and Fraunces are bundled in `assets/fonts` instead of downloaded on first launch. (5) Listing photos are decoded at the size they are drawn, not at full resolution.
+**Verified:** analyze clean, 594 tests pass (new: lazy tabs, refresh window, fonts load from the bundle with runtime fetching off, checked to fail when a font file is missing).
+**Not verified:** a release APK build and a real phone (no Android SDK here). R8 shrinking on a release build can break plugins; install the new APK and check login, PIN lock and fingerprint first.
+**Not changed (next candidates):** Home loads every approved listing to show a few, and the directory loads every alumni row. Fine for beta size; add a limit or paging before it grows.

@@ -27,6 +27,7 @@ Future<void> pumpShell(
   List<int>? chatBuilds,
   List<ValueNotifier<Map<String, dynamic>>>? users,
   bool? chat,
+  Duration? refreshAfter,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -42,6 +43,7 @@ Future<void> pumpShell(
                   builder: (_) => HomeShell(
                     profile: profile,
                     chat: chat ?? chatEnabled,
+                    refreshAfter: refreshAfter ?? const Duration(minutes: 2),
                     pages:
                         pages ??
                         fakePages(users: users, chatBuilds: chatBuilds),
@@ -60,6 +62,21 @@ Future<void> pumpShell(
   await tester.tap(find.text('OPEN SHELL'));
   await tester.pumpAndSettle();
 }
+
+Future<void> pumpShellCounting(
+  WidgetTester tester, {
+  required List<int> chatBuilds,
+  required List<int> directoryBuilds,
+  required List<int> marketBuilds,
+}) => pumpShell(
+  tester,
+  chat: true,
+  pages: fakePages(
+    chatBuilds: chatBuilds,
+    directoryBuilds: directoryBuilds,
+    marketBuilds: marketBuilds,
+  ),
+);
 
 Future<void> tapNav(WidgetTester tester, String label) async {
   await tester.tap(
@@ -151,17 +168,54 @@ void main() {
     expect(users.every((u) => identical(u, users.first)), isTrue);
   });
 
-  testWidgets('Chat refetches on re-select (epoch), other tabs keep state', (
+  testWidgets('tabs are built when first opened, not at launch', (
+    tester,
+  ) async {
+    final chatBuilds = <int>[];
+    final dir = <int>[];
+    final market = <int>[];
+    await pumpShellCounting(
+      tester,
+      chatBuilds: chatBuilds,
+      directoryBuilds: dir,
+      marketBuilds: market,
+    );
+    expect(chatBuilds, isEmpty);
+    expect(dir, isEmpty);
+    expect(market, isEmpty);
+    await tapNav(tester, 'Directory');
+    expect(dir.length, 1);
+    expect(market, isEmpty);
+    expect(chatBuilds, isEmpty);
+  });
+
+  testWidgets('Chat refetches on re-select once the refresh window is over', (
+    tester,
+  ) async {
+    final chatBuilds = <int>[];
+    await pumpShell(
+      tester,
+      chatBuilds: chatBuilds,
+      chat: true,
+      refreshAfter: Duration.zero,
+    );
+    await tapNav(tester, 'Chat');
+    expect(chatBuilds.length, 1); // first visit builds it
+    final afterFirst = chatBuilds.length;
+    await tapNav(tester, 'Home');
+    await tapNav(tester, 'Chat');
+    expect(chatBuilds.length, greaterThan(afterFirst));
+  });
+
+  testWidgets('coming back inside the refresh window keeps the tab as it was', (
     tester,
   ) async {
     final chatBuilds = <int>[];
     await pumpShell(tester, chatBuilds: chatBuilds, chat: true);
     await tapNav(tester, 'Chat');
-    expect(chatBuilds.length, 2); // initial IndexedStack build + epoch bump
-    final afterFirst = chatBuilds.length;
     await tapNav(tester, 'Home');
     await tapNav(tester, 'Chat');
-    expect(chatBuilds.length, greaterThan(afterFirst));
+    expect(chatBuilds.length, 1);
   });
 
   group('reachability: everything reachable before is still reachable', () {

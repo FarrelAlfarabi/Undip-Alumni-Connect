@@ -538,21 +538,41 @@ class ListingImage extends StatelessWidget {
       ),
     );
 
-    final image = url.isEmpty
-        ? placeholder()
-        : Image.network(
-            url,
-            fit: BoxFit.cover,
-            semanticLabel: semanticLabel,
-            excludeFromSemantics: semanticLabel == null,
-            errorBuilder: (_, _, _) => placeholder(),
-            loadingBuilder: (context, child, progress) =>
-                progress == null ? child : placeholder(),
-          );
-
-    if (size != null) {
-      return SizedBox(width: size, height: size, child: image);
+    // Decode at the size it is drawn, not at the photo's full resolution (up
+    // to 2 MB on disk, many megabytes decoded). Big memory and scroll-jank
+    // saving on the list, where the photo is a small thumbnail.
+    Widget photo(double width) {
+      final dpr = MediaQuery.devicePixelRatioOf(context);
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        cacheWidth: (width * dpr).round(),
+        gaplessPlayback: true,
+        semanticLabel: semanticLabel,
+        excludeFromSemantics: semanticLabel == null,
+        errorBuilder: (_, _, _) => placeholder(),
+        loadingBuilder: (context, child, progress) =>
+            progress == null ? child : placeholder(),
+      );
     }
-    return AspectRatio(aspectRatio: aspectRatio ?? 3 / 2, child: image);
+
+    if (url.isEmpty) {
+      return size != null
+          ? SizedBox(width: size, height: size, child: placeholder())
+          : AspectRatio(
+              aspectRatio: aspectRatio ?? 3 / 2,
+              child: placeholder(),
+            );
+    }
+    if (size != null) {
+      return SizedBox(width: size, height: size, child: photo(size!));
+    }
+    return AspectRatio(
+      aspectRatio: aspectRatio ?? 3 / 2,
+      child: LayoutBuilder(
+        builder: (context, constraints) =>
+            photo(constraints.hasBoundedWidth ? constraints.maxWidth : 600),
+      ),
+    );
   }
 }
