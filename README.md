@@ -28,8 +28,8 @@ true until login ships.
 - The public web version uses the same database.
 - Push notifications, release signing, store accounts and backups are missing.
 - The privacy policy is self-written and needs review before a public launch.
-- Testers get the debug APK from the GitHub Actions run (artifact
-  `lingkaran-<version>+<run number>-debug`, kept 7 days). Secrets: `SUPABASE_URL`,
+- Testers get the release APK from the GitHub Actions run (artifact
+  `lingkaran-<version>+<run number>-release`, kept 7 days). Secrets: `SUPABASE_URL`,
   `SUPABASE_ANON_KEY`, optional `ANDROID_DEBUG_KEYSTORE_BASE64`.
 
 ## Free launch features (Stages 1 to 8)

@@ -169,6 +169,13 @@ void main() {
       );
     });
 
+    testWidgets('the list asks the server for a capped number of rows', (
+      tester,
+    ) async {
+      final api = await pumpMarket(tester);
+      expect(api.lastLimit, kMarketplaceMaxRows);
+    });
+
     testWidgets('empty state when there are no approved listings', (
       tester,
     ) async {

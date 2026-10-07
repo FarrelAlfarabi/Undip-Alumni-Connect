@@ -9,8 +9,10 @@ import 'support/fake_marketplace_api.dart';
 
 /// Directory and Market sit in an IndexedStack, so they used to fetch once and
 /// show that forever: new people and products never appeared, and a person you
-/// just blocked stayed on screen. Entering the tab, or changing the block
-/// list, now rebuilds them (which refetches).
+/// just blocked stayed on screen. Coming back to a tab after the refresh window
+/// (these tests use none), or changing the block list, now rebuilds it (which
+/// refetches). The first visit builds it; coming back inside the window keeps
+/// it, so tab switches are not a spinner every time.
 const profile = {
   'id': 'me',
   'name': 'Ahmad Ramadhan',
@@ -31,6 +33,7 @@ Future<void> pump(
       home: HomeShell(
         profile: profile,
         chat: false,
+        refreshAfter: Duration.zero,
         pages: fakePages(
           directoryBuilds: directoryBuilds,
           marketBuilds: marketBuilds,
@@ -71,6 +74,32 @@ void main() {
     expect(market.length, greaterThan(before));
   });
 
+  testWidgets('coming back soon does not refetch, only after a while', (
+    tester,
+  ) async {
+    final dir = <int>[];
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    BlockList.shared.blocked.value = const {};
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HomeShell(
+          profile: profile,
+          chat: false,
+          pages: fakePages(directoryBuilds: dir, marketBuilds: <int>[]),
+          homeApi: FakeHomeApi(announcements: [announcementMap(1)]),
+          marketplaceRepository: MarketplaceRepository(FakeApi()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Home');
+    await tapNav(tester, 'Directory');
+    expect(dir.length, 1); // default window is minutes, not milliseconds
+  });
+
   testWidgets('staying on the same tab does not rebuild it', (tester) async {
     final dir = <int>[];
     await pump(tester, directoryBuilds: dir, marketBuilds: <int>[]);
@@ -85,6 +114,8 @@ void main() {
     final market = <int>[];
     await pump(tester, directoryBuilds: dir, marketBuilds: market);
     await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Market');
+    await tapNav(tester, 'Home');
     final d = dir.length;
     final m = market.length;
     BlockList.shared.blocked.value = {'person-1'};

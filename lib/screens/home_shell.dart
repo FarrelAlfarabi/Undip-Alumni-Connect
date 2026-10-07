@@ -27,7 +27,14 @@ class HomeShell extends StatefulWidget {
     this.marketplaceRepository,
     this.autoAdvance = const Duration(seconds: 5),
     this.chat = chatEnabled,
+    this.refreshAfter = const Duration(minutes: 2),
   });
+
+  /// A tab you left is refetched when you come back to it only if you were
+  /// away at least this long. Inside the window it comes back instantly, with
+  /// what it already had, instead of a spinner on every tap. Tests pass
+  /// [Duration.zero] to refetch on every entry.
+  final Duration refreshAfter;
 
   /// Whether the Chat tab exists. Defaults to the app-wide [chatEnabled]
   /// switch; tests pass it to check both states.
@@ -53,19 +60,24 @@ class _HomeShellState extends State<HomeShell> {
   int _index = HomeShell.homeTab;
   late final ValueNotifier<Map<String, dynamic>> _currentUser;
 
-  // Home (latest jobs/listings/news) and Chat show data that changes while
-  // the app is open (a conversation you just started from the directory, a
-  // job someone just posted). IndexedStack keeps every tab alive, so those
-  // tabs would otherwise show whatever they fetched at launch forever.
-  // Bumping the key on re-select recreates the tab, which refetches. Jobs
-  // and Marketplace are now pushed from Home, so they are built fresh (and
-  // refetch) every time they are opened.
-  int _homeEpoch = 0;
-  int _chatEpoch = 0;
-  // Directory and Market fetch once per State. Same trick: a new key on entry,
-  // and when the people I blocked change, so a block shows at once.
-  int _directoryEpoch = 0;
-  int _marketEpoch = 0;
+  // Home (latest jobs/listings/news), Directory, Market and Chat show data
+  // that changes while the app is open (a conversation you just started, a
+  // job someone just posted). IndexedStack keeps a visited tab alive, so such
+  // a tab would otherwise show whatever it fetched the first time forever.
+  // Bumping a tab's epoch gives it a new key, which recreates it and so
+  // refetches. It happens when the tab was left for [HomeShell.refreshAfter]
+  // or longer, and for every tab when the people I blocked change, so a block
+  // shows at once.
+  final Map<int, int> _epoch = {};
+  int _epochOf(int tab) => _epoch[tab] ?? 0;
+  void _bump(int tab) => _epoch[tab] = _epochOf(tab) + 1;
+
+  // Tabs are built the first time they are opened, not all at launch. Before
+  // this, every tab fetched its data while the first screen was still
+  // loading. Once built, IndexedStack keeps a tab alive (scroll position,
+  // filters).
+  final Set<int> _visited = {HomeShell.homeTab};
+  final Map<int, DateTime> _leftAt = {};
   Set<String> _lastBlocked = const {};
 
   /// Which Market segment is showing: 0 Products, 1 Businesses.
@@ -87,9 +99,9 @@ class _HomeShellState extends State<HomeShell> {
     _lastBlocked = {...now};
     if (!mounted) return;
     setState(() {
-      _homeEpoch++;
-      _directoryEpoch++;
-      _marketEpoch++;
+      for (final tab in _refreshable) {
+        _bump(tab);
+      }
     });
   }
 
@@ -109,16 +121,28 @@ class _HomeShellState extends State<HomeShell> {
     _select(HomeShell.marketTab);
   }
 
+  // Tabs that show data which changes while the app is open. Profile reads
+  // the shared user notifier, so it never needs refetching.
+  List<int> get _refreshable => [
+    HomeShell.homeTab,
+    HomeShell.directoryTab,
+    HomeShell.marketTab,
+    if (widget.chat) _chatTab,
+  ];
+
   void _select(int i) {
     setState(() {
-      if (i == HomeShell.homeTab && _index != HomeShell.homeTab) _homeEpoch++;
-      if (i == _chatTab && _index != _chatTab) _chatEpoch++;
-      if (i == HomeShell.directoryTab && _index != HomeShell.directoryTab) {
-        _directoryEpoch++;
+      if (i != _index) {
+        final now = DateTime.now();
+        _leftAt[_index] = now;
+        final left = _leftAt[i];
+        if (left != null &&
+            _refreshable.contains(i) &&
+            now.difference(left) >= widget.refreshAfter) {
+          _bump(i);
+        }
       }
-      if (i == HomeShell.marketTab && _index != HomeShell.marketTab) {
-        _marketEpoch++;
-      }
+      _visited.add(i);
       _index = i;
     });
   }
@@ -133,31 +157,49 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final pages = widget.pages;
+    // Index of each tab in the stack. Unvisited tabs are an empty box, so
+    // their page is not even created until the first visit.
+    final chatTab = _chatTab;
+    final profileTab = widget.chat ? 4 : 3;
+    Widget tab(int index, Widget Function() build) =>
+        _visited.contains(index) ? build() : const SizedBox.shrink();
     final tabs = [
-      HomeScreen(
-        key: ValueKey('home-$_homeEpoch'),
-        currentUser: _currentUser,
-        onOpenDirectory: () => _select(HomeShell.directoryTab),
-        onOpenMarket: _openMarket,
-        pages: pages,
-        api: widget.homeApi,
-        marketplaceRepository: widget.marketplaceRepository,
-        autoAdvance: widget.autoAdvance,
+      tab(
+        HomeShell.homeTab,
+        () => HomeScreen(
+          key: ValueKey('home-${_epochOf(HomeShell.homeTab)}'),
+          currentUser: _currentUser,
+          onOpenDirectory: () => _select(HomeShell.directoryTab),
+          onOpenMarket: _openMarket,
+          pages: pages,
+          api: widget.homeApi,
+          marketplaceRepository: widget.marketplaceRepository,
+          autoAdvance: widget.autoAdvance,
+        ),
       ),
-      KeyedSubtree(
-        key: ValueKey('directory-$_directoryEpoch'),
-        child: pages.directory(_currentUser),
+      tab(
+        HomeShell.directoryTab,
+        () => KeyedSubtree(
+          key: ValueKey('directory-${_epochOf(HomeShell.directoryTab)}'),
+          child: pages.directory(_currentUser),
+        ),
       ),
-      KeyedSubtree(
-        key: ValueKey('market-$_marketEpoch'),
-        child: pages.market(_currentUser, _marketSegment),
+      tab(
+        HomeShell.marketTab,
+        () => KeyedSubtree(
+          key: ValueKey('market-${_epochOf(HomeShell.marketTab)}'),
+          child: pages.market(_currentUser, _marketSegment),
+        ),
       ),
       if (widget.chat)
-        KeyedSubtree(
-          key: ValueKey('chat-$_chatEpoch'),
-          child: pages.chat(_currentUser),
+        tab(
+          chatTab,
+          () => KeyedSubtree(
+            key: ValueKey('chat-${_epochOf(chatTab)}'),
+            child: pages.chat(_currentUser),
+          ),
         ),
-      pages.profile(widget.profile, _currentUser),
+      tab(profileTab, () => pages.profile(widget.profile, _currentUser)),
     ];
 
     return PopScope(

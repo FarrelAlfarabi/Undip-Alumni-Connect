@@ -35,8 +35,9 @@ class MarketplaceException implements Exception {
 /// Thin seam over the Supabase client so the repository can be tested with
 /// a fake (the project has no mocking package and we do not add one).
 abstract class MarketplaceApi {
-  /// Approved listings joined with their seller.
-  Future<List<Map<String, dynamic>>> selectApprovedListings();
+  /// Approved listings joined with their seller, newest first. [limit] caps
+  /// how many rows come back (null: all of them).
+  Future<List<Map<String, dynamic>>> selectApprovedListings({int? limit});
 
   /// Calls a Postgres function. Returns the decoded JSON result.
   Future<dynamic> rpc(String function, Map<String, dynamic> params);
@@ -60,8 +61,10 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
   final SupabaseClient _client;
 
   @override
-  Future<List<Map<String, dynamic>>> selectApprovedListings() async {
-    final rows = await _client
+  Future<List<Map<String, dynamic>>> selectApprovedListings({
+    int? limit,
+  }) async {
+    final query = _client
         .from('marketplace_listings')
         .select(
           // Two links to alumni_profiles exist (seller_id, reviewed_by), so
@@ -70,6 +73,7 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
         )
         .eq('status', 'approved')
         .order('created_at', ascending: false);
+    final rows = await (limit == null ? query : query.limit(limit));
     return List<Map<String, dynamic>>.from(rows as List);
   }
 
@@ -140,8 +144,9 @@ class MarketplaceRepository {
   /// Admin screens pass [applyBlocks] false and see everything.
   Future<List<MarketplaceListing>> fetchApproved({
     bool applyBlocks = true,
+    int? limit,
   }) async {
-    final rows = await _guard(() => _api.selectApprovedListings());
+    final rows = await _guard(() => _api.selectApprovedListings(limit: limit));
     final all = rows.map(MarketplaceListing.fromMap).toList();
     if (!applyBlocks) return all;
     await BlockList.shared.ensureLoaded();
@@ -355,6 +360,12 @@ class MarketplaceRepository {
 }
 
 /// Allowed listing photo extensions (matches the bucket policy).
+/// Most listings the Market tab loads in one go, newest first, so the list
+/// does not grow without bound. Search and filters work on these rows only,
+/// so past this many the oldest listings are cut off until they run on the
+/// server.
+const int kMarketplaceMaxRows = 500;
+
 const kListingImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 
 /// Bucket file size limit (2 MB).

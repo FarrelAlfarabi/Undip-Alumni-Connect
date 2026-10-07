@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/data/home_repository.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/announcement_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/home_screen.dart';
@@ -241,6 +242,15 @@ void main() {
         find.textContaining(RegExp('fee|commission', caseSensitive: false)),
         findsNothing,
       );
+    });
+
+    testWidgets('asks the server for a capped number of listings', (
+      tester,
+    ) async {
+      final market = FakeApi()..approved = [listingMap(seller: sellerMap)];
+      await pumpHome(tester, market: market);
+      expect(market.lastLimit, kHomeListingFetchLimit);
+      expect(kHomeListingFetchLimit, greaterThan(kHomeLatestLimit));
     });
 
     testWidgets('filled: 3 newest each, opens the existing detail screens', (
