@@ -6,6 +6,7 @@ import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
 import 'job_detail_screen.dart';
+import 'my_job_postings_screen.dart';
 import 'post_job_screen.dart';
 
 /// Job board list view (Day 5) + navigation to job detail (Day 6). Free
@@ -130,6 +131,19 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       appBar: AppBar(
         title: const Text('Job Board'),
         automaticallyImplyLeading: widget.showBack,
+        actions: [
+          IconButton(
+            key: const Key('my-job-postings'),
+            tooltip: 'My job postings',
+            icon: const Icon(Icons.assignment_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    MyJobPostingsScreen(currentUser: widget.currentUser),
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _postJob,

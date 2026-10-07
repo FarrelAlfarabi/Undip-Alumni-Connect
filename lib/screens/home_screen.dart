@@ -697,6 +697,30 @@ class _MessageCard extends StatelessWidget {
   }
 }
 
+/// How long the green "your business is approved" card stays on Home.
+const Duration kApprovedCardLifetime = Duration(days: 3);
+
+/// The business the Home card talks about, or null when there is nothing
+/// worth showing. A business that still needs attention (waiting, not
+/// approved, suspended) always shows. An approved one shows only for
+/// [kApprovedCardLifetime] after it was approved, then the card goes away
+/// (My business in Profile still lists it).
+Business? businessForHomeCard(List<Business> all, DateTime now) {
+  bool fresh(Business b) {
+    final since = b.reviewedAt ?? b.updatedAt ?? b.createdAt;
+    return since == null || now.difference(since) < kApprovedCardLifetime;
+  }
+
+  // A recently approved one first, else whatever still needs attention.
+  for (final b in all) {
+    if (b.isApproved && fresh(b)) return b;
+  }
+  for (final b in all) {
+    if (!b.isApproved) return b;
+  }
+  return null;
+}
+
 class _BusinessSummary {
   const _BusinessSummary(this.businesses, this.usage);
   final List<Business> businesses;
@@ -767,8 +791,9 @@ class _BusinessEntry extends StatelessWidget {
             ),
           );
         }
-        // Show the approved one first, else the newest.
-        final b = all.firstWhere((x) => x.isApproved, orElse: () => all.first);
+        final b = businessForHomeCard(all, DateTime.now());
+        // Everything is approved and the news is old: nothing to show.
+        if (b == null) return const SizedBox.shrink();
         final u = summary.usage[b.id];
         final lines = <String>[
           b.approvedBand != null

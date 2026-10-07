@@ -94,7 +94,7 @@ Future<void> fillValid(
     find.widgetWithText(TextFormField, 'Price (whole rupiah)'),
     '85000',
   );
-  await tester.tap(find.byType(DropdownButtonFormField<String>));
+  await tester.tap(find.byType(DropdownButtonFormField<String>).first);
   await tester.pumpAndSettle();
   await tester.tap(find.text('Food & Drink').last);
   await tester.pumpAndSettle();

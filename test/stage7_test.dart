@@ -27,8 +27,10 @@ Business biz({
   String? band = 'micro',
   String? reason,
   String? until,
+  String? reviewedAt,
 }) => Business.fromMap(
   businessMap(
+    reviewedAt: reviewedAt ?? DateTime.now().toIso8601String(),
     status: status,
     approvedBand: status == 'approved' ? band : null,
     reason: reason,
@@ -160,7 +162,10 @@ void main() {
       expect(find.text('Kopi Ahmad'), findsOneWidget);
       expect(find.text('Approved'), findsOneWidget);
       expect(find.text('Band: Micro'), findsOneWidget);
-      expect(find.text('Products: 2 of 3 free'), findsOneWidget);
+      expect(
+        find.text('Products posted: 2 of 3 allowed for free'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('owner card: days of unlimited posting left', (tester) async {
@@ -176,6 +181,32 @@ void main() {
       );
       expect(find.textContaining('unlimited posting until'), findsOneWidget);
       expect(find.textContaining('12 days left'), findsOneWidget);
+    });
+
+    testWidgets('approved card goes away 3 days after approval', (
+      tester,
+    ) async {
+      final old = DateTime.now()
+          .subtract(const Duration(days: 4))
+          .toIso8601String();
+      await pumpHome(
+        tester,
+        FakeHomeApi(
+          businesses: [biz(reviewedAt: old)],
+          usage: [usage()],
+        ),
+      );
+      expect(find.byKey(const Key('business-owner-card')), findsNothing);
+      expect(find.byKey(const Key('business-register-card')), findsNothing);
+    });
+
+    test('a business that needs attention always shows', () {
+      final now = DateTime.now();
+      final old = now.subtract(const Duration(days: 30)).toIso8601String();
+      final approved = biz(reviewedAt: old);
+      final pending = biz(status: 'pending', band: null, reviewedAt: old);
+      expect(businessForHomeCard([approved], now), isNull);
+      expect(businessForHomeCard([approved, pending], now), same(pending));
     });
 
     testWidgets('owner card: pending and rejected show what the owner needs', (
@@ -217,6 +248,7 @@ void main() {
                   name: 'Kopi Ahmad',
                   status: 'approved',
                   approvedBand: 'micro',
+                  reviewedAt: DateTime.now().toIso8601String(),
                 ),
               ),
             ],

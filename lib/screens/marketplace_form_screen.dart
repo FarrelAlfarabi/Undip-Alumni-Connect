@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../data/cities.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
@@ -45,10 +46,10 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
   late final TextEditingController _title;
   late final TextEditingController _description;
   late final TextEditingController _price;
-  late final TextEditingController _city;
   late final TextEditingController _shop;
   late final TextEditingController _contact;
   String? _category;
+  String? _city;
   PickedImage? _picked;
   bool _saving = false;
   String? _error;
@@ -64,7 +65,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
     _title = TextEditingController(text: e?.title);
     _description = TextEditingController(text: e?.description);
     _price = TextEditingController(text: e?.priceIdr.toString());
-    _city = TextEditingController(text: e?.city ?? widget.defaultCity);
+    final startCity = (e?.city ?? widget.defaultCity ?? '').trim();
+    _city = startCity.isEmpty ? null : startCity;
     _shop = TextEditingController(text: e?.shopUrl);
     _contact = TextEditingController(text: e?.contactInfo);
     _category = e?.category;
@@ -73,7 +75,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_title, _description, _price, _city, _shop, _contact]) {
+    for (final c in [_title, _description, _price, _shop, _contact]) {
       c.dispose();
     }
     super.dispose();
@@ -133,7 +135,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
         description: _description.text.trim(),
         priceIdr: int.parse(_price.text.trim()),
         category: _category!,
-        city: _city.text.trim(),
+        city: _city!,
         imageUrl: imageUrl,
         shopUrl: _shop.text.trim().isEmpty ? null : _shop.text.trim(),
         contactInfo: _contact.text.trim().isEmpty ? null : _contact.text.trim(),
@@ -269,13 +271,21 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             validator: MarketplaceValidation.category,
                           ),
                           const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _city,
-                            enabled: !_saving,
+                          DropdownButtonFormField<String>(
+                            key: const Key('city-dropdown'),
+                            initialValue: _city,
+                            isExpanded: true,
                             decoration: const InputDecoration(
                               labelText: 'City',
                               border: OutlineInputBorder(),
                             ),
+                            items: [
+                              for (final c in citiesWith(_city))
+                                DropdownMenuItem(value: c, child: Text(c)),
+                            ],
+                            onChanged: _saving
+                                ? null
+                                : (v) => setState(() => _city = v),
                             validator: MarketplaceValidation.city,
                           ),
                           const SizedBox(height: 24),

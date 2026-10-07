@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/policy_config.dart';
 import '../models/business.dart';
 
 /// Error codes raised by the business SQL functions (see
@@ -12,6 +13,7 @@ enum BusinessErrorCode {
   invalidInput,
   invalidCategory,
   invalidBand,
+  businessLimit,
   notFound,
   notOwner,
   locked,
@@ -48,6 +50,9 @@ String businessErrorMessage(Object error) {
         return 'Choose a category.';
       case BusinessErrorCode.invalidBand:
         return 'Choose the yearly sales band.';
+      case BusinessErrorCode.businessLimit:
+        return 'You already have $kMaxBusinesses businesses. To add more, '
+            'email $kContactEmail.';
       case BusinessErrorCode.notFound:
         return 'This business no longer exists.';
       case BusinessErrorCode.notOwner:
@@ -95,6 +100,7 @@ class BusinessRepository {
         'p_social_link': input.socialLink,
         'p_website_link': input.websiteLink,
         'p_band': input.band?.name,
+        'p_personal': input.isPersonal,
       }),
     );
     return Business.fromMap(_single(row));
@@ -116,6 +122,7 @@ class BusinessRepository {
         'p_category': input.category,
         'p_social_link': input.socialLink,
         'p_website_link': input.websiteLink,
+        'p_personal': input.isPersonal,
       }),
     );
     return Business.fromMap(_single(row));
@@ -174,6 +181,7 @@ class BusinessRepository {
       'invalid_input' => BusinessErrorCode.invalidInput,
       'invalid_category' => BusinessErrorCode.invalidCategory,
       'invalid_band' => BusinessErrorCode.invalidBand,
+      'business_limit' => BusinessErrorCode.businessLimit,
       'not_found' => BusinessErrorCode.notFound,
       'not_owner' => BusinessErrorCode.notOwner,
       'locked' => BusinessErrorCode.locked,

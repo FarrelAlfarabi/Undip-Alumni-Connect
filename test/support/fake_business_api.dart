@@ -16,6 +16,8 @@ Map<String, dynamic> businessMap({
   String? reason,
   String? unlimitedUntil,
   String? ownerName,
+  String? reviewedAt,
+  bool personal = false,
 }) => {
   'id': id,
   'owner_id': ownerId,
@@ -31,6 +33,8 @@ Map<String, dynamic> businessMap({
   'unlimited_until': unlimitedUntil,
   'created_at': '2026-10-01T08:00:00+00:00',
   'owner_name': ?ownerName,
+  'reviewed_at': ?reviewedAt,
+  'is_personal': personal,
 };
 
 class FakeBusinessApi implements BusinessApi {

@@ -66,7 +66,7 @@ class _PreviewTile extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (ctx) => _PreviewSheet(feature: feature),
+      builder: (ctx) => SafeArea(child: _PreviewSheet(feature: feature)),
     );
   }
 

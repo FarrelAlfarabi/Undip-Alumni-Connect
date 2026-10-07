@@ -15,7 +15,9 @@ import '../policy/policy_screen.dart';
 import 'about_screen.dart';
 import 'admin_screen.dart';
 import 'delete_account_screen.dart';
+import 'contact_admin_screen.dart';
 import 'my_businesses_screen.dart';
+import 'my_job_postings_screen.dart';
 import 'blocked_users_screen.dart';
 import 'chat_screen.dart';
 import 'profile_setup_screen.dart';
@@ -194,18 +196,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               what: 'this profile',
               onBlocked: () => Navigator.of(context).maybePop(),
             ),
-          if (widget.showEditButton)
-            IconButton(
-              tooltip: 'Sign out',
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                // Back to verification with the whole shell torn down, so
-                // a second demo account starts from a clean state. Also
-                // forgets this device's remembered person and PIN (local
-                // only).
-                signOutTo(context, const VerificationScreen());
-              },
-            ),
         ],
       ),
       body: SafeArea(
@@ -291,7 +281,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             _profile['graduation_year']?.toString(),
                           ),
                           const SizedBox(height: 20),
-                          _section(theme, 'Employment'),
+                          Row(
+                            children: [
+                              Expanded(child: _section(theme, 'Employment')),
+                              if (widget.showEditButton)
+                                TextButton.icon(
+                                  key: const Key('profile-edit'),
+                                  onPressed: _editProfile,
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Edit'),
+                                ),
+                            ],
+                          ),
                           _field(
                             theme,
                             'Current Employer',
@@ -309,13 +313,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                   ),
                   if (widget.showEditButton) ...[
-                    const SizedBox(height: 20),
-                    FilledButton.icon(
-                      onPressed: _editProfile,
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Edit Employment Info'),
-                    ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _ProfileMenu(
                       adminFuture: _isAdmin,
                       onBusiness: () => Navigator.of(context).push(
@@ -325,6 +323,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
+                      onJobs: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MyJobPostingsScreen(
+                            currentUser: widget.currentUser,
+                          ),
+                        ),
+                      ),
+                      onContactAdmin: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ContactAdminScreen(),
+                        ),
+                      ),
+                      // Back to verification with the whole shell torn down,
+                      // so a second account starts from a clean state. Also
+                      // forgets this device's remembered person and PIN
+                      // (local only).
+                      onSignOut: () =>
+                          signOutTo(context, const VerificationScreen()),
                       onBlocked: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => BlockedUsersScreen(
@@ -431,12 +447,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 }
 
-/// The list under my own profile: My business, Blocked users, Privacy policy
+/// The list under my own profile: My business, My job postings, Blocked users, Privacy policy
 /// and community rules, Admin (admins only), and Delete my account last.
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu({
     required this.adminFuture,
     required this.onBusiness,
+    required this.onJobs,
+    required this.onContactAdmin,
+    required this.onSignOut,
     required this.onBlocked,
     required this.onPolicy,
     required this.onAdmin,
@@ -449,6 +468,9 @@ class _ProfileMenu extends StatelessWidget {
 
   final Future<bool>? adminFuture;
   final VoidCallback onBusiness;
+  final VoidCallback onJobs;
+  final VoidCallback onContactAdmin;
+  final VoidCallback onSignOut;
   final VoidCallback onBlocked;
   final VoidCallback onPolicy;
   final VoidCallback onAdmin;
@@ -486,6 +508,13 @@ class _ProfileMenu extends StatelessWidget {
           ),
           const Divider(height: 1),
           tile(
+            const Key('profile-jobs'),
+            Icons.work_outline,
+            'My job postings',
+            onJobs,
+          ),
+          const Divider(height: 1),
+          tile(
             const Key('profile-blocked'),
             Icons.block,
             'Blocked users',
@@ -506,6 +535,13 @@ class _ProfileMenu extends StatelessWidget {
             Icons.privacy_tip_outlined,
             'Privacy policy and community rules',
             onPolicy,
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-contact-admin'),
+            Icons.support_agent_outlined,
+            'Contact admin',
+            onContactAdmin,
           ),
           const Divider(height: 1),
           tile(
@@ -538,6 +574,13 @@ class _ProfileMenu extends StatelessWidget {
                 ],
               );
             },
+          ),
+          const Divider(height: 1),
+          tile(
+            const Key('profile-signout'),
+            Icons.logout,
+            'Sign out',
+            onSignOut,
           ),
           const Divider(height: 1),
           tile(

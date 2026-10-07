@@ -38,12 +38,27 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   @override
   void initState() {
     super.initState();
-    _future = widget.repository.reports(widget.adminId, hidden: _hidden);
+    _future = _fetch();
   }
 
   void _reload() => setState(() {
-    _future = widget.repository.reports(widget.adminId, hidden: _hidden);
+    _future = _fetch();
   });
+
+  // Opening the open-reports list counts as seeing them: the badge on the
+  // Admin screen clears. A failure here must not hide the list.
+  Future<List<AdminReport>> _fetch() async {
+    final items = await widget.repository.reports(
+      widget.adminId,
+      hidden: _hidden,
+    );
+    if (!_hidden) {
+      try {
+        await widget.repository.markReportsSeen(widget.adminId);
+      } catch (_) {}
+    }
+    return items;
+  }
 
   void _toast(String m) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));

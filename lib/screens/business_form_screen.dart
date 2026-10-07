@@ -36,6 +36,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   late final TextEditingController _website;
   String? _category;
   BusinessBand? _band;
+  bool _personal = false;
   String? _bandError;
   String? _linkError;
   String? _error;
@@ -54,6 +55,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     _website = TextEditingController(text: e?.websiteLink);
     _category = e?.category;
     _band = e?.requestedBand;
+    _personal = e?.isPersonal ?? false;
   }
 
   @override
@@ -127,6 +129,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
         socialLink: social,
         websiteLink: website,
         band: _band,
+        isPersonal: _personal,
       );
       final existing = widget.existing;
       final saved = existing == null
@@ -224,7 +227,21 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       validator: (v) =>
                           (v == null || v.isEmpty) ? 'Choose a category' : null,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      key: const Key('personal-business'),
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Personal business'),
+                      subtitle: const Text(
+                        'Run by one person (just you), with no employees or '
+                        'partners.',
+                      ),
+                      value: _personal,
+                      onChanged: _saving
+                          ? null
+                          : (v) => setState(() => _personal = v),
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       'Where people can see it',
                       style: theme.textTheme.titleSmall,

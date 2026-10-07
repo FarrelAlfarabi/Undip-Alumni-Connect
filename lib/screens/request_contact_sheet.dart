@@ -16,11 +16,14 @@ Future<bool> showRequestContactSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (ctx) => _RequestSheet(
-      repository: repository,
-      requesterId: requesterId,
-      targetId: targetId,
-      targetName: targetName,
+    // SafeArea keeps the Send button clear of the phone's own navigation bar.
+    builder: (ctx) => SafeArea(
+      child: _RequestSheet(
+        repository: repository,
+        requesterId: requesterId,
+        targetId: targetId,
+        targetName: targetName,
+      ),
     ),
   );
   if (sent == true && context.mounted) {
