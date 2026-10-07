@@ -23,8 +23,11 @@ fi
 # public web build). See scripts/check_supabase_env.sh.
 bash "$(dirname "$0")/check_supabase_env.sh"
 
+# Same version as .github/workflows/flutter-ci.yml (FLUTTER_VERSION). Keep the
+# two in step: test/ci_config_test.dart fails if they differ.
+FLUTTER_VERSION="3.47.4"
 if [ ! -d flutter ]; then
-  git clone https://github.com/flutter/flutter.git --depth 1 -b stable
+  git clone https://github.com/flutter/flutter.git --depth 1 -b "$FLUTTER_VERSION"
 fi
 export PATH="$PATH:$(pwd)/flutter/bin"
 

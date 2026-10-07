@@ -7,4 +7,14 @@
 -- nothing here is invented or guessed.
 -- ============================================================================
 
-revoke execute on function alumni_profiles_restrict_update() from anon, authenticated;
+-- Made conditional on 2026-10-06: the function is created by a LATER migration
+-- (20260915071412 and 20260915120000), so on an empty database this statement
+-- failed and a fresh project could not be built. The live database already has
+-- the function, so there the revoke still runs exactly as before. The later
+-- migrations revoke it again after they create it.
+do $$
+begin
+  if to_regprocedure('alumni_profiles_restrict_update()') is not null then
+    revoke execute on function alumni_profiles_restrict_update() from anon, authenticated;
+  end if;
+end $$;

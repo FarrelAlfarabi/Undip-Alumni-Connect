@@ -2,6 +2,8 @@ name: Flutter CI
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -38,6 +40,26 @@ jobs:
 
       - name: Test
         run: flutter test
+
+  # SQL checks on a throwaway Postgres (never a Supabase project): a fresh
+  # database must build from every migration, and the beta tests, rollbacks and
+  # live checks must pass. Runs independently of the Flutter job.
+  sql-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Postgres server binaries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql postgresql-contrib
+
+      - name: Fresh database builds from every migration
+        run: bash supabase/tests/run_fresh_chain.sh
+
+      - name: Beta SQL tests, rollbacks, live checks
+        run: bash supabase/tests/run_beta_local.sh
 
   # Debug APK for closed beta testers. Runs only after analyze and tests pass.
   build-apk:

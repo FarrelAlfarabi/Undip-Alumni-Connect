@@ -42,3 +42,6 @@ alter default privileges in schema public grant all on tables to anon, authentic
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 grant all on all tables in schema storage to anon, authenticated, service_role;
+
+-- Supabase always has this publication; the realtime migration adds tables to it.
+create publication supabase_realtime;
