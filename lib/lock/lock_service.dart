@@ -172,6 +172,18 @@ class LockService {
     _changes.value++;
   }
 
+  /// Removes the PIN (and the fingerprint choice, which needs a PIN to fall
+  /// back on). The remembered person stays, so the app keeps opening without
+  /// a PIN until a new one is set. Never touches the server.
+  Future<void> removePin() async {
+    await _store.delete(_kPin);
+    await _store.delete(_kOwner);
+    await _store.delete(_kFailed);
+    await _store.delete(_kWait);
+    await _store.delete(_kBio);
+    _changes.value++;
+  }
+
   Future<void> setBiometricsEnabled(bool on) async {
     if (on) {
       await _store.write(_kBio, '1');

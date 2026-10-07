@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -5,6 +6,8 @@ import '../config/feature_flags.dart';
 import '../data/admin_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
+import '../lock/lock_service.dart';
+import '../lock/pin_settings_screen.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
@@ -42,7 +45,11 @@ class ProfileDetailScreen extends StatefulWidget {
     this.chat = chatEnabled,
     this.contactRepository,
     this.adminCheck,
+    this.lock,
   });
+
+  /// The device lock. Injectable for tests; defaults to the real one.
+  final LockService? lock;
 
   /// Asks the database whether this profile is an admin. Injectable for
   /// tests. Asked once per session (when the Profile tab is built) and
@@ -65,6 +72,9 @@ class ProfileDetailScreen extends StatefulWidget {
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
+  /// A lock exists on this build (it is off on the public web build).
+  bool get _lockOn => widget.lock?.enabled ?? !(kIsWeb && !kWebLockTest);
+
   late Map<String, dynamic> _profile;
   bool _messaging = false;
   Future<bool>? _isAdmin;
@@ -333,6 +343,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
+                      onPin: _lockOn
+                          ? () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => PinSettingsScreen(
+                                  lock: widget.lock ?? LockService.shared,
+                                ),
+                              ),
+                            )
+                          : null,
                       onDelete: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => DeleteAccountScreen(
@@ -422,7 +441,11 @@ class _ProfileMenu extends StatelessWidget {
     required this.onPolicy,
     required this.onAdmin,
     required this.onDelete,
+    this.onPin,
   });
+
+  /// Null where there is no lock (the public web build): no row.
+  final VoidCallback? onPin;
 
   final Future<bool>? adminFuture;
   final VoidCallback onBusiness;
@@ -469,6 +492,15 @@ class _ProfileMenu extends StatelessWidget {
             onBlocked,
           ),
           const Divider(height: 1),
+          if (onPin != null) ...[
+            tile(
+              const Key('profile-pin'),
+              Icons.pin_outlined,
+              'PIN lock',
+              onPin!,
+            ),
+            const Divider(height: 1),
+          ],
           tile(
             const Key('profile-policy'),
             Icons.privacy_tip_outlined,

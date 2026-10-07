@@ -6,6 +6,7 @@ import 'package:undip_alumni_connect/lock/lock_store.dart';
 import '../support/fake_lock.dart';
 
 void main() {
+  removePinTests();
   group('remembering a person', () {
     test('stores only id, display name and a masked email', () async {
       final store = MemoryLockStore();
@@ -171,6 +172,50 @@ void main() {
       expect(await lock.biometricsEnabled(), isTrue);
       bio.available = false;
       expect(await lock.biometricsEnabled(), isFalse);
+    });
+  });
+}
+
+/// A PIN can be removed again (Profile > PIN lock). The person stays
+/// remembered on this device; only the PIN, its owner tag, its counters and the
+/// fingerprint choice go.
+void removePinTests() {
+  group('removing the PIN', () {
+    test(
+      'forgets the PIN and the fingerprint choice, keeps the person',
+      () async {
+        final lock = await makeRememberedLock(bio: FakeBiometrics());
+        await lock.setBiometricsEnabled(true);
+        expect(await lock.hasPin(), isTrue);
+
+        await lock.removePin();
+
+        expect(await lock.hasPin(), isFalse);
+        expect(await lock.biometricsEnabled(), isFalse);
+        expect((await lock.load())!.profileId, 'p1');
+      },
+    );
+
+    test('also clears a running wrong-try count and wait', () async {
+      final lock = await makeRememberedLock();
+      await lock.checkPin('000001');
+      await lock.removePin();
+      expect(await lock.attemptsLeft(), kMaxPinAttempts);
+      expect(await lock.waitUntil(), isNull);
+    });
+
+    test('removing when there is no PIN is fine', () async {
+      final lock = await makeRememberedLock(withPin: false);
+      await lock.removePin();
+      expect(await lock.hasPin(), isFalse);
+    });
+
+    test('tells listeners it changed (the overlay watches this)', () async {
+      final lock = await makeRememberedLock();
+      var changes = 0;
+      lock.changes.addListener(() => changes++);
+      await lock.removePin();
+      expect(changes, 1);
     });
   });
 }
