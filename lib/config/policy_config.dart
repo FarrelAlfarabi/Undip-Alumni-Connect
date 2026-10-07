@@ -7,15 +7,17 @@ const String kPolicyVersion = '2026-10-04-draft2';
 const String kPolicyUpdatedId = '4 Oktober 2026';
 const String kPolicyUpdatedEn = '4 October 2026';
 
-/// I MUST FILL IN: who runs the app, and how people can reach you. These two
+/// Who runs the app, and how people can reach you (beta values; replace the
+/// operator name and the temporary address with the real ones before a public launch). These two
 /// values are put into both policy texts (assets/policy/privacy_id.md and
 /// assets/policy/privacy_en.md) in place of {{OPERATOR}} and {{CONTACT_EMAIL}}.
-const String kOperatorName = '[FILL IN: operator name]';
-const String kContactEmail = '[FILL IN: contact email]';
+const String kOperatorName = 'Lingkaran beta team';
+const String kContactEmail = 'lingkaranikafe@gmail.com';
 
 /// I MUST FILL IN: the physical (postal) address of the operator. Shown on
 /// Profile > About with the operator name and contact email.
-const String kOperatorAddress = '[FILL IN: physical address]';
+const String kOperatorAddress =
+    'Temporary address: Semarang, Jawa Tengah, Indonesia (full postal address to follow)';
 
 /// The two text files. Indonesian first, English second. Replace the text in
 /// them at any time; keep the {{...}} tokens where the values should go.

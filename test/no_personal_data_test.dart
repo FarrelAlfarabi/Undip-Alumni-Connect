@@ -43,6 +43,9 @@ void main() {
     }
 
     walk(Directory('.'));
+    // The project's own public contact address is meant to be in the app and docs.
+    const allowed = {'lingkaranikafe@gmail.com'};
+    hits.removeWhere((h) => allowed.any(h.endsWith));
     // This file names the pattern, not an address.
     expect(
       hits.where((h) => !h.startsWith('./test/no_personal_data_test.dart')),
