@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,6 +11,9 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Flutter web draws on a canvas. Without this, screen readers see an empty
+  // page until a hidden "Enable accessibility" button is activated.
+  if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
   await dotenv.load(fileName: '.env');
 
   await Supabase.initialize(
