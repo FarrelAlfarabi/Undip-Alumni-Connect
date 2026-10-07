@@ -344,7 +344,7 @@ void main() {
       expect(find.byKey(const Key('content-menu')), findsOneWidget);
       await tester.pumpWidget(screen('me', true));
       expect(find.byKey(const Key('content-menu')), findsNothing);
-      expect(find.byKey(const Key('profile-blocked')), findsOneWidget);
+      expect(find.byKey(const Key('profile-settings')), findsOneWidget);
     });
 
     testWidgets('each received contact request has Report and Block', (
@@ -731,7 +731,8 @@ void main() {
 
     testWidgets('hide needs a reason, nothing is automatic', (tester) async {
       final api = await pump(tester, [row()]);
-      expect(api.calls, ['admin_reports_list']);
+      // Opening the open list also marks the reports as seen.
+      expect(api.calls, ['admin_reports_list', 'admin_reports_mark_seen']);
       await tester.tap(find.byKey(const Key('hide-t1')));
       await tester.pumpAndSettle();
       await tester.tap(

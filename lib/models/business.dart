@@ -51,6 +51,10 @@ const List<String> kBusinessCategories = [
   'Other',
 ];
 
+/// Most businesses one person can own. Also enforced in the database
+/// (`business_register`). More must be requested by email.
+const int kMaxBusinesses = 3;
+
 class Business {
   const Business({
     required this.id,
@@ -69,6 +73,9 @@ class Business {
     this.ownerName,
     this.hiddenAt,
     this.hiddenReason,
+    this.isPersonal = false,
+    this.reviewedAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -92,6 +99,13 @@ class Business {
   /// Set when an admin hid this business. Others cannot see it.
   final DateTime? hiddenAt;
   final String? hiddenReason;
+
+  /// A business run by one person.
+  final bool isPersonal;
+
+  /// When an admin last decided on it, and when the row last changed.
+  final DateTime? reviewedAt;
+  final DateTime? updatedAt;
 
   bool get isHidden => hiddenAt != null;
 
@@ -120,6 +134,9 @@ class Business {
       ownerName: m['owner_name'] as String?,
       hiddenAt: date(m['hidden_at']),
       hiddenReason: m['hidden_reason'] as String?,
+      isPersonal: m['is_personal'] == true,
+      reviewedAt: date(m['reviewed_at']),
+      updatedAt: date(m['updated_at']),
     );
   }
 }
@@ -133,6 +150,7 @@ class BusinessInput {
     this.socialLink,
     this.websiteLink,
     this.band,
+    this.isPersonal = false,
   });
 
   final String name;
@@ -143,6 +161,9 @@ class BusinessInput {
 
   /// Only used when registering. The band cannot be changed afterwards.
   final BusinessBand? band;
+
+  /// True for a business run by one person.
+  final bool isPersonal;
 }
 
 /// How many products a business has, and how many it may have. Comes from the

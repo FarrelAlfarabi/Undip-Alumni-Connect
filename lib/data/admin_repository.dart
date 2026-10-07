@@ -144,6 +144,21 @@ class AdminRepository {
         .toList();
   }
 
+  /// Open reports no admin has looked at yet (the badge on Reports).
+  Future<int> unseenReportsCount(String adminId) async {
+    final n = await _guard(
+      () => _api.rpc('admin_reports_unseen_count', {'p_admin': adminId}),
+    );
+    return (n as num?)?.toInt() ?? 0;
+  }
+
+  /// Marks every open report as seen (called when the Reports list opens).
+  Future<void> markReportsSeen(String adminId) async {
+    await _guard(
+      () => _api.rpc('admin_reports_mark_seen', {'p_admin': adminId}),
+    );
+  }
+
   Future<void> dismissReports(String adminId, AdminReport r) =>
       _reportAction(adminId, r, 'dismiss');
 

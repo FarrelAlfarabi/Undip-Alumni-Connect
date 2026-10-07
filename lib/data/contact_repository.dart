@@ -105,6 +105,25 @@ class ContactRepository {
     );
   }
 
+  /// The contact I saved to pre-fill when I accept a request, or null.
+  Future<String?> defaultContact(String profileId) async {
+    final r = await _guard(
+      () => _api.rpc('contact_default_get', {'p_profile': profileId}),
+    );
+    final text = r is String ? r.trim() : '';
+    return text.isEmpty ? null : text;
+  }
+
+  /// Saves my default contact (any text). Empty clears it.
+  Future<void> setDefaultContact(String profileId, String text) async {
+    await _guard(
+      () => _api.rpc('contact_default_set', {
+        'p_profile': profileId,
+        'p_contact': text.trim(),
+      }),
+    );
+  }
+
   Future<List<IncomingRequest>> incoming(String targetId) async {
     final rows = await _guard(
       () => _api.rpc('contact_requests_incoming', {'p_target': targetId}),

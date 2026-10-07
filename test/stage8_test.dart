@@ -25,6 +25,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-help')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile-feedback')));
     await tester.pumpAndSettle();
     expect(find.text('Send feedback'), findsWidgets);

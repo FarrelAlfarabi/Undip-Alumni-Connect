@@ -96,10 +96,12 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _CityClusterSheet(
-        cluster: cluster,
-        currentUser: widget.currentUser,
-        chat: widget.chat,
+      builder: (_) => SafeArea(
+        child: _CityClusterSheet(
+          cluster: cluster,
+          currentUser: widget.currentUser,
+          chat: widget.chat,
+        ),
       ),
     );
   }

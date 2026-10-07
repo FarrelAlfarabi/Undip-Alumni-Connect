@@ -77,7 +77,7 @@ void main() {
           BusinessUsage.fromMap(usageMap(used: 2)),
           today: today,
         ),
-        'Products: 2 of 3 free',
+        'Products posted: 2 of 3 allowed for free',
       );
     });
 
@@ -85,7 +85,7 @@ void main() {
       final u = BusinessUsage.fromMap(usageMap(used: 5, unlimited: true));
       expect(
         postingSummary(b, u, today: today),
-        'Products: 5, unlimited posting until 5 Nov 2026 (23 days left)',
+        'Products posted: 5, unlimited posting until 5 Nov 2026 (23 days left)',
       );
       expect(
         postingSummary(b, u, today: DateTime(2026, 11, 4)),
@@ -145,7 +145,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Approved band: Micro'), findsOneWidget);
-      expect(find.text('Products: 2 of 3 free'), findsOneWidget);
+      expect(
+        find.text('Products posted: 2 of 3 allowed for free'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('unlimited shows the end date with days left', (tester) async {

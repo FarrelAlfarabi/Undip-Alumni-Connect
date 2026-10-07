@@ -38,13 +38,13 @@ String postingSummary(
     final days = left <= 0
         ? 'last day'
         : (left == 1 ? '1 day left' : '$left days left');
-    return 'Products: ${usage.used}, unlimited posting until '
+    return 'Products posted: ${usage.used}, unlimited posting until '
         '${formatDay(business.unlimitedUntil!)} ($days)';
   }
   if (usage.overLimit) {
-    return 'Products: ${usage.used} of ${usage.freeLimit} free. You are over '
-        'the free limit. Your products stay visible, but new ones are '
-        'blocked.';
+    return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed for '
+        'free. You are over the free limit. Your products stay visible, but '
+        'new ones are blocked.';
   }
-  return 'Products: ${usage.used} of ${usage.freeLimit} free';
+  return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed for free';
 }

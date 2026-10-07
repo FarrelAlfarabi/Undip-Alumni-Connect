@@ -75,6 +75,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 request: r,
                 repository: _repo,
                 myId: _myId,
+                defaultContact: (widget.currentUser.value['email'] as String?)
+                    ?.trim(),
                 onChanged: _refresh,
               ),
             ),
@@ -152,7 +154,11 @@ class _IncomingCard extends StatelessWidget {
     required this.repository,
     required this.myId,
     required this.onChanged,
+    this.defaultContact,
   });
+
+  /// Filled into the share box when accepting. You can change it.
+  final String? defaultContact;
 
   final IncomingRequest request;
   final ContactRepository repository;
@@ -160,9 +166,15 @@ class _IncomingCard extends StatelessWidget {
   final VoidCallback onChanged;
 
   Future<void> _accept(BuildContext context) async {
+    // My saved default, else my email. A failed lookup just uses the email.
+    String? saved;
+    try {
+      saved = await repository.defaultContact(myId);
+    } catch (_) {}
+    if (!context.mounted) return;
     final text = await showDialog<String>(
       context: context,
-      builder: (ctx) => const _ShareDialog(),
+      builder: (ctx) => _ShareDialog(initial: saved ?? defaultContact),
     );
     if (text == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -289,16 +301,19 @@ class _IncomingCard extends StatelessWidget {
   }
 }
 
-/// Accept needs the target to TYPE what to share. Nothing is prefilled.
+/// Accept asks what to share. Your email is filled in as the default; change
+/// it to a WhatsApp number or anything else if you prefer.
 class _ShareDialog extends StatefulWidget {
-  const _ShareDialog();
+  const _ShareDialog({this.initial});
+
+  final String? initial;
 
   @override
   State<_ShareDialog> createState() => _ShareDialogState();
 }
 
 class _ShareDialogState extends State<_ShareDialog> {
-  final _text = TextEditingController();
+  late final _text = TextEditingController(text: widget.initial);
   String? _error;
 
   @override
@@ -325,8 +340,10 @@ class _ShareDialogState extends State<_ShareDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'For example your WhatsApp number or email. Only this person '
-            'will see it.',
+            'Your default contact is filled in (or your email if you have not '
+            'set one). Change it to anything you prefer: WhatsApp, Instagram, '
+            'phone, email... Only this person will see it. You can set your '
+            'default in Profile > Settings.',
           ),
           const SizedBox(height: 12),
           TextField(

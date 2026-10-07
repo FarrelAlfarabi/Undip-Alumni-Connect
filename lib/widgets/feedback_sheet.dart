@@ -26,12 +26,15 @@ Future<void> showFeedbackSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (ctx) => _FeedbackSheet(
-      error: error,
-      screen: screen,
-      repository: repository,
-      appInfo: appInfo,
-      profileId: profileId,
+    // SafeArea keeps the buttons clear of the phone's own navigation bar.
+    builder: (ctx) => SafeArea(
+      child: _FeedbackSheet(
+        error: error,
+        screen: screen,
+        repository: repository,
+        appInfo: appInfo,
+        profileId: profileId,
+      ),
     ),
   );
   if (sent == true && context.mounted) {

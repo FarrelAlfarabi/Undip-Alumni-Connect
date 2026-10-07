@@ -17,12 +17,15 @@ Future<bool> showContentReportSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (ctx) => _ReportSheet(
-      repository: repository,
-      reporterId: reporterId,
-      type: type,
-      targetId: targetId,
-      what: what,
+    // SafeArea keeps the buttons clear of the phone's own navigation bar.
+    builder: (ctx) => SafeArea(
+      child: _ReportSheet(
+        repository: repository,
+        reporterId: reporterId,
+        type: type,
+        targetId: targetId,
+        what: what,
+      ),
     ),
   );
   if (sent == true && context.mounted) {

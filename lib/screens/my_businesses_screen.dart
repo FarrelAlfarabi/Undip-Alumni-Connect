@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../config/policy_config.dart';
 import '../data/business_repository.dart';
 import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
 import '../widgets/error_view.dart';
+
+const String _limitNote =
+    'You can own up to $kMaxBusinesses businesses. To add more, email '
+    '$kContactEmail.';
 
 /// The owner's own businesses, with status, rejection reason and band.
 /// A rejected business can be edited and sent again.
@@ -33,6 +38,9 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   Future<(List<Business>, List<BusinessUsage>)> _load() async {
     final mine = await _repo.mine(widget.ownerId);
     final usage = await _repo.usage(widget.ownerId);
+    _activeCount = mine
+        .where((b) => b.status != BusinessStatus.rejected)
+        .length;
     return (mine, usage);
   }
 
@@ -40,7 +48,15 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
     _future = _load();
   });
 
+  // Rejected businesses do not count towards the limit (same as the database).
+  int _activeCount = 0;
+
   Future<void> _openForm([Business? existing]) async {
+    if (existing == null && _activeCount >= kMaxBusinesses) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(_limitNote)));
+      return;
+    }
     await Navigator.of(context).push<Business>(
       MaterialPageRoute(
         builder: (_) => BusinessFormScreen(
@@ -87,7 +103,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
                 padding: EdgeInsets.all(24),
                 child: Text(
                   'You have not registered a business yet. Register one so '
-                  'other alumni can find it.',
+                  'other alumni can find it.\n\n$_limitNote',
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -95,13 +111,25 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
           }
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: items.length,
+            itemCount: items.length + 1,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => BusinessOwnerCard(
-              business: items[i],
-              usage: usage[items[i].id],
-              onEdit: () => _openForm(items[i]),
-            ),
+            itemBuilder: (context, i) {
+              if (i == 0) {
+                return Text(
+                  _limitNote,
+                  key: const Key('business-limit-note'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                );
+              }
+              final b = items[i - 1];
+              return BusinessOwnerCard(
+                business: b,
+                usage: usage[b.id],
+                onEdit: () => _openForm(b),
+              );
+            },
           );
         },
       ),
@@ -164,7 +192,9 @@ class BusinessOwnerCard extends StatelessWidget {
               ],
             ),
             Text(
-              b.category,
+              b.isPersonal
+                  ? '${b.category} · Run by the owner only'
+                  : b.category,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

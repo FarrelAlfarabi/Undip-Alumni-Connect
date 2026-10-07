@@ -27,8 +27,10 @@ Business biz({
   String? band = 'micro',
   String? reason,
   String? until,
+  String? reviewedAt,
 }) => Business.fromMap(
   businessMap(
+    reviewedAt: reviewedAt ?? DateTime.now().toIso8601String(),
     status: status,
     approvedBand: status == 'approved' ? band : null,
     reason: reason,
@@ -160,7 +162,10 @@ void main() {
       expect(find.text('Kopi Ahmad'), findsOneWidget);
       expect(find.text('Approved'), findsOneWidget);
       expect(find.text('Band: Micro'), findsOneWidget);
-      expect(find.text('Products: 2 of 3 free'), findsOneWidget);
+      expect(
+        find.text('Products posted: 2 of 3 allowed for free'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('owner card: days of unlimited posting left', (tester) async {
@@ -176,6 +181,32 @@ void main() {
       );
       expect(find.textContaining('unlimited posting until'), findsOneWidget);
       expect(find.textContaining('12 days left'), findsOneWidget);
+    });
+
+    testWidgets('approved card goes away 3 days after approval', (
+      tester,
+    ) async {
+      final old = DateTime.now()
+          .subtract(const Duration(days: 4))
+          .toIso8601String();
+      await pumpHome(
+        tester,
+        FakeHomeApi(
+          businesses: [biz(reviewedAt: old)],
+          usage: [usage()],
+        ),
+      );
+      expect(find.byKey(const Key('business-owner-card')), findsNothing);
+      expect(find.byKey(const Key('business-register-card')), findsNothing);
+    });
+
+    test('a business that needs attention always shows', () {
+      final now = DateTime.now();
+      final old = now.subtract(const Duration(days: 30)).toIso8601String();
+      final approved = biz(reviewedAt: old);
+      final pending = biz(status: 'pending', band: null, reviewedAt: old);
+      expect(businessForHomeCard([approved], now), isNull);
+      expect(businessForHomeCard([approved, pending], now), same(pending));
     });
 
     testWidgets('owner card: pending and rejected show what the owner needs', (
@@ -217,6 +248,7 @@ void main() {
                   name: 'Kopi Ahmad',
                   status: 'approved',
                   approvedBand: 'micro',
+                  reviewedAt: DateTime.now().toIso8601String(),
                 ),
               ),
             ],
@@ -274,33 +306,54 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets(
-      'My business, Blocked users, Privacy policy, Delete my account',
-      (tester) async {
-        await pump(tester, admin: false);
-        for (final k in [
-          'profile-business',
-          'profile-blocked',
-          'profile-policy',
-          'profile-delete',
-        ]) {
-          expect(find.byKey(Key(k)), findsOneWidget, reason: k);
-        }
-        expect(find.byKey(const Key('profile-admin')), findsNothing);
-        expect(find.text('My business'), findsOneWidget);
-        expect(find.text('Blocked users'), findsOneWidget);
-        expect(find.text('Privacy policy and community rules'), findsOneWidget);
-      },
-    );
+    testWidgets('My business, My job postings, Settings, Help, Sign out', (
+      tester,
+    ) async {
+      await pump(tester, admin: false);
+      for (final k in [
+        'profile-business',
+        'profile-jobs',
+        'profile-settings',
+        'profile-help',
+        'profile-signout',
+      ]) {
+        expect(find.byKey(Key(k)), findsOneWidget, reason: k);
+      }
+      expect(find.byKey(const Key('profile-admin')), findsNothing);
+      // Rarely used rows are not on the main screen.
+      for (final k in ['profile-delete', 'profile-blocked', 'profile-pin']) {
+        expect(find.byKey(Key(k)), findsNothing, reason: k);
+      }
+    });
 
-    testWidgets('Admin only for admins, Delete is last', (tester) async {
+    testWidgets('Admin comes first for admins, Sign out is last', (
+      tester,
+    ) async {
       await pump(tester, admin: true);
       expect(find.byKey(const Key('profile-admin')), findsOneWidget);
       double y(String k) => tester.getTopLeft(find.byKey(Key(k))).dy;
-      expect(y('profile-business') < y('profile-blocked'), isTrue);
-      expect(y('profile-blocked') < y('profile-policy'), isTrue);
-      expect(y('profile-policy') < y('profile-admin'), isTrue);
-      expect(y('profile-admin') < y('profile-delete'), isTrue);
+      expect(y('profile-admin') < y('profile-business'), isTrue);
+      expect(y('profile-business') < y('profile-jobs'), isTrue);
+      expect(y('profile-jobs') < y('profile-settings'), isTrue);
+      expect(y('profile-settings') < y('profile-help'), isTrue);
+      expect(y('profile-help') < y('profile-signout'), isTrue);
     });
+
+    testWidgets(
+      'Settings holds the default contact, blocked users, policy and delete last',
+      (tester) async {
+        await pump(tester, admin: false);
+        await tester.tap(find.byKey(const Key('profile-settings')));
+        await tester.pumpAndSettle();
+        double y(String k) => tester.getTopLeft(find.byKey(Key(k))).dy;
+        expect(
+          find.byKey(const Key('settings-default-contact')),
+          findsOneWidget,
+        );
+        expect(y('settings-default-contact') < y('profile-blocked'), isTrue);
+        expect(y('profile-blocked') < y('profile-policy'), isTrue);
+        expect(y('profile-policy') < y('profile-delete'), isTrue);
+      },
+    );
   });
 }
