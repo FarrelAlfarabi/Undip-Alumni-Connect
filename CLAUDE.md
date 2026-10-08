@@ -11,7 +11,7 @@
 - Flutter is pinned to 3.47.4 (see `.github/workflows/flutter-ci.yml`).
 - Setup: `cp .env.example .env && flutter pub get`
 - Analyze: `flutter analyze`
-- Tests: `flutter test` (one file: `flutter test test/some_test.dart`)
+- Tests: `flutter test -r failures-only` (one file: add its path). The `failures-only` reporter exists in 3.47.4.
 - Release gate: `flutter test --dart-define=RELEASE_CHECK=true test/release_check_test.dart`
 - SQL checks (local throwaway Postgres only, never a Supabase project):
   - `bash supabase/tests/run_fresh_chain.sh`
@@ -32,6 +32,7 @@
 - Run tests through the `test-runner` subagent.
   - During a stage run only the test files you touched.
   - Run the full suite once, before the commit.
+  - Use `-r failures-only` to keep output short.
 - Do not paste long logs. Report only failing tests with file and line.
 - Do not repeat a command whose inputs did not change.
 - Keep replies short. Final message: what changed, what to review, 10 lines or fewer. No recap of steps.

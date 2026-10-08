@@ -8,7 +8,7 @@ for products from approved businesses, requests to contact, and an Ikafe
 announcements feed. **Closed beta (about 15 testers).** It is free: there is
 no subscription and no payment in the app. Chat is hidden and replaced by
 "request to contact". There is no real login yet, so read "Closed beta
-warning" below before inviting anyone. `PROJECT_NOTES.md` is the running log,
+warning" below before inviting anyone. `PROJECT_NOTES.md` is a one-page summary (full log: `docs/archive/PROJECT_NOTES_FULL.md`),
 `docs/STAGE_LOG.md` and `docs/DECISIONS.md` cover the free-launch work, and
 `DEMO_SCRIPT.md` is the walkthrough.
 
