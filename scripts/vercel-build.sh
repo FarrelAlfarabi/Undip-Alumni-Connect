@@ -41,7 +41,11 @@ flutter pub get
 # a browser. Production builds never do (web has no real secure storage).
 EXTRA_DEFINES=""
 if [ "${VERCEL_ENV:-}" = "preview" ]; then
-  EXTRA_DEFINES="--dart-define=WEB_LOCK_TEST=true"
+  EXTRA_DEFINES="--dart-define=WEB_LOCK_TEST=true --dart-define=REAL_MAP=true"
+fi
+# The real Nearby map can also be forced on in any environment.
+if [ "${REAL_MAP:-}" = "true" ] && [ "${VERCEL_ENV:-}" != "preview" ]; then
+  EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=REAL_MAP=true"
 fi
 flutter build web --release $EXTRA_DEFINES
 
