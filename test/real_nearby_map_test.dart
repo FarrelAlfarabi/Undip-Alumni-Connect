@@ -139,4 +139,65 @@ void main() {
       expect(find.byType(FlutterMap), findsOneWidget);
     });
   });
+
+  group('map buttons', () {
+    MapCamera cam(WidgetTester tester) =>
+        MapController.maybeOf(tester.element(find.byType(MarkerLayer)))!.camera;
+
+    testWidgets('center goes to my city, show all fits everyone', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        pins: [pin('A', 'Jakarta', 430), pin('C', 'Medan', 1400)],
+      );
+      final start = cam(tester);
+      await tester.tap(find.byKey(const Key('map-center')));
+      await tester.pump();
+      final me = cityCoordinates('Semarang')!;
+      expect(cam(tester).center.latitude, closeTo(me.$1, 0.01));
+      expect(cam(tester).zoom, 10);
+
+      await tester.tap(find.byKey(const Key('map-fit')));
+      await tester.pump();
+      expect(cam(tester).zoom, closeTo(start.zoom, 0.5));
+    });
+
+    testWidgets('nearest goes to the closest other city', (tester) async {
+      await pump(
+        tester,
+        pins: [pin('A', 'Medan', 1400), pin('C', 'Yogyakarta', 110)],
+      );
+      await tester.tap(find.byKey(const Key('map-nearest')));
+      await tester.pump();
+      final y = cityCoordinates('Yogyakarta')!;
+      expect(cam(tester).center.latitude, closeTo(y.$1, 0.01));
+      expect(cam(tester).center.longitude, closeTo(y.$2, 0.01));
+    });
+
+    testWidgets('zoom buttons change the zoom by one step', (tester) async {
+      await pump(tester, pins: [pin('A', 'Jakarta', 430)]);
+      final z = cam(tester).zoom;
+      await tester.tap(find.byKey(const Key('map-zoom-in')));
+      await tester.pump();
+      expect(cam(tester).zoom, z + 1);
+      await tester.tap(find.byKey(const Key('map-zoom-out')));
+      await tester.pump();
+      expect(cam(tester).zoom, z);
+    });
+
+    testWidgets('center is off when my profile has no known city', (
+      tester,
+    ) async {
+      await pump(tester, myCity: 'Kudus', pins: [pin('A', 'Jakarta', 430)]);
+      final b = tester.widget<IconButton>(find.byKey(const Key('map-center')));
+      expect(b.onPressed, isNull);
+    });
+
+    testWidgets('with nobody on the map, nearest is off', (tester) async {
+      await pump(tester, pins: const []);
+      final b = tester.widget<IconButton>(find.byKey(const Key('map-nearest')));
+      expect(b.onPressed, isNull);
+    });
+  });
 }

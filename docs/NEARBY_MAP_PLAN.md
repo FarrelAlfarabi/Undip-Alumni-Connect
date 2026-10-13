@@ -24,6 +24,8 @@ worked for 8 cities; with 100 cities it would mislead.
 | Nearby screen | picks the real map when `REAL_MAP` is on; city sheet and chips unchanged |
 | Vercel | preview builds set `REAL_MAP=true`; `REAL_MAP=true` env var forces it elsewhere |
 
+Buttons (top right): center on my city, show all, go to nearest alumni, zoom in, zoom out.
+
 Behaviour: map opens fitted to the viewer's city plus every city with alumni.
 One pin per city with a count. One alumnus: tap opens the profile. Several:
 tap opens the existing city sheet (chat, WhatsApp invite). "You" sits under

@@ -13,9 +13,10 @@ import 'nearby_map_view.dart' show AlumniPin;
 /// than we do.
 ///
 /// Same inputs as the hand-drawn map ([NearbyMapView]) plus [onCityTap].
+/// Buttons: center on my city, show all, nearest alumni, zoom in and out.
 /// Alumni whose city has no known centre are left off the map (they still
 /// show in the list and the city chips).
-class RealNearbyMap extends StatelessWidget {
+class RealNearbyMap extends StatefulWidget {
   const RealNearbyMap({
     super.key,
     required this.myCity,
@@ -39,10 +40,23 @@ class RealNearbyMap extends StatelessWidget {
   final bool showTiles;
   final double height;
 
+  @override
+  State<RealNearbyMap> createState() => _RealNearbyMapState();
+}
+
+class _RealNearbyMapState extends State<RealNearbyMap> {
+  final _controller = MapController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   /// Alumni per city that has a known centre, in first-seen order.
   Map<String, List<AlumniPin>> get _byCity {
     final out = <String, List<AlumniPin>>{};
-    for (final p in pins) {
+    for (final p in widget.pins) {
       final city = p.profile['city'] as String? ?? '';
       if (cityCoordinates(city) == null) continue;
       out.putIfAbsent(city, () => []).add(p);
@@ -55,21 +69,79 @@ class RealNearbyMap extends StatelessWidget {
     return c == null ? null : LatLng(c.$1, c.$2);
   }
 
+  List<LatLng> get _allPoints => [
+    for (final city in _byCity.keys) _point(city)!,
+    ?_point(widget.myCity),
+  ];
+
+  /// The nearest city that has alumni, other than the viewer's own when
+  /// another one exists. Null when nobody is on the map.
+  String? get _nearestCity {
+    final byCity = _byCity;
+    if (byCity.isEmpty) return null;
+    String? best;
+    for (final e in byCity.entries) {
+      if (e.key == widget.myCity && byCity.length > 1) continue;
+      if (best == null || e.value.first.km < byCity[best]!.first.km) {
+        best = e.key;
+      }
+    }
+    return best;
+  }
+
+  void _fitAll() {
+    final points = _allPoints;
+    if (points.isEmpty) {
+      _controller.move(_defaultCenter, 4);
+    } else if (points.length == 1) {
+      _controller.move(points.first, 9);
+    } else {
+      _controller.fitCamera(
+        CameraFit.bounds(
+          bounds: LatLngBounds.fromPoints(points),
+          padding: const EdgeInsets.all(56),
+          maxZoom: 9,
+        ),
+      );
+    }
+  }
+
+  void _centerOnMe() {
+    final me = _point(widget.myCity);
+    if (me != null) _controller.move(me, 10);
+  }
+
+  void _goToNearest() {
+    final city = _nearestCity;
+    final p = city == null ? null : _point(city);
+    if (p != null) _controller.move(p, 9);
+  }
+
+  void _zoomBy(double delta) {
+    final cam = _controller.camera;
+    _controller.move(
+      cam.center,
+      (cam.zoom + delta).clamp(_kMinZoom, _kMaxZoom),
+    );
+  }
+
+  static const _defaultCenter = LatLng(-2.5, 118); // middle of Indonesia
+  static const _kMinZoom = 3.0;
+  static const _kMaxZoom = 12.0;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final byCity = _byCity;
-    final me = _point(myCity);
-    final points = [for (final city in byCity.keys) _point(city)!, ?me];
+    final me = _point(widget.myCity);
+    final points = _allPoints;
     final land = theme.colorScheme.surfaceContainerHighest;
     final camera = points.length < 2
         ? MapOptions(
-            initialCenter: points.isEmpty
-                ? const LatLng(-2.5, 118) // middle of Indonesia
-                : points.first,
+            initialCenter: points.isEmpty ? _defaultCenter : points.first,
             initialZoom: points.isEmpty ? 4 : 9,
-            minZoom: 3,
-            maxZoom: 12,
+            minZoom: _kMinZoom,
+            maxZoom: _kMaxZoom,
             backgroundColor: land,
           )
         : MapOptions(
@@ -78,8 +150,8 @@ class RealNearbyMap extends StatelessWidget {
               padding: const EdgeInsets.all(56),
               maxZoom: 9,
             ),
-            minZoom: 3,
-            maxZoom: 12,
+            minZoom: _kMinZoom,
+            maxZoom: _kMaxZoom,
             backgroundColor: land,
           );
 
@@ -87,51 +159,128 @@ class RealNearbyMap extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: SizedBox(
         key: const Key('nearby-real-map'),
-        height: height,
-        child: FlutterMap(
-          options: camera,
+        height: widget.height,
+        child: Stack(
           children: [
-            if (showTiles)
-              TileLayer(
-                urlTemplate: kMapTileUrl,
-                userAgentPackageName: 'com.undip.alumni_connect',
-              ),
-            MarkerLayer(
-              markers: [
-                for (final e in byCity.entries)
-                  Marker(
-                    point: _point(e.key)!,
-                    width: 96,
-                    height: 62,
-                    // The pin sits above the point; "You" sits below it.
-                    alignment: e.key == myCity
-                        ? Alignment.topCenter
-                        : Alignment.center,
-                    child: _CityMarker(
-                      city: e.key,
-                      count: e.value.length,
-                      isMyCity: e.key == myCity,
-                      onTap: () => e.value.length == 1
-                          ? onPinTap(e.value.first)
-                          : onCityTap(e.key),
-                    ),
+            FlutterMap(
+              mapController: _controller,
+              options: camera,
+              children: [
+                if (widget.showTiles)
+                  TileLayer(
+                    urlTemplate: kMapTileUrl,
+                    userAgentPackageName: 'com.undip.alumni_connect',
                   ),
-                if (me != null)
-                  Marker(
-                    point: me,
-                    width: 48,
-                    height: 26,
-                    alignment: Alignment.bottomCenter,
-                    child: const _YouMarker(),
+                MarkerLayer(
+                  markers: [
+                    for (final e in byCity.entries)
+                      Marker(
+                        point: _point(e.key)!,
+                        width: 96,
+                        height: 62,
+                        // The pin sits above the point; "You" sits below it.
+                        alignment: e.key == widget.myCity
+                            ? Alignment.topCenter
+                            : Alignment.center,
+                        child: _CityMarker(
+                          city: e.key,
+                          count: e.value.length,
+                          isMyCity: e.key == widget.myCity,
+                          onTap: () => e.value.length == 1
+                              ? widget.onPinTap(e.value.first)
+                              : widget.onCityTap(e.key),
+                        ),
+                      ),
+                    if (me != null)
+                      Marker(
+                        point: me,
+                        width: 48,
+                        height: 26,
+                        alignment: Alignment.bottomCenter,
+                        child: const _YouMarker(),
+                      ),
+                  ],
+                ),
+                if (widget.showTiles)
+                  SimpleAttributionWidget(
+                    source: const Text(kMapAttribution),
+                    backgroundColor: Colors.white70,
                   ),
               ],
             ),
-            if (showTiles)
-              SimpleAttributionWidget(
-                source: const Text(kMapAttribution),
-                backgroundColor: Colors.white70,
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _MapButton(
+                    buttonKey: const Key('map-center'),
+                    icon: Icons.my_location,
+                    tooltip: 'Center on my city',
+                    onPressed: me == null ? null : _centerOnMe,
+                  ),
+                  _MapButton(
+                    buttonKey: const Key('map-fit'),
+                    icon: Icons.zoom_out_map,
+                    tooltip: 'Show all alumni',
+                    onPressed: _fitAll,
+                  ),
+                  _MapButton(
+                    buttonKey: const Key('map-nearest'),
+                    icon: Icons.near_me_outlined,
+                    tooltip: 'Go to nearest alumni',
+                    onPressed: _nearestCity == null ? null : _goToNearest,
+                  ),
+                  _MapButton(
+                    buttonKey: const Key('map-zoom-in'),
+                    icon: Icons.add,
+                    tooltip: 'Zoom in',
+                    onPressed: () => _zoomBy(1),
+                  ),
+                  _MapButton(
+                    buttonKey: const Key('map-zoom-out'),
+                    icon: Icons.remove,
+                    tooltip: 'Zoom out',
+                    onPressed: () => _zoomBy(-1),
+                  ),
+                ],
               ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MapButton extends StatelessWidget {
+  const _MapButton({
+    required this.buttonKey,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final Key buttonKey;
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: Colors.white,
+        elevation: 2,
+        shape: const CircleBorder(),
+        child: IconButton(
+          key: buttonKey,
+          icon: Icon(icon, size: 20),
+          tooltip: tooltip,
+          color: Colors.black87,
+          onPressed: onPressed,
         ),
       ),
     );
