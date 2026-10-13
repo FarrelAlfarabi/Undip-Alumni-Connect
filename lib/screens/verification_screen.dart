@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 import '../policy/consent_screen.dart';
@@ -52,7 +53,12 @@ class VerificationScreen extends StatefulWidget {
     this.verifyEmail = defaultVerifyEmail,
     this.homeBuilder = defaultHomeBuilder,
     this.accountRepository,
+    this.loginApi,
   });
+
+  /// Email code login. Null means the old email match, unless the build was
+  /// made with REAL_LOGIN=true, which uses [SupabaseLoginApi].
+  final LoginApi? loginApi;
 
   /// Injectable for tests (consent is saved through it).
   final AccountRepository? accountRepository;
@@ -75,6 +81,8 @@ enum _VerificationState { idle, loading, notFound, error }
 class _VerificationScreenState extends State<VerificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _codeController = TextEditingController();
+  bool _codeSent = false;
 
   _VerificationState _state = _VerificationState.idle;
   String? _errorMessage;
@@ -83,13 +91,55 @@ class _VerificationScreenState extends State<VerificationScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _codeController.dispose();
     super.dispose();
+  }
+
+  LoginApi? get _login =>
+      widget.loginApi ?? (kRealLogin ? SupabaseLoginApi() : null);
+
+  /// Step 1 of the code login: send the code. Step 2: check it.
+  Future<void> _verifyWithCode(LoginApi api, String email) async {
+    setState(() {
+      _state = _VerificationState.loading;
+      _errorMessage = null;
+    });
+    try {
+      if (!_codeSent) {
+        if (!await api.emailKnown(email)) {
+          setState(() => _state = _VerificationState.notFound);
+          return;
+        }
+        await api.sendCode(email);
+        setState(() {
+          _codeSent = true;
+          _state = _VerificationState.idle;
+        });
+        return;
+      }
+      final profile = await api.verifyCode(email, _codeController.text);
+      if (profile == null) {
+        setState(() => _state = _VerificationState.notFound);
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _state = _VerificationState.idle);
+      await _afterVerified(profile, email);
+    } catch (e) {
+      setState(() {
+        _state = _VerificationState.error;
+        _errorMessage = friendlyError(e);
+        _lastError = e;
+      });
+    }
   }
 
   Future<void> _verify() async {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim().toLowerCase();
+    final api = _login;
+    if (api != null) return _verifyWithCode(api, email);
 
     setState(() {
       _state = _VerificationState.loading;
@@ -194,6 +244,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
     setState(() {
       _state = _VerificationState.idle;
       _errorMessage = null;
+      _codeSent = false;
+      _codeController.clear();
     });
   }
 
@@ -247,8 +299,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
         return _VerificationForm(
           formKey: _formKey,
           controller: _emailController,
+          codeController: _codeSent ? _codeController : null,
           loading: _state == _VerificationState.loading,
           onSubmit: _verify,
+          onChangeEmail: _reset,
         );
     }
   }
@@ -260,7 +314,13 @@ class _VerificationForm extends StatelessWidget {
     required this.controller,
     required this.loading,
     required this.onSubmit,
+    this.codeController,
+    this.onChangeEmail,
   });
+
+  /// Shown instead of the email box once a code was sent.
+  final TextEditingController? codeController;
+  final VoidCallback? onChangeEmail;
 
   final GlobalKey<FormState> formKey;
   final TextEditingController controller;
@@ -301,28 +361,57 @@ class _VerificationForm extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          TextFormField(
-            controller: controller,
-            autofocus: true,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            enabled: !loading,
-            onFieldSubmitted: (_) => onSubmit(),
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              hintText: 'name@example.com',
-              prefixIcon: Icon(Icons.mail_outline),
-              border: OutlineInputBorder(),
+          if (codeController != null) ...[
+            Text(
+              'We sent a 6 digit code to ${controller.text.trim()}. '
+              'Enter it below.',
+              key: const Key('code-sent-note'),
+              style: theme.textTheme.bodyMedium,
             ),
-            validator: (value) {
-              final v = value?.trim() ?? '';
-              if (v.isEmpty) return 'Enter your email';
-              if (!v.contains('@') || !v.contains('.')) {
-                return 'Enter a valid email';
-              }
-              return null;
-            },
-          ),
+            const SizedBox(height: 12),
+            TextFormField(
+              key: const Key('login-code'),
+              controller: codeController,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              enabled: !loading,
+              maxLength: 6,
+              onFieldSubmitted: (_) => onSubmit(),
+              decoration: const InputDecoration(
+                labelText: '6 digit code',
+                prefixIcon: Icon(Icons.pin_outlined),
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) =>
+                  RegExp(r'^\d{6}$').hasMatch((value ?? '').trim())
+                  ? null
+                  : 'Enter the 6 digit code',
+            ),
+          ] else
+            TextFormField(
+              key: const Key('login-email'),
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              enabled: !loading,
+              onFieldSubmitted: (_) => onSubmit(),
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                hintText: 'name@example.com',
+                prefixIcon: Icon(Icons.mail_outline),
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                final v = value?.trim() ?? '';
+                if (v.isEmpty) return 'Enter your email';
+                if (!v.contains('@') || !v.contains('.')) {
+                  return 'Enter a valid email';
+                }
+                return null;
+              },
+            ),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: loading ? null : onSubmit,
@@ -335,8 +424,14 @@ class _VerificationForm extends StatelessWidget {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   )
-                : const Text('Verify'),
+                : Text(codeController != null ? 'Verify code' : 'Verify'),
           ),
+          if (codeController != null)
+            TextButton(
+              key: const Key('login-change-email'),
+              onPressed: loading ? null : onChangeEmail,
+              child: const Text('Use a different email'),
+            ),
         ],
       ),
     );

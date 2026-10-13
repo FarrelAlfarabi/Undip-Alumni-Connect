@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../data/feedback_repository.dart';
 import '../policy/consent_screen.dart';
@@ -57,9 +58,16 @@ Future<void> signOutTo(
   BuildContext context,
   Widget destination, {
   LockService? lock,
+  LoginApi? login,
 }) async {
   final navigator = Navigator.of(context);
   FeedbackSession.profileId = null;
+  final api = login ?? (kRealLogin ? SupabaseLoginApi() : null);
+  try {
+    await api?.signOut();
+  } catch (_) {
+    // The device is signed out locally even if the server call fails.
+  }
   try {
     await (lock ?? LockService.shared).signOut();
   } catch (_) {

@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/auth/login_api.dart';
+import 'package:undip_alumni_connect/lock/app_entry.dart';
+import 'package:undip_alumni_connect/screens/verification_screen.dart';
+
+import 'account_test.dart' show appHome, phone, withPolicyBundle;
+import 'support/fake_lock.dart';
+
+class FakeLoginApi implements LoginApi {
+  FakeLoginApi({this.known = true, this.session = true});
+
+  bool known;
+  bool session;
+  Object? verifyError;
+  Map<String, dynamic>? profile = testProfile();
+  final sent = <String>[];
+  final checked = <String>[];
+  var signedOut = 0;
+
+  @override
+  Future<bool> emailKnown(String email) async => known;
+
+  @override
+  Future<void> sendCode(String email) async => sent.add(email);
+
+  @override
+  Future<Map<String, dynamic>?> verifyCode(String email, String code) async {
+    checked.add(code);
+    if (verifyError != null) throw verifyError!;
+    return profile;
+  }
+
+  @override
+  bool get hasSession => session;
+
+  @override
+  Future<void> signOut() async => signedOut++;
+}
+
+Future<void> pumpVerify(WidgetTester tester, FakeLoginApi api) async {
+  phone(tester);
+  await tester.pumpWidget(
+    withPolicyBundle(
+      MaterialApp(
+        home: VerificationScreen(
+          loginApi: api,
+          lock: makeLock(enabled: false),
+          homeBuilder: appHome,
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
+void main() {
+  test('real login is off unless the build turns it on', () {
+    expect(kRealLogin, isFalse);
+  });
+
+  group('code login screen', () {
+    testWidgets('email first, then a code box, then the app', (tester) async {
+      final api = FakeLoginApi();
+      await pumpVerify(tester, api);
+      expect(find.byKey(const Key('login-code')), findsNothing);
+
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        ' Ahmad.Ramadhan@Example.com ',
+      );
+      await tester.tap(find.text('Verify'));
+      await settle(tester);
+      expect(api.sent, ['ahmad.ramadhan@example.com']);
+      expect(find.byKey(const Key('code-sent-note')), findsOneWidget);
+      expect(find.byKey(const Key('login-email')), findsNothing);
+
+      await tester.enterText(find.byKey(const Key('login-code')), '123456');
+      await tester.tap(find.text('Verify code'));
+      await settle(tester);
+      expect(api.checked, ['123456']);
+      expect(find.text('APP for ${testProfile()['name']}'), findsOneWidget);
+    });
+
+    testWidgets('an email with no alumni record gets no code', (tester) async {
+      final api = FakeLoginApi(known: false);
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'nobody@example.com',
+      );
+      await tester.tap(find.text('Verify'));
+      await settle(tester);
+      expect(api.sent, isEmpty);
+      expect(find.text('No Matching Record'), findsOneWidget);
+    });
+
+    testWidgets('the code must be 6 digits before it is checked', (
+      tester,
+    ) async {
+      final api = FakeLoginApi();
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Verify'));
+      await settle(tester);
+      await tester.enterText(find.byKey(const Key('login-code')), '12ab');
+      await tester.tap(find.text('Verify code'));
+      await settle(tester);
+      expect(find.text('Enter the 6 digit code'), findsOneWidget);
+      expect(api.checked, isEmpty);
+    });
+
+    testWidgets('a wrong or expired code shows an error and can restart', (
+      tester,
+    ) async {
+      final api = FakeLoginApi()..verifyError = Exception('otp_expired');
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Verify'));
+      await settle(tester);
+      await tester.enterText(find.byKey(const Key('login-code')), '000000');
+      await tester.tap(find.text('Verify code'));
+      await settle(tester);
+      expect(find.text('Something Went Wrong'), findsOneWidget);
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
+      expect(find.byKey(const Key('login-email')), findsOneWidget);
+    });
+
+    testWidgets('a person who is not verified is not let in', (tester) async {
+      final api = FakeLoginApi()..profile = null;
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Verify'));
+      await settle(tester);
+      await tester.enterText(find.byKey(const Key('login-code')), '123456');
+      await tester.tap(find.text('Verify code'));
+      await settle(tester);
+      expect(find.text('No Matching Record'), findsOneWidget);
+    });
+
+    testWidgets('"Use a different email" goes back to the email box', (
+      tester,
+    ) async {
+      final api = FakeLoginApi();
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Verify'));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('login-change-email')));
+      await tester.pump();
+      expect(find.byKey(const Key('login-email')), findsOneWidget);
+    });
+  });
+
+  group('app start with real login', () {
+    testWidgets('a remembered PIN is not enough without a stored sign in', (
+      tester,
+    ) async {
+      phone(tester);
+      final lock = await makeRememberedLock();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AppEntry(
+            lock: lock,
+            loginApi: FakeLoginApi(session: false),
+            fetchProfile: (id) async => testProfile(),
+            homeBuilder: appHome,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await enterPin(tester, testPin);
+      await tester.pump();
+      expect(find.text(kSessionExpiredNotice), findsOneWidget);
+      expect(find.text('Get Started'), findsOneWidget);
+      expect(await lock.load(), isNull);
+    });
+
+    testWidgets('with a stored sign in the PIN opens the app', (tester) async {
+      phone(tester);
+      final lock = await makeRememberedLock();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AppEntry(
+            lock: lock,
+            loginApi: FakeLoginApi(),
+            fetchProfile: (id) async => testProfile(),
+            homeBuilder: appHome,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await enterPin(tester, testPin);
+      await tester.pump();
+      expect(find.text('APP for ${testProfile()['name']}'), findsOneWidget);
+    });
+  });
+}

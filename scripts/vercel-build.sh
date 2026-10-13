@@ -43,6 +43,11 @@ EXTRA_DEFINES=""
 if [ "${VERCEL_ENV:-}" = "preview" ]; then
   EXTRA_DEFINES="--dart-define=WEB_LOCK_TEST=true"
 fi
+# Real login (emailed code). Off unless the Vercel environment variable
+# REAL_LOGIN is set to "true". See docs/REAL_LOGIN.md before turning it on.
+if [ "${REAL_LOGIN:-}" = "true" ]; then
+  EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=REAL_LOGIN=true"
+fi
 flutter build web --release $EXTRA_DEFINES
 
 # CanvasKit loads from Google's CDN by default (see flutter_bootstrap.js'
