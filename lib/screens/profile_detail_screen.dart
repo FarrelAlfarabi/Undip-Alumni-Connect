@@ -316,16 +316,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                           _field(
                             theme,
-                            'Current Employer',
-                            _profile['current_employer'],
-                          ),
-                          _field(
-                            theme,
                             'Current Role',
                             _profile['current_role'],
                           ),
                           _field(theme, 'Industry', _profile['industry']),
-                          _field(theme, 'Company', _profile['company']),
+                          // Profiles saved before the two employer fields
+                          // were merged may only have current_employer.
+                          _field(
+                            theme,
+                            'Company',
+                            _profile['company'] ?? _profile['current_employer'],
+                          ),
                         ],
                       ),
                     ),

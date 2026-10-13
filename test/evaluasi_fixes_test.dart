@@ -112,6 +112,19 @@ void main() {
       expect(kIndustries.last, 'Other');
     });
 
+    test('every Indonesian city is offered and has a sensible distance', () {
+      expect(kNearbyCities.length, greaterThan(90));
+      expect(
+        kNearbyCities,
+        containsAll(['Banda Aceh', 'Jayapura', 'Solo (Surakarta)']),
+      );
+      // Seeded pair keeps its hand-entered value; others are worked out.
+      expect(approxDistanceKm('Jakarta', 'Semarang'), 430);
+      final km = approxDistanceKm('Semarang', 'Solo (Surakarta)')!;
+      expect(km, inInclusiveRange(80, 120));
+      expect(approxDistanceKm('Kudus', 'Semarang'), isNull);
+    });
+
     test('the city picker offers only cities Nearby has distances for', () {
       expect(kNearbyCities, contains('Semarang'));
       for (final a in kNearbyCities) {

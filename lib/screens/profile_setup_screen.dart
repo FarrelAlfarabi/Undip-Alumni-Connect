@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/city_distances.dart';
 import '../data/industries.dart';
 import '../lock/session.dart';
+import '../widgets/searchable_choice.dart';
 import 'verification_screen.dart';
 
 /// Lets the verified alumnus update their employment info. Identity fields
@@ -179,7 +180,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _SearchableChoice(
+                  SearchableChoice(
                     fieldKey: const Key('profile-industry'),
                     label: 'Industry',
                     controller: _industryController,
@@ -189,7 +190,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     onSelected: (v) => setState(() => _industry = v),
                   ),
                   const SizedBox(height: 16),
-                  _SearchableChoice(
+                  SearchableChoice(
                     fieldKey: const Key('profile-city'),
                     label: 'City',
                     helper: 'Used for Nearby Alumni',
@@ -234,58 +235,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// A dropdown you can also type into to narrow the list. Only a value from
-/// [options] (or the one already [selected] when the screen opened) can be
-/// chosen, so free text never reaches the database.
-class _SearchableChoice extends StatelessWidget {
-  const _SearchableChoice({
-    required this.fieldKey,
-    required this.label,
-    required this.controller,
-    required this.options,
-    required this.selected,
-    required this.enabled,
-    required this.onSelected,
-    this.helper,
-  });
-
-  final Key fieldKey;
-  final String label;
-  final String? helper;
-  final TextEditingController controller;
-  final List<String> options;
-  final String? selected;
-  final bool enabled;
-  final ValueChanged<String?> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final entries = [
-      if (selected != null && !options.contains(selected)) selected!,
-      ...options,
-    ];
-    return LayoutBuilder(
-      builder: (context, box) => DropdownMenu<String>(
-        key: fieldKey,
-        controller: controller,
-        width: box.maxWidth,
-        enabled: enabled,
-        label: Text(label),
-        helperText: helper,
-        initialSelection: selected,
-        enableFilter: true,
-        requestFocusOnTap: true,
-        menuHeight: 280,
-        dropdownMenuEntries: [
-          for (final o in entries)
-            DropdownMenuEntry<String>(value: o, label: o),
-        ],
-        onSelected: onSelected,
       ),
     );
   }
