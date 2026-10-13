@@ -95,3 +95,7 @@ int? approxDistanceKm(String? from, String? to) {
   if (from == null || to == null) return null;
   return _cityDistancesKm[from]?[to];
 }
+
+/// Cities Nearby can place people in: the ones with distances above. The
+/// profile's City picker offers exactly these, so a chosen city always works.
+List<String> get kNearbyCities => _cityDistancesKm.keys.toList()..sort();

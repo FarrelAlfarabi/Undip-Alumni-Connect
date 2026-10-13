@@ -141,11 +141,47 @@ void main() {
       }
     });
 
-    testWidgets('from Home, back leaves the shell', (tester) async {
+    testWidgets('from Home, back asks before leaving', (tester) async {
       await pumpShell(tester);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
+      expect(find.text('Exit the app?'), findsOneWidget);
+      expect(find.byType(HomeShell), findsOneWidget);
+    });
+
+    testWidgets('Stay keeps the app open', (tester) async {
+      await pumpShell(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('exit-cancel')));
+      await tester.pumpAndSettle();
+      expect(find.text('Exit the app?'), findsNothing);
+      expect(find.byType(HomeShell), findsOneWidget);
+      expect(find.text('Hello, Ahmad'), findsOneWidget);
+    });
+
+    testWidgets('Exit leaves the shell', (tester) async {
+      await pumpShell(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('exit-confirm')));
+      await tester.pumpAndSettle();
       expect(find.byType(HomeShell), findsNothing);
+    });
+
+    testWidgets('from another tab, back goes Home first and does not ask', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+      await tapNav(tester, 'Market');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Exit the app?'), findsNothing);
+      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      // A second Back, now on Home, asks.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Exit the app?'), findsOneWidget);
     });
   });
 

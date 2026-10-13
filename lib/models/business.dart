@@ -76,6 +76,7 @@ class Business {
     this.isPersonal = false,
     this.reviewedAt,
     this.updatedAt,
+    this.photoUrl,
   });
 
   final String id;
@@ -107,6 +108,33 @@ class Business {
   final DateTime? reviewedAt;
   final DateTime? updatedAt;
 
+  /// Public link to the business photo, if the owner added one.
+  final String? photoUrl;
+
+  /// A copy with another photo link (the lists get photos in a second call).
+  Business withPhoto(String? url) => Business(
+    id: id,
+    ownerId: ownerId,
+    name: name,
+    description: description,
+    category: category,
+    status: status,
+    socialLink: socialLink,
+    websiteLink: websiteLink,
+    requestedBand: requestedBand,
+    approvedBand: approvedBand,
+    rejectionReason: rejectionReason,
+    unlimitedUntil: unlimitedUntil,
+    createdAt: createdAt,
+    ownerName: ownerName,
+    hiddenAt: hiddenAt,
+    hiddenReason: hiddenReason,
+    isPersonal: isPersonal,
+    reviewedAt: reviewedAt,
+    updatedAt: updatedAt,
+    photoUrl: url,
+  );
+
   bool get isHidden => hiddenAt != null;
 
   bool get isApproved => status == BusinessStatus.approved;
@@ -137,6 +165,7 @@ class Business {
       isPersonal: m['is_personal'] == true,
       reviewedAt: date(m['reviewed_at']),
       updatedAt: date(m['updated_at']),
+      photoUrl: m['photo_url'] as String?,
     );
   }
 }

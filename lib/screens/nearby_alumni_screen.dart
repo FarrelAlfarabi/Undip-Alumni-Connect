@@ -10,6 +10,7 @@ import '../util/friendly_error.dart';
 import '../widgets/nearby_map_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
+import 'profile_setup_screen.dart';
 
 /// One city's worth of nearby alumni, grouped for the map's networking
 /// chips and the sheet they open (_CityClusterSheet).
@@ -106,6 +107,19 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     );
   }
 
+  /// Opens the profile editor, where the city is chosen, and refreshes
+  /// Nearby with the saved profile.
+  Future<void> _setCity() async {
+    final updated = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => ProfileSetupScreen(profile: widget.currentUser.value),
+      ),
+    );
+    if (updated == null || !mounted) return;
+    widget.currentUser.value = updated;
+    setState(() {});
+  }
+
   void _openProfile(Map<String, dynamic> profile) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -191,13 +205,25 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
               }
 
               if (myCity == null || myCity.isEmpty) {
-                return const Center(
+                return Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      'Your profile has no city on file, so nearby '
-                      'distances can\'t be simulated for you.',
-                      textAlign: TextAlign.center,
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Your profile has no city on file, so nearby '
+                          'distances can\'t be simulated for you.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          key: const Key('nearby-set-city'),
+                          onPressed: _setCity,
+                          icon: const Icon(Icons.location_city_outlined),
+                          label: const Text('Set your city'),
+                        ),
+                      ],
                     ),
                   ),
                 );

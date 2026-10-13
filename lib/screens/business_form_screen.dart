@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
+import '../data/marketplace_image_picker.dart';
 import '../models/business.dart';
 import '../util/safe_url.dart';
+import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 
 /// What the owner is told after submitting.
 const String kBusinessSubmittedMessage =
     'Submitted. An admin will review your business. You can see the status '
     'in "My businesses".';
+
+/// Added to [kBusinessSubmittedMessage] when the business was saved but its
+/// photo could not be.
+const String kBusinessPhotoFailedMessage =
+    ' The photo did not upload. Open the business from "My businesses" and '
+    'add it again.';
 
 /// Register a business, or (when [existing] is set) fix a pending or rejected
 /// one. The yearly sales band is chosen once and cannot be changed after.
@@ -18,11 +26,15 @@ class BusinessFormScreen extends StatefulWidget {
     required this.ownerId,
     required this.repository,
     this.existing,
+    this.pickPhoto = pickListingImage,
   });
 
   final String ownerId;
   final BusinessRepository repository;
   final Business? existing;
+
+  /// Injectable for tests; defaults to the file picker.
+  final ImagePickerFn pickPhoto;
 
   @override
   State<BusinessFormScreen> createState() => _BusinessFormScreenState();
@@ -39,6 +51,9 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   bool _personal = false;
   String? _bandError;
   String? _linkError;
+  String? _photoError;
+  PickedImage? _picked;
+  bool _removePhoto = false;
   String? _error;
   Object? _lastError;
   bool _saving = false;
@@ -65,6 +80,30 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     }
     super.dispose();
   }
+
+  Future<void> _choosePhoto() async {
+    try {
+      final picked = await widget.pickPhoto();
+      if (picked == null || !mounted) return;
+      setState(() {
+        _picked = picked;
+        _removePhoto = false;
+        _photoError = null;
+      });
+    } on ImagePickException catch (e) {
+      if (!mounted) return;
+      setState(() => _photoError = e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _photoError = 'Could not open that image. Try another.');
+    }
+  }
+
+  void _clearPhoto() => setState(() {
+    _picked = null;
+    _removePhoto = true;
+    _photoError = null;
+  });
 
   static String? _requiredName(String? v) {
     final t = (v ?? '').trim();
@@ -135,10 +174,42 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
       final saved = existing == null
           ? await widget.repository.register(widget.ownerId, input)
           : await widget.repository.update(widget.ownerId, existing.id, input);
+      // The business is saved first, so a photo that fails never loses what
+      // the owner typed.
+      var result = saved;
+      var photoFailed = false;
+      try {
+        if (_picked != null) {
+          final url = await widget.repository.uploadPhoto(
+            ownerId: widget.ownerId,
+            fileName: _picked!.name,
+            bytes: _picked!.bytes,
+          );
+          result = await widget.repository.setPhoto(
+            widget.ownerId,
+            saved.id,
+            url,
+          );
+        } else if (_removePhoto && existing?.photoUrl != null) {
+          result = await widget.repository.setPhoto(
+            widget.ownerId,
+            saved.id,
+            null,
+          );
+        }
+      } catch (_) {
+        photoFailed = true;
+      }
       messenger.showSnackBar(
-        const SnackBar(content: Text(kBusinessSubmittedMessage)),
+        SnackBar(
+          content: Text(
+            photoFailed
+                ? '$kBusinessSubmittedMessage$kBusinessPhotoFailedMessage'
+                : kBusinessSubmittedMessage,
+          ),
+        ),
       );
-      navigator.pop(saved);
+      navigator.pop(result);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -147,6 +218,72 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
         _lastError = e;
       });
     }
+  }
+
+  /// The optional photo: a preview, then Add / Change and Remove buttons.
+  Widget _photoSection(ThemeData theme) {
+    final existingUrl = _removePhoto ? null : widget.existing?.photoUrl;
+    final hasPhoto = _picked != null || (existingUrl?.isNotEmpty ?? false);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Photo (optional)', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+          'A logo or a picture of your products. JPG, PNG or WebP, up to '
+          '2 MB. An admin sees it when reviewing.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (_picked != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                height: 140,
+                width: double.infinity,
+                child: Image.memory(
+                  _picked!.bytes,
+                  key: const Key('business-photo-preview'),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+          )
+        else
+          BusinessPhoto(url: existingUrl),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('business-photo-pick'),
+              onPressed: _saving ? null : _choosePhoto,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              label: Text(hasPhoto ? 'Change photo' : 'Add photo'),
+            ),
+            if (hasPhoto)
+              TextButton(
+                key: const Key('business-photo-remove'),
+                onPressed: _saving ? null : _clearPhoto,
+                child: const Text('Remove'),
+              ),
+          ],
+        ),
+        if (_photoError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _photoError!,
+              key: const Key('business-photo-error'),
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -241,6 +378,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                           ? null
                           : (v) => setState(() => _personal = v),
                     ),
+                    const SizedBox(height: 16),
+                    _photoSection(theme),
                     const SizedBox(height: 16),
                     Text(
                       'Where people can see it',

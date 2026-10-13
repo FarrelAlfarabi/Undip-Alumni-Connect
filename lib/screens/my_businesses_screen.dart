@@ -6,6 +6,7 @@ import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
+import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 
 const String _limitNote =
@@ -169,6 +170,7 @@ class BusinessOwnerCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            BusinessPhoto(url: b.photoUrl),
             Row(
               children: [
                 Expanded(

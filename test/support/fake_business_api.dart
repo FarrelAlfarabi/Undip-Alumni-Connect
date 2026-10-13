@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:undip_alumni_connect/data/business_repository.dart';
 
@@ -18,6 +20,7 @@ Map<String, dynamic> businessMap({
   String? ownerName,
   String? reviewedAt,
   bool personal = false,
+  String? photoUrl,
 }) => {
   'id': id,
   'owner_id': ownerId,
@@ -35,6 +38,7 @@ Map<String, dynamic> businessMap({
   'owner_name': ?ownerName,
   'reviewed_at': ?reviewedAt,
   'is_personal': personal,
+  'photo_url': photoUrl,
 };
 
 class FakeBusinessApi implements BusinessApi {
@@ -55,6 +59,27 @@ class FakeBusinessApi implements BusinessApi {
       throw t;
     }
     return results[function] ?? <dynamic>[];
+  }
+
+  /// Paths passed to [uploadPhoto], in order.
+  final uploads = <String>[];
+
+  /// Throw this from the next upload (then cleared).
+  Object? throwOnUpload;
+
+  @override
+  Future<String> uploadPhoto(
+    String path,
+    Uint8List bytes,
+    String contentType,
+  ) async {
+    uploads.add(path);
+    final t = throwOnUpload;
+    if (t != null) {
+      throwOnUpload = null;
+      throw t;
+    }
+    return 'https://files.example/storage/v1/object/public/business-photos/$path';
   }
 }
 

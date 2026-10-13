@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business.dart';
+import 'business_repository.dart';
 import 'report_repository.dart';
 
 enum AdminErrorCode {
@@ -84,9 +85,15 @@ class AdminRepository {
         'p_status': status,
       }),
     );
-    return (rows as List)
-        .map((r) => Business.fromMap(Map<String, dynamic>.from(r as Map)))
-        .toList();
+    final photos = await BusinessRepository.photoUrls(
+      () => _api.rpc('admin_business_photo_urls', {'p_admin': adminId}),
+    );
+    return BusinessRepository.withPhotos(
+      (rows as List)
+          .map((r) => Business.fromMap(Map<String, dynamic>.from(r as Map)))
+          .toList(),
+      photos,
+    );
   }
 
   Future<Business> approve(

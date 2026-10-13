@@ -8,6 +8,7 @@ import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
 import '../lock/session.dart';
+import '../policy/policy_screen.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
 import 'admin_screen.dart';
@@ -358,6 +359,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
+                      onPolicy: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
+                      ),
                       onHelp: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const HelpScreen()),
                       ),
@@ -453,9 +457,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 }
 
 /// Under my own profile: Admin (admins only, with the unseen reports count),
-/// then My business and My job postings, then Settings and Help, then Sign out.
-/// Rarely used things (PIN, blocked users, policy, delete account, contact
-/// admin, feedback, about) live inside Settings and Help.
+/// then My business and My job postings, then Settings, Privacy policy and Help, then Sign out.
+/// Rarely used things (PIN, blocked users, delete account, contact admin,
+/// feedback, about) live inside Settings and Help.
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu({
     required this.adminFuture,
@@ -463,6 +467,7 @@ class _ProfileMenu extends StatelessWidget {
     required this.onBusiness,
     required this.onJobs,
     required this.onSettings,
+    required this.onPolicy,
     required this.onHelp,
     required this.onAdmin,
     required this.onSignOut,
@@ -473,6 +478,7 @@ class _ProfileMenu extends StatelessWidget {
   final VoidCallback onBusiness;
   final VoidCallback onJobs;
   final VoidCallback onSettings;
+  final VoidCallback onPolicy;
   final VoidCallback onHelp;
   final VoidCallback onAdmin;
   final VoidCallback onSignOut;
@@ -533,6 +539,12 @@ class _ProfileMenu extends StatelessWidget {
               title: 'Settings',
               subtitle: 'Default contact, PIN lock, blocked users, account',
               onTap: onSettings,
+            ),
+            MenuItem(
+              key: const Key('profile-policy'),
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy policy and community rules',
+              onTap: onPolicy,
             ),
             MenuItem(
               key: const Key('profile-help'),
