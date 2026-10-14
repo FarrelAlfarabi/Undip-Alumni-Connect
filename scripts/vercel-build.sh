@@ -47,6 +47,9 @@ fi
 if [ "${REAL_MAP:-}" = "true" ] && [ "${VERCEL_ENV:-}" != "preview" ]; then
   EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=REAL_MAP=true"
 fi
+# Optional map provider settings from Vercel environment variables.
+if [ -n "${MAP_TILE_URL:-}" ]; then EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=MAP_TILE_URL=${MAP_TILE_URL}"; fi
+if [ -n "${MAP_ATTRIBUTION:-}" ]; then EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=MAP_ATTRIBUTION=${MAP_ATTRIBUTION}"; fi
 flutter build web --release $EXTRA_DEFINES
 
 # CanvasKit loads from Google's CDN by default (see flutter_bootstrap.js'
