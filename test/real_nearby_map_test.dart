@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/map_config.dart';
+import 'package:undip_alumni_connect/data/basemap_outline.dart';
 import 'package:undip_alumni_connect/data/indonesian_cities.dart';
 import 'package:undip_alumni_connect/widgets/nearby_map_view.dart'
     show AlumniPin;
@@ -198,4 +199,22 @@ void main() {
       expect(b.onPressed, isNull);
     });
   });
+
+  test(
+    'bundled outline covers Indonesia and every city sits on or near it',
+    () {
+      expect(kBasemapIndonesia.length, greaterThan(50));
+      final all = [for (final r in kBasemapIndonesia) ...r];
+      for (final p in all) {
+        expect(p.latitude, inInclusiveRange(-12, 7));
+        expect(p.longitude, inInclusiveRange(94, 142));
+      }
+      // Java is in there: a point near Semarang is within ~1 degree of an edge.
+      final s = cityCoordinates('Semarang')!;
+      final near = all.any(
+        (p) => (p.latitude - s.$1).abs() < 1 && (p.longitude - s.$2).abs() < 1,
+      );
+      expect(near, isTrue);
+    },
+  );
 }

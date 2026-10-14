@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../config/map_config.dart';
+import '../data/basemap_outline.dart';
 import '../data/indonesian_cities.dart';
 import 'nearby_map_view.dart' show AlumniPin;
 
@@ -123,7 +124,8 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
     final byCity = _byCity;
     final me = _point(widget.myCity);
     final points = _allPoints;
-    final land = theme.colorScheme.surfaceContainerHighest;
+    // Sea colour behind the bundled outline.
+    final land = theme.colorScheme.secondaryContainer;
     final camera = points.length < 2
         ? MapOptions(
             initialCenter: points.isEmpty ? _defaultCenter : points.first,
@@ -158,6 +160,25 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
               mapController: _controller,
               options: camera,
               children: [
+                // Bundled outline: always there, tiles draw over it when loaded.
+                PolygonLayer(
+                  polygons: [
+                    for (final ring in kBasemapNeighbors)
+                      Polygon(
+                        points: ring,
+                        color: theme.colorScheme.surfaceContainerHigh,
+                        borderColor: theme.colorScheme.outlineVariant,
+                        borderStrokeWidth: 0.5,
+                      ),
+                    for (final ring in kBasemapIndonesia)
+                      Polygon(
+                        points: ring,
+                        color: theme.colorScheme.surface,
+                        borderColor: theme.colorScheme.outline,
+                        borderStrokeWidth: 0.8,
+                      ),
+                  ],
+                ),
                 if (widget.showTiles)
                   TileLayer(
                     urlTemplate: kMapTileUrl,
