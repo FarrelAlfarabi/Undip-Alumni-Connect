@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/login_api.dart';
@@ -84,12 +87,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
   final _codeController = TextEditingController();
   bool _codeSent = false;
 
+  /// Shown under the code box when a code is wrong or expired, so the person
+  /// stays on the code step instead of starting over.
+  String? _codeError;
+
+  /// Seconds before "Resend code" works again.
+  int _resendIn = 0;
+  Timer? _resendTimer;
+
   _VerificationState _state = _VerificationState.idle;
   String? _errorMessage;
   Object? _lastError;
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _emailController.dispose();
     _codeController.dispose();
     super.dispose();
@@ -98,11 +110,50 @@ class _VerificationScreenState extends State<VerificationScreen> {
   LoginApi? get _login =>
       widget.loginApi ?? (kRealLogin ? SupabaseLoginApi() : null);
 
+  void _startCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _resendIn = 30);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted || _resendIn <= 1) {
+        t.cancel();
+        if (mounted) setState(() => _resendIn = 0);
+        return;
+      }
+      setState(() => _resendIn--);
+    });
+  }
+
+  Future<void> _resend() async {
+    final api = _login;
+    if (api == null || _resendIn > 0) return;
+    final email = _emailController.text.trim().toLowerCase();
+    setState(() {
+      _state = _VerificationState.loading;
+      _codeError = null;
+      _codeController.clear();
+    });
+    try {
+      await api.sendCode(email);
+      if (!mounted) return;
+      setState(() => _state = _VerificationState.idle);
+      _startCooldown();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('New code sent')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _state = _VerificationState.idle;
+        _codeError = friendlyError(e);
+      });
+    }
+  }
+
   /// Step 1 of the code login: send the code. Step 2: check it.
   Future<void> _verifyWithCode(LoginApi api, String email) async {
     setState(() {
       _state = _VerificationState.loading;
       _errorMessage = null;
+      _codeError = null;
     });
     try {
       if (!_codeSent) {
@@ -111,13 +162,32 @@ class _VerificationScreenState extends State<VerificationScreen> {
           return;
         }
         await api.sendCode(email);
+        if (!mounted) return;
         setState(() {
           _codeSent = true;
           _state = _VerificationState.idle;
         });
+        _startCooldown();
         return;
       }
-      final profile = await api.verifyCode(email, _codeController.text);
+      Map<String, dynamic>? profile;
+      try {
+        profile = await api.verifyCode(email, _codeController.text);
+      } catch (e) {
+        // A wrong or expired code is the most common slip: keep the person
+        // on the code step with a plain message and let them retry or resend.
+        if (!mounted) return;
+        final network = friendlyError(e) == kNetworkError;
+        setState(() {
+          _state = _VerificationState.idle;
+          _codeError = network
+              ? kNetworkError
+              : 'That code is wrong or has expired. Check it and try again, '
+                    'or send a new code.';
+          _codeController.clear();
+        });
+        return;
+      }
       if (profile == null) {
         setState(() => _state = _VerificationState.notFound);
         return;
@@ -245,6 +315,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _state = _VerificationState.idle;
       _errorMessage = null;
       _codeSent = false;
+      _codeError = null;
+      _resendTimer?.cancel();
+      _resendIn = 0;
       _codeController.clear();
     });
   }
@@ -255,7 +328,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: AppBar(title: const Text('Verify Alumni Status')),
+      appBar: AppBar(
+        title: const Text('Verify Alumni Status'),
+        // On the code step the back arrow returns to the email box.
+        leading: _codeSent && _state == _VerificationState.idle
+            ? BackButton(onPressed: _reset)
+            : null,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -303,6 +382,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
           loading: _state == _VerificationState.loading,
           onSubmit: _verify,
           onChangeEmail: _reset,
+          codeError: _codeError,
+          resendIn: _resendIn,
+          onResend: _resend,
+          realLogin: _login != null,
         );
     }
   }
@@ -316,7 +399,19 @@ class _VerificationForm extends StatelessWidget {
     required this.onSubmit,
     this.codeController,
     this.onChangeEmail,
+    this.codeError,
+    this.resendIn = 0,
+    this.onResend,
+    this.realLogin = false,
   });
+
+  final String? codeError;
+  final int resendIn;
+  final VoidCallback? onResend;
+
+  /// Code login: the email step says "Send code" and the texts explain the
+  /// code. The old email match keeps its original wording.
+  final bool realLogin;
 
   /// Shown instead of the email box once a code was sent.
   final TextEditingController? codeController;
@@ -347,15 +442,22 @@ class _VerificationForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Verify Your Alumni Status',
+            codeController != null
+                ? 'Enter the code'
+                : 'Verify Your Alumni Status',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter the email the Ikafe team has on file for you to confirm '
-            'your alumni record.',
+            codeController != null
+                ? 'We emailed a 6 digit code to ${controller.text.trim()}.'
+                : realLogin
+                ? 'Enter the email the Ikafe team has on file for you. '
+                      'We will email you a 6 digit code, no password needed.'
+                : 'Enter the email the Ikafe team has on file for you to '
+                      'confirm your alumni record.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -363,10 +465,12 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 24),
           if (codeController != null) ...[
             Text(
-              'We sent a 6 digit code to ${controller.text.trim()}. '
-              'Enter it below.',
+              'Can\'t find it? Check your spam or junk folder. The code '
+              'expires after a while.',
               key: const Key('code-sent-note'),
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -377,11 +481,21 @@ class _VerificationForm extends StatelessWidget {
               textInputAction: TextInputAction.done,
               enabled: !loading,
               maxLength: 6,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(fontSize: 22, letterSpacing: 6),
+              onChanged: (v) {
+                // Check as soon as the sixth digit is in.
+                if (v.length == 6 && !loading) onSubmit();
+              },
               onFieldSubmitted: (_) => onSubmit(),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '6 digit code',
-                prefixIcon: Icon(Icons.pin_outlined),
-                border: OutlineInputBorder(),
+                counterText: '',
+                errorText: codeError,
+                errorMaxLines: 3,
+                prefixIcon: const Icon(Icons.pin_outlined),
+                border: const OutlineInputBorder(),
               ),
               validator: (value) =>
                   RegExp(r'^\d{6}$').hasMatch((value ?? '').trim())
@@ -396,6 +510,10 @@ class _VerificationForm extends StatelessWidget {
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,
               enabled: !loading,
+              autofillHints: const [AutofillHints.email],
+              autocorrect: false,
+              enableSuggestions: false,
+              textCapitalization: TextCapitalization.none,
               onFieldSubmitted: (_) => onSubmit(),
               decoration: const InputDecoration(
                 labelText: 'Email',
@@ -424,14 +542,28 @@ class _VerificationForm extends StatelessWidget {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   )
-                : Text(codeController != null ? 'Verify code' : 'Verify'),
+                : Text(
+                    codeController != null
+                        ? 'Verify code'
+                        : realLogin
+                        ? 'Send code'
+                        : 'Verify',
+                  ),
           ),
-          if (codeController != null)
+          if (codeController != null) ...[
+            TextButton(
+              key: const Key('login-resend'),
+              onPressed: loading || resendIn > 0 ? null : onResend,
+              child: Text(
+                resendIn > 0 ? 'Resend code in ${resendIn}s' : 'Resend code',
+              ),
+            ),
             TextButton(
               key: const Key('login-change-email'),
               onPressed: loading ? null : onChangeEmail,
               child: const Text('Use a different email'),
             ),
+          ],
         ],
       ),
     );

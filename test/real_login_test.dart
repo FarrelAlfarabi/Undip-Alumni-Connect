@@ -74,15 +74,14 @@ void main() {
         find.byKey(const Key('login-email')),
         ' Ahmad.Ramadhan@Example.com ',
       );
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Send code'));
       await settle(tester);
       expect(api.sent, ['ahmad.ramadhan@example.com']);
       expect(find.byKey(const Key('code-sent-note')), findsOneWidget);
       expect(find.byKey(const Key('login-email')), findsNothing);
 
       await tester.enterText(find.byKey(const Key('login-code')), '123456');
-      await tester.tap(find.text('Verify code'));
-      await settle(tester);
+      await settle(tester); // the sixth digit checks the code by itself
       expect(api.checked, ['123456']);
       expect(find.text('APP for ${testProfile()['name']}'), findsOneWidget);
     });
@@ -94,7 +93,7 @@ void main() {
         find.byKey(const Key('login-email')),
         'nobody@example.com',
       );
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Send code'));
       await settle(tester);
       expect(api.sent, isEmpty);
       expect(find.text('No Matching Record'), findsOneWidget);
@@ -109,7 +108,7 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Send code'));
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '12ab');
       await tester.tap(find.text('Verify code'));
@@ -118,7 +117,7 @@ void main() {
       expect(api.checked, isEmpty);
     });
 
-    testWidgets('a wrong or expired code shows an error and can restart', (
+    testWidgets('a wrong or expired code stays on the code step', (
       tester,
     ) async {
       final api = FakeLoginApi()..verifyError = Exception('otp_expired');
@@ -127,15 +126,39 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Send code'));
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '000000');
-      await tester.tap(find.text('Verify code'));
       await settle(tester);
-      expect(find.text('Something Went Wrong'), findsOneWidget);
-      await tester.tap(find.text('Try again'));
-      await tester.pump();
-      expect(find.byKey(const Key('login-email')), findsOneWidget);
+      expect(find.textContaining('wrong or has expired'), findsOneWidget);
+      expect(find.text('Something Went Wrong'), findsNothing);
+      expect(find.byKey(const Key('login-code')), findsOneWidget);
+      // Can try again right away.
+      api.verifyError = null;
+      await tester.enterText(find.byKey(const Key('login-code')), '123456');
+      await settle(tester);
+      expect(api.checked, ['000000', '123456']);
+    });
+
+    testWidgets('resend waits 30 seconds, then sends a new code', (
+      tester,
+    ) async {
+      final api = FakeLoginApi();
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Send code'));
+      await settle(tester);
+      expect(find.text('Resend code in 30s'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 31));
+      expect(find.text('Resend code'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('login-resend')));
+      await settle(tester);
+      expect(api.sent.length, 2);
+      expect(find.text('Resend code in 30s'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('a person who is not verified is not let in', (tester) async {
@@ -145,10 +168,9 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Send code'));
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '123456');
-      await tester.tap(find.text('Verify code'));
       await settle(tester);
       expect(find.text('No Matching Record'), findsOneWidget);
     });
@@ -162,7 +184,7 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Send code'));
       await settle(tester);
       await tester.tap(find.byKey(const Key('login-change-email')));
       await tester.pump();
