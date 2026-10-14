@@ -128,10 +128,10 @@ jobs:
           MAP_TILE_URL: ${{ secrets.MAP_TILE_URL }}
           MAP_ATTRIBUTION: ${{ secrets.MAP_ATTRIBUTION }}
         run: |
-          DEFINES="--dart-define=REAL_MAP=true"
-          if [ -n "$MAP_TILE_URL" ]; then DEFINES="$DEFINES --dart-define=MAP_TILE_URL=$MAP_TILE_URL"; fi
-          if [ -n "$MAP_ATTRIBUTION" ]; then DEFINES="$DEFINES --dart-define=MAP_ATTRIBUTION=$MAP_ATTRIBUTION"; fi
-          flutter build apk --release --build-number "${{ github.run_number }}" $DEFINES
+          DEFINES=(--dart-define=REAL_MAP=true)
+          if [ -n "$MAP_TILE_URL" ]; then DEFINES+=("--dart-define=MAP_TILE_URL=$MAP_TILE_URL"); fi
+          if [ -n "$MAP_ATTRIBUTION" ]; then DEFINES+=("--dart-define=MAP_ATTRIBUTION=$MAP_ATTRIBUTION"); fi
+          flutter build apk --release --build-number "${{ github.run_number }}" "${DEFINES[@]}"
 
       - name: Name the APK
         id: name
