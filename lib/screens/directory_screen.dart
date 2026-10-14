@@ -12,6 +12,16 @@ import 'profile_detail_screen.dart';
 /// names are cut off until search is done on the server.
 const int kDirectoryMaxRows = 500;
 
+/// Where this person works. `company` is the field people edit now; rows
+/// saved before the two fields were merged may only have `current_employer`.
+String? _employerOf(Map<String, dynamic> p) {
+  for (final k in ['company', 'current_employer']) {
+    final v = (p[k] as String?)?.trim();
+    if (v != null && v.isNotEmpty) return v;
+  }
+  return null;
+}
+
 /// Searchable alumni directory: filter by major, graduation year, and
 /// industry, plus free-text search on name/company. Demo scope: fetches
 /// verified alumni_profiles rows once (at most [kDirectoryMaxRows]) and
@@ -224,7 +234,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               if ((p['current_role'] as String?)?.isNotEmpty ==
                                   true)
                                 '${p['current_role']}'
-                                    '${(p['current_employer'] as String?)?.isNotEmpty == true ? ' @ ${p['current_employer']}' : ''}',
+                                    '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
                               '${p['major']} · Class of ${p['graduation_year']}',
                             ].join('\n'),
                           ),

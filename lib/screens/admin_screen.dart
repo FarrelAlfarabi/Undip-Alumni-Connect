@@ -7,6 +7,7 @@ import '../util/friendly_error.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
+import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
@@ -527,6 +528,7 @@ class _AdminBusinessCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            BusinessPhoto(url: b.photoUrl),
             Text(
               b.name,
               style: theme.textTheme.titleMedium?.copyWith(

@@ -4,12 +4,15 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
 import '../data/blocked_filter.dart';
+import '../config/map_config.dart';
 import '../data/city_distances.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/nearby_map_view.dart';
+import '../widgets/real_nearby_map.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
+import 'profile_setup_screen.dart';
 
 /// One city's worth of nearby alumni, grouped for the map's networking
 /// chips and the sheet they open (_CityClusterSheet).
@@ -106,6 +109,19 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     );
   }
 
+  /// Opens the profile editor, where the city is chosen, and refreshes
+  /// Nearby with the saved profile.
+  Future<void> _setCity() async {
+    final updated = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => ProfileSetupScreen(profile: widget.currentUser.value),
+      ),
+    );
+    if (updated == null || !mounted) return;
+    widget.currentUser.value = updated;
+    setState(() {});
+  }
+
   void _openProfile(Map<String, dynamic> profile) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -191,13 +207,25 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
               }
 
               if (myCity == null || myCity.isEmpty) {
-                return const Center(
+                return Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      'Your profile has no city on file, so nearby '
-                      'distances can\'t be simulated for you.',
-                      textAlign: TextAlign.center,
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Your profile has no city on file, so nearby '
+                          'distances can\'t be simulated for you.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          key: const Key('nearby-set-city'),
+                          onPressed: _setCity,
+                          icon: const Icon(Icons.location_city_outlined),
+                          label: const Text('Set your city'),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -250,15 +278,29 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      NearbyMapView(
-                        myCity: myCity,
-                        pins: pins,
-                        onPinTap: (pin) => _openProfile(pin.profile),
-                      ),
+                      if (kRealMap)
+                        RealNearbyMap(
+                          myCity: myCity,
+                          pins: pins,
+                          onPinTap: (pin) => _openProfile(pin.profile),
+                          onCityTap: (city) => _openClusterSheet(
+                            clusters.firstWhere((c) => c.city == city),
+                          ),
+                        )
+                      else
+                        NearbyMapView(
+                          myCity: myCity,
+                          pins: pins,
+                          onPinTap: (pin) => _openProfile(pin.profile),
+                        ),
                       const SizedBox(height: 4),
                       Text(
-                        'Pinch or drag to explore. Tap a marker to view '
-                        'that alumnus, or hover for a quick preview.',
+                        kRealMap
+                            ? 'Pins show the city each alumnus set in their '
+                                  'profile, not where they are. Tap a pin to '
+                                  'see who is there.'
+                            : 'Pinch or drag to explore. Tap a marker to view '
+                                  'that alumnus, or hover for a quick preview.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,

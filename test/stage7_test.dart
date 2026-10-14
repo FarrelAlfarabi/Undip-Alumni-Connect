@@ -306,25 +306,27 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('My business, My job postings, Settings, Help, Sign out', (
-      tester,
-    ) async {
-      await pump(tester, admin: false);
-      for (final k in [
-        'profile-business',
-        'profile-jobs',
-        'profile-settings',
-        'profile-help',
-        'profile-signout',
-      ]) {
-        expect(find.byKey(Key(k)), findsOneWidget, reason: k);
-      }
-      expect(find.byKey(const Key('profile-admin')), findsNothing);
-      // Rarely used rows are not on the main screen.
-      for (final k in ['profile-delete', 'profile-blocked', 'profile-pin']) {
-        expect(find.byKey(Key(k)), findsNothing, reason: k);
-      }
-    });
+    testWidgets(
+      'My business, My job postings, Settings, Privacy policy, Help, Sign out',
+      (tester) async {
+        await pump(tester, admin: false);
+        for (final k in [
+          'profile-business',
+          'profile-jobs',
+          'profile-settings',
+          'profile-policy',
+          'profile-help',
+          'profile-signout',
+        ]) {
+          expect(find.byKey(Key(k)), findsOneWidget, reason: k);
+        }
+        expect(find.byKey(const Key('profile-admin')), findsNothing);
+        // Rarely used rows are not on the main screen.
+        for (final k in ['profile-delete', 'profile-blocked', 'profile-pin']) {
+          expect(find.byKey(Key(k)), findsNothing, reason: k);
+        }
+      },
+    );
 
     testWidgets('Admin comes first for admins, Sign out is last', (
       tester,
@@ -335,12 +337,13 @@ void main() {
       expect(y('profile-admin') < y('profile-business'), isTrue);
       expect(y('profile-business') < y('profile-jobs'), isTrue);
       expect(y('profile-jobs') < y('profile-settings'), isTrue);
-      expect(y('profile-settings') < y('profile-help'), isTrue);
+      expect(y('profile-settings') < y('profile-policy'), isTrue);
+      expect(y('profile-policy') < y('profile-help'), isTrue);
       expect(y('profile-help') < y('profile-signout'), isTrue);
     });
 
     testWidgets(
-      'Settings holds the default contact, blocked users, policy and delete last',
+      'Settings holds the default contact, blocked users and delete last',
       (tester) async {
         await pump(tester, admin: false);
         await tester.tap(find.byKey(const Key('profile-settings')));
@@ -351,8 +354,8 @@ void main() {
           findsOneWidget,
         );
         expect(y('settings-default-contact') < y('profile-blocked'), isTrue);
-        expect(y('profile-blocked') < y('profile-policy'), isTrue);
-        expect(y('profile-policy') < y('profile-delete'), isTrue);
+        expect(y('profile-blocked') < y('profile-delete'), isTrue);
+        expect(find.byKey(const Key('profile-policy')), findsNothing);
       },
     );
   });

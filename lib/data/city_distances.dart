@@ -1,3 +1,7 @@
+import 'dart:math' as math;
+
+import 'indonesian_cities.dart';
+
 /// Static straight-line distances (km, approximate) between the cities
 /// used in the seed data. Powers the "Nearby Alumni" demo feature.
 ///
@@ -93,5 +97,29 @@ const Map<String, Map<String, int>> _cityDistancesKm = {
 /// city isn't in the demo's lookup table.
 int? approxDistanceKm(String? from, String? to) {
   if (from == null || to == null) return null;
-  return _cityDistancesKm[from]?[to];
+  final known = _cityDistancesKm[from]?[to];
+  if (known != null) return known;
+  if (from == to) return cityCoordinates(from) == null ? null : 0;
+  final a = cityCoordinates(from);
+  final b = cityCoordinates(to);
+  if (a == null || b == null) return null;
+  return _greatCircleKm(a, b);
 }
+
+/// Straight-line distance between two (lat, lng) points, rounded to 10 km.
+int _greatCircleKm((double, double) a, (double, double) b) {
+  const rad = math.pi / 180;
+  final dLat = (b.$1 - a.$1) * rad;
+  final dLng = (b.$2 - a.$2) * rad;
+  final h =
+      math.pow(math.sin(dLat / 2), 2) +
+      math.cos(a.$1 * rad) *
+          math.cos(b.$1 * rad) *
+          math.pow(math.sin(dLng / 2), 2);
+  final km = 2 * 6371 * math.asin(math.sqrt(h));
+  return (km / 10).round() * 10;
+}
+
+/// Cities the profile's City picker offers: every Indonesian city. Each one
+/// has a distance to every other, so a chosen city always works in Nearby.
+List<String> get kNearbyCities => kIndonesianCities;

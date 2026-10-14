@@ -16,6 +16,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$ROOT"
 PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -1)}"
 WORK="$(mktemp -d)"
 PORT="${PGPORT:-54331}"

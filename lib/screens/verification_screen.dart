@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 import '../policy/consent_screen.dart';
@@ -52,7 +56,12 @@ class VerificationScreen extends StatefulWidget {
     this.verifyEmail = defaultVerifyEmail,
     this.homeBuilder = defaultHomeBuilder,
     this.accountRepository,
+    this.loginApi,
   });
+
+  /// Email code login. Null means the old email match, unless the build was
+  /// made with REAL_LOGIN=true, which uses [SupabaseLoginApi].
+  final LoginApi? loginApi;
 
   /// Injectable for tests (consent is saved through it).
   final AccountRepository? accountRepository;
@@ -75,6 +84,16 @@ enum _VerificationState { idle, loading, notFound, error }
 class _VerificationScreenState extends State<VerificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _codeController = TextEditingController();
+  bool _codeSent = false;
+
+  /// Shown under the code box when a code is wrong or expired, so the person
+  /// stays on the code step instead of starting over.
+  String? _codeError;
+
+  /// Seconds before "Resend code" works again.
+  int _resendIn = 0;
+  Timer? _resendTimer;
 
   _VerificationState _state = _VerificationState.idle;
   String? _errorMessage;
@@ -82,14 +101,114 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _emailController.dispose();
+    _codeController.dispose();
     super.dispose();
+  }
+
+  LoginApi? get _login =>
+      widget.loginApi ?? (kRealLogin ? SupabaseLoginApi() : null);
+
+  void _startCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _resendIn = 30);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted || _resendIn <= 1) {
+        t.cancel();
+        if (mounted) setState(() => _resendIn = 0);
+        return;
+      }
+      setState(() => _resendIn--);
+    });
+  }
+
+  Future<void> _resend() async {
+    final api = _login;
+    if (api == null || _resendIn > 0) return;
+    final email = _emailController.text.trim().toLowerCase();
+    setState(() {
+      _state = _VerificationState.loading;
+      _codeError = null;
+      _codeController.clear();
+    });
+    try {
+      await api.sendCode(email);
+      if (!mounted) return;
+      setState(() => _state = _VerificationState.idle);
+      _startCooldown();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('New code sent')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _state = _VerificationState.idle;
+        _codeError = friendlyError(e);
+      });
+    }
+  }
+
+  /// Step 1 of the code login: send the code. Step 2: check it.
+  Future<void> _verifyWithCode(LoginApi api, String email) async {
+    setState(() {
+      _state = _VerificationState.loading;
+      _errorMessage = null;
+      _codeError = null;
+    });
+    try {
+      if (!_codeSent) {
+        // Same screen whether or not the email is on the list, so the app
+        // never tells a stranger who is an alumnus. Only known emails get a
+        // code.
+        if (await api.emailKnown(email)) await api.sendCode(email);
+        if (!mounted) return;
+        setState(() {
+          _codeSent = true;
+          _state = _VerificationState.idle;
+        });
+        _startCooldown();
+        return;
+      }
+      Map<String, dynamic>? profile;
+      try {
+        profile = await api.verifyCode(email, _codeController.text);
+      } catch (e) {
+        // A wrong or expired code is the most common slip: keep the person
+        // on the code step with a plain message and let them retry or resend.
+        if (!mounted) return;
+        final network = friendlyError(e) == kNetworkError;
+        setState(() {
+          _state = _VerificationState.idle;
+          _codeError = network
+              ? kNetworkError
+              : 'That code is wrong or has expired. Check it and try again, '
+                    'or send a new code.';
+          _codeController.clear();
+        });
+        return;
+      }
+      if (profile == null) {
+        setState(() => _state = _VerificationState.notFound);
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _state = _VerificationState.idle);
+      await _afterVerified(profile, email);
+    } catch (e) {
+      setState(() {
+        _state = _VerificationState.error;
+        _errorMessage = friendlyError(e);
+        _lastError = e;
+      });
+    }
   }
 
   Future<void> _verify() async {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim().toLowerCase();
+    final api = _login;
+    if (api != null) return _verifyWithCode(api, email);
 
     setState(() {
       _state = _VerificationState.loading;
@@ -194,6 +313,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
     setState(() {
       _state = _VerificationState.idle;
       _errorMessage = null;
+      _codeSent = false;
+      _codeError = null;
+      _resendTimer?.cancel();
+      _resendIn = 0;
+      _codeController.clear();
     });
   }
 
@@ -203,7 +327,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: AppBar(title: const Text('Verify Alumni Status')),
+      appBar: AppBar(
+        title: const Text('Verify Alumni Status'),
+        // On the code step the back arrow returns to the email box.
+        leading: _codeSent && _state == _VerificationState.idle
+            ? BackButton(onPressed: _reset)
+            : null,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -247,8 +377,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
         return _VerificationForm(
           formKey: _formKey,
           controller: _emailController,
+          codeController: _codeSent ? _codeController : null,
           loading: _state == _VerificationState.loading,
           onSubmit: _verify,
+          onChangeEmail: _reset,
+          codeError: _codeError,
+          resendIn: _resendIn,
+          onResend: _resend,
+          realLogin: _login != null,
         );
     }
   }
@@ -260,7 +396,25 @@ class _VerificationForm extends StatelessWidget {
     required this.controller,
     required this.loading,
     required this.onSubmit,
+    this.codeController,
+    this.onChangeEmail,
+    this.codeError,
+    this.resendIn = 0,
+    this.onResend,
+    this.realLogin = false,
   });
+
+  final String? codeError;
+  final int resendIn;
+  final VoidCallback? onResend;
+
+  /// Code login: the email step says "Send code" and the texts explain the
+  /// code. The old email match keeps its original wording.
+  final bool realLogin;
+
+  /// Shown instead of the email box once a code was sent.
+  final TextEditingController? codeController;
+  final VoidCallback? onChangeEmail;
 
   final GlobalKey<FormState> formKey;
   final TextEditingController controller;
@@ -287,42 +441,95 @@ class _VerificationForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Verify Your Alumni Status',
+            codeController != null
+                ? 'Enter the code'
+                : 'Verify Your Alumni Status',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter the email the Ikafe team has on file for you to confirm '
-            'your alumni record.',
+            codeController != null
+                ? 'If ${controller.text.trim()} is on the alumni list, we emailed '
+                      'a 6 digit code.'
+                : realLogin
+                ? 'Enter the email the Ikafe team has on file for you. '
+                      'We will email you a 6 digit code, no password needed.'
+                : 'Enter the email the Ikafe team has on file for you to '
+                      'confirm your alumni record.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 24),
-          TextFormField(
-            controller: controller,
-            autofocus: true,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            enabled: !loading,
-            onFieldSubmitted: (_) => onSubmit(),
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              hintText: 'name@example.com',
-              prefixIcon: Icon(Icons.mail_outline),
-              border: OutlineInputBorder(),
+          if (codeController != null) ...[
+            Text(
+              'Can\'t find it? Check your spam or junk folder. The code '
+              'expires after a while.',
+              key: const Key('code-sent-note'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            validator: (value) {
-              final v = value?.trim() ?? '';
-              if (v.isEmpty) return 'Enter your email';
-              if (!v.contains('@') || !v.contains('.')) {
-                return 'Enter a valid email';
-              }
-              return null;
-            },
-          ),
+            const SizedBox(height: 12),
+            TextFormField(
+              key: const Key('login-code'),
+              controller: codeController,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              enabled: !loading,
+              maxLength: 6,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: const TextStyle(fontSize: 22, letterSpacing: 6),
+              onChanged: (v) {
+                // Check as soon as the sixth digit is in.
+                if (v.length == 6 && !loading) onSubmit();
+              },
+              onFieldSubmitted: (_) => onSubmit(),
+              decoration: InputDecoration(
+                labelText: '6 digit code',
+                counterText: '',
+                errorText: codeError,
+                errorMaxLines: 3,
+                prefixIcon: const Icon(Icons.pin_outlined),
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) =>
+                  RegExp(r'^\d{6}$').hasMatch((value ?? '').trim())
+                  ? null
+                  : 'Enter the 6 digit code',
+            ),
+          ] else
+            TextFormField(
+              key: const Key('login-email'),
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              enabled: !loading,
+              autofillHints: const [AutofillHints.email],
+              autocorrect: false,
+              enableSuggestions: false,
+              textCapitalization: TextCapitalization.none,
+              onFieldSubmitted: (_) => onSubmit(),
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                hintText: 'name@example.com',
+                prefixIcon: Icon(Icons.mail_outline),
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                final v = value?.trim() ?? '';
+                if (v.isEmpty) return 'Enter your email';
+                if (!v.contains('@') || !v.contains('.')) {
+                  return 'Enter a valid email';
+                }
+                return null;
+              },
+            ),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: loading ? null : onSubmit,
@@ -335,8 +542,37 @@ class _VerificationForm extends StatelessWidget {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   )
-                : const Text('Verify'),
+                : Text(
+                    codeController != null
+                        ? 'Verify code'
+                        : realLogin
+                        ? 'Send code'
+                        : 'Verify',
+                  ),
           ),
+          if (codeController != null) ...[
+            TextButton(
+              key: const Key('login-resend'),
+              onPressed: loading || resendIn > 0 ? null : onResend,
+              child: Text(
+                resendIn > 0 ? 'Resend code in ${resendIn}s' : 'Resend code',
+              ),
+            ),
+            TextButton(
+              key: const Key('login-help'),
+              onPressed: () => showFeedbackSheet(
+                context,
+                error: null,
+                screen: 'Login help: no code or changed email',
+              ),
+              child: const Text('No code, or email changed? Contact the team'),
+            ),
+            TextButton(
+              key: const Key('login-change-email'),
+              onPressed: loading ? null : onChangeEmail,
+              child: const Text('Use a different email'),
+            ),
+          ],
         ],
       ),
     );

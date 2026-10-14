@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/policy_config.dart';
 import '../models/business.dart';
+import 'marketplace_repository.dart' show imageContentType;
 
 /// Error codes raised by the business SQL functions (see
 /// supabase/migrations/20261003100000_business_directory.sql).
@@ -71,6 +74,9 @@ String businessErrorMessage(Object error) {
 /// fake. Every business call is a Postgres function (no direct table access).
 abstract class BusinessApi {
   Future<dynamic> rpc(String function, Map<String, dynamic> params);
+
+  /// Uploads a business photo and returns its public URL.
+  Future<String> uploadPhoto(String path, Uint8List bytes, String contentType);
 }
 
 class SupabaseBusinessApi implements BusinessApi {
@@ -82,6 +88,21 @@ class SupabaseBusinessApi implements BusinessApi {
   @override
   Future<dynamic> rpc(String function, Map<String, dynamic> params) =>
       _client.rpc(function, params: params);
+
+  @override
+  Future<String> uploadPhoto(
+    String path,
+    Uint8List bytes,
+    String contentType,
+  ) async {
+    final bucket = _client.storage.from('business-photos');
+    await bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: contentType),
+    );
+    return bucket.getPublicUrl(path);
+  }
 }
 
 class BusinessRepository {
@@ -128,6 +149,38 @@ class BusinessRepository {
     return Business.fromMap(_single(row));
   }
 
+  /// Uploads a photo for a business and returns its public URL. The file
+  /// name is cleaned and prefixed with the owner id and a timestamp.
+  Future<String> uploadPhoto({
+    required String ownerId,
+    required String fileName,
+    required Uint8List bytes,
+  }) {
+    final safeName = fileName.replaceAll(RegExp(r'[^\w.\-]'), '_');
+    final path = '$ownerId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+    return _guard(
+      () => _api.uploadPhoto(path, bytes, imageContentType(fileName)),
+    );
+  }
+
+  /// Saves (or, with null, removes) the photo link of a pending or rejected
+  /// business. An approved one is locked, so a photo cannot be swapped in
+  /// after the admin has looked at it.
+  Future<Business> setPhoto(
+    String ownerId,
+    String businessId,
+    String? photoUrl,
+  ) async {
+    final row = await _guard(
+      () => _api.rpc('business_set_photo', {
+        'p_owner': ownerId,
+        'p_business': businessId,
+        'p_photo_url': photoUrl,
+      }),
+    );
+    return Business.fromMap(_single(row));
+  }
+
   /// The owner's own businesses, in every status.
   Future<List<Business>> mine(String ownerId) async {
     final rows = await _guard(
@@ -152,8 +205,37 @@ class BusinessRepository {
     final rows = await _guard(
       () => _api.rpc('business_directory', {'p_viewer': viewerId}),
     );
-    return _list(rows);
+    final photos = await photoUrls(
+      () => _api.rpc('business_photo_urls', {'p_viewer': viewerId}),
+    );
+    return withPhotos(_list(rows), photos);
   }
+
+  /// Reads a photo list (business id to link). A failure gives no photos
+  /// rather than an error: the lists still work without them, for example
+  /// before the photo migration has been applied.
+  static Future<Map<String, String>> photoUrls(
+    Future<dynamic> Function() ask,
+  ) async {
+    try {
+      final rows = await ask();
+      return {
+        for (final r in (rows as List))
+          if ((r as Map)['photo_url'] != null)
+            '${r['business_id']}': '${r['photo_url']}',
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// The same businesses with their photo links filled in.
+  static List<Business> withPhotos(
+    List<Business> list,
+    Map<String, String> photos,
+  ) => photos.isEmpty
+      ? list
+      : [for (final b in list) b.withPhoto(photos[b.id] ?? b.photoUrl)];
 
   List<Business> _list(dynamic rows) => (rows as List)
       .map((r) => Business.fromMap(Map<String, dynamic>.from(r as Map)))

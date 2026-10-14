@@ -10,6 +10,7 @@ import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
+import '../widgets/searchable_choice.dart';
 
 /// Create or edit a listing. Pops with the saved [MarketplaceListing], or
 /// null if the user backed out. Shows the "what happens next" message
@@ -48,6 +49,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
   late final TextEditingController _price;
   late final TextEditingController _shop;
   late final TextEditingController _contact;
+  late final TextEditingController _cityText;
   String? _category;
   String? _city;
   PickedImage? _picked;
@@ -67,6 +69,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
     _price = TextEditingController(text: e?.priceIdr.toString());
     final startCity = (e?.city ?? widget.defaultCity ?? '').trim();
     _city = startCity.isEmpty ? null : startCity;
+    _cityText = TextEditingController(text: _city ?? '');
     _shop = TextEditingController(text: e?.shopUrl);
     _contact = TextEditingController(text: e?.contactInfo);
     _category = e?.category;
@@ -75,7 +78,14 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_title, _description, _price, _shop, _contact]) {
+    for (final c in [
+      _title,
+      _description,
+      _price,
+      _shop,
+      _contact,
+      _cityText,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -271,22 +281,23 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             validator: MarketplaceValidation.category,
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
+                          FormField<String>(
                             key: const Key('city-dropdown'),
                             initialValue: _city,
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'City',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: [
-                              for (final c in citiesWith(_city))
-                                DropdownMenuItem(value: c, child: Text(c)),
-                            ],
-                            onChanged: _saving
-                                ? null
-                                : (v) => setState(() => _city = v),
                             validator: MarketplaceValidation.city,
+                            builder: (field) => SearchableChoice(
+                              fieldKey: const Key('city-choice'),
+                              label: 'City',
+                              controller: _cityText,
+                              options: citiesWith(_city),
+                              selected: _city,
+                              enabled: !_saving,
+                              errorText: field.errorText,
+                              onSelected: (v) {
+                                setState(() => _city = v);
+                                field.didChange(v);
+                              },
+                            ),
                           ),
                           const SizedBox(height: 24),
                           Text(
