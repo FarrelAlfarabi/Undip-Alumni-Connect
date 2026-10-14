@@ -121,7 +121,17 @@ jobs:
         run: flutter test --dart-define=RELEASE_CHECK=true test/release_check_test.dart
 
       - name: Build release APK
-        run: flutter build apk --release --build-number "${{ github.run_number }}"
+        env:
+          # Optional repository secrets, never in code: MAP_TILE_URL such as
+          # https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=KEY
+          # and MAP_ATTRIBUTION. Without them the map uses OpenStreetMap.
+          MAP_TILE_URL: ${{ secrets.MAP_TILE_URL }}
+          MAP_ATTRIBUTION: ${{ secrets.MAP_ATTRIBUTION }}
+        run: |
+          DEFINES="--dart-define=REAL_MAP=true"
+          if [ -n "$MAP_TILE_URL" ]; then DEFINES="$DEFINES --dart-define=MAP_TILE_URL=$MAP_TILE_URL"; fi
+          if [ -n "$MAP_ATTRIBUTION" ]; then DEFINES="$DEFINES --dart-define=MAP_ATTRIBUTION=$MAP_ATTRIBUTION"; fi
+          flutter build apk --release --build-number "${{ github.run_number }}" $DEFINES
 
       - name: Name the APK
         id: name
