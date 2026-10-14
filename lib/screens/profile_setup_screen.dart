@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/city_distances.dart';
+import '../data/industries.dart';
 import '../lock/session.dart';
+import '../widgets/searchable_choice.dart';
 import 'verification_screen.dart';
 
 /// Lets the verified alumnus update their employment info. Identity fields
@@ -17,10 +20,16 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  late final TextEditingController _employerController;
   late final TextEditingController _roleController;
   late final TextEditingController _industryController;
+  late final TextEditingController _cityController;
   late final TextEditingController _companyController;
+
+  // Picked from the fixed lists; null/empty means nothing chosen. A value
+  // saved before the lists existed is kept as an extra choice so opening
+  // this screen and saving never wipes it.
+  String? _industry;
+  String? _city;
 
   bool _saving = false;
   String? _error;
@@ -29,27 +38,35 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _employerController = TextEditingController(
-      text: widget.profile['current_employer'] as String? ?? '',
-    );
     _roleController = TextEditingController(
       text: widget.profile['current_role'] as String? ?? '',
     );
-    _industryController = TextEditingController(
-      text: widget.profile['industry'] as String? ?? '',
-    );
+    _industry = _nonEmpty(widget.profile['industry']);
+    _city = _nonEmpty(widget.profile['city']);
+    _industryController = TextEditingController(text: _industry ?? '');
+    _cityController = TextEditingController(text: _city ?? '');
+    // Company and Current Employer used to be two boxes for the same thing.
+    // Show whichever one has a value.
     _companyController = TextEditingController(
-      text: widget.profile['company'] as String? ?? '',
+      text:
+          _nonEmpty(widget.profile['company']) ??
+          _nonEmpty(widget.profile['current_employer']) ??
+          '',
     );
   }
 
   @override
   void dispose() {
-    _employerController.dispose();
     _roleController.dispose();
     _industryController.dispose();
+    _cityController.dispose();
     _companyController.dispose();
     super.dispose();
+  }
+
+  static String? _nonEmpty(Object? v) {
+    final s = (v as String?)?.trim();
+    return (s == null || s.isEmpty) ? null : s;
   }
 
   // Update-by-id then select-back can legitimately match 0 rows: this
@@ -62,10 +79,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
         .update({
-          'current_employer': _employerController.text.trim(),
           'current_role': _roleController.text.trim(),
-          'industry': _industryController.text.trim(),
+          'industry': _industry ?? '',
           'company': _companyController.text.trim(),
+          // The old Current Employer column is no longer shown. Keep it equal
+          // to Company so nothing stale is left behind until it is dropped.
+          'current_employer': _companyController.text.trim(),
+          if (_city != null) 'city': _city,
         })
         .eq('id', id)
         .select();
@@ -142,15 +162,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TextField(
-                    controller: _employerController,
-                    enabled: !_saving,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Employer',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
                     controller: _roleController,
                     enabled: !_saving,
                     decoration: const InputDecoration(
@@ -160,21 +171,34 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: _industryController,
-                    enabled: !_saving,
-                    decoration: const InputDecoration(
-                      labelText: 'Industry',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
+                    key: const Key('profile-company'),
                     controller: _companyController,
                     enabled: !_saving,
                     decoration: const InputDecoration(
                       labelText: 'Company',
                       border: OutlineInputBorder(),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  SearchableChoice(
+                    fieldKey: const Key('profile-industry'),
+                    label: 'Industry',
+                    controller: _industryController,
+                    options: kIndustries,
+                    selected: _industry,
+                    enabled: !_saving,
+                    onSelected: (v) => setState(() => _industry = v),
+                  ),
+                  const SizedBox(height: 16),
+                  SearchableChoice(
+                    fieldKey: const Key('profile-city'),
+                    label: 'City',
+                    helper: 'Used for Nearby Alumni',
+                    controller: _cityController,
+                    options: kNearbyCities,
+                    selected: _city,
+                    enabled: !_saving,
+                    onSelected: (v) => setState(() => _city = v),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 16),

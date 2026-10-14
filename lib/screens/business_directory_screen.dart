@@ -10,6 +10,7 @@ import '../widgets/filter_dropdown.dart';
 import '../widgets/safe_link_chip.dart';
 import 'business_form_screen.dart';
 import 'my_businesses_screen.dart';
+import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 
 /// Client-side search by name or category, plus a category filter.
@@ -257,6 +258,7 @@ class _BusinessCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              BusinessPhoto(url: business.photoUrl),
               Text(
                 business.name,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -325,6 +327,7 @@ class BusinessDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  BusinessPhoto(url: b.photoUrl, height: 200),
                   Text(
                     b.name,
                     style: theme.textTheme.headlineSmall?.copyWith(

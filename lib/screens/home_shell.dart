@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../config/feature_flags.dart';
 import '../data/block_list.dart';
@@ -147,11 +148,49 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
-  // Back from any tab first brings you back to the first tab (Home), and
-  // only from Home does the route pop (and the app eventually exit).
+  // Back from any tab first brings you back to the first tab (Home). Back
+  // from Home asks "Exit the app?" and only leaves on Exit.
+  bool _askingToExit = false;
+
   void _handlePop(bool didPop) {
     if (didPop) return;
-    _select(HomeShell.homeTab);
+    if (_index != HomeShell.homeTab) {
+      _select(HomeShell.homeTab);
+      return;
+    }
+    _confirmExit();
+  }
+
+  Future<void> _confirmExit() async {
+    if (_askingToExit) return;
+    _askingToExit = true;
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const Key('exit-dialog'),
+        title: const Text('Exit the app?'),
+        actions: [
+          TextButton(
+            key: const Key('exit-cancel'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Stay'),
+          ),
+          FilledButton(
+            key: const Key('exit-confirm'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Exit'),
+          ),
+        ],
+      ),
+    );
+    _askingToExit = false;
+    if (leave != true || !mounted) return;
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      SystemNavigator.pop();
+    }
   }
 
   @override
@@ -203,7 +242,7 @@ class _HomeShellState extends State<HomeShell> {
     ];
 
     return PopScope(
-      canPop: _index == HomeShell.homeTab,
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         body: IndexedStack(index: _index, children: tabs),

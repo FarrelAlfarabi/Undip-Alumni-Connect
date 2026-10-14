@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../data/contact_repository.dart';
 import '../lock/lock_service.dart';
 import '../lock/pin_settings_screen.dart';
-import '../policy/policy_screen.dart';
 import '../widgets/menu_list.dart';
 import 'blocked_users_screen.dart';
 import 'default_contact_screen.dart';
@@ -73,12 +72,6 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Blocked users',
                   onTap: () =>
                       _push(context, BlockedUsersScreen(currentUserId: me)),
-                ),
-                MenuItem(
-                  key: const Key('profile-policy'),
-                  icon: Icons.privacy_tip_outlined,
-                  title: 'Privacy policy and community rules',
-                  onTap: () => _push(context, const PolicyScreen()),
                 ),
               ],
             ),
