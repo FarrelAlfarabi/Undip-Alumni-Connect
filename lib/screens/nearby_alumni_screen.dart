@@ -4,10 +4,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
 import '../data/blocked_filter.dart';
+import '../config/map_config.dart';
 import '../data/city_distances.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/nearby_map_view.dart';
+import '../widgets/real_nearby_map.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
 import 'profile_setup_screen.dart';
@@ -276,15 +278,29 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      NearbyMapView(
-                        myCity: myCity,
-                        pins: pins,
-                        onPinTap: (pin) => _openProfile(pin.profile),
-                      ),
+                      if (kRealMap)
+                        RealNearbyMap(
+                          myCity: myCity,
+                          pins: pins,
+                          onPinTap: (pin) => _openProfile(pin.profile),
+                          onCityTap: (city) => _openClusterSheet(
+                            clusters.firstWhere((c) => c.city == city),
+                          ),
+                        )
+                      else
+                        NearbyMapView(
+                          myCity: myCity,
+                          pins: pins,
+                          onPinTap: (pin) => _openProfile(pin.profile),
+                        ),
                       const SizedBox(height: 4),
                       Text(
-                        'Pinch or drag to explore. Tap a marker to view '
-                        'that alumnus, or hover for a quick preview.',
+                        kRealMap
+                            ? 'Pins show the city each alumnus set in their '
+                                  'profile, not where they are. Tap a pin to '
+                                  'see who is there.'
+                            : 'Pinch or drag to explore. Tap a marker to view '
+                                  'that alumnus, or hover for a quick preview.',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
