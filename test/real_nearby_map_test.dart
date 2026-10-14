@@ -94,6 +94,7 @@ void main() {
       expect(find.byKey(const Key('map-city-Surabaya')), findsOneWidget);
       expect(find.text('2'), findsOneWidget);
       expect(find.byKey(const Key('map-you')), findsOneWidget);
+      expect(find.textContaining('You · '), findsOneWidget);
     });
 
     testWidgets('a city with one alumnus opens that profile', (tester) async {
@@ -163,16 +164,19 @@ void main() {
       expect(cam(tester).zoom, closeTo(start.zoom, 0.5));
     });
 
-    testWidgets('nearest goes to the closest other city', (tester) async {
-      await pump(
-        tester,
-        pins: [pin('A', 'Medan', 1400), pin('C', 'Yogyakarta', 110)],
+    testWidgets('map never rotates and north button keeps it at 0', (
+      tester,
+    ) async {
+      await pump(tester, pins: [pin('A', 'Jakarta', 430)]);
+      expect(cam(tester).rotation, 0);
+      final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+      expect(
+        InteractiveFlag.hasRotate(map.options.interactionOptions.flags),
+        isFalse,
       );
-      await tester.tap(find.byKey(const Key('map-nearest')));
+      await tester.tap(find.byKey(const Key('map-north')));
       await tester.pump();
-      final y = cityCoordinates('Yogyakarta')!;
-      expect(cam(tester).center.latitude, closeTo(y.$1, 0.01));
-      expect(cam(tester).center.longitude, closeTo(y.$2, 0.01));
+      expect(cam(tester).rotation, 0);
     });
 
     testWidgets('zoom buttons change the zoom by one step', (tester) async {
@@ -191,12 +195,6 @@ void main() {
     ) async {
       await pump(tester, myCity: 'Kudus', pins: [pin('A', 'Jakarta', 430)]);
       final b = tester.widget<IconButton>(find.byKey(const Key('map-center')));
-      expect(b.onPressed, isNull);
-    });
-
-    testWidgets('with nobody on the map, nearest is off', (tester) async {
-      await pump(tester, pins: const []);
-      final b = tester.widget<IconButton>(find.byKey(const Key('map-nearest')));
       expect(b.onPressed, isNull);
     });
   });

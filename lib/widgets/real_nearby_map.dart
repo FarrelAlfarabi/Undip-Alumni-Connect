@@ -13,7 +13,8 @@ import 'nearby_map_view.dart' show AlumniPin;
 /// than we do.
 ///
 /// Same inputs as the hand-drawn map ([NearbyMapView]) plus [onCityTap].
-/// Buttons: center on my city, show all, nearest alumni, zoom in and out.
+/// Buttons: center on my city, show all, point north, zoom in and out.
+/// The map never rotates: north is always up.
 /// Alumni whose city has no known centre are left off the map (they still
 /// show in the list and the city chips).
 class RealNearbyMap extends StatefulWidget {
@@ -74,21 +75,6 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
     ?_point(widget.myCity),
   ];
 
-  /// The nearest city that has alumni, other than the viewer's own when
-  /// another one exists. Null when nobody is on the map.
-  String? get _nearestCity {
-    final byCity = _byCity;
-    if (byCity.isEmpty) return null;
-    String? best;
-    for (final e in byCity.entries) {
-      if (e.key == widget.myCity && byCity.length > 1) continue;
-      if (best == null || e.value.first.km < byCity[best]!.first.km) {
-        best = e.key;
-      }
-    }
-    return best;
-  }
-
   void _fitAll() {
     final points = _allPoints;
     if (points.isEmpty) {
@@ -111,11 +97,8 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
     if (me != null) _controller.move(me, 10);
   }
 
-  void _goToNearest() {
-    final city = _nearestCity;
-    final p = city == null ? null : _point(city);
-    if (p != null) _controller.move(p, 9);
-  }
+  /// Rotation is locked, so this only guards against a stray rotation.
+  void _pointNorth() => _controller.rotate(0);
 
   void _zoomBy(double delta) {
     final cam = _controller.camera;
@@ -128,6 +111,9 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
   static const _defaultCenter = LatLng(-2.5, 118); // middle of Indonesia
   static const _kMinZoom = 3.0;
   static const _kMaxZoom = 12.0;
+  static const _kInteraction = InteractionOptions(
+    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +129,8 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
             minZoom: _kMinZoom,
             maxZoom: _kMaxZoom,
             backgroundColor: land,
+            initialRotation: 0,
+            interactionOptions: _kInteraction,
           )
         : MapOptions(
             initialCameraFit: CameraFit.bounds(
@@ -153,6 +141,8 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
             minZoom: _kMinZoom,
             maxZoom: _kMaxZoom,
             backgroundColor: land,
+            initialRotation: 0,
+            interactionOptions: _kInteraction,
           );
 
     return ClipRRect(
@@ -194,10 +184,10 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
                     if (me != null)
                       Marker(
                         point: me,
-                        width: 48,
+                        width: 150,
                         height: 26,
                         alignment: Alignment.bottomCenter,
-                        child: const _YouMarker(),
+                        child: _YouMarker(city: widget.myCity),
                       ),
                   ],
                 ),
@@ -227,10 +217,10 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
                     onPressed: _fitAll,
                   ),
                   _MapButton(
-                    buttonKey: const Key('map-nearest'),
-                    icon: Icons.near_me_outlined,
-                    tooltip: 'Go to nearest alumni',
-                    onPressed: _nearestCity == null ? null : _goToNearest,
+                    buttonKey: const Key('map-north'),
+                    icon: Icons.navigation_outlined,
+                    tooltip: 'Point north',
+                    onPressed: _pointNorth,
                   ),
                   _MapButton(
                     buttonKey: const Key('map-zoom-in'),
@@ -355,21 +345,26 @@ class _CityMarker extends StatelessWidget {
 }
 
 class _YouMarker extends StatelessWidget {
-  const _YouMarker();
+  const _YouMarker({required this.city});
+
+  final String city;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       key: const Key('map-you'),
       alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.blue.shade700,
         borderRadius: BorderRadius.circular(13),
         border: Border.all(color: Colors.white, width: 2),
       ),
-      child: const Text(
-        'You',
-        style: TextStyle(
+      child: Text(
+        'You · $city',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 11,
           fontWeight: FontWeight.w700,
