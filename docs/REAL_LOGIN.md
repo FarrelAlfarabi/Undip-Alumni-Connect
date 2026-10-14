@@ -46,7 +46,9 @@ applied before the new build ships.
      the email contains the 6 digit code, not only a link.
    - Set a real SMTP sender (Resend, Brevo, SES, ...). The built in sender is
      limited to a few emails per hour and will fail once testers sign in.
-   - Check OTP length is 6 and expiry (default 1 hour) suits you.
+   - Set OTP length to 6 and expiry to 600 seconds (default is 1 hour; the
+     dashboard setting could not be read from here). The login screen says
+     "expires after a while" so it stays true whatever you choose.
 2. Apply `20261013120000_real_login.sql`. Check: `select * from app_settings;`
    shows `require_login | off`.
 3. Deploy the app built with `REAL_LOGIN=true` (Vercel env var, or

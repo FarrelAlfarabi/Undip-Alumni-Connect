@@ -157,11 +157,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
     });
     try {
       if (!_codeSent) {
-        if (!await api.emailKnown(email)) {
-          setState(() => _state = _VerificationState.notFound);
-          return;
-        }
-        await api.sendCode(email);
+        // Same screen whether or not the email is on the list, so the app
+        // never tells a stranger who is an alumnus. Only known emails get a
+        // code.
+        if (await api.emailKnown(email)) await api.sendCode(email);
         if (!mounted) return;
         setState(() {
           _codeSent = true;
@@ -452,7 +451,8 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             codeController != null
-                ? 'We emailed a 6 digit code to ${controller.text.trim()}.'
+                ? 'If ${controller.text.trim()} is on the alumni list, we emailed '
+                      'a 6 digit code.'
                 : realLogin
                 ? 'Enter the email the Ikafe team has on file for you. '
                       'We will email you a 6 digit code, no password needed.'
@@ -557,6 +557,15 @@ class _VerificationForm extends StatelessWidget {
               child: Text(
                 resendIn > 0 ? 'Resend code in ${resendIn}s' : 'Resend code',
               ),
+            ),
+            TextButton(
+              key: const Key('login-help'),
+              onPressed: () => showFeedbackSheet(
+                context,
+                error: null,
+                screen: 'Login help: no code or changed email',
+              ),
+              child: const Text('No code, or email changed? Contact the team'),
             ),
             TextButton(
               key: const Key('login-change-email'),

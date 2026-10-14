@@ -86,7 +86,9 @@ void main() {
       expect(find.text('APP for ${testProfile()['name']}'), findsOneWidget);
     });
 
-    testWidgets('an email with no alumni record gets no code', (tester) async {
+    testWidgets('an unknown email looks the same but gets no code', (
+      tester,
+    ) async {
       final api = FakeLoginApi(known: false);
       await pumpVerify(tester, api);
       await tester.enterText(
@@ -96,7 +98,9 @@ void main() {
       await tester.tap(find.text('Send code'));
       await settle(tester);
       expect(api.sent, isEmpty);
-      expect(find.text('No Matching Record'), findsOneWidget);
+      expect(find.byKey(const Key('login-code')), findsOneWidget);
+      expect(find.text('No Matching Record'), findsNothing);
+      expect(find.byKey(const Key('login-help')), findsOneWidget);
     });
 
     testWidgets('the code must be 6 digits before it is checked', (
