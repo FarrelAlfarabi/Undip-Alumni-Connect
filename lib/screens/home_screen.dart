@@ -231,15 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 _bannerSection(theme),
-                const SizedBox(height: 16),
-                _BusinessEntry(
-                  future: _business,
-                  onOpenMine: () =>
-                      _pushThenRefresh(widget.pages.myBusinesses(_user)),
-                  onRegister: () =>
-                      _pushThenRefresh(widget.pages.registerBusiness(_user)),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 _QuickActions(
                   onJobs: () => _push(widget.pages.jobs(_user)),
                   onMarketplace: () => widget.onOpenMarket != null
@@ -251,6 +243,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   onDirectory: widget.onOpenDirectory,
                   onNearby: () => _push(widget.pages.nearby(_user)),
                 ),
+                const SizedBox(height: 12),
+                _BusinessEntry(
+                  future: _business,
+                  onOpenMine: () =>
+                      _pushThenRefresh(widget.pages.myBusinesses(_user)),
+                  onRegister: () =>
+                      _pushThenRefresh(widget.pages.registerBusiness(_user)),
+                ),
+                const SizedBox(height: 20),
                 const SizedBox(height: 24),
                 _sectionTitle(theme, 'Latest'),
                 const SizedBox(height: 8),
@@ -761,30 +762,21 @@ class _BusinessEntry extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+              child: Row(
                 children: [
-                  Text(
-                    'Own a business?',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSecondaryContainer,
+                  Expanded(
+                    child: Text(
+                      'Own a business? Let other alumni find it.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Register it so other alumni can find it, and add your '
-                    'products to the marketplace.',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   FilledButton(
                     key: const Key('business-register-button'),
                     onPressed: onRegister,
-                    child: const Text('Register your business'),
+                    child: const Text('Register'),
                   ),
                 ],
               ),
@@ -815,7 +807,7 @@ class _BusinessEntry extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             onTap: onOpenMine,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -841,6 +833,8 @@ class _BusinessEntry extends StatelessWidget {
                   for (final l in lines)
                     Text(
                       l,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

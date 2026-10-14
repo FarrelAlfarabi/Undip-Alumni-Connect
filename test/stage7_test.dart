@@ -168,6 +168,20 @@ void main() {
       );
     });
 
+    testWidgets('the business card sits below the quick actions', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        FakeHomeApi(businesses: [biz()], usage: [usage()]),
+      );
+      final tiles = tester.getTopLeft(find.byKey(const Key('tile-jobs'))).dy;
+      final card = tester
+          .getTopLeft(find.byKey(const Key('business-owner-card')))
+          .dy;
+      expect(card, greaterThan(tiles));
+    });
+
     testWidgets('owner card: days of unlimited posting left', (tester) async {
       final until = DateTime.now().add(const Duration(days: 12));
       final iso =

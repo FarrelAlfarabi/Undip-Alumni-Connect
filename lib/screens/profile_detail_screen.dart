@@ -268,6 +268,40 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                     ),
+                                    if ((_profile['city'] as String?)
+                                            ?.trim()
+                                            .isNotEmpty ??
+                                        false)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: Row(
+                                          key: const Key('profile-city-line'),
+                                          children: [
+                                            Icon(
+                                              Icons.location_on_outlined,
+                                              size: 16,
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                (_profile['city'] as String)
+                                                    .trim(),
+                                                style: theme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     if (widget.showEditButton)
                                       Text(
                                         _profile['email'] as String? ?? '',
