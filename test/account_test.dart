@@ -523,6 +523,32 @@ void main() {
   });
 
   group('Profile entries', () {
+    testWidgets('the profile card shows the city under the name', (
+      tester,
+    ) async {
+      phone(tester);
+      tester.view.physicalSize = const Size(420, 2200);
+      Widget screen(Map<String, dynamic> p) => MaterialApp(
+        key: UniqueKey(),
+        home: ProfileDetailScreen(
+          profile: p,
+          currentUser: ValueNotifier({'id': 'me'}),
+          showEditButton: true,
+          chat: false,
+          adminCheck: (_) async => false,
+        ),
+      );
+      await tester.pumpWidget(
+        screen({'id': 'me', 'name': 'X', 'city': 'Bandung'}),
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('profile-city-line')), findsOneWidget);
+      expect(find.text('Bandung'), findsOneWidget);
+      await tester.pumpWidget(screen({'id': 'me', 'name': 'X'}));
+      await tester.pump();
+      expect(find.byKey(const Key('profile-city-line')), findsNothing);
+    });
+
     testWidgets('policy and delete are on my own profile, not on others', (
       tester,
     ) async {
