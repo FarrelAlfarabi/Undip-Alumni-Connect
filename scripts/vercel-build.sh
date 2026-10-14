@@ -43,6 +43,11 @@ EXTRA_DEFINES=""
 if [ "${VERCEL_ENV:-}" = "preview" ]; then
   EXTRA_DEFINES="--dart-define=WEB_LOCK_TEST=true --dart-define=REAL_MAP=true"
 fi
+# Real login (emailed code). Off unless the Vercel environment variable
+# REAL_LOGIN is set to "true". See docs/REAL_LOGIN.md before turning it on.
+if [ "${REAL_LOGIN:-}" = "true" ]; then
+  EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=REAL_LOGIN=true"
+fi
 # The real Nearby map can also be forced on in any environment.
 if [ "${REAL_MAP:-}" = "true" ] && [ "${VERCEL_ENV:-}" != "preview" ]; then
   EXTRA_DEFINES="$EXTRA_DEFINES --dart-define=REAL_MAP=true"

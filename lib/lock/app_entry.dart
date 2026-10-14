@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../screens/verification_screen.dart';
 import '../screens/welcome_screen.dart';
@@ -23,6 +24,8 @@ Future<Map<String, dynamic>?> defaultProfileFetcher(String id) async {
 
 const String kSignInFailedNotice =
     "We couldn't sign you in on this device. Please verify again.";
+const String kSessionExpiredNotice =
+    'Your sign in expired. Please sign in again.';
 const String kTooManyPinsNotice = 'Too many wrong PINs. Please verify again.';
 
 /// The app's first screen. A person already verified on this device sees the
@@ -35,7 +38,11 @@ class AppEntry extends StatefulWidget {
     this.homeBuilder = defaultHomeBuilder,
     this.clock = DateTime.now,
     this.accountRepository,
+    this.loginApi,
   });
+
+  /// Real login only: a remembered person still needs a stored sign in.
+  final LoginApi? loginApi;
 
   /// Injectable for tests (consent is saved through it).
   final AccountRepository? accountRepository;
@@ -70,6 +77,13 @@ class _AppEntryState extends State<AppEntry> {
   }
 
   Future<void> _unlock(RememberedUser user) async {
+    final login = widget.loginApi ?? (kRealLogin ? SupabaseLoginApi() : null);
+    if (login != null && !login.hasSession) {
+      // The sign in expired or was removed: the PIN alone is not enough.
+      await _lock.clear();
+      if (mounted) _showWelcome(kSessionExpiredNotice);
+      return;
+    }
     Map<String, dynamic>? profile;
     try {
       profile = await widget.fetchProfile(user.profileId);
