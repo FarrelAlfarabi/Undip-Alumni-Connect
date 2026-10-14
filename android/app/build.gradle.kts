@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Release signing. Reads android/key.properties (never committed) with
+// storeFile, storePassword, keyAlias, keyPassword. See docs/ANDROID_RELEASE.md.
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val hasReleaseKey = keyProps.getProperty("storeFile") != null
 
 android {
     namespace = "com.undip.alumniconnect.undip_alumni_connect"
@@ -15,8 +25,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.undip.alumniconnect.undip_alumni_connect"
+        // Final app ID. Changing it later makes Android treat the app as a different app (no in place update).
+        applicationId = "com.lingkaran.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -29,11 +39,29 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = rootProject.file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            if (hasReleaseKey) {
+                signingConfig = signingConfigs.getByName("release")
+            } else if (System.getenv("REQUIRE_RELEASE_KEY") == "true") {
+                throw GradleException("REQUIRE_RELEASE_KEY is set but android/key.properties is missing.")
+            } else {
+                // No release key yet: fall back to the debug key so beta builds
+                // still work. NEVER hand this APK to real users.
+                logger.warn("WARNING: release build signed with the DEBUG key.")
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }

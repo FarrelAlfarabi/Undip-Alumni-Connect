@@ -111,6 +111,25 @@ jobs:
             echo "::warning::ANDROID_DEBUG_KEYSTORE_BASE64 is not set. Every build is signed with a new random debug key, so testers must UNINSTALL the old app before installing each new APK."
           fi
 
+      # Real release signing. Add four secrets: ANDROID_RELEASE_KEYSTORE_BASE64,
+      # ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+      # (see docs/ANDROID_RELEASE.md). Without them the APK is debug signed.
+      - name: Restore release keystore (optional)
+        env:
+          KS_B64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            printf '%s' "$KS_B64" | base64 -d > android/release.keystore
+            printf 'storeFile=release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KS_PASS" "$KEY_ALIAS" "$KEY_PASS" > android/key.properties
+            echo "REQUIRE_RELEASE_KEY=true" >> "$GITHUB_ENV"
+            echo "Signing with the release keystore."
+          else
+            echo "::warning::No release keystore secrets. This APK is signed with the DEBUG key and must not go to real users."
+          fi
+
       - name: Install dependencies
         run: flutter pub get
 
