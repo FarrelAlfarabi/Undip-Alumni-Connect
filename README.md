@@ -42,9 +42,12 @@ true until login ships.
   `unlimited_until` is set in the dashboard only. Sold items do not count.
 - Request to contact (replaces chat), notifications inside the app only,
   report and block, "Send feedback" on errors.
-- Admins come from the `app_admins` table (no passphrase). Add them in the
-  SQL editor, see the header of
-  `supabase/migrations/20261003130000_app_admins.sql`.
+- Admins come from the `app_admins` table (no passphrase). After applying
+  `supabase/migrations/20261012090000_admin_helpers.sql`, manage them in the
+  Supabase SQL editor with one line each:
+  `select add_app_admin('person@example.com', 'Name');`,
+  `select remove_app_admin('person@example.com');`,
+  `select * from list_app_admins();`. The person needs a profile first.
 - Account deletion, privacy policy and consent screen, BETA label and the
   version in Profile > About and on the Welcome screen.
 - The Nearby map follows the system dark mode (the rest of the app is light).
