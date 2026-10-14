@@ -69,3 +69,16 @@ km"), not driving distance.
    confirmed (it is about 500 lines and has its own test).
 3. Show the real map to everyone from the next release, or keep the flag until
    you have checked the preview.
+
+## Free tier now, swap later (decision 14 Oct 2026)
+- Start on a free tier. MapTiler is the pick: set at build time (no code change)
+  `MAP_TILE_URL=https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=YOUR_KEY`
+  and `MAP_ATTRIBUTION=© MapTiler © OpenStreetMap contributors`. The free
+  allowance and its terms (free plans are usually for non commercial use) must
+  be checked on maptiler.com at sign up, I could not verify them from here.
+- Swapping provider later is the same two build settings, nothing else.
+- If tiles start failing (quota used up, bad key), the map shows
+  "Map background unavailable. Pins still work." instead of a silent grey map.
+- Watching usage: the provider's dashboard shows requests against the quota.
+  Check it weekly during the beta and turn on any usage email alert it offers.
+  The app does not count tile requests itself (a per phone count would be wrong).

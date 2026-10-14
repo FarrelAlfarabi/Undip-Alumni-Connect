@@ -109,6 +109,8 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
   }
 
   static const _defaultCenter = LatLng(-2.5, 118); // middle of Indonesia
+  int _tileErrors = 0;
+  static const _kTileErrorLimit = 6;
   static const _kMinZoom = 3.0;
   static const _kMaxZoom = 12.0;
   static const _kInteraction = InteractionOptions(
@@ -160,6 +162,15 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
                   TileLayer(
                     urlTemplate: kMapTileUrl,
                     userAgentPackageName: 'com.undip.alumni_connect',
+                    // A quota or key problem shows up as failed tiles. Say so
+                    // instead of leaving a silent grey map; pins still work.
+                    errorTileCallback: (tile, error, stackTrace) {
+                      if (_tileErrors++ == _kTileErrorLimit && mounted) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) setState(() {});
+                        });
+                      }
+                    },
                   ),
                 MarkerLayer(
                   markers: [
@@ -198,6 +209,26 @@ class _RealNearbyMapState extends State<RealNearbyMap> {
                   ),
               ],
             ),
+            if (widget.showTiles && _tileErrors > _kTileErrorLimit)
+              Positioned(
+                left: 8,
+                bottom: 28,
+                child: Container(
+                  key: const Key('map-tiles-unavailable'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white70,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Map background unavailable. Pins still work.',
+                    style: TextStyle(fontSize: 11, color: Colors.black87),
+                  ),
+                ),
+              ),
             Positioned(
               top: 8,
               right: 8,
