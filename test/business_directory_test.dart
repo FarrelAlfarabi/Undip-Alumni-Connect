@@ -177,10 +177,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Required'), findsWidgets);
       expect(find.text('Choose a category'), findsOneWidget);
-      expect(
-        find.text('Add an Instagram or social link, a website link, or both.'),
-        findsOneWidget,
-      );
       expect(find.text('Choose the yearly sales band.'), findsOneWidget);
       expect(api.calls, isEmpty);
     });
@@ -196,13 +192,15 @@ void main() {
         'Kopi',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Instagram or social link'),
+        find.widgetWithText(TextFormField, 'Instagram *'),
         'javascript:alert(1)',
       );
       await tester.tap(find.text('Submit for review'));
       await tester.pumpAndSettle();
       expect(
-        find.text('Enter a link like https://instagram.com/yourshop'),
+        find.text(
+          'Enter @username or a link like https://instagram.com/yourshop',
+        ),
         findsOneWidget,
       );
       expect(api.calls, isEmpty);
@@ -223,7 +221,7 @@ void main() {
       await tester.tap(find.text('Food & Drink').last);
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Instagram or social link'),
+        find.widgetWithText(TextFormField, 'Instagram *'),
         'instagram.com/kopi_ahmad',
       );
       await tester.tap(find.byKey(const Key('band-small')));
@@ -256,8 +254,8 @@ void main() {
         await tester.tap(find.text('Other').last);
         await tester.pumpAndSettle();
         await tester.enterText(
-          find.widgetWithText(TextFormField, 'Website link'),
-          'https://kopi.example.com',
+          find.widgetWithText(TextFormField, 'Instagram *'),
+          '@kopi_ahmad',
         );
         await tester.tap(find.byKey(const Key('band-micro')));
         await tester.pump();

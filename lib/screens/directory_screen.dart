@@ -5,6 +5,7 @@ import '../data/blocked_filter.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
+import '../widgets/searchable_choice.dart';
 import 'profile_detail_screen.dart';
 
 /// Most alumni rows one load brings in, so the list does not grow without
@@ -55,6 +56,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   late Future<List<Map<String, dynamic>>> _future;
 
   final _searchController = TextEditingController();
+  final _industryController = TextEditingController(text: kAllFilter);
   String _major = kAllFilter;
   String _year = kAllFilter;
   String _industry = kAllFilter;
@@ -69,6 +71,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _industryController.dispose();
     super.dispose();
   }
 
@@ -119,6 +122,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       _major = kAllFilter;
       _year = kAllFilter;
       _industry = kAllFilter;
+      _industryController.text = kAllFilter;
     });
   }
 
@@ -187,11 +191,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: FilterDropdown(
+                    // A dropdown you can also type into to narrow the list.
+                    child: SearchableChoice(
+                      fieldKey: const Key('directory-industry'),
                       label: 'Industry',
-                      value: _industry,
+                      controller: _industryController,
                       options: industries,
-                      onChanged: (v) => setState(() => _industry = v),
+                      selected: _industry,
+                      enabled: true,
+                      onSelected: (v) =>
+                          setState(() => _industry = v ?? kAllFilter),
                     ),
                   ),
                 ],

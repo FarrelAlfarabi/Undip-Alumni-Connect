@@ -351,8 +351,8 @@ void main() {
       await tester.tap(find.text('Other').last);
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Website link'),
-        'https://kopi.example.com',
+        find.widgetWithText(TextFormField, 'Instagram *'),
+        '@kopi_ahmad',
       );
       await tester.tap(find.byKey(const Key('band-micro')));
       await tester.pump();

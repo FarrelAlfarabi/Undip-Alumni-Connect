@@ -40,7 +40,7 @@ String businessErrorMessage(Object error) {
       case BusinessErrorCode.notVerified:
         return 'Only verified alumni can use the business directory.';
       case BusinessErrorCode.linkRequired:
-        return 'Add an Instagram or social link, a website link, or both.';
+        return 'Add the business Instagram (@username or a link). The website is optional.';
       case BusinessErrorCode.invalidLink:
         return 'One of the links is not valid. Use a full link that starts '
             'with http:// or https://.';

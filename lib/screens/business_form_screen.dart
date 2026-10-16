@@ -50,7 +50,6 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   BusinessBand? _band;
   bool _personal = false;
   String? _bandError;
-  String? _linkError;
   String? _photoError;
   PickedImage? _picked;
   bool _removePhoto = false;
@@ -120,38 +119,42 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     return null;
   }
 
-  static String? _linkField(String? v) {
+  static String? _instagramField(String? v) {
+    final t = (v ?? '').trim();
+    if (t.isEmpty) return 'Required';
+    final uri = parseInstagram(t);
+    if (uri == null || !uri.host.contains('.')) {
+      return 'Enter @username or a link like https://instagram.com/yourshop';
+    }
+    return null;
+  }
+
+  static String? _websiteField(String? v) {
     final t = (v ?? '').trim();
     if (t.isEmpty) return null;
     final uri = parseHttpUrl(t);
     if (uri == null || !uri.host.contains('.')) {
-      return 'Enter a link like https://instagram.com/yourshop';
+      return 'Enter a link like https://yourshop.com';
     }
     return null;
   }
 
   /// A typed link in the form the database stores (with https://).
-  static String? _clean(String text) {
+  static String? _clean(String text, {bool instagram = false}) {
     final t = text.trim();
     if (t.isEmpty) return null;
-    return parseHttpUrl(t)?.toString();
+    return (instagram ? parseInstagram(t) : parseHttpUrl(t))?.toString();
   }
 
   Future<void> _submit() async {
     final fieldsOk = _formKey.currentState!.validate();
-    final social = _clean(_social.text);
+    final social = _clean(_social.text, instagram: true);
     final website = _clean(_website.text);
-    final linkMsg = (social == null && website == null)
-        ? 'Add an Instagram or social link, a website link, or both.'
-        : null;
     final bandMsg = (!_isEdit && _band == null)
         ? 'Choose the yearly sales band.'
         : null;
-    setState(() {
-      _linkError = linkMsg;
-      _bandError = bandMsg;
-    });
-    if (!fieldsOk || linkMsg != null || bandMsg != null) return;
+    setState(() => _bandError = bandMsg);
+    if (!fieldsOk || bandMsg != null) return;
 
     setState(() {
       _saving = true;
@@ -387,8 +390,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Add at least one link. Each link can be used by one '
-                      'business only.',
+                      'Instagram is required, the website is optional. Each '
+                      'link can be used by one business only.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -397,14 +400,14 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     TextFormField(
                       controller: _social,
                       enabled: !_saving,
-                      keyboardType: TextInputType.url,
+                      keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                        labelText: 'Instagram or social link',
-                        hintText: 'https://instagram.com/...',
+                        labelText: 'Instagram *',
+                        hintText: '@username or https://instagram.com/...',
                         border: OutlineInputBorder(),
                       ),
-                      validator: _linkField,
+                      validator: _instagramField,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -412,19 +415,12 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       enabled: !_saving,
                       keyboardType: TextInputType.url,
                       decoration: const InputDecoration(
-                        labelText: 'Website link',
+                        labelText: 'Website link (optional)',
                         hintText: 'https://...',
                         border: OutlineInputBorder(),
                       ),
-                      validator: _linkField,
+                      validator: _websiteField,
                     ),
-                    if (_linkError != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _linkError!,
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
-                    ],
                     const SizedBox(height: 24),
                     Text('Yearly sales *', style: theme.textTheme.titleSmall),
                     const SizedBox(height: 4),

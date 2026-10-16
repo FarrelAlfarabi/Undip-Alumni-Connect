@@ -30,18 +30,21 @@ select jt.expect_error($q$select business_register(gen_random_uuid(), 'Nama', 'd
 
 -- Link rules.
 select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Other', null, null, 'micro')$q$, jt.pid('siti.azizah@example.com')), 'link_required');
+-- Instagram is required: a website alone is refused.
+select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Other', null, 'https://kopi.example.com', 'micro')$q$, jt.pid('siti.azizah@example.com')), 'link_required');
+select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Other', '  ', 'https://kopi.example.com', 'micro')$q$, jt.pid('siti.azizah@example.com')), 'link_required');
 select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Other', 'javascript:alert(1)', null, 'micro')$q$, jt.pid('siti.azizah@example.com')), 'invalid_link');
 select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Other', 'instagram', null, 'micro')$q$, jt.pid('siti.azizah@example.com')), 'invalid_link');
 -- Same link in another form, same column and across columns.
 select jt.expect_error(format($q$select business_register(%L, 'Tiruan', 'desc', 'Other', 'HTTP://instagram.com/Kopi_Ahmad?hl=en', null, 'micro')$q$, jt.pid('siti.azizah@example.com')), 'link_in_use');
-select jt.expect_error(format($q$select business_register(%L, 'Tiruan', 'desc', 'Other', null, 'https://instagram.com/kopi_ahmad/', 'micro')$q$, jt.pid('siti.azizah@example.com')), 'link_in_use');
+select jt.expect_error(format($q$select business_register(%L, 'Tiruan', 'desc', 'Other', 'https://instagram.com/siti_tiruan', 'https://instagram.com/kopi_ahmad/', 'micro')$q$, jt.pid('siti.azizah@example.com')), 'link_in_use');
 -- Bad band, category, empty name.
 select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Other', 'https://instagram.com/x2', null, 'huge')$q$, jt.pid('siti.azizah@example.com')), 'invalid_band');
 select jt.expect_error(format($q$select business_register(%L, 'Nama', 'desc', 'Spaceships', 'https://instagram.com/x3', null, 'micro')$q$, jt.pid('siti.azizah@example.com')), 'invalid_category');
 select jt.expect_error(format($q$select business_register(%L, '  ', 'desc', 'Other', 'https://instagram.com/x4', null, 'micro')$q$, jt.pid('siti.azizah@example.com')), 'invalid_input');
 
 -- One owner may register several businesses (each has its own link).
-insert into t_ids select 'b2', id from business_register(jt.pid('ahmad.ramadhan@example.com'), 'Batik Ahmad', 'Batik', 'Fashion', null, 'https://batikahmad.example.com', 'micro');
+insert into t_ids select 'b2', id from business_register(jt.pid('ahmad.ramadhan@example.com'), 'Batik Ahmad', 'Batik', 'Fashion', 'https://instagram.com/batik_ahmad', 'https://batikahmad.example.com', 'micro');
 insert into t_ids select 's1', id from business_register(jt.pid('siti.azizah@example.com'), 'Siti Catering', 'Catering', 'Food & Drink', 'https://instagram.com/siti_catering', null, 'medium');
 
 -- The owner sees their own, with status. Others do not see them.
@@ -72,7 +75,7 @@ select jt.assert((select rejection_reason from business_my(jt.pid('ahmad.ramadha
 
 -- Approved business is locked for the owner. Rejected can be fixed and re-applied.
 select jt.expect_error(format($q$select business_update(%L, %L, 'x1', 'd', 'Other', 'https://instagram.com/q', null)$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'b1')), 'locked');
-select business_update(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'b2'), 'Batik Ahmad', 'Batik tulis', 'Fashion', null, 'https://batikahmad.example.com/toko');
+select business_update(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'b2'), 'Batik Ahmad', 'Batik tulis', 'Fashion', 'https://instagram.com/batik_ahmad', 'https://batikahmad.example.com/toko');
 select jt.assert((select status from business_my(jt.pid('ahmad.ramadhan@example.com')) where id = (select v from t_ids where k = 'b2')) = 'pending', 'rejected business goes back to pending after edit');
 select jt.assert((select rejection_reason from business_my(jt.pid('ahmad.ramadhan@example.com')) where id = (select v from t_ids where k = 'b2')) is null, 'rejection reason cleared');
 select jt.assert((select approved_band from business_my(jt.pid('ahmad.ramadhan@example.com')) where id = (select v from t_ids where k = 'b2')) is null, 'approved band still empty');
