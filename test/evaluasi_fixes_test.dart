@@ -286,7 +286,7 @@ void main() {
       await tester.tap(find.text('Food & Drink').last);
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Instagram or social link'),
+        find.widgetWithText(TextFormField, 'Instagram *'),
         'instagram.com/kopi_ahmad',
       );
       await tester.tap(find.byKey(const Key('band-small')));

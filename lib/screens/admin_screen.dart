@@ -9,6 +9,7 @@ import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
+import '../widgets/filter_dropdown.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
 /// only when the database says this profile is an admin.
@@ -200,6 +201,8 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   ];
 
   String? _status = 'pending';
+  String _category = kAllFilter;
+  final _search = TextEditingController();
   late Future<List<Business>> _future;
   final _busy = <String>{};
 
@@ -207,6 +210,30 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   void initState() {
     super.initState();
     _future = widget.repository.businesses(widget.adminId, status: _status);
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Search is on the list already loaded for the chosen status: name, owner,
+  /// description and both links.
+  List<Business> _visible(List<Business> all) {
+    final q = _search.text.trim().toLowerCase();
+    return all.where((b) {
+      if (_category != kAllFilter && b.category != _category) return false;
+      if (q.isEmpty) return true;
+      return [
+        b.name,
+        b.ownerName,
+        b.description,
+        b.socialLink,
+        b.websiteLink,
+      ].any((v) => (v ?? '').toLowerCase().contains(q));
+    }).toList();
   }
 
   void _reload() => setState(() {
@@ -364,6 +391,46 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    key: const Key('admin-business-search'),
+                    controller: _search,
+                    decoration: InputDecoration(
+                      hintText: 'Search name, owner or link...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _search.text.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.clear),
+                              tooltip: 'Clear search',
+                              onPressed: _search.clear,
+                            ),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: KeyedSubtree(
+                    key: const Key('admin-business-category'),
+                    child: FilterDropdown(
+                      label: 'Category',
+                      value: _category,
+                      options: const [kAllFilter, ...kBusinessCategories],
+                      onChanged: (v) => setState(() => _category = v),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: FutureBuilder<List<Business>>(
               future: _future,
@@ -381,9 +448,13 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                     onRetry: _reload,
                   );
                 }
-                final items = snap.data ?? const [];
-                if (items.isEmpty) {
+                final all = snap.data ?? const <Business>[];
+                if (all.isEmpty) {
                   return const Center(child: Text('Nothing here.'));
+                }
+                final items = _visible(all);
+                if (items.isEmpty) {
+                  return const Center(child: Text('Nothing matches.'));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),

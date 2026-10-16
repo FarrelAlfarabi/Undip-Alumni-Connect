@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/filter_dropdown.dart';
 
 /// Feedback inbox: what testers sent from the "Send feedback" button, newest
 /// first, with the number of new items. Mark each as seen or done. There is
@@ -24,11 +25,37 @@ class AdminFeedbackScreen extends StatefulWidget {
 class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
   late Future<List<FeedbackItem>> _future;
   final _busy = <String>{};
+  final _search = TextEditingController();
+  String _status = kAllFilter;
+
+  static const _statuses = [kAllFilter, 'new', 'seen', 'done'];
 
   @override
   void initState() {
     super.initState();
     _future = widget.repository.feedback(widget.adminId);
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<FeedbackItem> _visible(List<FeedbackItem> all) {
+    final q = _search.text.trim().toLowerCase();
+    return all.where((f) {
+      if (_status != kAllFilter && f.status != _status) return false;
+      if (q.isEmpty) return true;
+      return [
+        f.profileName,
+        f.message,
+        f.errorText,
+        f.screen,
+        f.platform,
+      ].any((v) => (v ?? '').toLowerCase().contains(q));
+    }).toList();
   }
 
   void _reload() => setState(() {
@@ -79,8 +106,34 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
             return const Center(child: Text('No feedback yet.'));
           }
           final fresh = items.where((f) => f.isNew).length;
+          final shown = _visible(items);
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: ClearableSearchField(
+                        key: const Key('admin-feedback-search'),
+                        controller: _search,
+                        hintText: 'Search message, name or screen...',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: FilterDropdown(
+                        label: 'Status',
+                        value: _status,
+                        options: _statuses,
+                        onChanged: (v) => setState(() => _status = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Align(
@@ -93,17 +146,19 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                 ),
               ),
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _FeedbackCard(
-                    item: items[i],
-                    busy: _busy.contains(items[i].id),
-                    onSeen: () => _set(items[i], 'seen'),
-                    onDone: () => _set(items[i], 'done'),
-                  ),
-                ),
+                child: shown.isEmpty
+                    ? const Center(child: Text('Nothing matches.'))
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: shown.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _FeedbackCard(
+                          item: shown[i],
+                          busy: _busy.contains(shown[i].id),
+                          onSeen: () => _set(shown[i], 'seen'),
+                          onDone: () => _set(shown[i], 'done'),
+                        ),
+                      ),
               ),
             ],
           );

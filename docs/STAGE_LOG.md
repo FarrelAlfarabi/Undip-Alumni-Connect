@@ -32,3 +32,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Closed test notice on Welcome and the consent screen.
 - New docs: `BETA_RULES.md`, `AUTH_MIGRATION_PLAN.md`, `BETA_MESSAGE.md`, `OPEN_ITEMS.md`.
 - Not done, on purpose: see `docs/OPEN_ITEMS.md`.
+
+## Four fixes (16 Oct 2026)
+- Business form: Instagram required (`@username` becomes an instagram.com link), website optional. Migration `20261016090000` makes `business_register` / `business_update` refuse a missing Instagram; not applied to any project. Old website-only rows are untouched.
+- Admin: Businesses (search name, owner, link + category) and Feedback (search + status). Directory Industry: type to narrow or open the list. Web: viewport meta stops the focus zoom.
+- Checks: analyze clean, 681 tests pass, `run_beta_local.sh` passes.

@@ -27,6 +27,19 @@ Uri? parseHttpUrl(String? raw) {
   return uri;
 }
 
+/// Parses an Instagram entry: `@username` (1 to 30 letters, digits, dots or
+/// underscores) becomes `https://instagram.com/username`; anything else must
+/// be a web link, as for [parseHttpUrl]. Returns null when it is neither.
+Uri? parseInstagram(String? raw) {
+  final text = (raw ?? '').trim();
+  if (text.startsWith('@')) {
+    final handle = text.substring(1);
+    if (!RegExp(r'^[A-Za-z0-9._]{1,30}$').hasMatch(handle)) return null;
+    return Uri.parse('https://instagram.com/$handle');
+  }
+  return parseHttpUrl(text);
+}
+
 /// Form validator for a link field. Empty is fine unless [required].
 String? validateHttpUrl(String? value, {bool required = false}) {
   final v = (value ?? '').trim();

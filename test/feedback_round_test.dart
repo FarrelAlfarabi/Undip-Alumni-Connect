@@ -72,7 +72,7 @@ void main() {
       await tester.tap(find.text('Other').last);
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Instagram or social link'),
+        find.widgetWithText(TextFormField, 'Instagram *'),
         'https://instagram.com/kopisolo',
       );
       await tester.tap(find.byKey(const Key('personal-business')));

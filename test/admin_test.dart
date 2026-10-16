@@ -249,7 +249,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('A reason is required'), findsOneWidget);
       expect(api.calls.contains('admin_business_decide'), isFalse);
-      await tester.enterText(find.byType(TextField), 'Link rusak');
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'Link rusak',
+      );
       await tester.tap(find.widgetWithText(FilledButton, 'Reject'));
       await tester.pumpAndSettle();
       expect(api.params['admin_business_decide']!['p_action'], 'reject');
@@ -285,7 +291,13 @@ void main() {
       api.throwOnCall = null;
       await tester.tap(find.byKey(const Key('reject-b1')));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'x');
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'x',
+      );
       api.throwOnCall = pgError('not_admin');
       await tester.tap(find.widgetWithText(FilledButton, 'Reject'));
       await tester.pumpAndSettle();
