@@ -32,6 +32,10 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
+  <style>
+    html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+  </style>
+
   <title>Lingkaran</title>
   <link rel="manifest" href="manifest.json">
 </head>
@@ -44,6 +48,7 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <script src="viewport_guard.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

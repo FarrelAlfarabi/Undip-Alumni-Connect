@@ -40,3 +40,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 
 ## Profile card redesign (16 Oct 2026)
 - Academic and Employment are now two soft panels with an icon and title. Label sits above its value. Edit sits in the Employment header, at the panel edge. Larger avatar. Analyze clean, 681 tests pass.
+
+## iPhone zoom guard (16 Oct 2026)
+- The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
+- Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
