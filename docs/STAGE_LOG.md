@@ -37,3 +37,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Business form: Instagram required (`@username` becomes an instagram.com link), website optional. Migration `20261016090000` makes `business_register` / `business_update` refuse a missing Instagram; not applied to any project. Old website-only rows are untouched.
 - Admin: Businesses (search name, owner, link + category) and Feedback (search + status). Directory Industry: type to narrow or open the list. Web: viewport meta stops the focus zoom.
 - Checks: analyze clean, 681 tests pass, `run_beta_local.sh` passes.
+
+## Profile card redesign (16 Oct 2026)
+- Academic and Employment are now two soft panels with an icon and title. Label sits above its value. Edit sits in the Employment header, at the panel edge. Larger avatar. Analyze clean, 681 tests pass.

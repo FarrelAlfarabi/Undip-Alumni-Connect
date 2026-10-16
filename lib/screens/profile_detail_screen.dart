@@ -239,7 +239,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           Row(
                             children: [
                               CircleAvatar(
-                                radius: 28,
+                                radius: 32,
                                 backgroundColor:
                                     theme.colorScheme.primaryContainer,
                                 child: Text(
@@ -322,44 +322,59 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               ),
                             ],
                           ),
-                          const Divider(height: 32),
-                          _section(theme, 'Academic'),
-                          _field(theme, 'NIM', _profile['nim']),
-                          _field(theme, 'Faculty', _profile['faculty']),
-                          _field(theme, 'Major', _profile['major']),
-                          _field(
-                            theme,
-                            'Graduation Year',
-                            _profile['graduation_year']?.toString(),
-                          ),
                           const SizedBox(height: 20),
-                          Row(
+                          _panel(
+                            theme,
+                            icon: Icons.school_outlined,
+                            title: 'Academic',
                             children: [
-                              Expanded(child: _section(theme, 'Employment')),
-                              if (widget.showEditButton)
-                                TextButton.icon(
-                                  key: const Key('profile-edit'),
-                                  onPressed: _editProfile,
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 18,
-                                  ),
-                                  label: const Text('Edit'),
-                                ),
+                              _field(theme, 'NIM', _profile['nim']),
+                              _field(theme, 'Faculty', _profile['faculty']),
+                              _field(theme, 'Major', _profile['major']),
+                              _field(
+                                theme,
+                                'Graduation Year',
+                                _profile['graduation_year']?.toString(),
+                              ),
                             ],
                           ),
-                          _field(
+                          const SizedBox(height: 12),
+                          _panel(
                             theme,
-                            'Current Role',
-                            _profile['current_role'],
-                          ),
-                          _field(theme, 'Industry', _profile['industry']),
-                          // Profiles saved before the two employer fields
-                          // were merged may only have current_employer.
-                          _field(
-                            theme,
-                            'Company',
-                            _profile['company'] ?? _profile['current_employer'],
+                            icon: Icons.work_outline,
+                            title: 'Employment',
+                            action: widget.showEditButton
+                                ? TextButton.icon(
+                                    key: const Key('profile-edit'),
+                                    onPressed: _editProfile,
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 18,
+                                    ),
+                                    label: const Text('Edit'),
+                                  )
+                                : null,
+                            children: [
+                              _field(
+                                theme,
+                                'Current Role',
+                                _profile['current_role'],
+                              ),
+                              _field(theme, 'Industry', _profile['industry']),
+                              // Profiles saved before the two employer fields
+                              // were merged may only have current_employer.
+                              _field(
+                                theme,
+                                'Company',
+                                _profile['company'] ??
+                                    _profile['current_employer'],
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -454,37 +469,69 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _section(ThemeData theme, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
+  /// A soft inner panel for one group of facts: icon and small-caps title on
+  /// the left, an optional action (Edit) on the right, then the rows.
+  Widget _panel(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+    Widget? action,
+  }) {
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 48,
+            child: Row(
+              children: [
+                Icon(icon, size: 18, color: scheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title.toUpperCase(),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                ?action,
+              ],
+            ),
+          ),
+          ...children,
+        ],
       ),
     );
   }
 
+  /// Label above value, so a long value never squeezes the label and the two
+  /// always line up.
   Widget _field(ThemeData theme, String label, String? value) {
     final display = (value == null || value.isEmpty) ? '—' : value;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          Expanded(child: Text(display, style: theme.textTheme.bodyMedium)),
+          const SizedBox(height: 2),
+          Text(display, style: theme.textTheme.bodyLarge),
         ],
       ),
     );
