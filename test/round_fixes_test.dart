@@ -280,6 +280,20 @@ void main() {
       matching: find.byType(TextField),
     );
 
+    testWidgets('starts showing All, same height as Major and Year', (
+      tester,
+    ) async {
+      await pumpDirectory(tester);
+      expect(tester.widget<TextField>(field()).controller!.text, 'All');
+      final industry = tester.getSize(
+        find.byKey(const Key('directory-industry')),
+      );
+      final major = tester.getSize(
+        find.byType(DropdownButtonFormField<String>).first,
+      );
+      expect(industry.height, major.height);
+    });
+
     testWidgets('type to narrow the list, then pick', (tester) async {
       await pumpDirectory(tester);
       await tester.tap(field());
