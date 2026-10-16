@@ -349,5 +349,23 @@ void main() {
       expect(meta, contains('maximum-scale=1'));
       expect(meta, contains('user-scalable=no'));
     });
+
+    // The meta tag alone did not stop an iPhone from zooming into the
+    // business form and staying zoomed. This script snaps the page back to
+    // 100% and blocks pinch and double-tap zoom. It is a file, not inline,
+    // because the Content-Security-Policy only allows scripts from 'self'.
+    test('a zoom guard script is loaded before Flutter starts', () {
+      final html = File('web/index.html').readAsStringSync();
+      final guard = html.indexOf('src="viewport_guard.js"');
+      final boot = html.indexOf('src="flutter_bootstrap.js"');
+      expect(guard, isNonNegative);
+      expect(guard, lessThan(boot));
+      expect(html, contains('touch-action: manipulation'));
+      final js = File('web/viewport_guard.js').readAsStringSync();
+      expect(js, contains('visualViewport'));
+      expect(js, contains('gesturestart'));
+      expect(js, contains('focusout'));
+      expect(js, isNot(contains('eval(')));
+    });
   });
 }
