@@ -199,6 +199,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       options: industries,
                       selected: _industry,
                       enabled: true,
+                      dense: true,
                       onSelected: (v) =>
                           setState(() => _industry = v ?? kAllFilter),
                     ),

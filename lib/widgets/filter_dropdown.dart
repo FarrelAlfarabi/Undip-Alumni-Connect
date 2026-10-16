@@ -4,6 +4,29 @@ import 'package:flutter/material.dart';
 /// always the first entry in its options list.
 const kAllFilter = 'All';
 
+/// One look for every search box and filter in a search+filter bar: rounded,
+/// softly filled, same height. [FilterDropdown], [ClearableSearchField] and
+/// the dense [SearchableChoice] all use it, so they line up.
+InputDecorationTheme filterFieldTheme(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  OutlineInputBorder border(Color color, [double width = 1]) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
+      );
+  return InputDecorationTheme(
+    isDense: true,
+    filled: true,
+    fillColor: scheme.surfaceContainerLowest,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
+    suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 24),
+    border: border(scheme.outlineVariant),
+    enabledBorder: border(scheme.outlineVariant),
+    focusedBorder: border(scheme.primary, 1.5),
+  );
+}
+
 /// A labeled dropdown filter, shared by every screen with a search+filter
 /// bar (Alumni Directory, Job Board, Messages).
 class FilterDropdown extends StatelessWidget {
@@ -25,12 +48,9 @@ class FilterDropdown extends StatelessWidget {
     return DropdownButtonFormField<String>(
       initialValue: value,
       isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      ),
+      borderRadius: BorderRadius.circular(12),
+      decoration: InputDecoration(labelText: label)
+          .applyDefaults(filterFieldTheme(context)),
       items: options
           .map(
             (o) => DropdownMenuItem(
@@ -92,9 +112,7 @@ class ClearableSearchField extends StatelessWidget {
                     tooltip: 'Clear search',
                     onPressed: controller.clear,
                   ),
-            border: const OutlineInputBorder(),
-            isDense: true,
-          ),
+          ).applyDefaults(filterFieldTheme(context)),
         );
       },
     );

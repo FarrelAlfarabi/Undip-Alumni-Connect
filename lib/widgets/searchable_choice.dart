@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'filter_dropdown.dart';
+
 /// A dropdown you can also type into to narrow the list. Only a value from
 /// [options] (or the one already [selected] when the screen opened) can be
 /// chosen, so free text never reaches the database.
@@ -15,12 +17,16 @@ class SearchableChoice extends StatelessWidget {
     required this.onSelected,
     this.helper,
     this.errorText,
+    this.dense = false,
   });
 
   final Key fieldKey;
   final String label;
   final String? helper;
   final String? errorText;
+
+  /// Same size and look as a [FilterDropdown], for a search+filter bar.
+  final bool dense;
   final TextEditingController controller;
   final List<String> options;
   final String? selected;
@@ -44,6 +50,10 @@ class SearchableChoice extends StatelessWidget {
         errorText: errorText,
         initialSelection: selected,
         enableFilter: true,
+        inputDecorationTheme: dense ? filterFieldTheme(context) : null,
+        menuStyle: dense
+            ? const MenuStyle(visualDensity: VisualDensity.compact)
+            : null,
         trailingIcon: Icon(
           Icons.arrow_drop_down,
           semanticLabel: 'Show $label options',
