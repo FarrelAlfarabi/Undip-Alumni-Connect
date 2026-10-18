@@ -50,3 +50,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Period filter (All time, Today, 7, 30 days) on Reports and Feedback. Removed the "new" tags: count badges on Admin Reports/Feedback and the Profile Admin row, the "N new of M" line, the highlighted border and status chip on new feedback. Reports no longer marks itself seen on open (data and SQL untouched). 690 tests pass.
 - Admin Businesses: the status chips are now a Status dropdown next to the search; Category is type-to-filter (like Industry); new Posted filter (All time, Today, 7, 30, 90 days) by post date.
 - Business form: photo helper now states the real limits (JPG/PNG/WebP, 2 MB, any size, cropped to a wide banner). Nothing in code or storage limits dimensions.
+
+## Admin announcements (18 Oct 2026)
+- Admin > Announcements: past posts with search and a Period filter (same `period_filter.dart` and components as Reports), plus a "New announcement" form (title 120, message 2000).
+- Admin-only in the database: no write policy on `announcements`; posting goes through `admin_announcement_create`, which checks `app_admins`. Migration `20261018110000_admin_announcements.sql` is not applied anywhere. No Status filter: announcements have no status. No audience targeting.
