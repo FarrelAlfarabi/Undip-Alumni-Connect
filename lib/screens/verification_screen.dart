@@ -79,7 +79,7 @@ class VerificationScreen extends StatefulWidget {
   State<VerificationScreen> createState() => _VerificationScreenState();
 }
 
-enum _VerificationState { idle, loading, notFound, error }
+enum _VerificationState { idle, loading, notFound, suspended, error }
 
 class _VerificationScreenState extends State<VerificationScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -173,9 +173,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
       try {
         profile = await api.verifyCode(email, _codeController.text);
       } catch (e) {
+        if (!mounted) return;
+        if (isSuspendedError(e)) {
+          setState(() => _state = _VerificationState.suspended);
+          return;
+        }
         // A wrong or expired code is the most common slip: keep the person
         // on the code step with a plain message and let them retry or resend.
-        if (!mounted) return;
         final network = friendlyError(e) == kNetworkError;
         setState(() {
           _state = _VerificationState.idle;
@@ -195,6 +199,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
       setState(() => _state = _VerificationState.idle);
       await _afterVerified(profile, email);
     } catch (e) {
+      if (isSuspendedError(e)) {
+        setState(() => _state = _VerificationState.suspended);
+        return;
+      }
       setState(() {
         _state = _VerificationState.error;
         _errorMessage = friendlyError(e);
@@ -227,6 +235,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
       setState(() => _state = _VerificationState.idle);
       await _afterVerified(match, email);
     } catch (e) {
+      if (isSuspendedError(e)) {
+        setState(() => _state = _VerificationState.suspended);
+        return;
+      }
       setState(() {
         _state = _VerificationState.error;
         _errorMessage = friendlyError(e);
@@ -366,6 +378,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
           email: _emailController.text.trim(),
           onTryAgain: _reset,
         );
+      case _VerificationState.suspended:
+        return _SuspendedResult(onTryAgain: _reset);
       case _VerificationState.error:
         return _ErrorResult(
           message: _errorMessage!,
@@ -618,6 +632,48 @@ class _NotFoundResult extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         FilledButton(onPressed: onTryAgain, child: const Text('Try again')),
+      ],
+    );
+  }
+}
+
+class _SuspendedResult extends StatelessWidget {
+  const _SuspendedResult({required this.onTryAgain});
+
+  final VoidCallback onTryAgain;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      key: const Key('account-suspended'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CircleAvatar(
+          radius: 28,
+          backgroundColor: theme.colorScheme.errorContainer,
+          child: Icon(
+            Icons.block_outlined,
+            color: theme.colorScheme.onErrorContainer,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Account Suspended',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          kSuspendedMessage,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 20),
+        FilledButton(onPressed: onTryAgain, child: const Text('Back')),
       ],
     );
   }

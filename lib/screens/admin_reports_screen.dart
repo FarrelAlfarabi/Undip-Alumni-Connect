@@ -163,6 +163,71 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     );
   }
 
+  Future<void> _suspend(AdminReport r) async {
+    final controller = TextEditingController();
+    final sender = r.targetType == ReportTarget.contactRequest;
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        String? error;
+        return StatefulBuilder(
+          builder: (ctx, setLocal) => AlertDialog(
+            title: Text(
+              sender ? 'Suspend the sender?' : 'Suspend this person?',
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'They cannot sign in and disappear from the Directory until '
+                  'you lift the suspension. Their posts and businesses stay as '
+                  'they are: hide those separately if needed.',
+                  style: Theme.of(ctx).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  maxLines: 3,
+                  maxLength: 300,
+                  decoration: InputDecoration(
+                    labelText: 'Reason (kept for admins)',
+                    errorText: error,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  final t = controller.text.trim();
+                  if (t.isEmpty) {
+                    setLocal(() => error = 'A reason is required');
+                    return;
+                  }
+                  Navigator.of(ctx).pop(t);
+                },
+                child: const Text('Suspend'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (reason == null) return;
+    await _run(
+      r,
+      () => widget.repository.suspendUser(widget.adminId, r, reason),
+      'Suspended. They cannot sign in.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -308,6 +373,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         'Marked as handled.',
                       ),
                       onHide: () => _hide(r),
+                      onSuspend: () => _suspend(r),
+                      onUnsuspend: () => _run(
+                        r,
+                        () =>
+                            widget.repository.unsuspendUser(widget.adminId, r),
+                        'Suspension lifted. They can sign in again.',
+                      ),
                       onRestore: () => _run(
                         r,
                         () =>
@@ -334,6 +406,8 @@ class _ReportCard extends StatelessWidget {
     required this.onDismiss,
     required this.onActioned,
     required this.onHide,
+    required this.onSuspend,
+    required this.onUnsuspend,
     required this.onRestore,
   });
 
@@ -343,6 +417,8 @@ class _ReportCard extends StatelessWidget {
   final VoidCallback onDismiss;
   final VoidCallback onActioned;
   final VoidCallback onHide;
+  final VoidCallback onSuspend;
+  final VoidCallback onUnsuspend;
   final VoidCallback onRestore;
 
   @override
@@ -385,7 +461,8 @@ class _ReportCard extends StatelessWidget {
             ],
             if (r.isHidden)
               Text(
-                'Hidden${r.hiddenReason != null ? ': ${r.hiddenReason}' : ''}',
+                '${r.targetType == ReportTarget.profile ? 'Suspended' : 'Hidden'}'
+                '${r.hiddenReason != null ? ': ${r.hiddenReason}' : ''}',
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             const SizedBox(height: 8),
@@ -412,8 +489,20 @@ class _ReportCard extends StatelessWidget {
                       onPressed: busy ? null : onHide,
                       child: const Text('Hide'),
                     ),
+                  if (r.canSuspend && !r.isHidden)
+                    FilledButton(
+                      key: Key('suspend-${r.targetId}'),
+                      onPressed: busy ? null : onSuspend,
+                      child: const Text('Suspend user'),
+                    ),
                 ],
-                if (r.isHidden)
+                if (r.isHidden && r.targetType == ReportTarget.profile)
+                  FilledButton(
+                    key: Key('unsuspend-${r.targetId}'),
+                    onPressed: busy ? null : onUnsuspend,
+                    child: const Text('Lift suspension'),
+                  )
+                else if (r.isHidden)
                   FilledButton(
                     key: Key('restore-${r.targetId}'),
                     onPressed: busy ? null : onRestore,

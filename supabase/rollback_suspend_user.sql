@@ -16,9 +16,16 @@ drop policy if exists "alumni_profiles_select" on alumni_profiles;
 create policy "alumni_profiles_select" on alumni_profiles
   for select using (deleted_at is null);
 
-drop policy if exists "alumni_profiles_update_anon" on alumni_profiles;
-create policy "alumni_profiles_update_anon" on alumni_profiles
-  for update using (deleted_at is null) with check (deleted_at is null);
+do $$
+begin
+  if exists (select 1 from pg_policies
+              where schemaname = 'public' and tablename = 'alumni_profiles'
+                and policyname = 'alumni_profiles_update_anon') then
+    drop policy "alumni_profiles_update_anon" on alumni_profiles;
+    create policy "alumni_profiles_update_anon" on alumni_profiles
+      for update using (deleted_at is null) with check (deleted_at is null);
+  end if;
+end $$;
 
 drop policy if exists "alumni_profiles_update" on alumni_profiles;
 create policy "alumni_profiles_update" on alumni_profiles
@@ -26,6 +33,31 @@ create policy "alumni_profiles_update" on alumni_profiles
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+create or replace function current_profile_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select id from alumni_profiles
+   where user_id = auth.uid() and auth.uid() is not null
+   limit 1;
+$$;
+
+create or replace function business_is_verified(p_profile uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from alumni_profiles
+    where id = p_profile and verification_status = 'verified'
+  );
+$$;
 
 create or replace function alumni_profiles_restrict_update()
 returns trigger

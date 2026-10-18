@@ -15,6 +15,10 @@
 -- own suspension); verify_alumni_email and claim_alumni_profile;
 -- admin_reports_list (suspended people show in the Hidden list) and
 -- admin_reports_decide (new actions suspend_user / unsuspend_user).
+-- A person who is already signed in is also refused: current_profile_id() and
+-- business_is_verified() ignore a suspended profile, so assert_caller raises
+-- not_signed_in and verified-only actions refuse. With require_login off the
+-- profile id is only a parameter, so that part cannot be enforced.
 -- Idempotent. Rollback: supabase/rollback_suspend_user.sql.
 
 alter table alumni_profiles add column if not exists suspended_at timestamptz;
@@ -24,10 +28,19 @@ drop policy if exists "alumni_profiles_select" on alumni_profiles;
 create policy "alumni_profiles_select" on alumni_profiles
   for select using (deleted_at is null and suspended_at is null);
 
-drop policy if exists "alumni_profiles_update_anon" on alumni_profiles;
-create policy "alumni_profiles_update_anon" on alumni_profiles
-  for update using (deleted_at is null and suspended_at is null)
-  with check (deleted_at is null and suspended_at is null);
+-- Only rewrite the anon update policy when it exists: cutover_real_login.sql
+-- drops it on purpose, and this migration must not bring it back.
+do $$
+begin
+  if exists (select 1 from pg_policies
+              where schemaname = 'public' and tablename = 'alumni_profiles'
+                and policyname = 'alumni_profiles_update_anon') then
+    drop policy "alumni_profiles_update_anon" on alumni_profiles;
+    create policy "alumni_profiles_update_anon" on alumni_profiles
+      for update using (deleted_at is null and suspended_at is null)
+      with check (deleted_at is null and suspended_at is null);
+  end if;
+end $$;
 
 drop policy if exists "alumni_profiles_update" on alumni_profiles;
 create policy "alumni_profiles_update" on alumni_profiles
@@ -35,6 +48,33 @@ create policy "alumni_profiles_update" on alumni_profiles
   to authenticated
   using (auth.uid() = user_id and suspended_at is null)
   with check (auth.uid() = user_id and suspended_at is null);
+
+create or replace function current_profile_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select id from alumni_profiles
+   where user_id = auth.uid() and auth.uid() is not null
+     and suspended_at is null
+   limit 1;
+$$;
+
+create or replace function business_is_verified(p_profile uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from alumni_profiles
+    where id = p_profile and verification_status = 'verified'
+      and suspended_at is null
+  );
+$$;
 
 create or replace function alumni_profiles_restrict_update()
 returns trigger
@@ -324,7 +364,7 @@ begin
        where id = v_person and deleted_at is null;
     else
       update alumni_profiles set suspended_at = null, suspended_reason = null
-       where id = v_person;
+       where id = v_person and suspended_at is not null;
     end if;
     get diagnostics n = row_count;
     if n = 0 then raise exception 'not_found'; end if;
@@ -342,6 +382,9 @@ begin
 end;
 $$;
 
+revoke execute on function business_is_verified(uuid) from public, anon, authenticated;
+revoke execute on function current_profile_id() from public;
+grant execute on function current_profile_id() to anon, authenticated;
 revoke execute on function alumni_profiles_restrict_update() from public, anon, authenticated;
 revoke execute on function verify_alumni_email(text) from public;
 grant execute on function verify_alumni_email(text) to anon, authenticated;

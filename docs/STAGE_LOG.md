@@ -50,3 +50,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Period filter (All time, Today, 7, 30 days) on Reports and Feedback. Removed the "new" tags: count badges on Admin Reports/Feedback and the Profile Admin row, the "N new of M" line, the highlighted border and status chip on new feedback. Reports no longer marks itself seen on open (data and SQL untouched). 690 tests pass.
 - Admin Businesses: the status chips are now a Status dropdown next to the search; Category is type-to-filter (like Industry); new Posted filter (All time, Today, 7, 30, 90 days) by post date.
 - Business form: photo helper now states the real limits (JPG/PNG/WebP, 2 MB, any size, cropped to a wide banner). Nothing in code or storage limits dimensions.
+
+## Suspend user (18 Oct 2026)
+- Reports: "Suspend user" on profile and contact-request reports (reason required), "Lift suspension" from the Hidden list. A suspended person cannot sign in (email match or email code), is gone from the Directory, and an already signed-in session is refused. Admins and yourself cannot be suspended. Their posts and businesses stay; hide those separately.
+- Migration `20261018090000_suspend_user.sql` (rollback `rollback_suspend_user.sql`) is not applied to any project; it leaves the anon update policy alone if the real-login cutover dropped it. 704 tests pass, both SQL runners pass.
