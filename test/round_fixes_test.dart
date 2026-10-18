@@ -190,7 +190,14 @@ void main() {
         businessMap(id: 'a', name: 'Kopi Ahmad', category: 'Food & Drink'),
         businessMap(id: 'b', name: 'Batik Siti', category: 'Fashion'),
       ]);
-      await tester.tap(find.byKey(const Key('admin-business-category')));
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byKey(const Key('admin-business-category')),
+              matching: find.byIcon(Icons.arrow_drop_down),
+            )
+            .first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Fashion').last);
       await tester.pumpAndSettle();
@@ -200,6 +207,56 @@ void main() {
         api.calls.where((c) => c == 'admin_businesses_list'),
         hasLength(1),
       );
+    });
+
+    testWidgets('Businesses: type in the category box to narrow the list', (
+      tester,
+    ) async {
+      await pumpBusinesses(tester, [
+        businessMap(id: 'a', name: 'Kopi Ahmad', category: 'Food & Drink'),
+        businessMap(id: 'b', name: 'Batik Siti', category: 'Fashion'),
+      ]);
+      final field = find.descendant(
+        of: find.byKey(const Key('admin-business-category')),
+        matching: find.byType(TextField),
+      );
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+      await tester.enterText(field, 'fash');
+      await tester.pumpAndSettle();
+      expect(find.byType(MenuItemButton).hitTestable(), findsOneWidget);
+      await tester.tap(find.byType(MenuItemButton).hitTestable());
+      await tester.pumpAndSettle();
+      expect(find.text('Kopi Ahmad'), findsNothing);
+      expect(find.text('Batik Siti'), findsOneWidget);
+    });
+
+    testWidgets('Businesses: filter by post date', (tester) async {
+      final now = DateTime.now().toUtc();
+      String ago(int d) => now.subtract(Duration(days: d)).toIso8601String();
+      await pumpBusinesses(tester, [
+        businessMap(id: 'a', name: 'Baru', createdAt: ago(0)),
+        businessMap(id: 'b', name: 'Minggu ini', createdAt: ago(5)),
+        businessMap(id: 'c', name: 'Bulan ini', createdAt: ago(20)),
+        businessMap(id: 'd', name: 'Tiga bulan', createdAt: ago(60)),
+        businessMap(id: 'e', name: 'Lama', createdAt: ago(200)),
+      ]);
+      Future<void> pick(String label) async {
+        await tester.tap(find.byKey(const Key('admin-business-period')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label).last);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('Lama'), findsOneWidget);
+      await pick('Last 7 days');
+      expect(find.text('Minggu ini'), findsOneWidget);
+      expect(find.text('Bulan ini'), findsNothing);
+      await pick('Last 90 days');
+      expect(find.text('Tiga bulan'), findsOneWidget);
+      expect(find.text('Lama'), findsNothing);
+      await pick('All time');
+      expect(find.text('Lama'), findsOneWidget);
     });
 
     testWidgets('Feedback: search by message, name or screen', (tester) async {

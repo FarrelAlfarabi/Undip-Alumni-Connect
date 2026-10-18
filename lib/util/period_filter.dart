@@ -5,6 +5,7 @@ const List<String> kPeriodOptions = [
   'Today',
   'Last 7 days',
   'Last 30 days',
+  'Last 90 days',
 ];
 
 /// Whether [when] falls inside [period] (one of [kPeriodOptions]). "Today"
@@ -19,6 +20,7 @@ bool inPeriod(DateTime? when, String period, {DateTime? now}) {
     'Today' => DateTime(n.year, n.month, n.day),
     'Last 7 days' => n.subtract(const Duration(days: 7)),
     'Last 30 days' => n.subtract(const Duration(days: 30)),
+    'Last 90 days' => n.subtract(const Duration(days: 90)),
     _ => null,
   };
   return since == null || !t.isBefore(since);
