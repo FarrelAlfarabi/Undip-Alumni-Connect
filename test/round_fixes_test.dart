@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/data/business_repository.dart';
+import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_feedback_screen.dart';
 import 'package:undip_alumni_connect/screens/admin_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
@@ -124,6 +125,20 @@ void main() {
         api.params['business_register']!['p_website_link'],
         'https://kopi.example.com',
       );
+    });
+
+    testWidgets('photo helper states the real limits', (tester) async {
+      await pumpForm(tester);
+      final helper = find.byKey(const Key('business-photo-help'));
+      expect(helper, findsOneWidget);
+      final text = tester.widget<Text>(helper).data!;
+      expect(text, contains('JPG, PNG or WebP'));
+      expect(text, contains('2 MB'));
+      expect(text, contains('any size'));
+      expect(text, contains('wide banner'));
+      // The numbers in the text are the ones the code enforces.
+      expect(kListingImageMaxBytes, 2 * 1024 * 1024);
+      expect(kListingImageExtensions, ['jpg', 'jpeg', 'png', 'webp']);
     });
 
     test('the server code link_required asks for Instagram', () {
