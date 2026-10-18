@@ -142,7 +142,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       if (!mounted) return;
       // The database refuses a field it has locked with "Only ... can be
       // updated". Say that, instead of a message that suggests retrying.
-      final locked = e.toString().contains('can be updated');
+      final locked =
+          e is PostgrestException && e.message.contains('can be updated');
       setState(() {
         _saving = false;
         _error = locked
