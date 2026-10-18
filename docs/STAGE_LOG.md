@@ -44,3 +44,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## iPhone zoom guard (16 Oct 2026)
 - The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
 - Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
+
+## Hide NIM (18 Oct 2026)
+- Other members no longer get NIM. Migration `20261018120000_hide_nim.sql` revokes the `nim` column from anon/authenticated; `profile_nim(viewer, profile)` returns it to the owner and admins only. Rollback: `supabase/rollback_hide_nim.sql`. Not applied to any project.
+- App: every `alumni_profiles` read names its columns (`lib/data/profile_columns.dart`); a new column needs a grant and a line there. Profile card shows NIM only when `profile_nim` answers. Stale-id retry uses email, not NIM.
+- Deploy migration and app together. Local SQL checks pass; Flutter tests not run here (no Flutter in this container), CI runs them.
