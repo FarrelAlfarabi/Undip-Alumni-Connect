@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../auth/login_api.dart';
@@ -26,6 +28,12 @@ void enterApp(
   AccountRepository? accountRepository,
 }) {
   final l = lock ?? LockService.shared;
+  if (profile['deactivated_at'] != null) {
+    // Signing in again brings a deactivated account back. Best effort: if the
+    // call fails the person still gets in, and the next sign in tries again.
+    unawaited(_reactivate(profile['id'] as String, accountRepository));
+    profile = {...profile, 'deactivated_at': null};
+  }
   if (needsConsent(profile)) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -49,6 +57,12 @@ void enterApp(
   FeedbackSession.profileId = profile['id'] as String?;
   Navigator.of(context)
       .pushReplacement(MaterialPageRoute(builder: (_) => homeBuilder(profile)));
+}
+
+Future<void> _reactivate(String id, AccountRepository? repository) async {
+  try {
+    await (repository ?? AccountRepository()).reactivateAccount(id);
+  } catch (_) {}
 }
 
 /// Sign out on this device: forget the remembered person but keep their PIN

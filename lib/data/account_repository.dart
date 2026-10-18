@@ -62,6 +62,26 @@ class AccountRepository {
     }
   }
 
+  /// Hides the account from Members, Nearby Alumni and the marketplace.
+  /// Nothing is removed; [reactivateAccount] (or signing in again) undoes it.
+  Future<void> deactivateAccount(String profileId) => _toggle(
+    'account_deactivate',
+    profileId,
+  );
+
+  Future<void> reactivateAccount(String profileId) => _toggle(
+    'account_reactivate',
+    profileId,
+  );
+
+  Future<void> _toggle(String function, String profileId) async {
+    try {
+      await _api.rpc(function, {'p_profile': profileId});
+    } on PostgrestException catch (e) {
+      throw AccountException(e.message, e.message);
+    }
+  }
+
   /// Deletes the account: lists the person's files, calls `account_delete`
   /// (one transaction, which also queues the files in storage_cleanup_queue),
   /// and only then removes the files from storage, best effort. This order

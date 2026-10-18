@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/blocked_filter.dart';
+import '../data/deactivated_filter.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
@@ -86,7 +87,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         .order('name', ascending: true)
         .limit(kDirectoryMaxRows);
     return withoutBlockedProfiles(
-      List<Map<String, dynamic>>.from(rows as List),
+      withoutDeactivatedProfiles(List<Map<String, dynamic>>.from(rows as List)),
     );
   }
 

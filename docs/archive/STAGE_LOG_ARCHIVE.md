@@ -122,3 +122,7 @@ Stages 0 to 8, moved unchanged from docs/STAGE_LOG.md.
 - Tests: `test/stage8_test.dart`; the Visit shop test now scrolls to the button because the banner is two lines.
 - Checks: analyze clean, all tests pass. No SQL change.
 
+## Stages 9 and 8B (summary)
+- Stage 8B: layout stress tests (`test/layout_stress_test.dart`, about 25 screens at 320x568 and 360x640, text up to 2.0); fixed the consent bottom panel, the policy banner and the My businesses status chip. 535 tests passed.
+- Stage 9: docs refreshed (`PROJECT_NOTES.md`, `README.md`, `DEMO_SCRIPT.md`, checklists, `SECURITY_AUDIT.md` section 11) and the PR written, ready for review, not merged.
+

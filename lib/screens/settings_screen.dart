@@ -5,6 +5,7 @@ import '../lock/lock_service.dart';
 import '../lock/pin_settings_screen.dart';
 import '../widgets/menu_list.dart';
 import 'blocked_users_screen.dart';
+import 'deactivate_account_screen.dart';
 import 'default_contact_screen.dart';
 import 'delete_account_screen.dart';
 
@@ -85,6 +86,16 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 8),
             MenuList(
               items: [
+                MenuItem(
+                  key: const Key('profile-deactivate'),
+                  icon: Icons.pause_circle_outline,
+                  title: 'Deactivate my account',
+                  subtitle: 'Hide your profile. Sign in again to come back.',
+                  onTap: () => _push(
+                    context,
+                    DeactivateAccountScreen(currentUser: currentUser),
+                  ),
+                ),
                 MenuItem(
                   key: const Key('profile-delete'),
                   icon: Icons.delete_forever_outlined,

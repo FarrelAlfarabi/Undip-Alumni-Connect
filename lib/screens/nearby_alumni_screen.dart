@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
 import '../data/blocked_filter.dart';
+import '../data/deactivated_filter.dart';
 import '../config/map_config.dart';
 import '../data/city_distances.dart';
 import '../widgets/error_view.dart';
@@ -91,7 +92,7 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
         .eq('verification_status', 'verified')
         .order('name', ascending: true);
     return withoutBlockedProfiles(
-      List<Map<String, dynamic>>.from(rows as List),
+      withoutDeactivatedProfiles(List<Map<String, dynamic>>.from(rows as List)),
     );
   }
 
