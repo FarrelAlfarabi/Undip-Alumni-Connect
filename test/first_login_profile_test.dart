@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/data/contact_repository.dart';
 import 'package:undip_alumni_connect/lock/session.dart';
 import 'package:undip_alumni_connect/screens/default_contact_screen.dart';
 import 'package:undip_alumni_connect/screens/first_login_profile_screen.dart';
@@ -95,9 +96,18 @@ void main() {
     testWidgets('Contact to share opens the existing default contact screen', (
       tester,
     ) async {
-      await enter(tester, {...testProfile(), kFirstLoginKey: true});
+      phone(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FirstLoginProfileScreen(
+            profile: testProfile(),
+            onDone: (_, _) {},
+            contactRepository: ContactRepository(_NoContactApi()),
+          ),
+        ),
+      );
       await tester.tap(find.byKey(const Key('first-login-contact-edit')));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.byType(DefaultContactScreen), findsOneWidget);
     });
 
@@ -116,4 +126,10 @@ void main() {
       expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
     });
   });
+}
+
+class _NoContactApi implements ContactApi {
+  @override
+  Future<dynamic> rpc(String function, Map<String, dynamic> params) async =>
+      null;
 }

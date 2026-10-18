@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/contact_repository.dart';
 import 'default_contact_screen.dart';
 import 'profile_setup_screen.dart';
 
@@ -16,6 +17,7 @@ class FirstLoginProfileScreen extends StatefulWidget {
     super.key,
     required this.profile,
     required this.onDone,
+    this.contactRepository,
   });
 
   final Map<String, dynamic> profile;
@@ -23,6 +25,9 @@ class FirstLoginProfileScreen extends StatefulWidget {
   /// Called with the profile (updated if they saved the editor) to enter the app.
   final void Function(BuildContext context, Map<String, dynamic> profile)
   onDone;
+
+  /// Injectable for tests.
+  final ContactRepository? contactRepository;
 
   @override
   State<FirstLoginProfileScreen> createState() =>
@@ -48,7 +53,10 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
   Future<void> _editContact() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => DefaultContactScreen(profileId: _profile['id'] as String),
+        builder: (_) => DefaultContactScreen(
+          profileId: _profile['id'] as String,
+          repository: widget.contactRepository,
+        ),
       ),
     );
     if (!mounted) return;
