@@ -44,3 +44,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## iPhone zoom guard (16 Oct 2026)
 - The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
 - Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
+
+## First-login profile step (18 Oct 2026)
+- After the first consent only (policy_version was null), an optional screen offers the existing employment editor and Default contact; Lewati skips. No migration, no new fields, NIM not shown.
+- Flutter not installed here: analyze and tests not run; CI must confirm.
