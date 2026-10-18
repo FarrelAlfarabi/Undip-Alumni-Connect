@@ -44,3 +44,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## iPhone zoom guard (16 Oct 2026)
 - The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
 - Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
+
+## Reports search and filters (18 Oct 2026)
+- Admin Reports: search (title, owner, note, reason) plus Type and Reason filters, on both Open and Hidden. Runs on the loaded list, no new load. Reason filter is hidden on the Hidden tab (those rows carry no reasons).

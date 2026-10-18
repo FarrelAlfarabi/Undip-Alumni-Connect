@@ -4,6 +4,7 @@ import '../data/admin_repository.dart';
 import '../data/report_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/filter_dropdown.dart';
 
 String reportTargetLabel(ReportTarget t) => switch (t) {
   ReportTarget.job => 'Job',
@@ -32,6 +33,9 @@ class AdminReportsScreen extends StatefulWidget {
 
 class _AdminReportsScreenState extends State<AdminReportsScreen> {
   bool _hidden = false;
+  String _type = kAllFilter;
+  String _reason = kAllFilter;
+  final _search = TextEditingController();
   late Future<List<AdminReport>> _future;
   final _busy = <String>{};
 
@@ -39,6 +43,38 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   void initState() {
     super.initState();
     _future = _fetch();
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Search and filters run on the list already loaded: title, owner, notes
+  /// and reason names. The reason filter only applies to open reports (the
+  /// Hidden list carries no reasons).
+  List<AdminReport> _visible(List<AdminReport> all) {
+    final q = _search.text.trim().toLowerCase();
+    return all.where((r) {
+      if (_type != kAllFilter && reportTargetLabel(r.targetType) != _type) {
+        return false;
+      }
+      if (!_hidden &&
+          _reason != kAllFilter &&
+          !r.reasons.any((e) => e.label == _reason)) {
+        return false;
+      }
+      if (q.isEmpty) return true;
+      return [
+        r.title,
+        r.ownerName,
+        r.hiddenReason,
+        ...r.notes,
+        ...r.reasons.map((e) => e.label),
+      ].any((v) => (v ?? '').toLowerCase().contains(q));
+    }).toList();
   }
 
   void _reload() => setState(() {
@@ -156,6 +192,68 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
               },
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Column(
+              children: [
+                TextField(
+                  key: const Key('admin-report-search'),
+                  controller: _search,
+                  decoration: InputDecoration(
+                    hintText: 'Search title, owner, note or reason...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _search.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.clear),
+                            tooltip: 'Clear search',
+                            onPressed: _search.clear,
+                          ),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: KeyedSubtree(
+                        key: const Key('admin-report-type'),
+                        child: FilterDropdown(
+                          label: 'Type',
+                          value: _type,
+                          options: [
+                            kAllFilter,
+                            for (final t in ReportTarget.values)
+                              reportTargetLabel(t),
+                          ],
+                          onChanged: (v) => setState(() => _type = v),
+                        ),
+                      ),
+                    ),
+                    if (!_hidden) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: const Key('admin-report-reason'),
+                          child: FilterDropdown(
+                            label: 'Reason',
+                            value: _reason,
+                            options: [
+                              kAllFilter,
+                              for (final e in ContentReportReason.values)
+                                e.label,
+                            ],
+                            onChanged: (v) => setState(() => _reason = v),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: FutureBuilder<List<AdminReport>>(
               future: _future,
@@ -173,13 +271,17 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                     onRetry: _reload,
                   );
                 }
-                final items = snap.data ?? const [];
-                if (items.isEmpty) {
+                final all = snap.data ?? const <AdminReport>[];
+                if (all.isEmpty) {
                   return Center(
                     child: Text(
                       _hidden ? 'Nothing is hidden.' : 'No open reports.',
                     ),
                   );
+                }
+                final items = _visible(all);
+                if (items.isEmpty) {
+                  return const Center(child: Text('Nothing matches.'));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
