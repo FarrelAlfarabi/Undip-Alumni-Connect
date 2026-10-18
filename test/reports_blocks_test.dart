@@ -731,8 +731,7 @@ void main() {
 
     testWidgets('hide needs a reason, nothing is automatic', (tester) async {
       final api = await pump(tester, [row()]);
-      // Opening the open list also marks the reports as seen.
-      expect(api.calls, ['admin_reports_list', 'admin_reports_mark_seen']);
+      expect(api.calls, ['admin_reports_list']);
       await tester.tap(find.byKey(const Key('hide-t1')));
       await tester.pumpAndSettle();
       await tester.tap(
@@ -744,7 +743,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('A reason is required'), findsOneWidget);
       expect(api.calls.contains('admin_reports_decide'), isFalse);
-      await tester.enterText(find.byType(TextField), 'Lowongan palsu');
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'Lowongan palsu',
+      );
       await tester.tap(
         find.descendant(
           of: find.byType(AlertDialog),

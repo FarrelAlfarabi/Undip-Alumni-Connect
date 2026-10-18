@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/admin_repository.dart';
 import '../data/report_repository.dart';
 import '../util/friendly_error.dart';
+import '../util/period_filter.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
 
@@ -35,6 +36,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   bool _hidden = false;
   String _type = kAllFilter;
   String _reason = kAllFilter;
+  String _period = kAllTime;
   final _search = TextEditingController();
   late Future<List<AdminReport>> _future;
   final _busy = <String>{};
@@ -53,11 +55,12 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   /// Search and filters run on the list already loaded: title, owner, notes
-  /// and reason names. The reason filter only applies to open reports (the
+  /// and reason names; Type, Period and Reason narrow it. The reason filter only applies to open reports (the
   /// Hidden list carries no reasons).
   List<AdminReport> _visible(List<AdminReport> all) {
     final q = _search.text.trim().toLowerCase();
     return all.where((r) {
+      if (!inPeriod(r.lastReported, _period)) return false;
       if (_type != kAllFilter && reportTargetLabel(r.targetType) != _type) {
         return false;
       }
@@ -81,20 +84,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     _future = _fetch();
   });
 
-  // Opening the open-reports list counts as seeing them: the badge on the
-  // Admin screen clears. A failure here must not hide the list.
-  Future<List<AdminReport>> _fetch() async {
-    final items = await widget.repository.reports(
-      widget.adminId,
-      hidden: _hidden,
-    );
-    if (!_hidden) {
-      try {
-        await widget.repository.markReportsSeen(widget.adminId);
-      } catch (_) {}
-    }
-    return items;
-  }
+  Future<List<AdminReport>> _fetch() =>
+      widget.repository.reports(widget.adminId, hidden: _hidden);
 
   void _toast(String m) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
@@ -228,6 +219,18 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                               reportTargetLabel(t),
                           ],
                           onChanged: (v) => setState(() => _type = v),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: KeyedSubtree(
+                        key: const Key('admin-report-period'),
+                        child: FilterDropdown(
+                          label: 'Period',
+                          value: _period,
+                          options: kPeriodOptions,
+                          onChanged: (v) => setState(() => _period = v),
                         ),
                       ),
                     ),

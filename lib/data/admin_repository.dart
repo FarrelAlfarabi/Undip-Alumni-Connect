@@ -260,6 +260,7 @@ class AdminReport {
     required this.notes,
     required this.isHidden,
     this.hiddenReason,
+    this.lastReported,
   });
 
   final ReportTarget targetType;
@@ -271,6 +272,9 @@ class AdminReport {
   final List<String> notes;
   final bool isHidden;
   final String? hiddenReason;
+
+  /// When it was last reported (for a hidden item: when it was hidden).
+  final DateTime? lastReported;
 
   /// Jobs, products and businesses can be hidden. Profiles and contact
   /// requests can only be dismissed or marked as handled.
@@ -300,6 +304,7 @@ class AdminReport {
       notes: strings(m['notes']),
       isHidden: m['is_hidden'] == true,
       hiddenReason: m['hidden_reason'] as String?,
+      lastReported: DateTime.tryParse('${m['last_reported']}'),
     );
   }
 }

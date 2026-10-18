@@ -47,3 +47,4 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 
 ## Reports search and filters (18 Oct 2026)
 - Admin Reports: search (title, owner, note, reason) plus Type and Reason filters, on both Open and Hidden. Runs on the loaded list, no new load. Reason filter is hidden on the Hidden tab (those rows carry no reasons).
+- Period filter (All time, Today, 7, 30 days) on Reports and Feedback. Removed the "new" tags: count badges on Admin Reports/Feedback and the Profile Admin row, the "N new of M" line, the highlighted border and status chip on new feedback. Reports no longer marks itself seen on open (data and SQL untouched). 690 tests pass.

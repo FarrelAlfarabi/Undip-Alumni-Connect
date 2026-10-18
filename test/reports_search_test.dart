@@ -12,6 +12,7 @@ Map<String, dynamic> row({
   String owner = 'Ahmad',
   List<String> reasons = const ['spam_or_scam'],
   List<String> notes = const [],
+  DateTime? at,
 }) => {
   'target_type': type,
   'target_id': id,
@@ -21,7 +22,7 @@ Map<String, dynamic> row({
   'report_count': 1,
   'reasons': reasons,
   'notes': notes,
-  'last_reported': '2026-10-02T00:00:00Z',
+  'last_reported': (at ?? DateTime.now()).toUtc().toIso8601String(),
   'is_hidden': false,
   'hidden_reason': null,
 };
@@ -92,10 +93,7 @@ void main() {
     await tester.enterText(search, 'zzz');
     await tester.pumpAndSettle();
     expect(find.text('Nothing matches.'), findsOneWidget);
-    expect(
-      api.calls.where((c) => c == 'admin_reports_list'),
-      hasLength(1),
-    );
+    expect(api.calls.where((c) => c == 'admin_reports_list'), hasLength(1));
   });
 
   testWidgets('filter by type', (tester) async {
@@ -135,5 +133,61 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('report-job-h2')), findsOneWidget);
     expect(find.byKey(const Key('report-job-h1')), findsNothing);
+  });
+
+  testWidgets('filter by period', (tester) async {
+    final now = DateTime.now();
+    await pump(tester, [
+      row(type: 'job', id: 'new', title: 'Fresh', at: now),
+      row(
+        type: 'job',
+        id: 'wk',
+        title: 'Last week',
+        at: now.subtract(const Duration(days: 5)),
+      ),
+      row(
+        type: 'job',
+        id: 'mo',
+        title: 'Last month',
+        at: now.subtract(const Duration(days: 20)),
+      ),
+      row(
+        type: 'job',
+        id: 'old',
+        title: 'Ancient',
+        at: now.subtract(const Duration(days: 90)),
+      ),
+    ]);
+    Finder card(String id) => find.byKey(Key('report-job-$id'));
+    expect(card('old'), findsOneWidget);
+
+    Future<void> pick(String label) async {
+      await tester.tap(find.byKey(const Key('admin-report-period')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+    }
+
+    await pick('Today');
+    expect(card('new'), findsOneWidget);
+    expect(card('wk'), findsNothing);
+
+    await pick('Last 7 days');
+    expect(card('new'), findsOneWidget);
+    expect(card('wk'), findsOneWidget);
+    expect(card('mo'), findsNothing);
+
+    await pick('Last 30 days');
+    expect(card('mo'), findsOneWidget);
+    expect(card('old'), findsNothing);
+
+    await pick('All time');
+    expect(card('old'), findsOneWidget);
+  });
+
+  testWidgets('no "New" tag on a report card', (tester) async {
+    await pump(tester, rows);
+    expect(find.text('New'), findsNothing);
+    expect(find.text('new'), findsNothing);
   });
 }

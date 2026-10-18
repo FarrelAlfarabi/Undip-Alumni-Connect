@@ -445,23 +445,50 @@ void main() {
       return api;
     }
 
-    testWidgets('lists items with the count of new ones', (tester) async {
+    testWidgets('lists items, with no "new" tag anywhere', (tester) async {
       final api = await pump(tester, [
         row('a', 'new'),
         row('b', 'seen'),
         row('c', 'new', name: null),
       ]);
       expect(api.params['admin_feedback_list'], {'p_admin': 'me'});
-      expect(
-        tester.widget<Text>(find.byKey(const Key('feedback-count'))).data,
-        '2 new of 3',
-      );
+      expect(find.byKey(const Key('feedback-count')), findsNothing);
+      expect(find.textContaining('new of'), findsNothing);
+      expect(find.widgetWithText(Chip, 'new'), findsNothing);
+      expect(find.widgetWithText(Chip, 'seen'), findsOneWidget);
       expect(find.textContaining('Not verified'), findsOneWidget);
       expect(
         find.textContaining('Error: Could not load jobs'),
         findsNWidgets(3),
       );
       expect(find.textContaining('v0.9.0 (build 7)'), findsNWidgets(3));
+    });
+
+    testWidgets('filter by period', (tester) async {
+      final now = DateTime.now().toUtc();
+      Map<String, dynamic> at(String id, int daysAgo) => {
+        ...row(id, 'seen'),
+        'created_at': now.subtract(Duration(days: daysAgo)).toIso8601String(),
+      };
+      await pump(tester, [at('a', 0), at('b', 5), at('c', 20), at('d', 90)]);
+      Future<void> pick(String label) async {
+        await tester.tap(find.byKey(const Key('admin-feedback-period')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label).last);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byKey(const Key('feedback-d')), findsOneWidget);
+      await pick('Last 7 days');
+      expect(find.byKey(const Key('feedback-a')), findsOneWidget);
+      expect(find.byKey(const Key('feedback-b')), findsOneWidget);
+      expect(find.byKey(const Key('feedback-c')), findsNothing);
+      await pick('Last 30 days');
+      expect(find.byKey(const Key('feedback-c')), findsOneWidget);
+      expect(find.byKey(const Key('feedback-d')), findsNothing);
+      await pick('Today');
+      expect(find.byKey(const Key('feedback-a')), findsOneWidget);
+      expect(find.byKey(const Key('feedback-b')), findsNothing);
     });
 
     testWidgets('mark as seen and done', (tester) async {
@@ -484,7 +511,7 @@ void main() {
     });
 
     testWidgets(
-      'Admin screen: Feedback section with a badge for new items, no notification',
+      'Admin screen: Feedback section has no "new" badge and asks no count',
       (tester) async {
         phone(tester);
         final api = FakeAdminApi()..results['admin_feedback_new_count'] = 5;
@@ -498,11 +525,9 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final badge = tester.widget<Badge>(
-          find.byKey(const Key('feedback-badge')),
-        );
-        expect(badge.isLabelVisible, isTrue);
-        expect((badge.label as Text).data, '5');
+        expect(find.byKey(const Key('feedback-badge')), findsNothing);
+        expect(find.byType(Badge), findsNothing);
+        expect(api.calls.contains('admin_feedback_new_count'), isFalse);
         expect(find.byKey(const Key('admin-reports')), findsOneWidget);
         expect(find.byKey(const Key('admin-businesses')), findsOneWidget);
       },
