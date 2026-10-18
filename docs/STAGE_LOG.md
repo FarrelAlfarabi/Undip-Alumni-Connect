@@ -44,3 +44,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## iPhone zoom guard (16 Oct 2026)
 - The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
 - Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
+
+## Profile save fix (18 Oct 2026)
+- Cause: DB trigger `alumni_profiles_restrict_update` still locked `city`; the editor sends city, so any city change failed. Not the Instagram migration (it only touches business functions).
+- Migration `20261018090000_profile_city_editable.sql` (not applied to any project) + rollback + SQL test 16. App sends city only when changed and names the locked-field error.
+- Checks: `run_beta_local.sh` and `run_fresh_chain.sh` pass. Flutter not installed in this session, so analyze and Dart tests run in CI only.
