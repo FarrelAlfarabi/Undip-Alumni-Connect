@@ -1,4 +1,4 @@
--- Undo 20261018090000_profile_city_editable.sql. Safe to run twice.
+-- Undo 20261018100000_profile_city_editable.sql. Safe to run twice.
 -- Locks city again (the previous column lock from 20261005090000).
 create or replace function alumni_profiles_restrict_update()
 returns trigger

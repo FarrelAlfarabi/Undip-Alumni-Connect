@@ -47,5 +47,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 
 ## Profile save fix (18 Oct 2026)
 - Cause: DB trigger `alumni_profiles_restrict_update` still locked `city`; the editor sends city, so any city change failed. Not the Instagram migration (it only touches business functions).
-- Migration `20261018090000_profile_city_editable.sql` (not applied to any project) + rollback + SQL test 16. App sends city only when changed and names the locked-field error.
+- Migration `20261018100000_profile_city_editable.sql` (not applied to any project) + rollback + SQL test 16. App sends city only when changed and names the locked-field error.
 - Checks: `run_beta_local.sh` and `run_fresh_chain.sh` pass. Flutter not installed in this session, so analyze and Dart tests run in CI only.
