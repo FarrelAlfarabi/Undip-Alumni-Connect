@@ -416,7 +416,7 @@ class _QuickActions extends StatelessWidget {
         _Tile(
           key: const Key('tile-directory'),
           icon: Icons.people_outline,
-          label: 'Directory',
+          label: 'Members',
           onTap: onDirectory,
         ),
         _Tile(

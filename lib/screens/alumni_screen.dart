@@ -59,7 +59,7 @@ class _AlumniScreenState extends State<AlumniScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.people_outline), text: 'Directory'),
+            Tab(icon: Icon(Icons.people_outline), text: 'Members'),
             Tab(icon: Icon(Icons.near_me_outlined), text: 'Nearby'),
           ],
         ),

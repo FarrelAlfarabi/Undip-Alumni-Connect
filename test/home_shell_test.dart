@@ -99,7 +99,7 @@ void main() {
     );
     expect(destinations.map((d) => d.label).toList(), [
       'Home',
-      'Directory',
+      'Members',
       'Market',
       'Profile',
     ]);
@@ -120,7 +120,7 @@ void main() {
     );
     expect(destinations.map((d) => d.label).toList(), [
       'Home',
-      'Directory',
+      'Members',
       'Market',
       'Chat',
       'Profile',
@@ -132,7 +132,7 @@ void main() {
       tester,
     ) async {
       await pumpShell(tester, chat: true);
-      for (final tab in ['Directory', 'Market', 'Chat', 'Profile']) {
+      for (final tab in ['Members', 'Market', 'Chat', 'Profile']) {
         await tapNav(tester, tab);
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -190,7 +190,7 @@ void main() {
   ) async {
     final users = <ValueNotifier<Map<String, dynamic>>>[];
     await pumpShell(tester, users: users, chat: true);
-    for (final tab in ['Directory', 'Market', 'Chat', 'Profile']) {
+    for (final tab in ['Members', 'Market', 'Chat', 'Profile']) {
       await tapNav(tester, tab);
     }
     await tapNav(tester, 'Home');
@@ -219,7 +219,7 @@ void main() {
     expect(chatBuilds, isEmpty);
     expect(dir, isEmpty);
     expect(market, isEmpty);
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     expect(dir.length, 1);
     expect(market, isEmpty);
     expect(chatBuilds, isEmpty);
@@ -261,7 +261,7 @@ void main() {
       await pumpShell(tester, chat: true);
       await tapNav(tester, 'Profile');
       expect(find.text('PAGE Profile'), findsOneWidget);
-      await tapNav(tester, 'Directory');
+      await tapNav(tester, 'Members');
       expect(find.text('PAGE Directory'), findsOneWidget);
       await tapNav(tester, 'Chat');
       expect(find.text('PAGE Chat'), findsOneWidget);
