@@ -41,21 +41,14 @@ flutter pub get
 # a browser. Production builds never do (web has no real secure storage).
 EXTRA_DEFINES=()
 if [ "${VERCEL_ENV:-}" = "preview" ]; then
-  EXTRA_DEFINES=(--dart-define=WEB_LOCK_TEST=true --dart-define=REAL_MAP=true)
+  EXTRA_DEFINES=(--dart-define=WEB_LOCK_TEST=true)
 fi
 # Real login (emailed code). Off unless the Vercel environment variable
 # REAL_LOGIN is set to "true". See docs/REAL_LOGIN.md before turning it on.
 if [ "${REAL_LOGIN:-}" = "true" ]; then
   EXTRA_DEFINES+=(--dart-define=REAL_LOGIN=true)
 fi
-# The real Nearby map can also be forced on in any environment.
-if [ "${REAL_MAP:-}" = "true" ] && [ "${VERCEL_ENV:-}" != "preview" ]; then
-  EXTRA_DEFINES+=(--dart-define=REAL_MAP=true)
-fi
-# Optional map provider settings from Vercel environment variables.
-if [ -n "${MAP_TILE_URL:-}" ]; then EXTRA_DEFINES+=("--dart-define=MAP_TILE_URL=${MAP_TILE_URL}"); fi
-if [ -n "${MAP_ATTRIBUTION:-}" ]; then EXTRA_DEFINES+=("--dart-define=MAP_ATTRIBUTION=${MAP_ATTRIBUTION}"); fi
-# An array, so a value with spaces (the map credit) stays one argument.
+# An array, so a value with spaces stays one argument.
 flutter build web --release ${EXTRA_DEFINES[@]+"${EXTRA_DEFINES[@]}"}
 
 # CanvasKit loads from Google's CDN by default (see flutter_bootstrap.js'
