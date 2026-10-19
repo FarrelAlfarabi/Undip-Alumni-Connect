@@ -60,7 +60,7 @@ void main() {
     final dir = <int>[];
     await pump(tester, directoryBuilds: dir, marketBuilds: <int>[]);
     final before = dir.length;
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     expect(dir.length, greaterThan(before));
   });
 
@@ -94,18 +94,18 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     await tapNav(tester, 'Home');
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     expect(dir.length, 1); // default window is minutes, not milliseconds
   });
 
   testWidgets('staying on the same tab does not rebuild it', (tester) async {
     final dir = <int>[];
     await pump(tester, directoryBuilds: dir, marketBuilds: <int>[]);
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     final after = dir.length;
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     expect(dir.length, after);
   });
 
@@ -113,7 +113,7 @@ void main() {
     final dir = <int>[];
     final market = <int>[];
     await pump(tester, directoryBuilds: dir, marketBuilds: market);
-    await tapNav(tester, 'Directory');
+    await tapNav(tester, 'Members');
     await tapNav(tester, 'Market');
     await tapNav(tester, 'Home');
     final d = dir.length;

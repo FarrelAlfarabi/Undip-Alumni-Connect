@@ -136,8 +136,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
         if (snapshot.hasError) {
           return ErrorView(
-            message: friendlyLoadError('the directory', snapshot.error),
-            screen: 'Directory',
+            message: friendlyLoadError('the members list', snapshot.error),
+            screen: 'Members',
             error: snapshot.error,
             onRetry: () => setState(() {
               _future = _fetchAlumni();

@@ -258,7 +258,7 @@ class _HomeShellState extends State<HomeShell> {
             const NavigationDestination(
               icon: Icon(Icons.people_outline),
               selectedIcon: Icon(Icons.people),
-              label: 'Directory',
+              label: 'Members',
             ),
             const NavigationDestination(
               icon: Icon(Icons.storefront_outlined),

@@ -21,11 +21,11 @@ Say this first: **this is a closed beta. It is free, there is no payment in the 
 
 ## 2. Navigation
 
-Four tabs: **Home, Directory, Market, Profile**. Chat is hidden. The bell (notifications) and **Requests** are on Home.
+Four tabs: **Home, Members, Market, Profile**. Chat is hidden. The bell (notifications) and **Requests** are on Home.
 
-## 3. Directory and Nearby
+## 3. Members and Nearby
 
-1. **Directory**: search by name or company, filter by major, year, industry.
+1. **Members**: search by name or company, filter by major, year, industry.
 2. Open a profile. Instead of messaging there is **Request contact**: the person decides whether to share a contact.
 3. **Nearby** is simulated from each profile's city, not real GPS. Switch the phone to dark mode to show the dark map.
 
