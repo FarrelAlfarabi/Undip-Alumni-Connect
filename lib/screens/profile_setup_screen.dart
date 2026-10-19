@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/city_distances.dart';
 import '../data/industries.dart';
+import '../data/profile_columns.dart';
 import '../lock/session.dart';
 import '../widgets/searchable_choice.dart';
 import 'verification_screen.dart';
@@ -91,7 +92,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             'city': _city,
         })
         .eq('id', id)
-        .select();
+        .select(kProfileColumns);
     final list = rows as List;
     return list.isEmpty ? null : list.first as Map<String, dynamic>;
   }
@@ -107,16 +108,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       var updated = await _updateById(widget.profile['id'] as String);
 
       if (updated == null) {
-        // Our cached id is stale -- look the row up again by NIM (a
+        // Our cached id is stale -- look the row up again by email (a
         // stable natural key untouched by a reset regenerating ids) and
-        // retry once with whatever id it has now.
-        final nim = widget.profile['nim'] as String?;
-        final fresh = nim == null
+        // retry once with whatever id it has now. NIM is not readable.
+        final email = widget.profile['email'] as String?;
+        final fresh = email == null
             ? null
             : await Supabase.instance.client
                   .from('alumni_profiles')
                   .select('id')
-                  .eq('nim', nim)
+                  .eq('email', email)
                   .maybeSingle();
         if (fresh != null) {
           updated = await _updateById(fresh['id'] as String);

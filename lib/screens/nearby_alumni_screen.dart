@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
+import '../data/profile_columns.dart';
 import '../data/blocked_filter.dart';
 import '../config/map_config.dart';
 import '../data/city_distances.dart';
@@ -87,7 +88,7 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     }
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
-        .select()
+        .select(kProfileColumns)
         .eq('verification_status', 'verified')
         .order('name', ascending: true);
     return withoutBlockedProfiles(
