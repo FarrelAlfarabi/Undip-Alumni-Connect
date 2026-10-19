@@ -82,3 +82,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Other members no longer get NIM. Migration `20261018120000_hide_nim.sql` revokes the `nim` column from anon/authenticated; `profile_nim(viewer, profile)` returns it to the owner and admins only. Rollback: `supabase/rollback_hide_nim.sql`. Not applied to any project.
 - App: every `alumni_profiles` read names its columns (`lib/data/profile_columns.dart`); a new column needs a grant and a line there. Profile card shows NIM only when `profile_nim` answers. Stale-id retry uses email, not NIM.
 - Deploy migration and app together. Local SQL checks pass; Flutter tests not run here (no Flutter in this container), CI runs them.
+
+- Stage: Home greeting pinned above the scroll area (widget test added; Flutter not available in cloud, CI runs it).
