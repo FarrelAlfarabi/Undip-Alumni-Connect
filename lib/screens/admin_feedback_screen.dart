@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
+import '../util/period_filter.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
 
@@ -27,6 +28,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
   final _busy = <String>{};
   final _search = TextEditingController();
   String _status = kAllFilter;
+  String _period = kAllTime;
 
   static const _statuses = [kAllFilter, 'new', 'seen', 'done'];
 
@@ -47,6 +49,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
     final q = _search.text.trim().toLowerCase();
     return all.where((f) {
       if (_status != kAllFilter && f.status != _status) return false;
+      if (!inPeriod(f.createdAt, _period)) return false;
       if (q.isEmpty) return true;
       return [
         f.profileName,
@@ -105,7 +108,6 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
           if (items.isEmpty) {
             return const Center(child: Text('No feedback yet.'));
           }
-          final fresh = items.where((f) => f.isNew).length;
           final shown = _visible(items);
           return Column(
             children: [
@@ -135,13 +137,20 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    '$fresh new of ${items.length}',
-                    key: const Key('feedback-count'),
-                    style: Theme.of(context).textTheme.labelLarge,
+                  child: SizedBox(
+                    width: 200,
+                    child: KeyedSubtree(
+                      key: const Key('admin-feedback-period'),
+                      child: FilterDropdown(
+                        label: 'Period',
+                        value: _period,
+                        options: kPeriodOptions,
+                        onChanged: (v) => setState(() => _period = v),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -191,11 +200,7 @@ class _FeedbackCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: f.isNew
-              ? theme.colorScheme.primary
-              : theme.colorScheme.outlineVariant,
-        ),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -212,10 +217,11 @@ class _FeedbackCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Chip(
-                  label: Text(f.status),
-                  visualDensity: VisualDensity.compact,
-                ),
+                if (!f.isNew)
+                  Chip(
+                    label: Text(f.status),
+                    visualDensity: VisualDensity.compact,
+                  ),
               ],
             ),
             Text(
