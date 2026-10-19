@@ -134,9 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ValueNotifier<Map<String, dynamic>> get _user => widget.currentUser;
 
   Future<void> _openRequests() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => widget.pages.requests(_user)),
-    );
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => widget.pages.requests(_user)));
     if (mounted) {
       setState(() {
         _pendingRequests = _api
@@ -289,8 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   heading: 'Baru di Marketplace',
                   future: _listings,
                   emptyIcon: Icons.storefront_outlined,
-                  emptyText:
-                      'Belum ada produk. Produk yang disetujui akan muncul di sini.',
+                  emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
                   onRetry: () => setState(() {
                     _listings = _fetchListings();
                   }),
@@ -491,9 +489,8 @@ class _RequestsCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   '$count alumni ingin terhubung denganmu. Lihat permintaan',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onTertiaryContainer,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: scheme.onTertiaryContainer),
                 ),
               ),
               Icon(Icons.chevron_right, color: scheme.onTertiaryContainer),
@@ -558,9 +555,8 @@ class _Tile extends StatelessWidget {
                       subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),

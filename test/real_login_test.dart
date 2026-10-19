@@ -134,7 +134,10 @@ void main() {
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '000000');
       await settle(tester);
-      expect(find.textContaining('salah atau sudah kedaluwarsa'), findsOneWidget);
+      expect(
+        find.textContaining('salah atau sudah kedaluwarsa'),
+        findsOneWidget,
+      );
       expect(find.text('Terjadi Kesalahan'), findsNothing);
       expect(find.byKey(const Key('login-code')), findsOneWidget);
       // Can try again right away.

@@ -91,9 +91,10 @@ void main() {
       WidgetTester tester,
       Map<String, dynamic> profile, {
       bool showEdit = false,
+      FakeContactApi? withApi,
     }) async {
       phone(tester);
-      final api = FakeContactApi();
+      final api = withApi ?? FakeContactApi();
       await tester.pumpWidget(
         MaterialApp(
           home: ProfileDetailScreen(
@@ -110,16 +111,51 @@ void main() {
 
     testWidgets('shown on another alumnus profile', (tester) async {
       await pump(tester, other);
-      expect(find.text('Request to contact'), findsOneWidget);
+      expect(find.text('Minta kontak'), findsOneWidget);
+    });
+
+    testWidgets('an open request to this person shows as sent, not a button', (
+      tester,
+    ) async {
+      final api = FakeContactApi()
+        ..results['contact_requests_outgoing'] = [
+          outgoingMap(targetId: 'u2', name: 'Siti Azizah'),
+        ];
+      await pump(tester, other, withApi: api);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('request-sent')), findsOneWidget);
+      expect(find.byKey(const Key('request-contact')), findsNothing);
+      expect(find.textContaining('menunggu jawaban'), findsOneWidget);
+    });
+
+    testWidgets('an answered request does not block a new one', (tester) async {
+      final api = FakeContactApi()
+        ..results['contact_requests_outgoing'] = [
+          outgoingMap(targetId: 'u2', status: 'rejected'),
+        ];
+      await pump(tester, other, withApi: api);
+      expect(find.byKey(const Key('request-contact')), findsOneWidget);
+    });
+
+    testWidgets('after sending, the button turns into the sent state', (
+      tester,
+    ) async {
+      await pump(tester, other);
+      await tester.tap(find.byKey(const Key('request-contact')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kirim permintaan'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('request-sent')), findsOneWidget);
+      expect(find.byKey(const Key('request-contact')), findsNothing);
     });
 
     testWidgets('not shown on my own profile (either way of opening it)', (
       tester,
     ) async {
       await pump(tester, me, showEdit: true);
-      expect(find.text('Request to contact'), findsNothing);
+      expect(find.text('Minta kontak'), findsNothing);
       await pump(tester, me);
-      expect(find.text('Request to contact'), findsNothing);
+      expect(find.text('Minta kontak'), findsNothing);
     });
 
     testWidgets('sheet: optional message, 200 limit, sends and confirms', (
@@ -134,14 +170,14 @@ void main() {
         find.byType(TextField),
         'Saya ingin bertanya soal karier',
       );
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Kirim permintaan'));
       await tester.pumpAndSettle();
       expect(api.params['contact_request_send'], {
         'p_requester': 'me',
         'p_target': 'u2',
         'p_message': 'Saya ingin bertanya soal karier',
       });
-      expect(find.text('Request sent to Siti Azizah.'), findsOneWidget);
+      expect(find.text('Permintaan terkirim ke Siti Azizah.'), findsOneWidget);
     });
 
     testWidgets('a blocked send shows a plain message and keeps the sheet', (
@@ -151,13 +187,13 @@ void main() {
       api.throwOnCall = pgFail('request_already_open');
       await tester.tap(find.byKey(const Key('request-contact')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Send request'));
+      await tester.tap(find.text('Kirim permintaan'));
       await tester.pumpAndSettle();
       expect(
         find.textContaining('already have an open request'),
         findsOneWidget,
       );
-      expect(find.text('Send request'), findsOneWidget);
+      expect(find.text('Kirim permintaan'), findsOneWidget);
     });
   });
 

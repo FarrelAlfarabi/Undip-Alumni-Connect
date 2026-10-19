@@ -137,8 +137,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
       if (!mounted) return;
       setState(() => _state = _VerificationState.idle);
       _startCooldown();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Kode baru sudah dikirim')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kode baru sudah dikirim')));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -570,7 +571,9 @@ class _VerificationForm extends StatelessWidget {
               key: const Key('login-resend'),
               onPressed: loading || resendIn > 0 ? null : onResend,
               child: Text(
-                resendIn > 0 ? 'Kirim ulang kode dalam $resendIn dtk' : 'Kirim ulang kode',
+                resendIn > 0
+                    ? 'Kirim ulang kode dalam $resendIn dtk'
+                    : 'Kirim ulang kode',
               ),
             ),
             TextButton(
@@ -580,7 +583,9 @@ class _VerificationForm extends StatelessWidget {
                 error: null,
                 screen: 'Login help: no code or changed email',
               ),
-              child: const Text('Kode tidak masuk atau email berubah? Hubungi tim'),
+              child: const Text(
+                'Kode tidak masuk atau email berubah? Hubungi tim',
+              ),
             ),
             TextButton(
               key: const Key('login-change-email'),

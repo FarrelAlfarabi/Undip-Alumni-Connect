@@ -7,6 +7,7 @@ import '../data/admin_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
+import '../models/contact_request.dart';
 import '../lock/session.dart';
 import '../policy/policy_screen.dart';
 import '../util/friendly_error.dart';
@@ -92,6 +93,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _nim = _askNim();
     if (widget.showEditButton) {
       _isAdmin = _askAdmin();
+    } else if (!_isOwnProfile) {
+      _loadRequestSent();
     }
   }
 
@@ -141,14 +144,33 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
   }
 
+  // True when I already have a request to this person that is waiting for
+  // an answer. Then the button says so instead of inviting a second request.
+  bool _requestSent = false;
+
+  Future<void> _loadRequestSent() async {
+    try {
+      final mine = await (widget.contactRepository ?? ContactRepository())
+          .outgoing(widget.currentUser.value['id'] as String);
+      final id = _profile['id'];
+      final open = mine.any(
+        (r) => r.targetId == id && r.status == ContactRequestStatus.pending,
+      );
+      if (open && mounted) setState(() => _requestSent = true);
+    } catch (_) {
+      // Unknown: keep the normal button. A second send is refused anyway.
+    }
+  }
+
   Future<void> _requestContact() async {
-    await showRequestContactSheet(
+    final sent = await showRequestContactSheet(
       context,
       repository: widget.contactRepository ?? ContactRepository(),
       requesterId: widget.currentUser.value['id'] as String,
       targetId: _profile['id'] as String,
-      targetName: _profile['name'] as String? ?? 'this alumnus',
+      targetName: _profile['name'] as String? ?? 'alumni ini',
     );
+    if (sent && mounted) setState(() => _requestSent = true);
   }
 
   Future<void> _messageThisAlumnus() async {
@@ -449,12 +471,29 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                   ] else if (!_isOwnProfile) ...[
                     const SizedBox(height: 20),
-                    FilledButton.icon(
-                      key: const Key('request-contact'),
-                      onPressed: _requestContact,
-                      icon: const Icon(Icons.person_add_alt_outlined),
-                      label: const Text('Request to contact'),
-                    ),
+                    if (_requestSent) ...[
+                      FilledButton.tonalIcon(
+                        key: const Key('request-sent'),
+                        onPressed: null,
+                        icon: const Icon(Icons.hourglass_top),
+                        label: const Text('Permintaan terkirim'),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Sedang menunggu jawaban. Kamu akan dapat notifikasi '
+                        'saat ada jawaban.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ] else
+                      FilledButton.icon(
+                        key: const Key('request-contact'),
+                        onPressed: _requestContact,
+                        icon: const Icon(Icons.person_add_alt_outlined),
+                        label: const Text('Minta kontak'),
+                      ),
                     if (widget.chat) ...[
                       const SizedBox(height: 12),
                       FilledButton.icon(
