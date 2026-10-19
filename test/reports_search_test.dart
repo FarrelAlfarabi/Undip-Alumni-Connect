@@ -124,7 +124,7 @@ void main() {
       {...row(type: 'job', id: 'h1', title: 'Admin kerja'), 'is_hidden': true},
       {...row(type: 'job', id: 'h2', title: 'Sales'), 'is_hidden': true},
     ];
-    await tester.tap(find.text('Hidden'));
+    await tester.tap(find.byTooltip('Hidden items'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('admin-report-search')),
@@ -133,6 +133,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('report-job-h2')), findsOneWidget);
     expect(find.byKey(const Key('report-job-h1')), findsNothing);
+  });
+
+  testWidgets('no Hidden tab; hidden items sit behind one icon', (
+    tester,
+  ) async {
+    await pump(tester, rows);
+    expect(find.byType(SegmentedButton<bool>), findsNothing);
+    expect(find.text('Hidden'), findsNothing);
+    expect(find.byTooltip('Hidden items'), findsOneWidget);
+    await tester.tap(find.byTooltip('Hidden items'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Hidden items'), findsNothing);
+    expect(find.text('Hidden items'), findsOneWidget);
+  });
+
+  testWidgets('every card: main action on top, full width, same place', (
+    tester,
+  ) async {
+    await pump(tester, rows);
+    final hide = tester.getRect(find.byKey(const Key('hide-p1')));
+    final suspend = tester.getRect(find.byKey(const Key('suspend-u1')));
+    final handled = tester.getRect(find.byKey(const Key('hide-j1')));
+    expect(hide.left, suspend.left);
+    expect(hide.width, suspend.width);
+    expect(handled.left, hide.left);
+    expect(handled.width, hide.width);
+    // Dismiss is always under the main action, never beside it.
+    final dismiss = tester.getRect(find.byKey(const Key('dismiss-p1')));
+    expect(dismiss.top, greaterThan(hide.bottom));
+    // Profile: Dismiss and Mark as handled share one row under Suspend.
+    final pd = tester.getRect(find.byKey(const Key('dismiss-u1')));
+    final pa = tester.getRect(find.byKey(const Key('actioned-u1')));
+    expect(pd.top, greaterThan(suspend.bottom));
+    expect(pa.top, pd.top);
   });
 
   testWidgets('filter by period', (tester) async {

@@ -40,7 +40,7 @@ class _MarketScreenState extends State<MarketScreen> {
         builder: (context, index, _) => Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: SizedBox(
                 width: double.infinity,
                 child: SegmentedButton<int>(

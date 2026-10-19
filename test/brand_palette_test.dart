@@ -68,6 +68,26 @@ void main() {
     });
   });
 
+  test('surfaces are neutral grey, no cream or blue tint', () {
+    final scheme = AppTheme.light().colorScheme;
+    int spread(Color c) {
+      final v = [c.r, c.g, c.b].map((x) => (x * 255).round()).toList()..sort();
+      return v.last - v.first;
+    }
+
+    for (final c in [
+      scheme.surface,
+      scheme.surfaceContainerLowest,
+      scheme.surfaceContainerLow,
+      scheme.surfaceContainer,
+      scheme.surfaceContainerHigh,
+      scheme.outlineVariant,
+    ]) {
+      expect(spread(c), lessThanOrEqualTo(6), reason: '$c is tinted');
+    }
+    expect(scheme.surface, isNot(const Color(0xFFF8F6F1)));
+  });
+
   test('the old indigo and brass are gone from the theme', () {
     final scheme = AppTheme.light().colorScheme;
     for (final c in [scheme.primary, scheme.secondary, scheme.surface]) {

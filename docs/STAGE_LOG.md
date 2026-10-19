@@ -97,3 +97,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Deploy migration and app together. Local SQL checks pass; Flutter tests not run here (no Flutter in this container), CI runs them.
 
 - Stage: Home greeting pinned above the scroll area (widget test added; Flutter not available in cloud, CI runs it).
+## Neutral surfaces, Market and Reports layout (19 Oct 2026)
+- Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
+- Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
+- Tests updated. Analyze clean, 747 tests pass.
