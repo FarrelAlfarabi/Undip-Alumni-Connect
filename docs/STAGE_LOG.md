@@ -57,3 +57,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Suspend user (18 Oct 2026)
 - Reports: "Suspend user" on profile and contact-request reports (reason required), "Lift suspension" from the Hidden list. A suspended person cannot sign in (email match or email code), is gone from the Directory, and an already signed-in session is refused. Admins and yourself cannot be suspended. Their posts and businesses stay; hide those separately.
 - Migration `20261018090000_suspend_user.sql` (rollback `rollback_suspend_user.sql`) is not applied to any project; it leaves the anon update policy alone if the real-login cutover dropped it. 704 tests pass, both SQL runners pass.
+## Profile save fix (18 Oct 2026)
+- Cause: DB trigger `alumni_profiles_restrict_update` still locked `city`; the editor sends city, so any city change failed. Not the Instagram migration (it only touches business functions).
+- Migration `20261018100000_profile_city_editable.sql` (not applied to any project) + rollback + SQL test 16. App sends city only when changed and names the locked-field error.
+- Checks: `run_beta_local.sh` and `run_fresh_chain.sh` pass. Flutter not installed in this session, so analyze and Dart tests run in CI only.
