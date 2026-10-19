@@ -70,8 +70,10 @@ void main() {
       String msg(ContactErrorCode c) =>
           contactErrorMessage(ContactException(c, ''));
       expect(msg(ContactErrorCode.tooManyOpen), contains('$kOpenRequestMax'));
-      expect(msg(ContactErrorCode.dailyLimitReached),
-          contains('$kDailyRequestMax'));
+      expect(
+        msg(ContactErrorCode.dailyLimitReached),
+        contains('$kDailyRequestMax'),
+      );
       expect(msg(ContactErrorCode.alreadyShared), contains('Requests'));
     });
 

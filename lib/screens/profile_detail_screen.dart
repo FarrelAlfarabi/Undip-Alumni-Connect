@@ -229,7 +229,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.showEditButton ? 'My Profile' : 'Alumni Profile'),
+        title: Text(widget.showEditButton ? 'Profil Saya' : 'Profil Alumni'),
         // Own profile is the Profile tab's root (HomeShell index 0) — no
         // back arrow, matching every other bottom-nav tab. Someone else's
         // profile is a real pushed screen (from the Directory, a job
@@ -248,6 +248,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
         ],
       ),
+      // The main action on someone else's profile stays on screen while the
+      // page scrolls, instead of sitting under both panels.
+      bottomNavigationBar: !widget.showEditButton && !_isOwnProfile
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _contactActions(theme),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -355,68 +372,133 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          _panel(
-                            theme,
-                            icon: Icons.school_outlined,
-                            title: 'Academic',
-                            children: [
-                              FutureBuilder<String?>(
-                                future: _nim,
-                                builder: (context, snap) {
-                                  final nim = snap.data;
-                                  if (nim == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return _field(theme, 'NIM', nim);
-                                },
-                              ),
-                              _field(theme, 'Faculty', _profile['faculty']),
-                              _field(theme, 'Major', _profile['major']),
-                              _field(
-                                theme,
-                                'Graduation Year',
-                                _profile['graduation_year']?.toString(),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          _panel(
-                            theme,
-                            icon: Icons.work_outline,
-                            title: 'Employment',
-                            action: widget.showEditButton
-                                ? TextButton.icon(
-                                    key: const Key('profile-edit'),
-                                    onPressed: _editProfile,
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
+                          if (widget.showEditButton) ...[
+                            _panel(
+                              theme,
+                              icon: Icons.school_outlined,
+                              title: 'Academic',
+                              children: [
+                                FutureBuilder<String?>(
+                                  future: _nim,
+                                  builder: (context, snap) {
+                                    final nim = snap.data;
+                                    if (nim == null) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return _field(theme, 'NIM', nim);
+                                  },
+                                ),
+                                _field(theme, 'Faculty', _profile['faculty']),
+                                _field(theme, 'Major', _profile['major']),
+                                _field(
+                                  theme,
+                                  'Graduation Year',
+                                  _profile['graduation_year']?.toString(),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _panel(
+                              theme,
+                              icon: Icons.work_outline,
+                              title: 'Employment',
+                              action: widget.showEditButton
+                                  ? TextButton.icon(
+                                      key: const Key('profile-edit'),
+                                      onPressed: _editProfile,
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
                                       ),
-                                    ),
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                    ),
-                                    label: const Text('Edit'),
-                                  )
-                                : null,
-                            children: [
-                              _field(
-                                theme,
-                                'Current Role',
-                                _profile['current_role'],
-                              ),
-                              _field(theme, 'Industry', _profile['industry']),
-                              // Profiles saved before the two employer fields
-                              // were merged may only have current_employer.
-                              _field(
-                                theme,
-                                'Company',
-                                _profile['company'] ??
-                                    _profile['current_employer'],
-                              ),
-                            ],
-                          ),
+                                      icon: const Icon(
+                                        Icons.edit_outlined,
+                                        size: 18,
+                                      ),
+                                      label: const Text('Edit'),
+                                    )
+                                  : null,
+                              children: [
+                                _field(
+                                  theme,
+                                  'Current Role',
+                                  _profile['current_role'],
+                                ),
+                                _field(theme, 'Industry', _profile['industry']),
+                                // Profiles saved before the two employer fields
+                                // were merged may only have current_employer.
+                                _field(
+                                  theme,
+                                  'Company',
+                                  _profile['company'] ??
+                                      _profile['current_employer'],
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            _panel(
+                              theme,
+                              icon: Icons.work_outline,
+                              title: 'Employment',
+                              action: widget.showEditButton
+                                  ? TextButton.icon(
+                                      key: const Key('profile-edit'),
+                                      onPressed: _editProfile,
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.edit_outlined,
+                                        size: 18,
+                                      ),
+                                      label: const Text('Edit'),
+                                    )
+                                  : null,
+                              children: [
+                                _field(
+                                  theme,
+                                  'Current Role',
+                                  _profile['current_role'],
+                                ),
+                                _field(theme, 'Industry', _profile['industry']),
+                                // Profiles saved before the two employer fields
+                                // were merged may only have current_employer.
+                                _field(
+                                  theme,
+                                  'Company',
+                                  _profile['company'] ??
+                                      _profile['current_employer'],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _panel(
+                              theme,
+                              icon: Icons.school_outlined,
+                              title: 'Academic',
+                              children: [
+                                FutureBuilder<String?>(
+                                  future: _nim,
+                                  builder: (context, snap) {
+                                    final nim = snap.data;
+                                    if (nim == null) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return _field(theme, 'NIM', nim);
+                                  },
+                                ),
+                                _field(theme, 'Faculty', _profile['faculty']),
+                                _field(theme, 'Major', _profile['major']),
+                                _field(
+                                  theme,
+                                  'Graduation Year',
+                                  _profile['graduation_year']?.toString(),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -469,47 +551,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onSignOut: () =>
                           signOutTo(context, const VerificationScreen()),
                     ),
-                  ] else if (!_isOwnProfile) ...[
-                    const SizedBox(height: 20),
-                    if (_requestSent) ...[
-                      FilledButton.tonalIcon(
-                        key: const Key('request-sent'),
-                        onPressed: null,
-                        icon: const Icon(Icons.hourglass_top),
-                        label: const Text('Permintaan terkirim'),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Sedang menunggu jawaban. Kamu akan dapat notifikasi '
-                        'saat ada jawaban.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ] else
-                      FilledButton.icon(
-                        key: const Key('request-contact'),
-                        onPressed: _requestContact,
-                        icon: const Icon(Icons.person_add_alt_outlined),
-                        label: const Text('Minta kontak'),
-                      ),
-                    if (widget.chat) ...[
-                      const SizedBox(height: 12),
-                      FilledButton.icon(
-                        onPressed: _messaging ? null : _messageThisAlumnus,
-                        icon: _messaging
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const Icon(Icons.chat_bubble_outline),
-                        label: const Text('Message'),
-                      ),
-                    ],
                   ],
                 ],
               ),
@@ -519,6 +560,46 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       ),
     );
   }
+
+  List<Widget> _contactActions(ThemeData theme) => [
+    if (_requestSent) ...[
+      FilledButton.tonalIcon(
+        key: const Key('request-sent'),
+        onPressed: null,
+        icon: const Icon(Icons.hourglass_top),
+        label: const Text('Permintaan terkirim'),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        'Sedang menunggu jawaban. Kamu akan dapat notifikasi saat ada '
+        'jawaban.',
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    ] else
+      FilledButton.icon(
+        key: const Key('request-contact'),
+        onPressed: _requestContact,
+        icon: const Icon(Icons.person_add_alt_outlined),
+        label: const Text('Minta kontak'),
+      ),
+    if (widget.chat) ...[
+      const SizedBox(height: 12),
+      FilledButton.icon(
+        onPressed: _messaging ? null : _messageThisAlumnus,
+        icon: _messaging
+            ? const SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            : const Icon(Icons.chat_bubble_outline),
+        label: const Text('Message'),
+      ),
+    ],
+  ];
 
   /// A soft inner panel for one group of facts: icon and small-caps title on
   /// the left, an optional action (Edit) on the right, then the rows.
