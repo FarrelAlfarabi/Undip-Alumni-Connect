@@ -73,6 +73,8 @@ flutter:
     # Fonts bundled so the app never downloads them at runtime (google_fonts
     # finds them here by file name, see assets/fonts/README.md).
     - assets/fonts/
+    # Ikafe UNDIP logo (shown on a white chip, see widgets/brand_lockup.dart).
+    - assets/brand/
     # - images/a_dot_burr.jpeg
     # - images/a_dot_ham.jpeg
 

@@ -57,6 +57,10 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
 - Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
 
+## Ikafe palette and logo (19 Oct 2026)
+- Colors only: yellow `#FFC400`, black `#141414`, blue `#0073B1` (links) replace indigo and brass in `lib/theme.dart`. Filled buttons are yellow with black text; text links are blue; the lock screen is black.
+- The Ikafe UNDIP logo (`assets/brand/`) sits on a white chip in the Home app bar, Welcome and lock screens. App title is "Lingkaran by Ikafe UNDIP". Layout unchanged.
+- Tests: `test/brand_palette_test.dart` (AA contrast, theme mapping, logo placement). Analyze clean, 694 tests pass.
 ## Terms scroll gate (18 Oct 2026)
 - Consent screen: the checkbox stays off until the policy is scrolled to the bottom, with a hint line. Short text that fits on screen unlocks at once. Stays unlocked after switching language. Policy text unchanged.
 - Tests: `consent_scroll_test.dart`; `account_test.dart` scrolls first. Analyze clean, 686 tests pass.

@@ -268,10 +268,12 @@ const variants = [
   Variant('360x640 x1.6', Size(360, 640), 1.6),
 ];
 
-/// Reads the policy files straight from disk.
+/// Reads the policy files and images straight from disk. The asset manifest
+/// (which Image.asset asks for first) comes from the test bundle.
 class DiskBundle extends CachingAssetBundle {
   @override
   Future<ByteData> load(String key) async {
+    if (key == 'AssetManifest.bin') return rootBundle.load(key);
     final bytes = File(key).readAsBytesSync();
     return ByteData.sublistView(Uint8List.fromList(bytes));
   }
