@@ -4,6 +4,12 @@ Older stages (0 to 8): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Feature intro (19 Oct 2026)
+- New `FeatureIntroScreen`: 2 skippable pages explaining Marketplace (Market > Products) and Business (Market > Businesses). Copy in Indonesian, feature names in English.
+- `IntroGate` wraps the app in `defaultHomeBuilder`; shows the intro once per person per device (flag in the lock store, `LockService.introSeen/markIntroSeen`). Web build shows it once per page load.
+- Settings > "Pengenalan fitur" reopens it. Independent of the profile-setup PR. No SQL change.
+- Checks: analyze clean, full suite passes (`test/feature_intro_test.dart` new).
+
 ## Stage 9: docs and PR
 - Updated `PROJECT_NOTES.md` (new entry), `README.md`, `DEMO_SCRIPT.md`, `MARKETPLACE_CHECKLIST.md`, `docs/hub/CLICK_TEST_CHECKLIST.md`. Added section 11 "Known gaps for the closed beta" to `SECURITY_AUDIT.md`. The master plan was not touched.
 - PR description written (migration order, secrets, admin SQL, "I must fill in", decisions, gaps, warning). PR marked ready for review. Not merged. Vercel not touched.
