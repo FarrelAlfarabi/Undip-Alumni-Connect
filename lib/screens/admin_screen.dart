@@ -4,12 +4,15 @@ import '../data/admin_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
+import '../util/period_filter.dart';
+import 'admin_announcements_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
+import '../widgets/searchable_choice.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
 /// only when the database says this profile is an admin.
@@ -38,22 +41,6 @@ class _AdminScreenState extends State<AdminScreen> {
       widget.adminRepository ?? AdminRepository();
   late final MarketplaceRepository _market =
       widget.marketplaceRepository ?? MarketplaceRepository();
-  late Future<int> _newFeedback;
-  late Future<int> _unseenReports;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCount();
-  }
-
-  void _loadCount() {
-    _newFeedback = _admin.newFeedbackCount(widget.adminId).catchError((_) => 0);
-    _unseenReports = _admin
-        .unseenReportsCount(widget.adminId)
-        .catchError((_) => 0);
-  }
-
   @override
   Widget build(BuildContext context) {
     final adminId = widget.adminId;
@@ -64,7 +51,6 @@ class _AdminScreenState extends State<AdminScreen> {
         icon: Icons.flag_outlined,
         title: 'Reports',
         subtitle: 'Reported content: dismiss, hide, restore',
-        showsReportsCount: true,
         builder: (_) =>
             AdminReportsScreen(adminId: adminId, repository: _admin),
       ),
@@ -73,9 +59,16 @@ class _AdminScreenState extends State<AdminScreen> {
         icon: Icons.feedback_outlined,
         title: 'Feedback',
         subtitle: 'What testers sent from the Send feedback button',
-        showsFeedbackCount: true,
         builder: (_) =>
             AdminFeedbackScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-announcements',
+        icon: Icons.campaign_outlined,
+        title: 'Announcements',
+        subtitle: 'Post news for all members, search past posts',
+        builder: (_) =>
+            AdminAnnouncementsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-businesses',
@@ -113,38 +106,10 @@ class _AdminScreenState extends State<AdminScreen> {
                 leading: Icon(s.icon),
                 title: Text(s.title),
                 subtitle: Text(s.subtitle),
-                trailing: s.showsFeedbackCount
-                    ? FutureBuilder<int>(
-                        future: _newFeedback,
-                        builder: (context, snap) {
-                          final n = snap.data ?? 0;
-                          return Badge(
-                            key: const Key('feedback-badge'),
-                            isLabelVisible: n > 0,
-                            label: Text('$n'),
-                            child: const Icon(Icons.chevron_right),
-                          );
-                        },
-                      )
-                    : s.showsReportsCount
-                    ? FutureBuilder<int>(
-                        future: _unseenReports,
-                        builder: (context, snap) {
-                          final n = snap.data ?? 0;
-                          return Badge(
-                            key: const Key('reports-badge'),
-                            isLabelVisible: n > 0,
-                            label: Text('$n'),
-                            child: const Icon(Icons.chevron_right),
-                          );
-                        },
-                      )
-                    : const Icon(Icons.chevron_right),
-                onTap: () async {
-                  await Navigator.of(context)
-                      .push(MaterialPageRoute(builder: s.builder));
-                  if (mounted) setState(_loadCount);
-                },
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(builder: s.builder)),
               ),
             ),
         ],
@@ -160,15 +125,11 @@ class AdminSection {
     required this.title,
     required this.subtitle,
     required this.builder,
-    this.showsFeedbackCount = false,
-    this.showsReportsCount = false,
   });
 
   final String key;
-  final bool showsFeedbackCount;
 
   /// Shows the number of reports no admin has seen yet.
-  final bool showsReportsCount;
   final IconData icon;
   final String title;
   final String subtitle;
@@ -201,8 +162,11 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   ];
 
   String? _status = 'pending';
+  String get _statusLabel => _filters.firstWhere((f) => f.$2 == _status).$1;
   String _category = kAllFilter;
+  String _period = kAllTime;
   final _search = TextEditingController();
+  final _categoryText = TextEditingController(text: kAllFilter);
   late Future<List<Business>> _future;
   final _busy = <String>{};
 
@@ -216,15 +180,17 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   @override
   void dispose() {
     _search.dispose();
+    _categoryText.dispose();
     super.dispose();
   }
 
   /// Search is on the list already loaded for the chosen status: name, owner,
-  /// description and both links.
+  /// description and both links. Category and post date narrow it further.
   List<Business> _visible(List<Business> all) {
     final q = _search.text.trim().toLowerCase();
     return all.where((b) {
       if (_category != kAllFilter && b.category != _category) return false;
+      if (!inPeriod(b.createdAt, _period)) return false;
       if (q.isEmpty) return true;
       return [
         b.name,
@@ -370,63 +336,79 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
       appBar: AppBar(title: const Text('Businesses')),
       body: Column(
         children: [
-          SizedBox(
-            height: 56,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              children: [
-                for (final f in _filters)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(f.$1),
-                      selected: _status == f.$2,
-                      onSelected: (_) {
-                        _status = f.$2;
-                        _reload();
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Column(
               children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    key: const Key('admin-business-search'),
-                    controller: _search,
-                    decoration: InputDecoration(
-                      hintText: 'Search name, owner or link...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _search.text.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.clear),
-                              tooltip: 'Clear search',
-                              onPressed: _search.clear,
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        key: const Key('admin-business-search'),
+                        controller: _search,
+                        decoration: InputDecoration(
+                          hintText: 'Search name, owner or link...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _search.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  tooltip: 'Clear search',
+                                  onPressed: _search.clear,
+                                ),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: KeyedSubtree(
+                        key: const Key('admin-business-status'),
+                        child: FilterDropdown(
+                          label: 'Status',
+                          value: _statusLabel,
+                          options: [for (final f in _filters) f.$1],
+                          onChanged: (v) {
+                            _status = _filters.firstWhere((f) => f.$1 == v).$2;
+                            _reload();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: KeyedSubtree(
-                    key: const Key('admin-business-category'),
-                    child: FilterDropdown(
-                      label: 'Category',
-                      value: _category,
-                      options: const [kAllFilter, ...kBusinessCategories],
-                      onChanged: (v) => setState(() => _category = v),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SearchableChoice(
+                        fieldKey: const Key('admin-business-category'),
+                        label: 'Category',
+                        controller: _categoryText,
+                        options: const [kAllFilter, ...kBusinessCategories],
+                        selected: _category,
+                        enabled: true,
+                        dense: true,
+                        onSelected: (v) =>
+                            setState(() => _category = v ?? kAllFilter),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: KeyedSubtree(
+                        key: const Key('admin-business-period'),
+                        child: FilterDropdown(
+                          label: 'Posted',
+                          value: _period,
+                          options: kPeriodOptions,
+                          onChanged: (v) => setState(() => _period = v),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

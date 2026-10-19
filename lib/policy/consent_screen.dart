@@ -6,6 +6,7 @@ import '../config/policy_config.dart';
 import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 import '../lock/session.dart';
+import '../screens/first_login_profile_screen.dart' show kFirstLoginKey;
 import '../screens/welcome_screen.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -45,6 +46,7 @@ class ConsentScreen extends StatefulWidget {
 
 class _ConsentScreenState extends State<ConsentScreen> {
   bool _checked = false;
+  bool _readToEnd = false;
   bool _saving = false;
   String? _error;
   Object? _lastError;
@@ -65,6 +67,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
         ...widget.profile,
         'policy_version': kPolicyVersion,
         'policy_accepted_at': DateTime.now().toUtc().toIso8601String(),
+        // Nothing accepted before means this is their first login. A later
+        // policy version bump (old version, not null) is not a first login.
+        if (widget.profile['policy_version'] == null) kFirstLoginKey: true,
       });
     } catch (e) {
       if (!mounted) return;
@@ -88,7 +93,14 @@ class _ConsentScreenState extends State<ConsentScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(child: PolicyReader(bundle: widget.bundle)),
+            Expanded(
+              child: PolicyReader(
+                bundle: widget.bundle,
+                onReachedEnd: () {
+                  if (!_readToEnd) setState(() => _readToEnd = true);
+                },
+              ),
+            ),
             const Divider(height: 1),
             // Scrolls when the text is very large, so Continue is never cut off.
             ConstrainedBox(
@@ -102,12 +114,24 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   children: [
                     const ClosedTestNotice(),
                     const SizedBox(height: 8),
+                    if (!_readToEnd)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          'Scroll to the bottom to continue. (Gulir sampai '
+                          'bawah untuk melanjutkan.)',
+                          key: const Key('consent-scroll-hint'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                     CheckboxListTile(
                       key: const Key('consent-checkbox'),
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
                       value: _checked,
-                      onChanged: _saving
+                      onChanged: (_saving || !_readToEnd)
                           ? null
                           : (v) => setState(() => _checked = v ?? false),
                       title: const Text(

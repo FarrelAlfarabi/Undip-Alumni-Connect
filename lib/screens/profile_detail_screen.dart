@@ -44,7 +44,7 @@ class ProfileDetailScreen extends StatefulWidget {
     this.chat = chatEnabled,
     this.contactRepository,
     this.adminCheck,
-    this.unseenReportsCheck,
+    this.nimLoader,
     this.lock,
   });
 
@@ -56,9 +56,10 @@ class ProfileDetailScreen extends StatefulWidget {
   /// never cached on the device.
   final Future<bool> Function(String profileId)? adminCheck;
 
-  /// Number of reports no admin has seen yet (the badge on Admin). Injectable
-  /// for tests.
-  final Future<int> Function(String profileId)? unseenReportsCheck;
+  /// Asks the database for this profile's NIM on behalf of the viewer. It
+  /// answers only for the profile's owner and for admins; everyone else gets
+  /// null, and NIM is not shown. Injectable for tests.
+  final Future<String?> Function(String viewerId, String profileId)? nimLoader;
 
   /// Injectable for tests; defaults to the real repository.
   final ContactRepository? contactRepository;
@@ -82,15 +83,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
   bool _messaging = false;
   Future<bool>? _isAdmin;
-  Future<int>? _unseenReports;
+  Future<String?>? _nim;
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
+    _nim = _askNim();
     if (widget.showEditButton) {
       _isAdmin = _askAdmin();
-      _unseenReports = _askUnseen();
     }
   }
 
@@ -105,16 +106,25 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
   }
 
-  // A failed lookup just shows no number.
-  Future<int> _askUnseen() async {
+  // NIM is private: the database returns it to the owner and admins only. A
+  // failed or empty answer just leaves the NIM row out.
+  Future<String?> _askNim() async {
     try {
-      final id = widget.currentUser.value['id'] as String;
-      final ask =
-          widget.unseenReportsCheck ?? AdminRepository().unseenReportsCount;
-      return await ask(id);
+      final viewer = widget.currentUser.value['id'] as String;
+      final profile = _profile['id'] as String;
+      final ask = widget.nimLoader ?? _rpcNim;
+      return await ask(viewer, profile);
     } catch (_) {
-      return 0;
+      return null;
     }
+  }
+
+  static Future<String?> _rpcNim(String viewerId, String profileId) async {
+    final result = await Supabase.instance.client.rpc(
+      'profile_nim',
+      params: {'p_viewer': viewerId, 'p_profile': profileId},
+    );
+    return result is String && result.isNotEmpty ? result : null;
   }
 
   bool get _isOwnProfile => _profile['id'] == widget.currentUser.value['id'];
@@ -328,7 +338,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             icon: Icons.school_outlined,
                             title: 'Academic',
                             children: [
-                              _field(theme, 'NIM', _profile['nim']),
+                              FutureBuilder<String?>(
+                                future: _nim,
+                                builder: (context, snap) {
+                                  final nim = snap.data;
+                                  if (nim == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return _field(theme, 'NIM', nim);
+                                },
+                              ),
                               _field(theme, 'Faculty', _profile['faculty']),
                               _field(theme, 'Major', _profile['major']),
                               _field(
@@ -384,7 +403,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     const SizedBox(height: 16),
                     _ProfileMenu(
                       adminFuture: _isAdmin,
-                      unseenReports: _unseenReports,
                       onBusiness: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => MyBusinessesScreen(
@@ -415,19 +433,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onHelp: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const HelpScreen()),
                       ),
-                      onAdmin: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => AdminScreen(
-                              adminId: widget.currentUser.value['id'] as String,
-                            ),
+                      onAdmin: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => AdminScreen(
+                            adminId: widget.currentUser.value['id'] as String,
                           ),
-                        );
-                        // The number may have changed while in Admin.
-                        if (mounted) {
-                          setState(() => _unseenReports = _askUnseen());
-                        }
-                      },
+                        ),
+                      ),
                       // Back to verification with the whole shell torn down,
                       // so a second account starts from a clean state. Also
                       // forgets this device's remembered person and PIN
@@ -538,14 +550,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 }
 
-/// Under my own profile: Admin (admins only, with the unseen reports count),
+/// Under my own profile: Admin (admins only),
 /// then My business and My job postings, then Settings, Privacy policy and Help, then Sign out.
 /// Rarely used things (PIN, blocked users, delete account, contact admin,
 /// feedback, about) live inside Settings and Help.
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu({
     required this.adminFuture,
-    required this.unseenReports,
     required this.onBusiness,
     required this.onJobs,
     required this.onSettings,
@@ -556,7 +567,6 @@ class _ProfileMenu extends StatelessWidget {
   });
 
   final Future<bool>? adminFuture;
-  final Future<int>? unseenReports;
   final VoidCallback onBusiness;
   final VoidCallback onJobs;
   final VoidCallback onSettings;
@@ -576,22 +586,15 @@ class _ProfileMenu extends StatelessWidget {
             if (snap.data != true) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: FutureBuilder<int>(
-                future: unseenReports,
-                builder: (context, unseen) => MenuList(
-                  items: [
-                    MenuItem(
-                      key: const Key('profile-admin'),
-                      icon: Icons.admin_panel_settings_outlined,
-                      title: 'Admin',
-                      subtitle: (unseen.data ?? 0) > 0
-                          ? '${unseen.data} new reports'
-                          : null,
-                      badge: unseen.data ?? 0,
-                      onTap: onAdmin,
-                    ),
-                  ],
-                ),
+              child: MenuList(
+                items: [
+                  MenuItem(
+                    key: const Key('profile-admin'),
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: 'Admin',
+                    onTap: onAdmin,
+                  ),
+                ],
               ),
             );
           },

@@ -127,9 +127,14 @@ class PolicyDraftBanner extends StatelessWidget {
 /// Language switch (Indonesian first) plus the text. Used on the policy
 /// screen and on the consent screen.
 class PolicyReader extends StatefulWidget {
-  const PolicyReader({super.key, this.bundle});
+  const PolicyReader({super.key, this.bundle, this.onReachedEnd});
 
   final AssetBundle? bundle;
+
+  /// Called once the text has loaded and the reader has scrolled to the
+  /// bottom. Also called straight after loading when everything already fits
+  /// on screen, so short screens are never stuck.
+  final VoidCallback? onReachedEnd;
 
   @override
   State<PolicyReader> createState() => _PolicyReaderState();
@@ -138,6 +143,23 @@ class PolicyReader extends StatefulWidget {
 class _PolicyReaderState extends State<PolicyReader> {
   PolicyLanguage _language = PolicyLanguage.id;
   Future<String>? _text;
+  final _scroll = ScrollController();
+  bool _loaded = false;
+  bool _reachedEnd = false;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _checkEnd() {
+    if (_reachedEnd || !_loaded || !mounted || !_scroll.hasClients) return;
+    // A few pixels of slack: the last line can rest just short of the edge.
+    if (_scroll.position.extentAfter > 24) return;
+    _reachedEnd = true;
+    widget.onReachedEnd?.call();
+  }
 
   AssetBundle get _bundle => widget.bundle ?? DefaultAssetBundle.of(context);
 
@@ -162,6 +184,10 @@ class _PolicyReaderState extends State<PolicyReader> {
       future: _text!,
       builder: (context, snap) {
         final Widget content;
+        _loaded = snap.connectionState == ConnectionState.done;
+        if (_loaded) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _checkEnd());
+        }
         if (snap.connectionState != ConnectionState.done) {
           content = const Padding(
             padding: EdgeInsets.all(32),
@@ -180,31 +206,44 @@ class _PolicyReaderState extends State<PolicyReader> {
             child: PolicyBody(text: snap.data ?? ''),
           );
         }
-        return SingleChildScrollView(
-          key: const Key('policy-scroll'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PolicyDraftBanner(language: _language),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: SegmentedButton<PolicyLanguage>(
-                  segments: const [
-                    ButtonSegment(
-                      value: PolicyLanguage.id,
-                      label: Text('Bahasa Indonesia'),
+        return NotificationListener<ScrollMetricsNotification>(
+          onNotification: (_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _checkEnd());
+            return false;
+          },
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (_) {
+              _checkEnd();
+              return false;
+            },
+            child: SingleChildScrollView(
+              key: const Key('policy-scroll'),
+              controller: _scroll,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PolicyDraftBanner(language: _language),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: SegmentedButton<PolicyLanguage>(
+                      segments: const [
+                        ButtonSegment(
+                          value: PolicyLanguage.id,
+                          label: Text('Bahasa Indonesia'),
+                        ),
+                        ButtonSegment(
+                          value: PolicyLanguage.en,
+                          label: Text('English'),
+                        ),
+                      ],
+                      selected: {_language},
+                      onSelectionChanged: (s) => _set(s.first),
                     ),
-                    ButtonSegment(
-                      value: PolicyLanguage.en,
-                      label: Text('English'),
-                    ),
-                  ],
-                  selected: {_language},
-                  onSelectionChanged: (s) => _set(s.first),
-                ),
+                  ),
+                  content,
+                ],
               ),
-              content,
-            ],
+            ),
           ),
         );
       },

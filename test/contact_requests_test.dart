@@ -49,6 +49,8 @@ void main() {
         'request_already_open': ContactErrorCode.requestAlreadyOpen,
         'cooldown_active': ContactErrorCode.cooldownActive,
         'daily_limit_reached': ContactErrorCode.dailyLimitReached,
+        'too_many_open': ContactErrorCode.tooManyOpen,
+        'already_shared': ContactErrorCode.alreadyShared,
         'not_accepted': ContactErrorCode.notAccepted,
         'shared_required': ContactErrorCode.sharedRequired,
       };
@@ -62,6 +64,15 @@ void main() {
           expect(contactErrorMessage(ex), isNot(contains('_')));
         }
       }
+    });
+
+    test('limit messages say the number and what to do next', () {
+      String msg(ContactErrorCode c) =>
+          contactErrorMessage(ContactException(c, ''));
+      expect(msg(ContactErrorCode.tooManyOpen), contains('$kOpenRequestMax'));
+      expect(msg(ContactErrorCode.dailyLimitReached),
+          contains('$kDailyRequestMax'));
+      expect(msg(ContactErrorCode.alreadyShared), contains('Requests'));
     });
 
     test('lists never read a shared contact column', () async {
