@@ -35,7 +35,8 @@ String adminErrorMessage(Object error) {
       case AdminErrorCode.reasonRequired:
         return 'A reason is required.';
       case AdminErrorCode.invalidState:
-        return 'That is not possible in the current status. Reload the list.';
+        return 'That is not possible right now. You cannot suspend an admin or '
+            'yourself. Otherwise reload the list.';
       case AdminErrorCode.notFound:
         return 'This item no longer exists.';
       case AdminErrorCode.invalidView:
@@ -178,6 +179,14 @@ class AdminRepository {
   Future<void> restoreContent(String adminId, AdminReport r) =>
       _reportAction(adminId, r, 'restore');
 
+  /// Blocks the reported person (or the sender of a reported contact
+  /// request) from signing in and removes them from the Directory.
+  Future<void> suspendUser(String adminId, AdminReport r, String reason) =>
+      _reportAction(adminId, r, 'suspend_user', reason: reason);
+
+  Future<void> unsuspendUser(String adminId, AdminReport r) =>
+      _reportAction(adminId, r, 'unsuspend_user');
+
   Future<void> _reportAction(
     String adminId,
     AdminReport r,
@@ -275,6 +284,12 @@ class AdminReport {
 
   /// When it was last reported (for a hidden item: when it was hidden).
   final DateTime? lastReported;
+
+  /// A reported person, or the sender of a reported contact request, can be
+  /// suspended. Never offered once they are suspended (it shows in Hidden).
+  bool get canSuspend =>
+      targetType == ReportTarget.profile ||
+      targetType == ReportTarget.contactRequest;
 
   /// Jobs, products and businesses can be hidden. Profiles and contact
   /// requests can only be dismissed or marked as handled.
