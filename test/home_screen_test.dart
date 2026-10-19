@@ -63,6 +63,23 @@ void main() {
     );
     expect(find.text('by Ikafe UNDIP'), findsOneWidget);
   });
+  group('pinned top bar', () {
+    testWidgets('greeting and notifications stay visible after scrolling',
+        (tester) async {
+      await pumpHome(tester);
+      final greetingTop = tester.getTopLeft(find.byKey(const Key('home-greeting')));
+      await tester.drag(find.byKey(const Key('home-list')), const Offset(0, -600));
+      await tester.pump();
+      expect(find.byKey(const Key('home-greeting')).hitTestable(), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const Key('home-greeting'))),
+        greetingTop,
+      );
+      expect(find.byKey(const Key('home-notifications')).hitTestable(),
+          findsOneWidget);
+    });
+  });
+
   group('greeting', () {
     testWidgets('uses the first name only', (tester) async {
       await pumpHome(tester);

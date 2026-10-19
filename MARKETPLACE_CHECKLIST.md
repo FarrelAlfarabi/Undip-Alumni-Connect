@@ -44,7 +44,7 @@ Run against a **demo database** (not the live project) with every migration up t
 - [ ] Admin suspends the business -> its products vanish; approve again -> they return.
 
 ## Regression
-- [ ] Verification, PIN lock, Profile, Directory, Nearby (map follows dark mode), Jobs (list, post, apply, no subscriber gate), News.
+- [ ] Verification, PIN lock, Profile, Members, Nearby (map follows dark mode), Jobs (list, post, apply, no subscriber gate), News.
 
 ## Known gaps to keep in mind while testing
 - Roles are not enforced by real login (see README "Closed beta warning").

@@ -7,6 +7,7 @@ import '../widgets/menu_list.dart';
 import 'blocked_users_screen.dart';
 import 'default_contact_screen.dart';
 import 'delete_account_screen.dart';
+import 'feature_intro_screen.dart';
 
 /// Profile > Settings: the things you set once and rarely come back to.
 class SettingsScreen extends StatelessWidget {
@@ -53,6 +54,18 @@ class SettingsScreen extends StatelessWidget {
                     DefaultContactScreen(
                       profileId: me,
                       repository: contactRepository,
+                    ),
+                  ),
+                ),
+                MenuItem(
+                  key: const Key('settings-intro'),
+                  icon: Icons.tour_outlined,
+                  title: 'Pengenalan fitur',
+                  subtitle: 'Apa itu Marketplace dan Business',
+                  onTap: () => _push(
+                    context,
+                    FeatureIntroScreen(
+                      onDone: (ctx) async => Navigator.of(ctx).pop(),
                     ),
                   ),
                 ),

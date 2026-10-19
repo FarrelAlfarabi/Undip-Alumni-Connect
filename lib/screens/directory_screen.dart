@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/blocked_filter.dart';
+import '../data/profile_columns.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
@@ -75,18 +76,35 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.dispose();
   }
 
+  /// Opens on the user's own graduation year. Skipped when the profile has
+  /// no year, or nobody in the list shares it (the dropdown would have no
+  /// matching option). Only applied while the year filter is still "All".
+  List<Map<String, dynamic>> _withDefaultYear(List<Map<String, dynamic>> rows) {
+    final own = widget.currentUser.value['graduation_year']?.toString();
+    if (own != null &&
+        _year == kAllFilter &&
+        rows.any((p) => p['graduation_year']?.toString() == own)) {
+      _year = own;
+    }
+    return rows;
+  }
+
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
     if (widget.fetchAlumni != null) {
-      return withoutBlockedProfiles(await widget.fetchAlumni!());
+      return _withDefaultYear(
+        await withoutBlockedProfiles(await widget.fetchAlumni!()),
+      );
     }
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
-        .select()
+        .select(kProfileColumns)
         .eq('verification_status', 'verified')
         .order('name', ascending: true)
         .limit(kDirectoryMaxRows);
-    return withoutBlockedProfiles(
-      List<Map<String, dynamic>>.from(rows as List),
+    return _withDefaultYear(
+      await withoutBlockedProfiles(
+        List<Map<String, dynamic>>.from(rows as List),
+      ),
     );
   }
 
@@ -136,8 +154,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
         if (snapshot.hasError) {
           return ErrorView(
-            message: friendlyLoadError('the directory', snapshot.error),
-            screen: 'Directory',
+            message: friendlyLoadError('the members list', snapshot.error),
+            screen: 'Members',
             error: snapshot.error,
             onRetry: () => setState(() {
               _future = _fetchAlumni();

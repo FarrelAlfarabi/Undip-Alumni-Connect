@@ -706,25 +706,14 @@ List<Case> buildCases() {
         fetchAlumni: () async => alumniRows(),
       ),
     ),
-    Case(
-      'NearbyAlumniScreen (map, light)',
-      () => _nearby(
-        currentUser: me,
+    Case('NearbyAlumniScreen (city picked)', () {
+      BlockList.shared = BlockList.preloaded({});
+      return _nearby(
+        currentUser: ValueNotifier({...me.value, 'city': 'Semarang'}),
         chat: true,
         fetchAlumni: () async => alumniRows(),
-      ),
-      after: _showMap,
-    ),
-    Case(
-      'NearbyAlumniScreen (map, dark)',
-      () => _nearby(
-        currentUser: me,
-        chat: true,
-        fetchAlumni: () async => alumniRows(),
-      ),
-      after: _showMap,
-      dark: true,
-    ),
+      );
+    }, after: _pickJakarta),
     Case(
       'NearbyAlumniScreen empty',
       () => _nearby(currentUser: me, fetchAlumni: () async => []),
@@ -827,8 +816,9 @@ Widget _nearby({
   ),
 );
 
-Future<void> _showMap(WidgetTester tester) async {
-  await tester.tap(find.text('Map'));
+Future<void> _pickJakarta(WidgetTester tester) async {
+  await tester.ensureVisible(find.byKey(const Key('nearby-city-Jakarta')));
+  await tester.tap(find.byKey(const Key('nearby-city-Jakarta')));
   await settle(tester);
 }
 

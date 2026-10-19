@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/login_api.dart';
 import '../data/account_repository.dart';
+import '../data/profile_columns.dart';
 import '../screens/verification_screen.dart';
 import '../screens/welcome_screen.dart';
 import '../util/friendly_error.dart';
@@ -16,7 +17,7 @@ typedef ProfileFetcher = Future<Map<String, dynamic>?> Function(String id);
 Future<Map<String, dynamic>?> defaultProfileFetcher(String id) async {
   final row = await Supabase.instance.client
       .from('alumni_profiles')
-      .select()
+      .select(kProfileColumns)
       .eq('id', id)
       .maybeSingle();
   return row == null ? null : Map<String, dynamic>.from(row);

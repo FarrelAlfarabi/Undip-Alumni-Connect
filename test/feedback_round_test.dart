@@ -188,7 +188,9 @@ void main() {
     expect(find.byKey(const Key('support-email')), findsOneWidget);
   });
 
-  testWidgets('Admin: Reports row shows the unseen count', (tester) async {
+  testWidgets('Admin: Reports row has no "new" badge and asks no count', (
+    tester,
+  ) async {
     tall(tester);
     final api = FakeAdminApi()
       ..results['admin_reports_unseen_count'] = 3
@@ -203,13 +205,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('reports-badge')),
-        matching: find.text('3'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('reports-badge')), findsNothing);
+    expect(find.byType(Badge), findsNothing);
+    expect(api.calls.contains('admin_reports_unseen_count'), isFalse);
   });
 
   testWidgets('My job postings lists my jobs with applicant counts', (
@@ -307,9 +305,7 @@ void main() {
     });
   });
 
-  testWidgets('Profile: Admin row shows the unseen reports number', (
-    tester,
-  ) async {
+  testWidgets('Profile: Admin row has no "new reports" text', (tester) async {
     tester.view.physicalSize = const Size(420, 2200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -319,11 +315,11 @@ void main() {
           profile: {'id': 'me', 'name': 'Ahmad'},
           currentUser: ValueNotifier({'id': 'me'}),
           adminCheck: (_) async => true,
-          unseenReportsCheck: (_) async => 4,
         ),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('4 new reports'), findsOneWidget);
+    expect(find.byKey(const Key('profile-admin')), findsOneWidget);
+    expect(find.textContaining('new reports'), findsNothing);
   });
 }

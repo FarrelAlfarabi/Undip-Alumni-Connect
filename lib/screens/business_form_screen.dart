@@ -234,7 +234,10 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
         const SizedBox(height: 4),
         Text(
           'A logo or a picture of your products. JPG, PNG or WebP, up to '
-          '2 MB. An admin sees it when reviewing.',
+          '2 MB. Best size: wide, 2:1 (1200 x 600 px). It is shown as a banner '
+          'and the edges get cropped, so keep the main part in the middle. An '
+          'admin sees it when reviewing.',
+          key: const Key('business-photo-help'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

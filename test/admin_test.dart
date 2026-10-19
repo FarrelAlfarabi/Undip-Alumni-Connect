@@ -304,14 +304,22 @@ void main() {
       expect(find.text('You are not an admin.'), findsOneWidget);
     });
 
-    testWidgets('status chips reload with that status', (tester) async {
+    testWidgets('the Status dropdown reloads with that status', (tester) async {
       final api = await pump(tester, [], width: 900);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Suspended'));
-      await tester.pumpAndSettle();
+      expect(find.byType(ChoiceChip), findsNothing);
+      Future<void> pick(String label) async {
+        await tester.tap(find.byKey(const Key('admin-business-status')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(label).last);
+        await tester.pumpAndSettle();
+      }
+
+      await pick('Suspended');
       expect(api.params['admin_businesses_list']!['p_status'], 'suspended');
-      await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
-      await tester.pumpAndSettle();
+      await pick('All');
       expect(api.params['admin_businesses_list']!['p_status'], isNull);
+      await pick('Pending');
+      expect(api.params['admin_businesses_list']!['p_status'], 'pending');
     });
   });
 }

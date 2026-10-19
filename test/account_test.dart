@@ -75,6 +75,15 @@ class FakeAccountApi implements AccountApi {
 Widget appHome(Map<String, dynamic> p) =>
     Scaffold(body: Text('APP for ${p['name']}'));
 
+/// The consent box unlocks only after the policy is read to the bottom.
+Future<void> readPolicyToEnd(WidgetTester tester) async {
+  await tester.drag(
+    find.byKey(const Key('policy-scroll')),
+    const Offset(0, -20000),
+  );
+  await tester.pumpAndSettle();
+}
+
 void phone(WidgetTester tester) {
   tester.view.physicalSize = const Size(420, 1000);
   tester.view.devicePixelRatio = 1;
@@ -233,6 +242,7 @@ void main() {
       'tick the box, Continue saves the current version and enters the app',
       (tester) async {
         final (api, _) = await launch(tester, testProfile(policyVersion: null));
+        await readPolicyToEnd(tester);
         await tester.tap(find.byKey(const Key('consent-checkbox')));
         await tester.pump();
         await tester.tap(find.byKey(const Key('consent-continue')));
@@ -241,6 +251,10 @@ void main() {
           'p_profile': 'p1',
           'p_version': kPolicyVersion,
         });
+        // First login: the optional profile step comes before the app.
+        expect(find.byKey(const Key('first-login-profile')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('first-login-skip')));
+        await tester.pumpAndSettle();
         expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
       },
     );
@@ -263,6 +277,7 @@ void main() {
       (tester) async {
         final (api, _) = await launch(tester, testProfile(policyVersion: null));
         api.failOn = 'account_accept_policy';
+        await readPolicyToEnd(tester);
         await tester.tap(find.byKey(const Key('consent-checkbox')));
         await tester.pump();
         await tester.tap(find.byKey(const Key('consent-continue')));
@@ -305,6 +320,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byKey(const Key('consent-screen')), findsOneWidget);
+      await readPolicyToEnd(tester);
       await tester.tap(find.byKey(const Key('consent-checkbox')));
       await tester.pump();
       await tester.tap(find.byKey(const Key('consent-continue')));

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/marketplace_listing.dart';
 import 'block_list.dart';
+import 'profile_columns.dart';
 
 /// Error codes raised by the marketplace SQL functions (see
 /// supabase/migrations/20260930090200_marketplace_functions.sql).
@@ -92,7 +93,7 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
   Future<Map<String, dynamic>?> selectProfile(String id) async {
     final row = await _client
         .from('alumni_profiles')
-        .select()
+        .select(kProfileColumns)
         .eq('id', id)
         .maybeSingle();
     return row == null ? null : Map<String, dynamic>.from(row);

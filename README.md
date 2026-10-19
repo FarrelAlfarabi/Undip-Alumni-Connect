@@ -34,7 +34,7 @@ true until login ships.
 
 ## Free launch features (Stages 1 to 8)
 
-- Four tabs: Home, Directory, Market (Products and Businesses), Profile.
+- Four tabs: Home, Members, Market (Products and Businesses), Profile.
 - Business directory: any alumnus can register a business (several allowed).
   An admin approves, rejects or suspends it. Yearly sales pick a UMKM band
   (PP 7/2021 Art. 35).
@@ -50,7 +50,6 @@ true until login ships.
   `select * from list_app_admins();`. The person needs a profile first.
 - Account deletion, privacy policy and consent screen, BETA label and the
   version in Profile > About and on the Welcome screen.
-- The Nearby map follows the system dark mode (the rest of the app is light).
 - Local SQL checks: `supabase/tests/run_beta_local.sh`.
 
 ## Running it
@@ -167,10 +166,10 @@ request reaches Postgres as `anon` and RLS cannot know who is calling.
 
 **Home hub.** After verification the app lands on a Home tab: a greeting, a
 banner carousel of the latest Ikafe announcements (text cards, auto-advance,
-swipe, tap for the full text), quick tiles (Jobs, Marketplace, Directory,
+swipe, tap for the full text), quick tiles (Jobs, Marketplace, Members,
 Nearby Alumni), a "Latest" strip (3 newest jobs, 3 newest approved
 marketplace listings) and an Upcoming section. The bottom navigation is
-Home, Directory, Market, Profile (Chat only returns if `chatEnabled` in
+Home, Members, Market, Profile (Chat only returns if `chatEnabled` in
 `lib/config/feature_flags.dart` is turned on). Jobs, News ("See all
 announcements"), Requests, Notifications and Nearby open from Home with a back
 arrow.

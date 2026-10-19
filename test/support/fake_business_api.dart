@@ -21,6 +21,7 @@ Map<String, dynamic> businessMap({
   String? reviewedAt,
   bool personal = false,
   String? photoUrl,
+  String createdAt = '2026-10-01T08:00:00+00:00',
 }) => {
   'id': id,
   'owner_id': ownerId,
@@ -34,7 +35,7 @@ Map<String, dynamic> businessMap({
   'status': status,
   'rejection_reason': reason,
   'unlimited_until': unlimitedUntil,
-  'created_at': '2026-10-01T08:00:00+00:00',
+  'created_at': createdAt,
   'owner_name': ?ownerName,
   'reviewed_at': ?reviewedAt,
   'is_personal': personal,

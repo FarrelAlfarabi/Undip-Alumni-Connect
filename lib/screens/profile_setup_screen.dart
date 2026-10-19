@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/city_distances.dart';
 import '../data/industries.dart';
+import '../data/profile_columns.dart';
 import '../lock/session.dart';
 import '../widgets/searchable_choice.dart';
 import 'verification_screen.dart';
@@ -85,10 +86,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           // The old Current Employer column is no longer shown. Keep it equal
           // to Company so nothing stale is left behind until it is dropped.
           'current_employer': _companyController.text.trim(),
-          if (_city != null) 'city': _city,
+          // Only send the city when it changed, so saving the job fields
+          // never depends on the city column being writable.
+          if (_city != null && _city != _nonEmpty(widget.profile['city']))
+            'city': _city,
         })
         .eq('id', id)
-        .select();
+        .select(kProfileColumns);
     final list = rows as List;
     return list.isEmpty ? null : list.first as Map<String, dynamic>;
   }
@@ -104,16 +108,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       var updated = await _updateById(widget.profile['id'] as String);
 
       if (updated == null) {
-        // Our cached id is stale -- look the row up again by NIM (a
+        // Our cached id is stale -- look the row up again by email (a
         // stable natural key untouched by a reset regenerating ids) and
-        // retry once with whatever id it has now.
-        final nim = widget.profile['nim'] as String?;
-        final fresh = nim == null
+        // retry once with whatever id it has now. NIM is not readable.
+        final email = widget.profile['email'] as String?;
+        final fresh = email == null
             ? null
             : await Supabase.instance.client
                   .from('alumni_profiles')
                   .select('id')
-                  .eq('nim', nim)
+                  .eq('email', email)
                   .maybeSingle();
         if (fresh != null) {
           updated = await _updateById(fresh['id'] as String);
@@ -137,9 +141,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       Navigator.of(context).pop(updated);
     } catch (e) {
       if (!mounted) return;
+      // The database refuses a field it has locked with "Only ... can be
+      // updated". Say that, instead of a message that suggests retrying.
+      final locked =
+          e is PostgrestException && e.message.contains('can be updated');
       setState(() {
         _saving = false;
-        _error = 'Something went wrong saving your changes. Please try again.';
+        _error = locked
+            ? "Your city can't be saved yet. Please contact the admin."
+            : 'Something went wrong saving your changes. Please try again.';
       });
     }
   }
