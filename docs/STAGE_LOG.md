@@ -4,6 +4,23 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Feature intro (19 Oct 2026)
+- New `FeatureIntroScreen`: 2 skippable pages explaining Marketplace (Market > Products) and Business (Market > Businesses). Copy in Indonesian, feature names in English.
+- `IntroGate` wraps the app in `defaultHomeBuilder`; shows the intro once per person per device (flag in the lock store, `LockService.introSeen/markIntroSeen`). Web build shows it once per page load.
+- Settings > "Pengenalan fitur" reopens it. Independent of the profile-setup PR. No SQL change.
+- Checks: analyze clean, full suite passes (`test/feature_intro_test.dart` new).
+
+## Stage 9: docs and PR
+- Updated `PROJECT_NOTES.md` (new entry), `README.md`, `DEMO_SCRIPT.md`, `MARKETPLACE_CHECKLIST.md`, `docs/hub/CLICK_TEST_CHECKLIST.md`. Added section 11 "Known gaps for the closed beta" to `SECURITY_AUDIT.md`. The master plan was not touched.
+- PR description written (migration order, secrets, admin SQL, "I must fill in", decisions, gaps, warning). PR marked ready for review. Not merged. Vercel not touched.
+- Final checks: analyze clean, all tests pass, beta SQL checks pass (run at Stage 7).
+
+## Stage 8B: layout stress tests
+- New `test/layout_stress_test.dart`: about 25 screens (normal, empty, error states) at 320x568 text 1.0 and 360x640 text 1.6, Nearby map in dark mode, tap targets of at least 48 dp and tooltips on icon buttons. Uses Roboto from the Flutter SDK (the default test font is far too wide and gives false overflows).
+- Result: no failures at those sizes. A stricter check at 320 wide with text 2.0 found two real problems, both fixed: the consent screen's bottom panel (Continue could be cut off) now scrolls, and the policy banner and language switch now scroll with the text; the status chip on My businesses can shrink.
+- Not covered: InkWell tap areas, popup menus, SegmentedButton; real IBM Plex Sans (slightly wider than Roboto); real phones.
+- Checks: analyze clean, 535 tests pass. No SQL change.
+
 ## Beta hardening (6 Oct 2026), after the build review
 Everything test first. Dart: analyze clean, all tests pass (2 skipped, the release gate). SQL: `run_beta_local.sh` and the new `run_fresh_chain.sh` pass.
 - Main Android manifest now has INTERNET (release builds could not reach the network).

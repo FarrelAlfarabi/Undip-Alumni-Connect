@@ -5,6 +5,7 @@ import '../data/account_repository.dart';
 import '../data/feedback_repository.dart';
 import '../policy/consent_screen.dart';
 import '../screens/first_login_profile_screen.dart';
+import '../screens/feature_intro_screen.dart';
 import '../screens/home_shell.dart';
 import 'lock_service.dart';
 
@@ -12,8 +13,10 @@ import 'lock_service.dart';
 /// real [HomeShell] talks to Supabase.
 typedef HomeBuilder = Widget Function(Map<String, dynamic> profile);
 
-Widget defaultHomeBuilder(Map<String, dynamic> profile) =>
-    HomeShell(profile: profile);
+Widget defaultHomeBuilder(Map<String, dynamic> profile) => IntroGate(
+  profileId: profile['id'] as String?,
+  child: HomeShell(profile: profile),
+);
 
 /// Go into the app for a verified person, replacing the current screen.
 ///

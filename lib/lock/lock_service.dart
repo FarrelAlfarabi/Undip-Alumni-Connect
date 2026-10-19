@@ -109,6 +109,7 @@ class LockService {
   static const _kFailed = 'lingkaran.lock.v1.failed';
   static const _kWait = 'lingkaran.lock.v1.wait_until';
   static const _kBio = 'lingkaran.lock.v1.bio';
+  static const _kIntroPrefix = 'lingkaran.intro.v1.seen.';
 
   final ValueNotifier<int> _changes = ValueNotifier(0);
   ValueListenable<int> get changes => _changes;
@@ -153,6 +154,14 @@ class LockService {
     await _store.write(_kName, displayName);
     await _store.write(_kMasked, maskEmail(email));
   }
+
+  /// Whether this person has already been through the feature intro on this
+  /// device. Kept per profile id so a shared phone shows it to each person.
+  Future<bool> introSeen(String profileId) async =>
+      (await _store.read('$_kIntroPrefix$profileId')) == '1';
+
+  Future<void> markIntroSeen(String profileId) =>
+      _store.write('$_kIntroPrefix$profileId', '1');
 
   Future<bool> hasPin() async => (await _store.read(_kPin)) != null;
 
