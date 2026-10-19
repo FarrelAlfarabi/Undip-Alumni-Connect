@@ -206,7 +206,35 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
+        child: Column(
+          children: [
+            // Pinned: stays put while the sections below scroll.
+            Material(
+              color: theme.scaffoldBackgroundColor,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      first == null ? 'Hello' : 'Hello, $first',
+                      key: const Key('home-greeting'),
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'What would you like to do today?',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
           onRefresh: _refresh,
           // A short fixed set of sections, so a plain scroll view (built in
           // full) rather than a lazy ListView.
@@ -217,19 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  first == null ? 'Hello' : 'Hello, $first',
-                  key: const Key('home-greeting'),
-                  style: theme.textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'What would you like to do today?',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _bannerSection(theme),
                 const SizedBox(height: 8),
                 _QuickActions(
@@ -301,6 +317,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+        ),
+            ),
+          ],
         ),
       ),
     );
