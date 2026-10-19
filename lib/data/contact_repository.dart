@@ -6,12 +6,18 @@ import '../models/contact_request.dart';
 const int kContactMessageMax = 200;
 const int kSharedContactMax = 200;
 
+/// Send limits (enforced in the database; shown in the messages below).
+const int kDailyRequestMax = 5;
+const int kOpenRequestMax = 10;
+
 enum ContactErrorCode {
   notVerified,
   cannotRequestSelf,
   requestAlreadyOpen,
   cooldownActive,
   dailyLimitReached,
+  tooManyOpen,
+  alreadyShared,
   messageTooLong,
   sharedRequired,
   sharedTooLong,
@@ -48,7 +54,14 @@ String contactErrorMessage(Object error) {
       case ContactErrorCode.blocked:
         return 'You cannot send a request to this person right now.';
       case ContactErrorCode.dailyLimitReached:
-        return 'You have sent 5 requests today. Please try again tomorrow.';
+        return 'You have sent $kDailyRequestMax requests today. Please try '
+            'again tomorrow.';
+      case ContactErrorCode.tooManyOpen:
+        return 'You have $kOpenRequestMax requests waiting for an answer. '
+            'You can send more once some are answered.';
+      case ContactErrorCode.alreadyShared:
+        return 'This person already shared their contact with you. Find it '
+            'under Requests.';
       case ContactErrorCode.messageTooLong:
         return 'The message is too long (200 characters at most).';
       case ContactErrorCode.sharedRequired:
@@ -207,6 +220,8 @@ class ContactRepository {
     'request_already_open' => ContactErrorCode.requestAlreadyOpen,
     'cooldown_active' => ContactErrorCode.cooldownActive,
     'daily_limit_reached' => ContactErrorCode.dailyLimitReached,
+    'too_many_open' => ContactErrorCode.tooManyOpen,
+    'already_shared' => ContactErrorCode.alreadyShared,
     'message_too_long' => ContactErrorCode.messageTooLong,
     'shared_required' => ContactErrorCode.sharedRequired,
     'shared_too_long' => ContactErrorCode.sharedTooLong,
