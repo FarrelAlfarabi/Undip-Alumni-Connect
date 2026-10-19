@@ -50,3 +50,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Period filter (All time, Today, 7, 30 days) on Reports and Feedback. Removed the "new" tags: count badges on Admin Reports/Feedback and the Profile Admin row, the "N new of M" line, the highlighted border and status chip on new feedback. Reports no longer marks itself seen on open (data and SQL untouched). 690 tests pass.
 - Admin Businesses: the status chips are now a Status dropdown next to the search; Category is type-to-filter (like Industry); new Posted filter (All time, Today, 7, 30, 90 days) by post date.
 - Business form: photo helper now states the real limits (JPG/PNG/WebP, 2 MB, any size, cropped to a wide banner). Nothing in code or storage limits dimensions.
+
+## Photo ratio helper (19 Oct 2026)
+- Business form photo helper now says best size is 2:1 (1200 x 600 px), edges cropped, keep the main part in the middle. Text only; the app still accepts any size up to 2 MB. Stacked on the admin filters branch. Analyze clean, 693 tests pass.

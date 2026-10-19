@@ -134,8 +134,9 @@ void main() {
       final text = tester.widget<Text>(helper).data!;
       expect(text, contains('JPG, PNG or WebP'));
       expect(text, contains('2 MB'));
-      expect(text, contains('any size'));
-      expect(text, contains('wide banner'));
+      expect(text, contains('2:1'));
+      expect(text, contains('1200 x 600'));
+      expect(text, contains('middle'));
       // The numbers in the text are the ones the code enforces.
       expect(kListingImageMaxBytes, 2 * 1024 * 1024);
       expect(kListingImageExtensions, ['jpg', 'jpeg', 'png', 'webp']);
