@@ -59,3 +59,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Contact request limits (19 Oct 2026)
 - Already there: 5 per day, one open per person, 30 day wait after a rejection. Added: max 10 open requests at a time (`too_many_open`) and no new request to someone who already accepted you (`already_shared`), with plain messages.
 - Migration `20261019100000` only replaces the insert guard; not applied to any project. Rollback script and SQL test `16` included.
+## Photo ratio helper (19 Oct 2026)
+- Business form photo helper now says best size is 2:1 (1200 x 600 px), edges cropped, keep the main part in the middle. Text only; the app still accepts any size up to 2 MB. Stacked on the admin filters branch. Analyze clean, 693 tests pass.
