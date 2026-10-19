@@ -18,6 +18,7 @@ final user = ValueNotifier<Map<String, dynamic>>({
 Future<void> pumpHome(
   WidgetTester tester, {
   FakeHomeApi? api,
+  Map<String, dynamic>? profile,
   FakeApi? market,
   VoidCallback? onDirectory,
   Size size = const Size(390, 844),
@@ -35,7 +36,7 @@ Future<void> pumpHome(
           textScaler: TextScaler.linear(textScale),
         ),
         child: HomeScreen(
-          currentUser: user,
+          currentUser: profile == null ? user : ValueNotifier(profile),
           onOpenDirectory: onDirectory ?? () {},
           pages: fakePages(),
           api: api ?? FakeHomeApi(),
@@ -352,6 +353,27 @@ void hubTests() {
       await tester.tap(find.byKey(const Key('home-requests-card')));
       await tester.pumpAndSettle();
       expect(find.text('PAGE Requests'), findsOneWidget);
+    });
+
+    testWidgets('a profile with no city or role gets a completion card', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      expect(find.byKey(const Key('home-profile-card')), findsOneWidget);
+      expect(find.textContaining('Lengkapi profilmu'), findsOneWidget);
+    });
+
+    testWidgets('a complete profile has no completion card', (tester) async {
+      await pumpHome(
+        tester,
+        profile: {
+          'id': 'me',
+          'name': 'Ahmad Ramadhan',
+          'city': 'Semarang',
+          'current_role': 'Analis',
+        },
+      );
+      expect(find.byKey(const Key('home-profile-card')), findsNothing);
     });
 
     testWidgets('tiles say what they are for; Businesses has no tile', (

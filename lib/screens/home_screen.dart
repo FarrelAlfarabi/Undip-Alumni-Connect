@@ -11,6 +11,7 @@ import '../widgets/banner_carousel.dart';
 import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
+import 'profile_setup_screen.dart';
 
 /// First name for the greeting: the first word of `name`, or null.
 String? firstNameOf(Map<String, dynamic> profile) {
@@ -133,6 +134,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ValueNotifier<Map<String, dynamic>> get _user => widget.currentUser;
 
+  // Directory, Nearby Alumni and Jobs work best when a person has filled in
+  // a city and a role, so Home keeps asking until both are there.
+  bool get _profileIncomplete {
+    bool empty(String k) => ((_user.value[k] as String?) ?? '').trim().isEmpty;
+    return empty('city') || empty('current_role');
+  }
+
+  Future<void> _completeProfile() async {
+    final updated = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => ProfileSetupScreen(profile: _user.value),
+      ),
+    );
+    if (updated != null && mounted) {
+      setState(() => _user.value = updated);
+    }
+  }
+
   Future<void> _openRequests() async {
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => widget.pages.requests(_user)));
@@ -240,6 +259,45 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
+                if (_profileIncomplete)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
+                      key: const Key('home-profile-card'),
+                      color: theme.colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: _completeProfile,
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                color: theme.colorScheme.onSecondaryContainer,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Lengkapi profilmu: tambahkan kota dan '
+                                  'pekerjaan agar alumni lain bisa menemukanmu.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color:
+                                        theme.colorScheme.onSecondaryContainer,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: theme.colorScheme.onSecondaryContainer,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 _bannerSection(theme),
                 const SizedBox(height: 8),
                 _QuickActions(
