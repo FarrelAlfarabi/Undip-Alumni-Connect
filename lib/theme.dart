@@ -1,44 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Placeholder visual identity — indigo/brass, drawn from Javanese batik
-/// (kawung motif, indigo-dyed cloth, brass/gold prada gilding). Not UNDIP's
-/// or Ikafe's official branding; a working stand-in for the demo/pitch.
-/// Matches the pitch landing page's palette and type pairing.
+/// Visual identity drawn from the Ikafe UNDIP logo: yellow leads, black
+/// anchors, blue informs (links and info only). Logo blue is #0096DE; it is too
+/// light for text, so the UI uses the darker [blue] below.
 class AppTheme {
   AppTheme._();
 
-  static const indigo = Color(0xFF2E2A5C);
-  // Darker brass: the old 0xFF9C6E22 was 4.06:1 on the paper background and
-  // 4.16:1 under the light button text (WCAG AA needs 4.5:1).
-  static const gold = Color(0xFF7F5815);
+  static const yellow = Color(0xFFFFC400);
+  static const black = Color(0xFF141414);
+  static const blue = Color(0xFF0073B1);
 
-  /// The original brighter brass. Only for decoration on the dark lock
-  /// screen, never for text on a light background.
-  static const goldBright = Color(0xFF9C6E22);
-  static const paper = Color(0xFFF7F3E8);
-  static const paperRaised = Color(0xFFEDE6D2);
-  static const ink = Color(0xFF211D3C);
+  /// Darker yellow for text or icons on a light background (yellow itself is
+  /// 1.5:1 there). Passes 4.5:1 on paper, raised paper and soft yellow.
+  static const yellowText = Color(0xFF7A5800);
+  static const paper = Color(0xFFF8F6F1);
+  static const paperRaised = Color(0xFFF5F3EC);
+  static const ink = black;
 
   static ThemeData light() {
     final colorScheme =
         ColorScheme.fromSeed(
-          seedColor: indigo,
+          seedColor: blue,
           brightness: Brightness.light,
         ).copyWith(
-          primary: indigo,
-          onPrimary: const Color(0xFFFAF6EA),
-          primaryContainer: const Color(0xFFE7E2F2),
-          onPrimaryContainer: indigo,
-          secondary: gold,
-          onSecondary: const Color(0xFFFAF6EA),
-          secondaryContainer: const Color(0xFFF1E4C9),
-          onSecondaryContainer: const Color(0xFF6B4B17),
+          primary: black,
+          onPrimary: Colors.white,
+          primaryContainer: const Color(0xFFE4F1F9),
+          onPrimaryContainer: black,
+          secondary: yellowText,
+          onSecondary: Colors.white,
+          secondaryContainer: const Color(0xFFFFF3C4),
+          onSecondaryContainer: black,
           surface: paper,
           onSurface: ink,
-          surfaceContainerLowest: const Color(0xFFFAF6EA),
+          surfaceContainerLowest: Colors.white,
           surfaceContainer: paperRaised,
-          surfaceContainerHigh: const Color(0xFFE7DFC6),
+          surfaceContainerHigh: const Color(0xFFE6E1D6),
         );
 
     final baseText = GoogleFonts.ibmPlexSansTextTheme();
@@ -90,9 +88,12 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: colorScheme.secondary,
-          foregroundColor: colorScheme.onSecondary,
+          backgroundColor: yellow,
+          foregroundColor: black,
         ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: blue),
       ),
     );
   }

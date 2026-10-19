@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lingkaran',
+      title: 'Lingkaran by Ikafe UNDIP',
       theme: AppTheme.light(),
       navigatorKey: _navigatorKey,
       // Covers the app with the lock screen after it has been in the

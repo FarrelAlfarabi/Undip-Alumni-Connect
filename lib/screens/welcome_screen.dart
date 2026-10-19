@@ -3,13 +3,14 @@ import '../widgets/closed_test_notice.dart';
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
+import '../widgets/brand_lockup.dart';
 import '../util/app_info.dart';
 import 'verification_screen.dart';
 
 /// The app's actual entry screen — a proper branded landing moment in
 /// front of the verification form, instead of dropping straight into a
 /// bare card. Matches the pitch landing page's identity (kawung mark,
-/// indigo/brass palette, Fraunces + IBM Plex Sans).
+/// yellow, black and blue palette, Fraunces + IBM Plex Sans).
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key, this.notice});
 
@@ -71,6 +72,8 @@ class WelcomeScreen extends StatelessWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  const IkafeLogo(height: 28),
                   const SizedBox(height: 32),
                   Text(
                     'An alumni directory checked against the Ikafe list,\nbuilt to move people forward.',

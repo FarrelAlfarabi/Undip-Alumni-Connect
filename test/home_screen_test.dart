@@ -5,6 +5,7 @@ import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/announcement_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/home_screen.dart';
 import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
+import 'package:undip_alumni_connect/widgets/brand_lockup.dart';
 
 import 'support/fake_home.dart';
 import 'support/fake_marketplace_api.dart';
@@ -51,6 +52,17 @@ Future<void> pumpHome(
 
 void main() {
   announcementDetailTests();
+  testWidgets('app bar shows the Ikafe UNDIP lockup', (tester) async {
+    await pumpHome(tester);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byType(BrandLockup),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('by Ikafe UNDIP'), findsOneWidget);
+  });
   group('greeting', () {
     testWidgets('uses the first name only', (tester) async {
       await pumpHome(tester);

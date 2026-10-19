@@ -8,6 +8,7 @@ import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/brand_lockup.dart';
 import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lingkaran'),
+        title: const BrandLockup(),
         automaticallyImplyLeading: false,
         actions: [
           FutureBuilder<int>(

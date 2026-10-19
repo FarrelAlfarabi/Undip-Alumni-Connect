@@ -122,3 +122,5 @@ Stages 0 to 8, moved unchanged from docs/STAGE_LOG.md.
 - Tests: `test/stage8_test.dart`; the Visit shop test now scrolls to the button because the banner is two lines.
 - Checks: analyze clean, all tests pass. No SQL change.
 
+## Stage 9 and 8B (summary)
+- Stage 9: docs and the PR. Stage 8B: layout stress tests across phone sizes and text scales (`test/layout_stress_test.dart`).
