@@ -126,7 +126,7 @@ void main() {
       expect(find.text('Batik Tulis'), findsOneWidget);
       expect(find.text('Laptop Bekas'), findsNothing);
 
-      await tester.tap(find.text('Clear filters'));
+      await tester.tap(find.text('Hapus filter'));
       await tester.pumpAndSettle();
       expect(find.text('Laptop Bekas'), findsOneWidget);
       expect(find.text('Kopi Arabika'), findsOneWidget);
