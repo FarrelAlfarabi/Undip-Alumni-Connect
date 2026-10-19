@@ -11,7 +11,7 @@ import 'home_screen.dart';
 
 /// App shell with a bottom navigation: Home, Directory, Market, Profile (and
 /// Chat when [chatEnabled] is on). Lands on Home after verification. Market
-/// has two segments, Products and Businesses. Jobs, News, Nearby Alumni,
+/// has three segments, Products, Businesses and Jobs. News, Nearby Alumni,
 /// Requests and Notifications are opened from the Home hub (tiles, banners,
 /// icons) as pushed screens with a back arrow.
 ///

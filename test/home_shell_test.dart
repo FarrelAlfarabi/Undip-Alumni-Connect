@@ -270,7 +270,6 @@ void main() {
     testWidgets('Jobs, Marketplace, Nearby, News via Home', (tester) async {
       await pumpShell(tester);
       final routes = {
-        'tile-jobs': 'Jobs',
         'tile-nearby': 'Nearby',
         'see-all-announcements': 'Announcements',
       };
@@ -322,6 +321,15 @@ void main() {
       await tester.tap(find.byKey(const Key('tile-marketplace')));
       await tester.pumpAndSettle();
       expect(find.text('PAGE Market Products'), findsOneWidget);
+    });
+
+    testWidgets('the Jobs tile opens the Market tab on its Jobs segment', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+      await tester.tap(find.byKey(const Key('tile-jobs')));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE Market Jobs'), findsOneWidget);
     });
 
     testWidgets('back from Market goes to Home first', (tester) async {

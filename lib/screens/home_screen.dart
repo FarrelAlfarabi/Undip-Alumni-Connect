@@ -243,7 +243,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 _bannerSection(theme),
                 const SizedBox(height: 8),
                 _QuickActions(
-                  onJobs: () => _push(widget.pages.jobs(_user)),
+                  onJobs: () => widget.onOpenMarket != null
+                      ? widget.onOpenMarket!(2)
+                      : _push(widget.pages.jobs(_user)),
                   onMarketplace: () => widget.onOpenMarket != null
                       ? widget.onOpenMarket!(0)
                       : _push(widget.pages.marketplace(_user)),
