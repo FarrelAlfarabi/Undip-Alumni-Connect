@@ -43,7 +43,7 @@ void main() {
   group('entry: lock screen vs Welcome', () {
     testWidgets('new user sees the Welcome screen', (tester) async {
       await pumpEntry(tester, makeLock());
-      expect(find.text('Get Started'), findsOneWidget);
+      expect(find.text('Mulai'), findsOneWidget);
       expect(find.byKey(const Key('lock-screen')), findsNothing);
     });
 
@@ -52,7 +52,7 @@ void main() {
     ) async {
       await pumpEntry(tester, await makeRememberedLock());
       expect(find.byKey(const Key('lock-screen')), findsOneWidget);
-      expect(find.text('Get Started'), findsNothing);
+      expect(find.text('Mulai'), findsNothing);
       expect(find.text('Welcome back, Ahmad'), findsOneWidget);
       expect(find.text('LINGKARAN'), findsOneWidget);
       expect(find.text('AR'), findsOneWidget); // initials avatar
@@ -65,7 +65,7 @@ void main() {
       final store = MemoryLockStore()
         ..data['lingkaran.lock.v1.profile_id'] = 'p1';
       await pumpEntry(tester, makeLock(store: store, enabled: false));
-      expect(find.text('Get Started'), findsOneWidget);
+      expect(find.text('Mulai'), findsOneWidget);
     });
 
     testWidgets('the lock screen never shows the full email', (tester) async {
@@ -80,7 +80,7 @@ void main() {
     ) async {
       final lock = _ThrowingLock();
       await pumpEntry(tester, lock);
-      expect(find.text('Get Started'), findsOneWidget);
+      expect(find.text('Mulai'), findsOneWidget);
     });
   });
 
@@ -104,7 +104,7 @@ void main() {
         await pumpEntry(tester, lock, fetch: (_) async => null);
         await enterPin(tester, testPin);
         await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('Get Started'), findsOneWidget);
+        expect(find.text('Mulai'), findsOneWidget);
         expect(find.byKey(const Key('welcome-notice')), findsOneWidget);
         expect(store.data, isEmpty);
       },
@@ -209,7 +209,7 @@ void main() {
           await tester.pump(const Duration(seconds: 12));
         }
         await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('Get Started'), findsOneWidget);
+        expect(find.text('Mulai'), findsOneWidget);
         expect(find.text(kTooManyPinsNotice), findsOneWidget);
         expect(store.data, isEmpty);
       },
@@ -285,7 +285,7 @@ void main() {
         await tester.tap(find.byKey(Key(key)));
         await tester.pump(const Duration(milliseconds: 100));
         await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('Get Started'), findsOneWidget);
+        expect(find.text('Mulai'), findsOneWidget);
         expect(store.data, isEmpty);
         expect(await lock.load(), isNull);
       });
@@ -303,7 +303,7 @@ void main() {
       await tester.tap(find.byKey(const Key('lock-continue')));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('Verify Alumni Status'), findsOneWidget);
+      expect(find.text('Verifikasi Status Alumni'), findsOneWidget);
     });
   });
 
@@ -428,7 +428,7 @@ void main() {
         ),
       );
       await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Verifikasi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));
@@ -458,7 +458,7 @@ void main() {
         ),
       );
       await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Verifikasi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));
@@ -574,7 +574,7 @@ void main() {
         await tester.tap(find.byKey(const Key('lock-switch')));
         await tester.pump(const Duration(milliseconds: 100));
         await tester.pump(const Duration(milliseconds: 400));
-        expect(find.text('Get Started'), findsOneWidget);
+        expect(find.text('Mulai'), findsOneWidget);
         expect(store.data, isEmpty);
         expect(lock.sessionActive, isFalse);
       },

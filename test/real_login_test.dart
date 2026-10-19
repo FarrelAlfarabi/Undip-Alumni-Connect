@@ -74,7 +74,7 @@ void main() {
         find.byKey(const Key('login-email')),
         ' Ahmad.Ramadhan@Example.com ',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       expect(api.sent, ['ahmad.ramadhan@example.com']);
       expect(find.byKey(const Key('code-sent-note')), findsOneWidget);
@@ -95,11 +95,11 @@ void main() {
         find.byKey(const Key('login-email')),
         'nobody@example.com',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       expect(api.sent, isEmpty);
       expect(find.byKey(const Key('login-code')), findsOneWidget);
-      expect(find.text('No Matching Record'), findsNothing);
+      expect(find.text('Data Tidak Ditemukan'), findsNothing);
       expect(find.byKey(const Key('login-help')), findsOneWidget);
     });
 
@@ -112,12 +112,12 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '12ab');
-      await tester.tap(find.text('Verify code'));
+      await tester.tap(find.text('Verifikasi kode'));
       await settle(tester);
-      expect(find.text('Enter the 6 digit code'), findsOneWidget);
+      expect(find.text('Masukkan kode 6 digit'), findsOneWidget);
       expect(api.checked, isEmpty);
     });
 
@@ -130,12 +130,12 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '000000');
       await settle(tester);
-      expect(find.textContaining('wrong or has expired'), findsOneWidget);
-      expect(find.text('Something Went Wrong'), findsNothing);
+      expect(find.textContaining('salah atau sudah kedaluwarsa'), findsOneWidget);
+      expect(find.text('Terjadi Kesalahan'), findsNothing);
       expect(find.byKey(const Key('login-code')), findsOneWidget);
       // Can try again right away.
       api.verifyError = null;
@@ -153,15 +153,15 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
-      expect(find.text('Resend code in 30s'), findsOneWidget);
+      expect(find.text('Kirim ulang kode dalam 30 dtk'), findsOneWidget);
       await tester.pump(const Duration(seconds: 31));
-      expect(find.text('Resend code'), findsOneWidget);
+      expect(find.text('Kirim ulang kode'), findsOneWidget);
       await tester.tap(find.byKey(const Key('login-resend')));
       await settle(tester);
       expect(api.sent.length, 2);
-      expect(find.text('Resend code in 30s'), findsOneWidget);
+      expect(find.text('Kirim ulang kode dalam 30 dtk'), findsOneWidget);
       await tester.pump(const Duration(seconds: 31));
     });
 
@@ -172,11 +172,11 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '123456');
       await settle(tester);
-      expect(find.text('No Matching Record'), findsOneWidget);
+      expect(find.text('Data Tidak Ditemukan'), findsOneWidget);
     });
 
     testWidgets('"Use a different email" goes back to the email box', (
@@ -188,7 +188,7 @@ void main() {
         find.byKey(const Key('login-email')),
         'a@example.com',
       );
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       await tester.tap(find.byKey(const Key('login-change-email')));
       await tester.pump();
@@ -217,7 +217,7 @@ void main() {
       await enterPin(tester, testPin);
       await tester.pump();
       expect(find.text(kSessionExpiredNotice), findsOneWidget);
-      expect(find.text('Get Started'), findsOneWidget);
+      expect(find.text('Mulai'), findsOneWidget);
       expect(await lock.load(), isNull);
     });
 

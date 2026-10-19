@@ -54,7 +54,7 @@ void main() {
   group('greeting', () {
     testWidgets('uses the first name only', (tester) async {
       await pumpHome(tester);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
 
     test('firstNameOf handles empty and missing names', () {
@@ -143,7 +143,7 @@ void main() {
 
       api.announcementsError = null;
       api.announcements = [announcementMap(1)];
-      await tester.tap(find.text('Try again').first);
+      await tester.tap(find.text('Coba lagi').first);
       await tester.pump();
       await tester.pump();
       expect(find.text('Announcement 1'), findsOneWidget);
@@ -236,8 +236,8 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester);
-      expect(find.textContaining('No jobs posted yet'), findsOneWidget);
-      expect(find.textContaining('No listings yet'), findsOneWidget);
+      expect(find.textContaining('Belum ada lowongan'), findsOneWidget);
+      expect(find.textContaining('Belum ada produk'), findsOneWidget);
       expect(
         find.textContaining(RegExp('fee|commission', caseSensitive: false)),
         findsNothing,

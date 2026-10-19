@@ -313,7 +313,7 @@ void main() {
         ),
       );
       await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Verifikasi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));

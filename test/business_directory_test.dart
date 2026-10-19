@@ -441,7 +441,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Check your connection'), findsOneWidget);
       expect(find.textContaining('SocketException'), findsNothing);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Coba lagi'), findsOneWidget);
     });
 
     test('filter helper', () {

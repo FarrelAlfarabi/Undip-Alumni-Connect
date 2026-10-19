@@ -284,7 +284,7 @@ void main() {
       expect(find.textContaining('SocketException'), findsNothing);
       api.listError = null;
       api.rows = [note(title: 'Back again')];
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Coba lagi'));
       await tester.pumpAndSettle();
       expect(find.text('Back again'), findsOneWidget);
     });

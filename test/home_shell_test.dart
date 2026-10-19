@@ -105,7 +105,7 @@ void main() {
     ]);
     expect(find.text('Chat'), findsNothing);
     // Lands on Home.
-    expect(find.text('Hello, Ahmad'), findsOneWidget);
+    expect(find.text('Halo, Ahmad'), findsOneWidget);
     // Profile is the last tab and still opens.
     await tapNav(tester, 'Profile');
     expect(find.text('PAGE Profile'), findsOneWidget);
@@ -137,7 +137,7 @@ void main() {
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(find.byType(HomeShell), findsOneWidget, reason: 'from $tab');
-        expect(find.text('Hello, Ahmad'), findsOneWidget, reason: 'from $tab');
+        expect(find.text('Halo, Ahmad'), findsOneWidget, reason: 'from $tab');
       }
     });
 
@@ -157,7 +157,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Exit the app?'), findsNothing);
       expect(find.byType(HomeShell), findsOneWidget);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
 
     testWidgets('Exit leaves the shell', (tester) async {
@@ -177,7 +177,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Exit the app?'), findsNothing);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
       // A second Back, now on Home, asks.
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
@@ -334,7 +334,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(HomeShell), findsOneWidget);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
   });
 }

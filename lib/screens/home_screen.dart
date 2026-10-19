@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final n = snap.data ?? 0;
               return IconButton(
                 key: const Key('home-notifications'),
-                tooltip: n > 0 ? 'Notifications ($n new)' : 'Notifications',
+                tooltip: n > 0 ? 'Notifikasi ($n baru)' : 'Notifikasi',
                 onPressed: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final n = snap.data ?? 0;
               return IconButton(
                 key: const Key('home-requests'),
-                tooltip: n > 0 ? 'Requests ($n waiting)' : 'Requests',
+                tooltip: n > 0 ? 'Permintaan ($n menunggu)' : 'Permintaan',
                 onPressed: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
@@ -218,13 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  first == null ? 'Hello' : 'Hello, $first',
+                  first == null ? 'Halo' : 'Halo, $first',
                   key: const Key('home-greeting'),
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'What would you like to do today?',
+                  'Apa yang ingin kamu lakukan hari ini?',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -253,15 +253,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 const SizedBox(height: 24),
-                _sectionTitle(theme, 'Latest'),
+                _sectionTitle(theme, 'Terbaru'),
                 const SizedBox(height: 8),
                 _LatestBlock<Map<String, dynamic>>(
                   key: const Key('latest-jobs'),
-                  heading: 'New jobs',
+                  heading: 'Lowongan baru',
                   future: _jobs,
                   emptyIcon: Icons.work_outline,
                   emptyText:
-                      'No jobs posted yet. New openings will show up here.',
+                      'Belum ada lowongan. Lowongan baru akan muncul di sini.',
                   onRetry: () => setState(() {
                     _jobs = _latestJobs();
                   }),
@@ -279,11 +279,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _LatestBlock<MarketplaceListing>(
                   key: const Key('latest-listings'),
-                  heading: 'New in the marketplace',
+                  heading: 'Baru di Marketplace',
                   future: _listings,
                   emptyIcon: Icons.storefront_outlined,
                   emptyText:
-                      'No listings yet. Approved listings will show up here.',
+                      'Belum ada produk. Produk yang disetujui akan muncul di sini.',
                   onRetry: () => setState(() {
                     _listings = _fetchListings();
                   }),
@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 key: const Key('banner-error'),
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load announcements.",
-                actionLabel: 'Try again',
+                actionLabel: 'Coba lagi',
                 feedbackScreen: 'Home',
                 error: snap.error,
                 onAction: () => setState(() {
@@ -357,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: TextButton(
             key: const Key('see-all-announcements'),
             onPressed: () => _push(widget.pages.announcements()),
-            child: const Text('See all announcements'),
+            child: const Text('Lihat semua pengumuman'),
           ),
         ),
       ],
@@ -532,7 +532,7 @@ class _LatestBlock<T> extends StatelessWidget {
               return _MessageCard(
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load this right now.",
-                actionLabel: 'Try again',
+                actionLabel: 'Coba lagi',
                 feedbackScreen: 'Home',
                 error: snap.error,
                 onAction: onRetry,
@@ -767,7 +767,7 @@ class _BusinessEntry extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Own a business? Let other alumni find it.',
+                      'Punya usaha? Biar sesama alumni bisa menemukannya.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSecondaryContainer,
                       ),
@@ -776,7 +776,7 @@ class _BusinessEntry extends StatelessWidget {
                   FilledButton(
                     key: const Key('business-register-button'),
                     onPressed: onRegister,
-                    child: const Text('Register'),
+                    child: const Text('Daftarkan'),
                   ),
                 ],
               ),
@@ -789,11 +789,11 @@ class _BusinessEntry extends StatelessWidget {
         final u = summary.usage[b.id];
         final lines = <String>[
           b.approvedBand != null
-              ? 'Band: ${b.approvedBand!.label}'
-              : 'Band you chose: ${b.requestedBand?.label ?? '-'}',
+              ? 'Skala: ${b.approvedBand!.label}'
+              : 'Skala pilihanmu: ${b.requestedBand?.label ?? '-'}',
           if (b.isApproved && u != null) postingSummary(b, u),
           if (b.status == BusinessStatus.rejected && b.rejectionReason != null)
-            'Reason: ${b.rejectionReason}',
+            'Alasan: ${b.rejectionReason}',
           if (all.length > 1) '+ ${all.length - 1} more',
         ];
         return Card(
