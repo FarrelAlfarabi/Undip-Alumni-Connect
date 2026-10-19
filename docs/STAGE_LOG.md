@@ -64,3 +64,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Admin announcements (18 Oct 2026)
 - Admin > Announcements: past posts with search and a Period filter (same `period_filter.dart` and components as Reports), plus a "New announcement" form (title 120, message 2000).
 - Admin-only in the database: no write policy on `announcements`; posting goes through `admin_announcement_create`, which checks `app_admins`. Migration `20261018110000_admin_announcements.sql` is not applied anywhere. No Status filter: announcements have no status. No audience targeting.
+## First-login profile step (18 Oct 2026)
+- After the first consent only (policy_version was null), an optional screen offers the existing employment editor and Default contact; Lewati skips. No migration, no new fields, NIM not shown.
+- Flutter not installed here: analyze and tests not run; CI must confirm.

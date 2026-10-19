@@ -249,6 +249,10 @@ void main() {
           'p_profile': 'p1',
           'p_version': kPolicyVersion,
         });
+        // First login: the optional profile step comes before the app.
+        expect(find.byKey(const Key('first-login-profile')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('first-login-skip')));
+        await tester.pumpAndSettle();
         expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
       },
     );

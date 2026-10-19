@@ -4,6 +4,7 @@ import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../data/feedback_repository.dart';
 import '../policy/consent_screen.dart';
+import '../screens/first_login_profile_screen.dart';
 import '../screens/home_shell.dart';
 import 'lock_service.dart';
 
@@ -36,6 +37,26 @@ void enterApp(
           onAccepted: (ctx, accepted) => enterApp(
             ctx,
             accepted,
+            lock: l,
+            homeBuilder: homeBuilder,
+            accountRepository: accountRepository,
+          ),
+        ),
+      ),
+    );
+    return;
+  }
+  if (profile[kFirstLoginKey] == true) {
+    // Optional, shown once: the flag only exists on the profile handed over
+    // right after the first consent, so it never comes back.
+    final clean = {...profile}..remove(kFirstLoginKey);
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => FirstLoginProfileScreen(
+          profile: clean,
+          onDone: (ctx, updated) => enterApp(
+            ctx,
+            updated,
             lock: l,
             homeBuilder: homeBuilder,
             accountRepository: accountRepository,

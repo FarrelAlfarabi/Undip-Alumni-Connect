@@ -6,6 +6,7 @@ import '../config/policy_config.dart';
 import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 import '../lock/session.dart';
+import '../screens/first_login_profile_screen.dart' show kFirstLoginKey;
 import '../screens/welcome_screen.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -66,6 +67,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
         ...widget.profile,
         'policy_version': kPolicyVersion,
         'policy_accepted_at': DateTime.now().toUtc().toIso8601String(),
+        // Nothing accepted before means this is their first login. A later
+        // policy version bump (old version, not null) is not a first login.
+        if (widget.profile['policy_version'] == null) kFirstLoginKey: true,
       });
     } catch (e) {
       if (!mounted) return;
