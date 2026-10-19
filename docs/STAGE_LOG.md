@@ -84,7 +84,12 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Migration `20261019100000` only replaces the insert guard; not applied to any project. Rollback script and SQL test `16` included.
 ## Photo ratio helper (19 Oct 2026)
 - Business form photo helper now says best size is 2:1 (1200 x 600 px), edges cropped, keep the main part in the middle. Text only; the app still accepts any size up to 2 MB. Stacked on the admin filters branch. Analyze clean, 693 tests pass.
+## Members default year (19 Oct 2026)
+- Members screen now opens with the Year filter set to the user's own graduation year, every time it opens. User can pick "All" or another year. No year in profile, or nobody else shares it: shows all years.
+- Client only (`directory_screen.dart`), no migration. Test `test/directory_default_year_test.dart`. Full suite passes, analyze clean.
 ## Hide NIM (18 Oct 2026)
 - Other members no longer get NIM. Migration `20261018120000_hide_nim.sql` revokes the `nim` column from anon/authenticated; `profile_nim(viewer, profile)` returns it to the owner and admins only. Rollback: `supabase/rollback_hide_nim.sql`. Not applied to any project.
 - App: every `alumni_profiles` read names its columns (`lib/data/profile_columns.dart`); a new column needs a grant and a line there. Profile card shows NIM only when `profile_nim` answers. Stale-id retry uses email, not NIM.
 - Deploy migration and app together. Local SQL checks pass; Flutter tests not run here (no Flutter in this container), CI runs them.
+
+- Stage: Home greeting pinned above the scroll area (widget test added; Flutter not available in cloud, CI runs it).
