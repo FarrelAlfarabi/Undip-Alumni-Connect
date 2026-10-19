@@ -50,7 +50,6 @@ true until login ships.
   `select * from list_app_admins();`. The person needs a profile first.
 - Account deletion, privacy policy and consent screen, BETA label and the
   version in Profile > About and on the Welcome screen.
-- The Nearby map follows the system dark mode (the rest of the app is light).
 - Local SQL checks: `supabase/tests/run_beta_local.sh`.
 
 ## Running it

@@ -4,6 +4,12 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Nearby list and city WhatsApp group (19 Oct 2026)
+- Nearby is now a list only: map removed (widgets, outline data, `flutter_map`/`latlong2`, `REAL_MAP` flag, tile hosts in the CSP). City chips filter the list.
+- Picking a city shows "Gabung grup WhatsApp" (opens the invite link) or "Tambah link grup WhatsApp". Any verified member can add or change it.
+- SQL `20261019110000_city_whatsapp_groups.sql`: closed table, two functions, link must be `https://chat.whatsapp.com/...`. Not applied to any project.
+- Checks: analyze clean, full suite passes, `run_beta_local.sh` passes (new `18_city_whatsapp_groups_test.sql`).
+
 ## Feature intro (19 Oct 2026)
 - New `FeatureIntroScreen`: 2 skippable pages explaining Marketplace (Market > Products) and Business (Market > Businesses). Copy in Indonesian, feature names in English.
 - `IntroGate` wraps the app in `defaultHomeBuilder`; shows the intro once per person per device (flag in the lock store, `LockService.introSeen/markIntroSeen`). Web build shows it once per page load.
