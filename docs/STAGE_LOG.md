@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## UX pass (19 Oct 2026)
+- A: Indonesian copy on Welcome, login, Home and the shared error button. B: Home has one "Cari alumni" button, tiles with a line of text, a requests card; no Businesses tile. C: profile shows "Permintaan terkirim" after a request. D: Directory count, City filter, empty-state clear button.
+- E: other profiles show work before study, contact action pinned at the bottom. F: Jobs is a Market segment (Products, Businesses, Jobs). G: no change (lists already clear the button by 88 dp). H: Home card until city and role are set. I: no exit dialog on web.
+- Still English: Directory/profile labels, Market lists, Settings, Help and the other screens. Needs a screen-by-screen pass and a look at real phone width.
+
 ## Feature intro (19 Oct 2026)
 - New `FeatureIntroScreen`: 2 skippable pages explaining Marketplace (Market > Products) and Business (Market > Businesses). Copy in Indonesian, feature names in English.
 - `IntroGate` wraps the app in `defaultHomeBuilder`; shows the intro once per person per device (flag in the lock store, `LockService.introSeen/markIntroSeen`). Web build shows it once per page load.

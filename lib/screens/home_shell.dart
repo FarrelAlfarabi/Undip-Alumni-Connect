@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show setEquals;
+import 'package:flutter/foundation.dart' show kIsWeb, setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -158,6 +158,9 @@ class _HomeShellState extends State<HomeShell> {
       _select(HomeShell.homeTab);
       return;
     }
+    // A browser has no app to exit: the tab or window is closed by the person,
+    // so the dialog would only get in the way of the back button.
+    if (kIsWeb) return;
     _confirmExit();
   }
 
