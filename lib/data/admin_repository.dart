@@ -12,6 +12,7 @@ enum AdminErrorCode {
   invalidState,
   invalidAction,
   notFound,
+  invalidInput,
   unknown,
 }
 
@@ -39,6 +40,8 @@ String adminErrorMessage(Object error) {
             'yourself. Otherwise reload the list.';
       case AdminErrorCode.notFound:
         return 'This item no longer exists.';
+      case AdminErrorCode.invalidInput:
+        return 'Title and message are required, and must not be too long.';
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
@@ -237,6 +240,36 @@ class AdminRepository {
     );
   }
 
+  /// Announcements, newest first. Same rows the News screen shows, plus who
+  /// posted each one.
+  Future<List<AdminAnnouncement>> announcements(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_announcement_list', {'p_admin': adminId}),
+    );
+    return (rows as List)
+        .map(
+          (r) =>
+              AdminAnnouncement.fromMap(Map<String, dynamic>.from(r as Map)),
+        )
+        .toList();
+  }
+
+  /// Posts one announcement. Only the database decides who may: the call is
+  /// refused with `not_admin` for anyone not in app_admins.
+  Future<void> createAnnouncement(
+    String adminId, {
+    required String title,
+    required String body,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_announcement_create', {
+        'p_admin': adminId,
+        'p_title': title.trim(),
+        'p_body': body.trim(),
+      }),
+    );
+  }
+
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
       return await run();
@@ -253,6 +286,7 @@ class AdminRepository {
     'invalid_action' => AdminErrorCode.invalidAction,
     'invalid_view' => AdminErrorCode.invalidView,
     'not_found' => AdminErrorCode.notFound,
+    'invalid_input' => AdminErrorCode.invalidInput,
     _ => AdminErrorCode.unknown,
   };
 }
@@ -364,4 +398,30 @@ class FeedbackItem {
     buildNumber: m['build_number'] as String?,
     platform: m['platform'] as String?,
   );
+}
+
+/// One announcement in the admin list.
+class AdminAnnouncement {
+  const AdminAnnouncement({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.postedByName,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String title;
+  final String body;
+  final String? postedByName;
+  final DateTime createdAt;
+
+  factory AdminAnnouncement.fromMap(Map<String, dynamic> m) =>
+      AdminAnnouncement(
+        id: m['id'] as String,
+        title: (m['title'] as String?) ?? '',
+        body: (m['body'] as String?) ?? '',
+        postedByName: m['posted_by_name'] as String?,
+        createdAt: DateTime.parse(m['created_at'] as String),
+      );
 }

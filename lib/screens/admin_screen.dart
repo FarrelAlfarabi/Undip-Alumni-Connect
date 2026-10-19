@@ -5,6 +5,7 @@ import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
+import 'admin_announcements_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
@@ -60,6 +61,14 @@ class _AdminScreenState extends State<AdminScreen> {
         subtitle: 'What testers sent from the Send feedback button',
         builder: (_) =>
             AdminFeedbackScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-announcements',
+        icon: Icons.campaign_outlined,
+        title: 'Announcements',
+        subtitle: 'Post news for all members, search past posts',
+        builder: (_) =>
+            AdminAnnouncementsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-businesses',

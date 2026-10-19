@@ -61,3 +61,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Cause: DB trigger `alumni_profiles_restrict_update` still locked `city`; the editor sends city, so any city change failed. Not the Instagram migration (it only touches business functions).
 - Migration `20261018100000_profile_city_editable.sql` (not applied to any project) + rollback + SQL test 16. App sends city only when changed and names the locked-field error.
 - Checks: `run_beta_local.sh` and `run_fresh_chain.sh` pass. Flutter not installed in this session, so analyze and Dart tests run in CI only.
+## Admin announcements (18 Oct 2026)
+- Admin > Announcements: past posts with search and a Period filter (same `period_filter.dart` and components as Reports), plus a "New announcement" form (title 120, message 2000).
+- Admin-only in the database: no write policy on `announcements`; posting goes through `admin_announcement_create`, which checks `app_admins`. Migration `20261018110000_admin_announcements.sql` is not applied anywhere. No Status filter: announcements have no status. No audience targeting.
