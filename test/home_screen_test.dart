@@ -5,6 +5,7 @@ import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/announcement_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/home_screen.dart';
 import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
+import 'package:undip_alumni_connect/widgets/brand_lockup.dart';
 
 import 'support/fake_home.dart';
 import 'support/fake_marketplace_api.dart';
@@ -53,6 +54,45 @@ Future<void> pumpHome(
 void main() {
   hubTests();
   announcementDetailTests();
+  testWidgets('app bar shows the Ikafe UNDIP lockup', (tester) async {
+    await pumpHome(tester);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byType(BrandLockup),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('by Ikafe UNDIP'), findsOneWidget);
+  });
+  group('pinned top bar', () {
+    testWidgets('greeting and notifications stay visible after scrolling', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      final greetingTop = tester.getTopLeft(
+        find.byKey(const Key('home-greeting')),
+      );
+      await tester.drag(
+        find.byKey(const Key('home-list')),
+        const Offset(0, -600),
+      );
+      await tester.pump();
+      expect(
+        find.byKey(const Key('home-greeting')).hitTestable(),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const Key('home-greeting'))),
+        greetingTop,
+      );
+      expect(
+        find.byKey(const Key('home-notifications')).hitTestable(),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('greeting', () {
     testWidgets('uses the first name only', (tester) async {
       await pumpHome(tester);

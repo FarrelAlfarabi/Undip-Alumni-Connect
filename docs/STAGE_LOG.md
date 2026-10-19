@@ -8,6 +8,11 @@ If a session ends early, continue from the last entry here.
 - A: Indonesian copy on Welcome, login, Home and the shared error button. B: Home has one "Cari alumni" button, tiles with a line of text, a requests card; no Businesses tile. C: profile shows "Permintaan terkirim" after a request. D: Directory count, City filter, empty-state clear button.
 - E: other profiles show work before study, contact action pinned at the bottom. F: Jobs is a Market segment (Products, Businesses, Jobs). G: no change (lists already clear the button by 88 dp). H: Home card until city and role are set. I: no exit dialog on web.
 - Still English: Directory/profile labels, Market lists, Settings, Help and the other screens. Needs a screen-by-screen pass and a look at real phone width.
+## Nearby list and city WhatsApp group (19 Oct 2026)
+- Nearby is now a list only: map removed (widgets, outline data, `flutter_map`/`latlong2`, `REAL_MAP` flag, tile hosts in the CSP). City chips filter the list.
+- Picking a city shows "Gabung grup WhatsApp" (opens the invite link) or "Tambah link grup WhatsApp". Any verified member can add or change it.
+- SQL `20261019110000_city_whatsapp_groups.sql`: closed table, two functions, link must be `https://chat.whatsapp.com/...`. Not applied to any project.
+- Checks: analyze clean, full suite passes, `run_beta_local.sh` passes (new `18_city_whatsapp_groups_test.sql`).
 
 ## Feature intro (19 Oct 2026)
 - New `FeatureIntroScreen`: 2 skippable pages explaining Marketplace (Market > Products) and Business (Market > Businesses). Copy in Indonesian, feature names in English.
@@ -56,6 +61,10 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - The viewport meta alone did not stop an iPhone zooming into the business form and staying zoomed (Farrel's video). Added `web/viewport_guard.js` (blocks pinch, snaps back to 100% after a field loses focus or the page is zoomed) and `touch-action: manipulation`.
 - Not reproduced here (no iPhone): the editing field is already 16px in a desktop Chromium run. Needs a real-iPhone check on the preview.
 
+## Ikafe palette and logo (19 Oct 2026)
+- Colors only: yellow `#FFC400`, black `#141414`, blue `#0073B1` (links) replace indigo and brass in `lib/theme.dart`. Filled buttons are yellow with black text; text links are blue; the lock screen is black.
+- The Ikafe UNDIP logo (`assets/brand/`) sits on a white chip in the Home app bar, Welcome and lock screens. App title is "Lingkaran by Ikafe UNDIP". Layout unchanged.
+- Tests: `test/brand_palette_test.dart` (AA contrast, theme mapping, logo placement). Analyze clean, 694 tests pass.
 ## Terms scroll gate (18 Oct 2026)
 - Consent screen: the checkbox stays off until the policy is scrolled to the bottom, with a hint line. Short text that fits on screen unlocks at once. Stays unlocked after switching language. Policy text unchanged.
 - Tests: `consent_scroll_test.dart`; `account_test.dart` scrolls first. Analyze clean, 686 tests pass.
@@ -83,7 +92,12 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Migration `20261019100000` only replaces the insert guard; not applied to any project. Rollback script and SQL test `16` included.
 ## Photo ratio helper (19 Oct 2026)
 - Business form photo helper now says best size is 2:1 (1200 x 600 px), edges cropped, keep the main part in the middle. Text only; the app still accepts any size up to 2 MB. Stacked on the admin filters branch. Analyze clean, 693 tests pass.
+## Members default year (19 Oct 2026)
+- Members screen now opens with the Year filter set to the user's own graduation year, every time it opens. User can pick "All" or another year. No year in profile, or nobody else shares it: shows all years.
+- Client only (`directory_screen.dart`), no migration. Test `test/directory_default_year_test.dart`. Full suite passes, analyze clean.
 ## Hide NIM (18 Oct 2026)
 - Other members no longer get NIM. Migration `20261018120000_hide_nim.sql` revokes the `nim` column from anon/authenticated; `profile_nim(viewer, profile)` returns it to the owner and admins only. Rollback: `supabase/rollback_hide_nim.sql`. Not applied to any project.
 - App: every `alumni_profiles` read names its columns (`lib/data/profile_columns.dart`); a new column needs a grant and a line there. Profile card shows NIM only when `profile_nim` answers. Stale-id retry uses email, not NIM.
 - Deploy migration and app together. Local SQL checks pass; Flutter tests not run here (no Flutter in this container), CI runs them.
+
+- Stage: Home greeting pinned above the scroll area (widget test added; Flutter not available in cloud, CI runs it).

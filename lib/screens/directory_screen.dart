@@ -77,9 +77,24 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.dispose();
   }
 
+  /// Opens on the user's own graduation year. Skipped when the profile has
+  /// no year, or nobody in the list shares it (the dropdown would have no
+  /// matching option). Only applied while the year filter is still "All".
+  List<Map<String, dynamic>> _withDefaultYear(List<Map<String, dynamic>> rows) {
+    final own = widget.currentUser.value['graduation_year']?.toString();
+    if (own != null &&
+        _year == kAllFilter &&
+        rows.any((p) => p['graduation_year']?.toString() == own)) {
+      _year = own;
+    }
+    return rows;
+  }
+
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
     if (widget.fetchAlumni != null) {
-      return withoutBlockedProfiles(await widget.fetchAlumni!());
+      return _withDefaultYear(
+        await withoutBlockedProfiles(await widget.fetchAlumni!()),
+      );
     }
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
@@ -87,8 +102,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         .eq('verification_status', 'verified')
         .order('name', ascending: true)
         .limit(kDirectoryMaxRows);
-    return withoutBlockedProfiles(
-      List<Map<String, dynamic>>.from(rows as List),
+    return _withDefaultYear(
+      await withoutBlockedProfiles(
+        List<Map<String, dynamic>>.from(rows as List),
+      ),
     );
   }
 

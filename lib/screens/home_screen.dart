@@ -8,6 +8,7 @@ import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/brand_lockup.dart';
 import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
@@ -171,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lingkaran'),
+        title: const BrandLockup(),
         automaticallyImplyLeading: false,
         actions: [
           FutureBuilder<int>(
@@ -224,148 +225,179 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          // A short fixed set of sections, so a plain scroll view (built in
-          // full) rather than a lazy ListView.
-          child: SingleChildScrollView(
-            key: const Key('home-list'),
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  first == null ? 'Halo' : 'Halo, $first',
-                  key: const Key('home-greeting'),
-                  style: theme.textTheme.headlineSmall,
+        child: Column(
+          children: [
+            // Pinned: stays put while the sections below scroll.
+            Material(
+              color: theme.scaffoldBackgroundColor,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      first == null ? 'Halo' : 'Halo, $first',
+                      key: const Key('home-greeting'),
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Apa yang ingin kamu lakukan hari ini?',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Apa yang ingin kamu lakukan hari ini?',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                FutureBuilder<int>(
-                  future: _pendingRequests,
-                  builder: (context, snap) {
-                    final n = snap.data ?? 0;
-                    if (n <= 0) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _RequestsCard(count: n, onTap: _openRequests),
-                    );
-                  },
-                ),
-                if (_profileIncomplete)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Material(
-                      key: const Key('home-profile-card'),
-                      color: theme.colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: _completeProfile,
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                color: theme.colorScheme.onSecondaryContainer,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Lengkapi profilmu: tambahkan kota dan '
-                                  'pekerjaan agar alumni lain bisa menemukanmu.',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color:
-                                        theme.colorScheme.onSecondaryContainer,
-                                  ),
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                // A short fixed set of sections, so a plain scroll view (built in
+                // full) rather than a lazy ListView.
+                child: SingleChildScrollView(
+                  key: const Key('home-list'),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 8),
+                      FutureBuilder<int>(
+                        future: _pendingRequests,
+                        builder: (context, snap) {
+                          final n = snap.data ?? 0;
+                          if (n <= 0) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _RequestsCard(
+                              count: n,
+                              onTap: _openRequests,
+                            ),
+                          );
+                        },
+                      ),
+                      if (_profileIncomplete)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Material(
+                            key: const Key('home-profile-card'),
+                            color: theme.colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: _completeProfile,
+                              child: Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person_outline,
+                                      color: theme
+                                          .colorScheme
+                                          .onSecondaryContainer,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Lengkapi profilmu: tambahkan kota dan '
+                                        'pekerjaan agar alumni lain bisa menemukanmu.',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSecondaryContainer,
+                                            ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: theme
+                                          .colorScheme
+                                          .onSecondaryContainer,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: theme.colorScheme.onSecondaryContainer,
-                              ),
-                            ],
+                            ),
+                          ),
+                        ),
+                      _bannerSection(theme),
+                      const SizedBox(height: 8),
+                      _QuickActions(
+                        onJobs: () => widget.onOpenMarket != null
+                            ? widget.onOpenMarket!(2)
+                            : _push(widget.pages.jobs(_user)),
+                        onMarketplace: () => widget.onOpenMarket != null
+                            ? widget.onOpenMarket!(0)
+                            : _push(widget.pages.marketplace(_user)),
+                        onDirectory: widget.onOpenDirectory,
+                        onNearby: () => _push(widget.pages.nearby(_user)),
+                      ),
+                      const SizedBox(height: 12),
+                      _BusinessEntry(
+                        future: _business,
+                        onOpenMine: () =>
+                            _pushThenRefresh(widget.pages.myBusinesses(_user)),
+                        onRegister: () => _pushThenRefresh(
+                          widget.pages.registerBusiness(_user),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _sectionTitle(theme, 'Terbaru'),
+                      const SizedBox(height: 8),
+                      _LatestBlock<Map<String, dynamic>>(
+                        key: const Key('latest-jobs'),
+                        heading: 'Lowongan baru',
+                        future: _jobs,
+                        emptyIcon: Icons.work_outline,
+                        emptyText: 'Belum ada lowongan. Lowongan baru akan muncul di sini.',
+                        onRetry: () => setState(() {
+                          _jobs = _latestJobs();
+                        }),
+                        tileBuilder: (job) => _LatestTile(
+                          icon: Icons.work_outline,
+                          title: job['title'] as String? ?? '',
+                          subtitle: [
+                            job['company'] as String? ?? '',
+                            if ((job['industry'] as String?)?.isNotEmpty ==
+                                true)
+                              job['industry'] as String,
+                          ].where((s) => s.isNotEmpty).join(' · '),
+                          onTap: () =>
+                              _push(widget.pages.jobDetail(job, _user)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _LatestBlock<MarketplaceListing>(
+                        key: const Key('latest-listings'),
+                        heading: 'Baru di Marketplace',
+                        future: _listings,
+                        emptyIcon: Icons.storefront_outlined,
+                        emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
+                        onRetry: () => setState(() {
+                          _listings = _fetchListings();
+                        }),
+                        tileBuilder: (l) => _LatestTile(
+                          icon: Icons.storefront_outlined,
+                          title: l.title,
+                          subtitle:
+                              '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
+                          onTap: () => _push(
+                            widget.pages.listingDetail(l, _market, _user),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                _bannerSection(theme),
-                const SizedBox(height: 8),
-                _QuickActions(
-                  onJobs: () => widget.onOpenMarket != null
-                      ? widget.onOpenMarket!(2)
-                      : _push(widget.pages.jobs(_user)),
-                  onMarketplace: () => widget.onOpenMarket != null
-                      ? widget.onOpenMarket!(0)
-                      : _push(widget.pages.marketplace(_user)),
-                  onDirectory: widget.onOpenDirectory,
-                  onNearby: () => _push(widget.pages.nearby(_user)),
-                ),
-                const SizedBox(height: 12),
-                _BusinessEntry(
-                  future: _business,
-                  onOpenMine: () =>
-                      _pushThenRefresh(widget.pages.myBusinesses(_user)),
-                  onRegister: () =>
-                      _pushThenRefresh(widget.pages.registerBusiness(_user)),
-                ),
-                const SizedBox(height: 24),
-                _sectionTitle(theme, 'Terbaru'),
-                const SizedBox(height: 8),
-                _LatestBlock<Map<String, dynamic>>(
-                  key: const Key('latest-jobs'),
-                  heading: 'Lowongan baru',
-                  future: _jobs,
-                  emptyIcon: Icons.work_outline,
-                  emptyText:
-                      'Belum ada lowongan. Lowongan baru akan muncul di sini.',
-                  onRetry: () => setState(() {
-                    _jobs = _latestJobs();
-                  }),
-                  tileBuilder: (job) => _LatestTile(
-                    icon: Icons.work_outline,
-                    title: job['title'] as String? ?? '',
-                    subtitle: [
-                      job['company'] as String? ?? '',
-                      if ((job['industry'] as String?)?.isNotEmpty == true)
-                        job['industry'] as String,
-                    ].where((s) => s.isNotEmpty).join(' · '),
-                    onTap: () => _push(widget.pages.jobDetail(job, _user)),
+                      const SizedBox(height: 24),
+                      const UpcomingSection(),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                _LatestBlock<MarketplaceListing>(
-                  key: const Key('latest-listings'),
-                  heading: 'Baru di Marketplace',
-                  future: _listings,
-                  emptyIcon: Icons.storefront_outlined,
-                  emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
-                  onRetry: () => setState(() {
-                    _listings = _fetchListings();
-                  }),
-                  tileBuilder: (l) => _LatestTile(
-                    icon: Icons.storefront_outlined,
-                    title: l.title,
-                    subtitle:
-                        '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
-                    onTap: () =>
-                        _push(widget.pages.listingDetail(l, _market, _user)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const UpcomingSection(),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -9,6 +9,7 @@ import 'package:undip_alumni_connect/lock/lock_service.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:undip_alumni_connect/lock/pin_setup_screen.dart';
 import 'package:undip_alumni_connect/screens/verification_screen.dart';
+import 'package:undip_alumni_connect/widgets/brand_lockup.dart';
 
 import '../support/fake_lock.dart';
 
@@ -55,6 +56,7 @@ void main() {
       expect(find.text('Mulai'), findsNothing);
       expect(find.text('Welcome back, Ahmad'), findsOneWidget);
       expect(find.text('LINGKARAN'), findsOneWidget);
+      expect(find.byType(IkafeLogo), findsOneWidget);
       expect(find.text('AR'), findsOneWidget); // initials avatar
       expect(find.byKey(const Key('pin-5')), findsOneWidget);
       expect(find.text('Forgot PIN? Verify again'), findsOneWidget);

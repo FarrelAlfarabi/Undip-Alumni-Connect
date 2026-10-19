@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
 import '../theme.dart';
+import '../widgets/brand_lockup.dart';
 import 'biometrics.dart';
 import 'lock_config.dart';
 import 'lock_service.dart';
 import 'masking.dart';
 import 'pin_pad.dart';
 
-/// Shown to a person already verified on this device. Dark indigo and a PIN
+/// Shown to a person already verified on this device. Black and a PIN
 /// pad, so it reads as a different screen from the first-time Welcome.
 ///
 /// This is a device-level convenience lock, not real security (see README).
@@ -165,7 +166,7 @@ class _LockScreenState extends State<LockScreen> {
 
     return Scaffold(
       key: const Key('lock-screen'),
-      backgroundColor: AppTheme.indigo,
+      backgroundColor: AppTheme.black,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -176,7 +177,7 @@ class _LockScreenState extends State<LockScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!compact) ...[
-                    const KawungMark(size: 32, color: AppTheme.goldBright),
+                    const KawungMark(size: 32, color: AppTheme.yellow),
                     const SizedBox(height: 6),
                   ],
                   Text(
@@ -187,13 +188,17 @@ class _LockScreenState extends State<LockScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  IkafeLogo(height: compact ? 16 : 22),
                   SizedBox(height: compact ? 10 : 20),
                   CircleAvatar(
                     radius: compact ? 22 : 30,
-                    backgroundColor: AppTheme.gold,
+                    backgroundColor: AppTheme.yellow,
                     child: Text(
                       initialsOf(widget.user.displayName),
-                      style: theme.textTheme.titleLarge?.copyWith(color: fg),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: AppTheme.black,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -268,8 +273,8 @@ class _LockScreenState extends State<LockScreen> {
         key: const Key('lock-continue'),
         onPressed: _busy ? null : () => _run(widget.onContinue),
         style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.gold,
-          foregroundColor: AppTheme.paper,
+          backgroundColor: AppTheme.yellow,
+          foregroundColor: AppTheme.black,
         ),
         child: const Text('Continue'),
       ),
