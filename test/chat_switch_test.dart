@@ -47,8 +47,9 @@ Future<void> openCity(WidgetTester tester, {required bool chat}) async {
     ),
   );
   await tester.pumpAndSettle();
-  await tester.ensureVisible(find.byKey(const Key('nearby-city-Jakarta')));
-  await tester.tap(find.byKey(const Key('nearby-city-Jakarta')));
+  await tester.tap(find.byKey(const Key('nearby-city-field')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.textContaining('Jakarta (').last);
   await tester.pumpAndSettle();
 }
 

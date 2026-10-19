@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Nearby city dropdown (19 Oct 2026)
+- City chips on Nearby replaced by a searchable dropdown (`DropdownMenu`, key `nearby-city-field`). Entries keep counts: "Semua (N)", "Semarang (8)". Typing narrows the list.
+- Filter behavior and the WhatsApp group card are unchanged. Client only, no migration.
+- Tests updated (`city_whatsapp_group_test`, `chat_switch_test`, `layout_stress_test`). Analyze clean, full suite passes.
 ## Nearby list and city WhatsApp group (19 Oct 2026)
 - Nearby is now a list only: map removed (widgets, outline data, `flutter_map`/`latlong2`, `REAL_MAP` flag, tile hosts in the CSP). City chips filter the list.
 - Picking a city shows "Gabung grup WhatsApp" (opens the invite link) or "Tambah link grup WhatsApp". Any verified member can add or change it.
