@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 
 class _IntroPage {
@@ -161,21 +162,29 @@ class _FeatureIntroScreenState extends State<FeatureIntroScreen> {
   }
 }
 
-/// Wraps the signed-in app. The first time this person opens it on this
-/// device, the intro is pushed on top; Skip or Mulai marks it seen.
+/// Wraps the signed-in app. The first time a person opens it, the intro is
+/// pushed on top. "Seen" lives on their profile in Supabase (asked through
+/// `account_intro_seen`), so it holds across devices. The old local flag still
+/// counts: a device that has it skips the intro and saves it to Supabase. When
+/// Supabase cannot answer (offline, migration not applied yet) the local flag
+/// decides, so the app never blocks on it.
 class IntroGate extends StatefulWidget {
   const IntroGate({
     super.key,
-    required this.profileId,
+    required this.profile,
     required this.child,
     this.lock,
+    this.repository,
   });
 
-  final String? profileId;
+  final Map<String, dynamic> profile;
   final Widget child;
 
   /// Defaults to the real device lock.
   final LockService? lock;
+
+  /// Defaults to the real Supabase-backed repository.
+  final AccountRepository? repository;
 
   @override
   State<IntroGate> createState() => _IntroGateState();
@@ -189,16 +198,39 @@ class _IntroGateState extends State<IntroGate> {
   }
 
   Future<void> _maybeShow() async {
-    final id = widget.profileId;
+    final id = widget.profile['id'] as String?;
     if (id == null) return;
     final lock = widget.lock ?? LockService.shared;
-    bool seen;
-    try {
-      seen = await lock.introSeen(id);
-    } catch (_) {
-      return; // Storage trouble should never block the app.
+    final repo = widget.repository ?? AccountRepository();
+
+    // Best effort: a failed save only means it is tried again next time.
+    Future<void> save() async {
+      try {
+        await repo.markIntroSeen(id);
+      } catch (_) {}
     }
-    if (seen || !mounted) return;
+
+    bool seenHere;
+    try {
+      seenHere = await lock.introSeen(id);
+    } catch (_) {
+      seenHere = false;
+    }
+    if (seenHere) {
+      await save();
+      return;
+    }
+    try {
+      if (await repo.introSeen(id)) {
+        try {
+          await lock.markIntroSeen(id);
+        } catch (_) {}
+        return;
+      }
+    } catch (_) {
+      // Unknown on the server: the local flag (false here) decides.
+    }
+    if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
         fullscreenDialog: true,
@@ -206,9 +238,8 @@ class _IntroGateState extends State<IntroGate> {
           onDone: (ctx) async {
             try {
               await lock.markIntroSeen(id);
-            } catch (_) {
-              // Worst case it shows again next time.
-            }
+            } catch (_) {}
+            await save();
             if (ctx.mounted) Navigator.of(ctx).pop();
           },
         ),
