@@ -4,14 +4,10 @@ import 'package:undip_alumni_connect/data/business_repository.dart';
 import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/business_directory_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
-import 'package:undip_alumni_connect/screens/home_screen.dart';
 import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
-import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/widgets/filter_dropdown.dart';
 
 import 'support/fake_business_api.dart';
-import 'support/fake_home.dart';
-import 'support/fake_marketplace_api.dart';
 
 void tall(WidgetTester tester) {
   tester.view.physicalSize = const Size(600, 3000);
@@ -464,36 +460,5 @@ void main() {
         'Batik',
       );
     });
-  });
-
-  group('Home entry', () {
-    testWidgets(
-      'real Businesses tile replaces the Business directory preview',
-      (tester) async {
-        tester.view.physicalSize = const Size(390, 1400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await tester.pumpWidget(
-          MaterialApp(
-            home: HomeScreen(
-              currentUser: ValueNotifier({
-                'id': 'me',
-                'name': 'Ahmad Ramadhan',
-              }),
-              onOpenDirectory: () {},
-              pages: fakePages(),
-              api: FakeHomeApi(),
-              marketplaceRepository: MarketplaceRepository(FakeApi()),
-            ),
-          ),
-        );
-        await tester.pump();
-        await tester.pump();
-        expect(find.byKey(const Key('preview-business')), findsNothing);
-        await tester.tap(find.byKey(const Key('tile-businesses')));
-        await tester.pumpAndSettle();
-        expect(find.text('PAGE Businesses'), findsOneWidget);
-      },
-    );
   });
 }

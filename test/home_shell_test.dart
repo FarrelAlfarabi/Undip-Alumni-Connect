@@ -312,16 +312,12 @@ void main() {
   });
 
   group('Market tab', () {
-    testWidgets('opens on Products; the Home tiles switch tab and segment', (
+    testWidgets('opens on Products; the Home tile switches tab and segment', (
       tester,
     ) async {
       await pumpShell(tester);
       await tapNav(tester, 'Market');
       expect(find.text('PAGE Market Products'), findsOneWidget);
-      await tapNav(tester, 'Home');
-      await tester.tap(find.byKey(const Key('tile-businesses')));
-      await tester.pumpAndSettle();
-      expect(find.text('PAGE Market Businesses'), findsOneWidget);
       await tapNav(tester, 'Home');
       await tester.tap(find.byKey(const Key('tile-marketplace')));
       await tester.pumpAndSettle();

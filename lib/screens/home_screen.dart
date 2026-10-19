@@ -133,6 +133,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ValueNotifier<Map<String, dynamic>> get _user => widget.currentUser;
 
+  Future<void> _openRequests() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => widget.pages.requests(_user)),
+    );
+    if (mounted) {
+      setState(() {
+        _pendingRequests = _api
+            .pendingRequestCount(_user.value['id'] as String)
+            .catchError((_) => 0);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -180,20 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return IconButton(
                 key: const Key('home-requests'),
                 tooltip: n > 0 ? 'Permintaan ($n menunggu)' : 'Permintaan',
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => widget.pages.requests(_user),
-                    ),
-                  );
-                  if (mounted) {
-                    setState(() {
-                      _pendingRequests = _api
-                          .pendingRequestCount(_user.value['id'] as String)
-                          .catchError((_) => 0);
-                    });
-                  }
-                },
+                onPressed: _openRequests,
                 icon: Badge(
                   key: const Key('requests-badge'),
                   isLabelVisible: n > 0,
@@ -230,6 +230,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                FutureBuilder<int>(
+                  future: _pendingRequests,
+                  builder: (context, snap) {
+                    final n = snap.data ?? 0;
+                    if (n <= 0) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _RequestsCard(count: n, onTap: _openRequests),
+                    );
+                  },
+                ),
                 _bannerSection(theme),
                 const SizedBox(height: 8),
                 _QuickActions(
@@ -237,9 +248,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   onMarketplace: () => widget.onOpenMarket != null
                       ? widget.onOpenMarket!(0)
                       : _push(widget.pages.marketplace(_user)),
-                  onBusinesses: () => widget.onOpenMarket != null
-                      ? widget.onOpenMarket!(1)
-                      : _push(widget.pages.businesses(_user)),
                   onDirectory: widget.onOpenDirectory,
                   onNearby: () => _push(widget.pages.nearby(_user)),
                 ),
@@ -251,7 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   onRegister: () =>
                       _pushThenRefresh(widget.pages.registerBusiness(_user)),
                 ),
-                const SizedBox(height: 20),
                 const SizedBox(height: 24),
                 _sectionTitle(theme, 'Terbaru'),
                 const SizedBox(height: 8),
@@ -369,63 +376,131 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onJobs,
     required this.onMarketplace,
-    required this.onBusinesses,
     required this.onDirectory,
     required this.onNearby,
   });
 
   final VoidCallback onJobs;
   final VoidCallback onMarketplace;
-  final VoidCallback onBusinesses;
   final VoidCallback onDirectory;
   final VoidCallback onNearby;
 
   @override
   Widget build(BuildContext context) {
-    // Fixed tile height (not an aspect ratio) so tiles don't balloon on wide
-    // screens; four across on desktop-width layouts.
-    final wide = MediaQuery.sizeOf(context).width >= 700;
-    return GridView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: wide ? 4 : 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        mainAxisExtent: 64,
-      ),
+    final scheme = Theme.of(context).colorScheme;
+    // Finding an alumnus is the main job of the app, so it is one wide
+    // button; the rest are smaller shortcuts. Directory is also a bottom tab.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Tile(
-          key: const Key('tile-jobs'),
-          icon: Icons.work_outline,
-          label: 'Jobs',
-          onTap: onJobs,
-        ),
-        _Tile(
-          key: const Key('tile-marketplace'),
-          icon: Icons.storefront_outlined,
-          label: 'Marketplace',
-          onTap: onMarketplace,
-        ),
-        _Tile(
-          key: const Key('tile-businesses'),
-          icon: Icons.business_center_outlined,
-          label: 'Businesses',
-          onTap: onBusinesses,
-        ),
-        _Tile(
+        Material(
           key: const Key('tile-directory'),
-          icon: Icons.people_outline,
-          label: 'Members',
-          onTap: onDirectory,
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onDirectory,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.search, color: scheme.onPrimaryContainer),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cari alumni',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: scheme.onPrimaryContainer),
+                        ),
+                        Text(
+                          'Berdasarkan jurusan, angkatan, dan industri',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onPrimaryContainer),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),
+                ],
+              ),
+            ),
+          ),
         ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _Tile(
+                key: const Key('tile-jobs'),
+                icon: Icons.work_outline,
+                label: 'Jobs',
+                subtitle: 'Lowongan dari alumni',
+                onTap: onJobs,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _Tile(
+                key: const Key('tile-marketplace'),
+                icon: Icons.storefront_outlined,
+                label: 'Marketplace',
+                subtitle: 'Produk dan usaha alumni',
+                onTap: onMarketplace,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         _Tile(
           key: const Key('tile-nearby'),
           icon: Icons.near_me_outlined,
           label: 'Nearby Alumni',
+          subtitle: 'Alumni di kota yang sama denganmu',
           onTap: onNearby,
         ),
       ],
+    );
+  }
+}
+
+class _RequestsCard extends StatelessWidget {
+  const _RequestsCard({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      key: const Key('home-requests-card'),
+      color: scheme.tertiaryContainer,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Icon(Icons.handshake_outlined, color: scheme.onTertiaryContainer),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '$count alumni ingin terhubung denganmu. Lihat permintaan',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onTertiaryContainer,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.onTertiaryContainer),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -435,11 +510,13 @@ class _Tile extends StatelessWidget {
     super.key,
     required this.icon,
     required this.label,
+    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
@@ -457,7 +534,7 @@ class _Tile extends StatelessWidget {
         ),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
               CircleAvatar(
@@ -467,11 +544,25 @@ class _Tile extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

@@ -50,6 +50,7 @@ Future<void> pumpHome(
 }
 
 void main() {
+  hubTests();
   announcementDetailTests();
   group('greeting', () {
     testWidgets('uses the first name only', (tester) async {
@@ -332,6 +333,35 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+}
+
+void hubTests() {
+  group('Home hub', () {
+    testWidgets('no requests card when nobody is waiting', (tester) async {
+      await pumpHome(tester);
+      expect(find.byKey(const Key('home-requests-card')), findsNothing);
+    });
+
+    testWidgets('a waiting request shows a card that opens Requests', (
+      tester,
+    ) async {
+      await pumpHome(tester, api: FakeHomeApi(pendingRequests: 2));
+      expect(find.byKey(const Key('home-requests-card')), findsOneWidget);
+      expect(find.textContaining('2 alumni ingin terhubung'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('home-requests-card')));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE Requests'), findsOneWidget);
+    });
+
+    testWidgets('tiles say what they are for; Businesses has no tile', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      expect(find.text('Cari alumni'), findsOneWidget);
+      expect(find.text('Lowongan dari alumni'), findsOneWidget);
+      expect(find.byKey(const Key('tile-businesses')), findsNothing);
+    });
   });
 }
 
