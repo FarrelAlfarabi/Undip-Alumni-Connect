@@ -15,6 +15,7 @@ class MarketScreen extends StatefulWidget {
     required this.segment,
     this.marketplaceRepository,
     this.businessRepository,
+    this.fetchJobs,
   });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
@@ -23,6 +24,9 @@ class MarketScreen extends StatefulWidget {
   final ValueNotifier<int> segment;
   final MarketplaceRepository? marketplaceRepository;
   final BusinessRepository? businessRepository;
+
+  /// Injectable for tests; defaults to the Supabase query.
+  final Future<List<Map<String, dynamic>>> Function()? fetchJobs;
 
   @override
   State<MarketScreen> createState() => _MarketScreenState();
@@ -85,6 +89,7 @@ class _MarketScreenState extends State<MarketScreen> {
                   JobBoardScreen(
                     currentUser: widget.currentUser,
                     embedded: true,
+                    fetchJobs: widget.fetchJobs,
                   ),
                 ],
               ),
