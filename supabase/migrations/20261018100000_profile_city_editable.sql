@@ -34,6 +34,10 @@ begin
      or new.policy_accepted_at is distinct from old.policy_accepted_at
      or new.deleted_at is distinct from old.deleted_at
      or new.verification_status is distinct from old.verification_status
+     -- Suspension columns come from 20261018090000. Read through jsonb so this
+     -- function also works if that migration is not applied (yet).
+     or to_jsonb(new)->'suspended_at' is distinct from to_jsonb(old)->'suspended_at'
+     or to_jsonb(new)->'suspended_reason' is distinct from to_jsonb(old)->'suspended_reason'
   then
     raise exception
       'Only current_employer, current_role, industry, company and city can be updated';
