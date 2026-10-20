@@ -61,6 +61,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   String _major = kAllFilter;
   String _year = kAllFilter;
   String _industry = kAllFilter;
+  String _city = kAllFilter;
 
   @override
   void initState() {
@@ -76,9 +77,24 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.dispose();
   }
 
+  /// Opens on the user's own graduation year. Skipped when the profile has
+  /// no year, or nobody in the list shares it (the dropdown would have no
+  /// matching option). Only applied while the year filter is still "All".
+  List<Map<String, dynamic>> _withDefaultYear(List<Map<String, dynamic>> rows) {
+    final own = widget.currentUser.value['graduation_year']?.toString();
+    if (own != null &&
+        _year == kAllFilter &&
+        rows.any((p) => p['graduation_year']?.toString() == own)) {
+      _year = own;
+    }
+    return rows;
+  }
+
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
     if (widget.fetchAlumni != null) {
-      return withoutBlockedProfiles(await widget.fetchAlumni!());
+      return _withDefaultYear(
+        await withoutBlockedProfiles(await widget.fetchAlumni!()),
+      );
     }
     final rows = await Supabase.instance.client
         .from('alumni_profiles')
@@ -86,8 +102,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         .eq('verification_status', 'verified')
         .order('name', ascending: true)
         .limit(kDirectoryMaxRows);
-    return withoutBlockedProfiles(
-      List<Map<String, dynamic>>.from(rows as List),
+    return _withDefaultYear(
+      await withoutBlockedProfiles(
+        List<Map<String, dynamic>>.from(rows as List),
+      ),
     );
   }
 
@@ -100,6 +118,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         return false;
       }
       if (_industry != kAllFilter && p['industry'] != _industry) {
+        return false;
+      }
+      if (_city != kAllFilter && (p['city'] as String?)?.trim() != _city) {
         return false;
       }
       if (query.isNotEmpty) {
@@ -115,7 +136,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       _searchController.text.isNotEmpty ||
       _major != kAllFilter ||
       _year != kAllFilter ||
-      _industry != kAllFilter;
+      _industry != kAllFilter ||
+      _city != kAllFilter;
 
   void _clearFilters() {
     setState(() {
@@ -123,6 +145,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       _major = kAllFilter;
       _year = kAllFilter;
       _industry = kAllFilter;
+      _city = kAllFilter;
       _industryController.text = kAllFilter;
     });
   }
@@ -159,6 +182,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ..sort((a, b) => b.compareTo(a)),
         ];
         final industries = distinctSortedValues(all, 'industry');
+        final cities = distinctSortedValues(
+          all.map((p) => {'city': (p['city'] as String?)?.trim()}).toList(),
+          'city',
+        );
 
         return Column(
           children: [
@@ -166,7 +193,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: ClearableSearchField(
                 controller: _searchController,
-                hintText: 'Search by name or company...',
+                hintText: 'Cari nama atau perusahaan...',
               ),
             ),
             Padding(
@@ -190,7 +217,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       onChanged: (v) => setState(() => _year = v),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                children: [
                   Expanded(
                     // A dropdown you can also type into to narrow the list.
                     child: SearchableChoice(
@@ -205,7 +238,31 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           setState(() => _industry = v ?? kAllFilter),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilterDropdown(
+                      label: 'City',
+                      value: _city,
+                      options: cities,
+                      onChanged: (v) => setState(() => _city = v),
+                    ),
+                  ),
                 ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _hasActiveFilters
+                      ? '${filtered.length} dari ${all.length} alumni'
+                      : '${all.length} alumni',
+                  key: const Key('directory-count'),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -217,7 +274,20 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
             Expanded(
               child: filtered.isEmpty
-                  ? const Center(child: Text('No alumni match these filters.'))
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Tidak ada alumni yang cocok.'),
+                          if (_hasActiveFilters)
+                            TextButton(
+                              key: const Key('directory-empty-clear'),
+                              onPressed: _clearFilters,
+                              child: const Text('Hapus filter'),
+                            ),
+                        ],
+                      ),
+                    )
                   : ListView.separated(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       itemCount: filtered.length,
@@ -246,7 +316,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                   true)
                                 '${p['current_role']}'
                                     '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
-                              '${p['major']} · Class of ${p['graduation_year']}',
+                              '${p['major']} · Angkatan ${p['graduation_year']}',
                             ].join('\n'),
                           ),
                           isThreeLine: true,

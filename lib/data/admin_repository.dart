@@ -248,8 +248,7 @@ class AdminRepository {
     );
     return (rows as List)
         .map(
-          (r) =>
-              AdminAnnouncement.fromMap(Map<String, dynamic>.from(r as Map)),
+          (r) => AdminAnnouncement.fromMap(Map<String, dynamic>.from(r as Map)),
         )
         .toList();
   }

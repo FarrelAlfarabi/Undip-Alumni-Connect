@@ -8,9 +8,11 @@ import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/brand_lockup.dart';
 import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
+import 'profile_setup_screen.dart';
 
 /// First name for the greeting: the first word of `name`, or null.
 String? firstNameOf(Map<String, dynamic> profile) {
@@ -133,6 +135,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ValueNotifier<Map<String, dynamic>> get _user => widget.currentUser;
 
+  // Directory, Nearby Alumni and Jobs work best when a person has filled in
+  // a city and a role, so Home keeps asking until both are there.
+  bool get _profileIncomplete {
+    bool empty(String k) => ((_user.value[k] as String?) ?? '').trim().isEmpty;
+    return empty('city') || empty('current_role');
+  }
+
+  Future<void> _completeProfile() async {
+    final updated = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => ProfileSetupScreen(profile: _user.value),
+      ),
+    );
+    if (updated != null && mounted) {
+      setState(() => _user.value = updated);
+    }
+  }
+
+  Future<void> _openRequests() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => widget.pages.requests(_user)));
+    if (mounted) {
+      setState(() {
+        _pendingRequests = _api
+            .pendingRequestCount(_user.value['id'] as String)
+            .catchError((_) => 0);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -140,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lingkaran'),
+        title: const BrandLockup(),
         automaticallyImplyLeading: false,
         actions: [
           FutureBuilder<int>(
@@ -149,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final n = snap.data ?? 0;
               return IconButton(
                 key: const Key('home-notifications'),
-                tooltip: n > 0 ? 'Notifications ($n new)' : 'Notifications',
+                tooltip: n > 0 ? 'Notifikasi ($n baru)' : 'Notifikasi',
                 onPressed: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
@@ -179,21 +211,8 @@ class _HomeScreenState extends State<HomeScreen> {
               final n = snap.data ?? 0;
               return IconButton(
                 key: const Key('home-requests'),
-                tooltip: n > 0 ? 'Requests ($n waiting)' : 'Requests',
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => widget.pages.requests(_user),
-                    ),
-                  );
-                  if (mounted) {
-                    setState(() {
-                      _pendingRequests = _api
-                          .pendingRequestCount(_user.value['id'] as String)
-                          .catchError((_) => 0);
-                    });
-                  }
-                },
+                tooltip: n > 0 ? 'Permintaan ($n menunggu)' : 'Permintaan',
+                onPressed: _openRequests,
                 icon: Badge(
                   key: const Key('requests-badge'),
                   isLabelVisible: n > 0,
@@ -218,13 +237,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      first == null ? 'Hello' : 'Hello, $first',
+                      first == null ? 'Halo' : 'Halo, $first',
                       key: const Key('home-greeting'),
                       style: theme.textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'What would you like to do today?',
+                      'Apa yang ingin kamu lakukan hari ini?',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -235,89 +254,148 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: RefreshIndicator(
-          onRefresh: _refresh,
-          // A short fixed set of sections, so a plain scroll view (built in
-          // full) rather than a lazy ListView.
-          child: SingleChildScrollView(
-            key: const Key('home-list'),
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
-                _bannerSection(theme),
-                const SizedBox(height: 8),
-                _QuickActions(
-                  onJobs: () => _push(widget.pages.jobs(_user)),
-                  onMarketplace: () => widget.onOpenMarket != null
-                      ? widget.onOpenMarket!(0)
-                      : _push(widget.pages.marketplace(_user)),
-                  onBusinesses: () => widget.onOpenMarket != null
-                      ? widget.onOpenMarket!(1)
-                      : _push(widget.pages.businesses(_user)),
-                  onDirectory: widget.onOpenDirectory,
-                  onNearby: () => _push(widget.pages.nearby(_user)),
-                ),
-                const SizedBox(height: 12),
-                _BusinessEntry(
-                  future: _business,
-                  onOpenMine: () =>
-                      _pushThenRefresh(widget.pages.myBusinesses(_user)),
-                  onRegister: () =>
-                      _pushThenRefresh(widget.pages.registerBusiness(_user)),
-                ),
-                const SizedBox(height: 20),
-                const SizedBox(height: 24),
-                _sectionTitle(theme, 'Latest'),
-                const SizedBox(height: 8),
-                _LatestBlock<Map<String, dynamic>>(
-                  key: const Key('latest-jobs'),
-                  heading: 'New jobs',
-                  future: _jobs,
-                  emptyIcon: Icons.work_outline,
-                  emptyText:
-                      'No jobs posted yet. New openings will show up here.',
-                  onRetry: () => setState(() {
-                    _jobs = _latestJobs();
-                  }),
-                  tileBuilder: (job) => _LatestTile(
-                    icon: Icons.work_outline,
-                    title: job['title'] as String? ?? '',
-                    subtitle: [
-                      job['company'] as String? ?? '',
-                      if ((job['industry'] as String?)?.isNotEmpty == true)
-                        job['industry'] as String,
-                    ].where((s) => s.isNotEmpty).join(' · '),
-                    onTap: () => _push(widget.pages.jobDetail(job, _user)),
+                onRefresh: _refresh,
+                // A short fixed set of sections, so a plain scroll view (built in
+                // full) rather than a lazy ListView.
+                child: SingleChildScrollView(
+                  key: const Key('home-list'),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 8),
+                      FutureBuilder<int>(
+                        future: _pendingRequests,
+                        builder: (context, snap) {
+                          final n = snap.data ?? 0;
+                          if (n <= 0) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _RequestsCard(
+                              count: n,
+                              onTap: _openRequests,
+                            ),
+                          );
+                        },
+                      ),
+                      if (_profileIncomplete)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Material(
+                            key: const Key('home-profile-card'),
+                            color: theme.colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: _completeProfile,
+                              child: Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person_outline,
+                                      color: theme
+                                          .colorScheme
+                                          .onSecondaryContainer,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Lengkapi profilmu: tambahkan kota dan '
+                                        'pekerjaan agar alumni lain bisa menemukanmu.',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSecondaryContainer,
+                                            ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: theme
+                                          .colorScheme
+                                          .onSecondaryContainer,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      _bannerSection(theme),
+                      const SizedBox(height: 8),
+                      _QuickActions(
+                        onJobs: () => widget.onOpenMarket != null
+                            ? widget.onOpenMarket!(2)
+                            : _push(widget.pages.jobs(_user)),
+                        onMarketplace: () => widget.onOpenMarket != null
+                            ? widget.onOpenMarket!(0)
+                            : _push(widget.pages.marketplace(_user)),
+                        onDirectory: widget.onOpenDirectory,
+                        onNearby: () => _push(widget.pages.nearby(_user)),
+                      ),
+                      const SizedBox(height: 12),
+                      _BusinessEntry(
+                        future: _business,
+                        onOpenMine: () =>
+                            _pushThenRefresh(widget.pages.myBusinesses(_user)),
+                        onRegister: () => _pushThenRefresh(
+                          widget.pages.registerBusiness(_user),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _sectionTitle(theme, 'Terbaru'),
+                      const SizedBox(height: 8),
+                      _LatestBlock<Map<String, dynamic>>(
+                        key: const Key('latest-jobs'),
+                        heading: 'Lowongan baru',
+                        future: _jobs,
+                        emptyIcon: Icons.work_outline,
+                        emptyText: 'Belum ada lowongan. Lowongan baru akan muncul di sini.',
+                        onRetry: () => setState(() {
+                          _jobs = _latestJobs();
+                        }),
+                        tileBuilder: (job) => _LatestTile(
+                          icon: Icons.work_outline,
+                          title: job['title'] as String? ?? '',
+                          subtitle: [
+                            job['company'] as String? ?? '',
+                            if ((job['industry'] as String?)?.isNotEmpty ==
+                                true)
+                              job['industry'] as String,
+                          ].where((s) => s.isNotEmpty).join(' · '),
+                          onTap: () =>
+                              _push(widget.pages.jobDetail(job, _user)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _LatestBlock<MarketplaceListing>(
+                        key: const Key('latest-listings'),
+                        heading: 'Baru di Marketplace',
+                        future: _listings,
+                        emptyIcon: Icons.storefront_outlined,
+                        emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
+                        onRetry: () => setState(() {
+                          _listings = _fetchListings();
+                        }),
+                        tileBuilder: (l) => _LatestTile(
+                          icon: Icons.storefront_outlined,
+                          title: l.title,
+                          subtitle:
+                              '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
+                          onTap: () => _push(
+                            widget.pages.listingDetail(l, _market, _user),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const UpcomingSection(),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                _LatestBlock<MarketplaceListing>(
-                  key: const Key('latest-listings'),
-                  heading: 'New in the marketplace',
-                  future: _listings,
-                  emptyIcon: Icons.storefront_outlined,
-                  emptyText:
-                      'No listings yet. Approved listings will show up here.',
-                  onRetry: () => setState(() {
-                    _listings = _fetchListings();
-                  }),
-                  tileBuilder: (l) => _LatestTile(
-                    icon: Icons.storefront_outlined,
-                    title: l.title,
-                    subtitle:
-                        '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
-                    onTap: () =>
-                        _push(widget.pages.listingDetail(l, _market, _user)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const UpcomingSection(),
-              ],
-            ),
-          ),
-        ),
+              ),
             ),
           ],
         ),
@@ -354,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 key: const Key('banner-error'),
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load announcements.",
-                actionLabel: 'Try again',
+                actionLabel: 'Coba lagi',
                 feedbackScreen: 'Home',
                 error: snap.error,
                 onAction: () => setState(() {
@@ -376,7 +454,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: TextButton(
             key: const Key('see-all-announcements'),
             onPressed: () => _push(widget.pages.announcements()),
-            child: const Text('See all announcements'),
+            child: const Text('Lihat semua pengumuman'),
           ),
         ),
       ],
@@ -388,63 +466,130 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onJobs,
     required this.onMarketplace,
-    required this.onBusinesses,
     required this.onDirectory,
     required this.onNearby,
   });
 
   final VoidCallback onJobs;
   final VoidCallback onMarketplace;
-  final VoidCallback onBusinesses;
   final VoidCallback onDirectory;
   final VoidCallback onNearby;
 
   @override
   Widget build(BuildContext context) {
-    // Fixed tile height (not an aspect ratio) so tiles don't balloon on wide
-    // screens; four across on desktop-width layouts.
-    final wide = MediaQuery.sizeOf(context).width >= 700;
-    return GridView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: wide ? 4 : 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        mainAxisExtent: 64,
-      ),
+    final scheme = Theme.of(context).colorScheme;
+    // Finding an alumnus is the main job of the app, so it is one wide
+    // button; the rest are smaller shortcuts. Directory is also a bottom tab.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Tile(
-          key: const Key('tile-jobs'),
-          icon: Icons.work_outline,
-          label: 'Jobs',
-          onTap: onJobs,
-        ),
-        _Tile(
-          key: const Key('tile-marketplace'),
-          icon: Icons.storefront_outlined,
-          label: 'Marketplace',
-          onTap: onMarketplace,
-        ),
-        _Tile(
-          key: const Key('tile-businesses'),
-          icon: Icons.business_center_outlined,
-          label: 'Businesses',
-          onTap: onBusinesses,
-        ),
-        _Tile(
+        Material(
           key: const Key('tile-directory'),
-          icon: Icons.people_outline,
-          label: 'Members',
-          onTap: onDirectory,
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onDirectory,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.search, color: scheme.onPrimaryContainer),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cari alumni',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: scheme.onPrimaryContainer),
+                        ),
+                        Text(
+                          'Berdasarkan jurusan, angkatan, dan industri',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onPrimaryContainer),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),
+                ],
+              ),
+            ),
+          ),
         ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _Tile(
+                key: const Key('tile-jobs'),
+                icon: Icons.work_outline,
+                label: 'Jobs',
+                subtitle: 'Lowongan dari alumni',
+                onTap: onJobs,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _Tile(
+                key: const Key('tile-marketplace'),
+                icon: Icons.storefront_outlined,
+                label: 'Marketplace',
+                subtitle: 'Produk dan usaha alumni',
+                onTap: onMarketplace,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         _Tile(
           key: const Key('tile-nearby'),
           icon: Icons.near_me_outlined,
           label: 'Nearby Alumni',
+          subtitle: 'Alumni di kota yang sama denganmu',
           onTap: onNearby,
         ),
       ],
+    );
+  }
+}
+
+class _RequestsCard extends StatelessWidget {
+  const _RequestsCard({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      key: const Key('home-requests-card'),
+      color: scheme.tertiaryContainer,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Icon(Icons.handshake_outlined, color: scheme.onTertiaryContainer),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '$count alumni ingin terhubung denganmu. Lihat permintaan',
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: scheme.onTertiaryContainer),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.onTertiaryContainer),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -454,11 +599,13 @@ class _Tile extends StatelessWidget {
     super.key,
     required this.icon,
     required this.label,
+    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
@@ -476,7 +623,7 @@ class _Tile extends StatelessWidget {
         ),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
               CircleAvatar(
@@ -486,11 +633,24 @@ class _Tile extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -551,7 +711,7 @@ class _LatestBlock<T> extends StatelessWidget {
               return _MessageCard(
                 icon: Icons.cloud_off_outlined,
                 text: "Couldn't load this right now.",
-                actionLabel: 'Try again',
+                actionLabel: 'Coba lagi',
                 feedbackScreen: 'Home',
                 error: snap.error,
                 onAction: onRetry,
@@ -786,7 +946,7 @@ class _BusinessEntry extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Own a business? Let other alumni find it.',
+                      'Punya usaha? Biar sesama alumni bisa menemukannya.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSecondaryContainer,
                       ),
@@ -795,7 +955,7 @@ class _BusinessEntry extends StatelessWidget {
                   FilledButton(
                     key: const Key('business-register-button'),
                     onPressed: onRegister,
-                    child: const Text('Register'),
+                    child: const Text('Daftarkan'),
                   ),
                 ],
               ),
@@ -808,11 +968,11 @@ class _BusinessEntry extends StatelessWidget {
         final u = summary.usage[b.id];
         final lines = <String>[
           b.approvedBand != null
-              ? 'Band: ${b.approvedBand!.label}'
-              : 'Band you chose: ${b.requestedBand?.label ?? '-'}',
+              ? 'Skala: ${b.approvedBand!.label}'
+              : 'Skala pilihanmu: ${b.requestedBand?.label ?? '-'}',
           if (b.isApproved && u != null) postingSummary(b, u),
           if (b.status == BusinessStatus.rejected && b.rejectionReason != null)
-            'Reason: ${b.rejectionReason}',
+            'Alasan: ${b.rejectionReason}',
           if (all.length > 1) '+ ${all.length - 1} more',
         ];
         return Card(

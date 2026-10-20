@@ -105,7 +105,7 @@ void main() {
     ]);
     expect(find.text('Chat'), findsNothing);
     // Lands on Home.
-    expect(find.text('Hello, Ahmad'), findsOneWidget);
+    expect(find.text('Halo, Ahmad'), findsOneWidget);
     // Profile is the last tab and still opens.
     await tapNav(tester, 'Profile');
     expect(find.text('PAGE Profile'), findsOneWidget);
@@ -137,7 +137,7 @@ void main() {
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(find.byType(HomeShell), findsOneWidget, reason: 'from $tab');
-        expect(find.text('Hello, Ahmad'), findsOneWidget, reason: 'from $tab');
+        expect(find.text('Halo, Ahmad'), findsOneWidget, reason: 'from $tab');
       }
     });
 
@@ -157,7 +157,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Exit the app?'), findsNothing);
       expect(find.byType(HomeShell), findsOneWidget);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
 
     testWidgets('Exit leaves the shell', (tester) async {
@@ -177,7 +177,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Exit the app?'), findsNothing);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
       // A second Back, now on Home, asks.
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
@@ -270,7 +270,6 @@ void main() {
     testWidgets('Jobs, Marketplace, Nearby, News via Home', (tester) async {
       await pumpShell(tester);
       final routes = {
-        'tile-jobs': 'Jobs',
         'tile-nearby': 'Nearby',
         'see-all-announcements': 'Announcements',
       };
@@ -312,20 +311,25 @@ void main() {
   });
 
   group('Market tab', () {
-    testWidgets('opens on Products; the Home tiles switch tab and segment', (
+    testWidgets('opens on Products; the Home tile switches tab and segment', (
       tester,
     ) async {
       await pumpShell(tester);
       await tapNav(tester, 'Market');
       expect(find.text('PAGE Market Products'), findsOneWidget);
       await tapNav(tester, 'Home');
-      await tester.tap(find.byKey(const Key('tile-businesses')));
-      await tester.pumpAndSettle();
-      expect(find.text('PAGE Market Businesses'), findsOneWidget);
-      await tapNav(tester, 'Home');
       await tester.tap(find.byKey(const Key('tile-marketplace')));
       await tester.pumpAndSettle();
       expect(find.text('PAGE Market Products'), findsOneWidget);
+    });
+
+    testWidgets('the Jobs tile opens the Market tab on its Jobs segment', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+      await tester.tap(find.byKey(const Key('tile-jobs')));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE Market Jobs'), findsOneWidget);
     });
 
     testWidgets('back from Market goes to Home first', (tester) async {
@@ -334,7 +338,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(HomeShell), findsOneWidget);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
   });
 }

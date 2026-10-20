@@ -31,7 +31,7 @@ Future<void> pumpProfile(WidgetTester tester, {required bool chat}) async {
   );
 }
 
-Future<void> openCitySheet(WidgetTester tester, {required bool chat}) async {
+Future<void> openCity(WidgetTester tester, {required bool chat}) async {
   tester.view.physicalSize = const Size(390, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -47,9 +47,9 @@ Future<void> openCitySheet(WidgetTester tester, {required bool chat}) async {
     ),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Map'));
+  await tester.tap(find.byKey(const Key('nearby-city-field')));
   await tester.pumpAndSettle();
-  await tester.tap(find.textContaining('Jakarta ('));
+  await tester.tap(find.textContaining('Jakarta (').last);
   await tester.pumpAndSettle();
 }
 
@@ -64,13 +64,13 @@ void main() {
       expect(find.byIcon(Icons.chat_bubble_outline), findsNothing);
     });
 
-    testWidgets('no city group chat on Nearby, WhatsApp invite stays', (
+    testWidgets('no city group chat on Nearby, WhatsApp group stays', (
       tester,
     ) async {
-      await openCitySheet(tester, chat: false);
+      await openCity(tester, chat: false);
       expect(find.textContaining('Group Chat'), findsNothing);
-      expect(find.text('Invite via WhatsApp'), findsOneWidget);
-      expect(find.text('Alumni here'), findsOneWidget);
+      expect(find.byKey(const Key('nearby-wa-add')), findsOneWidget);
+      expect(find.text('Bunga Ayu'), findsOneWidget);
     });
   });
 
@@ -81,7 +81,7 @@ void main() {
     });
 
     testWidgets('city group chat button shows', (tester) async {
-      await openCitySheet(tester, chat: true);
+      await openCity(tester, chat: true);
       expect(find.text('Open Jakarta Group Chat'), findsOneWidget);
     });
   });

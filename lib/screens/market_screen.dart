@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../data/business_repository.dart';
 import '../data/marketplace_repository.dart';
 import 'business_directory_screen.dart';
+import 'job_board_screen.dart';
 import 'marketplace_screen.dart';
 
-/// The Market tab: two segments, Products and Businesses. [segment] can be
+/// The Market tab: three segments, Products, Businesses and Jobs. [segment] can be
 /// changed from outside (the Home tiles open the tab on the right segment).
 class MarketScreen extends StatefulWidget {
   const MarketScreen({
@@ -14,14 +15,18 @@ class MarketScreen extends StatefulWidget {
     required this.segment,
     this.marketplaceRepository,
     this.businessRepository,
+    this.fetchJobs,
   });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
-  /// 0 = Products, 1 = Businesses.
+  /// 0 = Products, 1 = Businesses, 2 = Jobs.
   final ValueNotifier<int> segment;
   final MarketplaceRepository? marketplaceRepository;
   final BusinessRepository? businessRepository;
+
+  /// Injectable for tests; defaults to the Supabase query.
+  final Future<List<Map<String, dynamic>>> Function()? fetchJobs;
 
   @override
   State<MarketScreen> createState() => _MarketScreenState();
@@ -40,7 +45,7 @@ class _MarketScreenState extends State<MarketScreen> {
         builder: (context, index, _) => Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: SizedBox(
                 width: double.infinity,
                 child: SegmentedButton<int>(
@@ -55,6 +60,11 @@ class _MarketScreenState extends State<MarketScreen> {
                       value: 1,
                       label: Text('Businesses'),
                       icon: Icon(Icons.business_center_outlined),
+                    ),
+                    ButtonSegment(
+                      value: 2,
+                      label: Text('Jobs'),
+                      icon: Icon(Icons.work_outline),
                     ),
                   ],
                   selected: {index},
@@ -75,6 +85,11 @@ class _MarketScreenState extends State<MarketScreen> {
                     currentUser: widget.currentUser,
                     repository: widget.businessRepository,
                     embedded: true,
+                  ),
+                  JobBoardScreen(
+                    currentUser: widget.currentUser,
+                    embedded: true,
+                    fetchJobs: widget.fetchJobs,
                   ),
                 ],
               ),

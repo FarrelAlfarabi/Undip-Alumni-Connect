@@ -20,11 +20,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'support/fake_lock.dart';
 
-/// Reads the policy files straight from disk, so widget tests do not wait on
-/// the real asset loader.
+/// Reads the policy files and images straight from disk, so widget tests do
+/// not wait on the real asset loader. The asset manifest (which Image.asset
+/// asks for first) comes from the test bundle.
 class DiskBundle extends CachingAssetBundle {
   @override
   Future<ByteData> load(String key) async {
+    if (key == 'AssetManifest.bin') return rootBundle.load(key);
     final bytes = File(key).readAsBytesSync();
     return ByteData.sublistView(Uint8List.fromList(bytes));
   }
@@ -313,7 +315,7 @@ void main() {
         ),
       );
       await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Verifikasi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));

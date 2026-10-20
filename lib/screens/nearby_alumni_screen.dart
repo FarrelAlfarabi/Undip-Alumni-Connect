@@ -3,54 +3,30 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
-import '../data/profile_columns.dart';
 import '../data/blocked_filter.dart';
-import '../config/map_config.dart';
 import '../data/city_distances.dart';
-import '../widgets/error_view.dart';
+import '../data/city_group_repository.dart';
+import '../data/profile_columns.dart';
 import '../util/friendly_error.dart';
-import '../widgets/nearby_map_view.dart';
-import '../widgets/real_nearby_map.dart';
+import '../widgets/error_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
 import 'profile_setup_screen.dart';
 
-/// One city's worth of nearby alumni, grouped for the map's networking
-/// chips and the sheet they open (_CityClusterSheet).
-class _CityCluster {
-  const _CityCluster({
-    required this.city,
-    required this.km,
-    required this.alumni,
-  });
-
-  final String city;
-  final int km;
-  final List<Map<String, dynamic>> alumni;
-}
-
-/// "Nearby Alumni" — demo-only proximity feature.
+/// "Nearby Alumni": a list of verified alumni, nearest city first, with a
+/// city filter. Picking a city shows that city's WhatsApp group: members open
+/// it with one tap, and any member can add or change the invite link (the app
+/// cannot create a WhatsApp group by itself, see 20261019110000_city_whatsapp_groups).
 ///
-/// DEMO SCOPE: distances are simulated from each alumnus's seeded `city`
-/// field against a static lookup table (see lib/data/city_distances.dart),
-/// not real device GPS. No location permission is ever requested and no
-/// one's actual location is read or stored — this was a deliberate choice.
-/// Real, live location-sharing between alumni who may not otherwise know
-/// each other has genuine safety implications (stalking risk chief among
-/// them) that weren't designed for and are explicitly out of scope for
-/// this demo. This screen exists to show the concept, not to ship it.
+/// DEMO SCOPE: distances are simulated from each alumnus's profile `city`
+/// against a static lookup table (see lib/data/city_distances.dart), not real
+/// device GPS. No location permission is ever requested and no one's actual
+/// location is read or stored: real location-sharing between alumni who may
+/// not know each other has safety risks (stalking chief among them) that were
+/// deliberately left out. The map that used to sit beside this list was
+/// removed on 19 Oct 2026; the list and the city filter replace it.
 ///
-/// The Map tab (added 17 Sep 2026, Master Plan §3.4 item 6; restyled to
-/// look like Google Maps with a per-person marker shortly after) plots
-/// each alumnus individually at their city's real-world coordinates —
-/// see nearby_map_view.dart's doc comment for why this still isn't a
-/// real map integration (no SDK, no API key, no tiles) and still never
-/// touches real GPS. Below the map, a row of per-city chips opens
-/// networking actions (city group chat, WhatsApp invite) for that whole
-/// city's alumni at once instead of requiring one-by-one messaging — see
-/// _CityClusterSheet below.
-///
-/// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) —
+/// Always embedded as a tab inside AlumniScreen (no own AppBar/Scaffold) -
 /// see alumni_screen.dart.
 class NearbyAlumniScreen extends StatefulWidget {
   const NearbyAlumniScreen({
@@ -58,6 +34,8 @@ class NearbyAlumniScreen extends StatefulWidget {
     required this.currentUser,
     this.fetchAlumni,
     this.chat = chatEnabled,
+    this.groups,
+    this.openUrl,
   });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
@@ -68,18 +46,28 @@ class NearbyAlumniScreen extends StatefulWidget {
   /// Whether city group chat is offered (the app-wide switch).
   final bool chat;
 
+  /// City WhatsApp links. Injectable for tests.
+  final CityGroupRepository? groups;
+
+  /// Opens a link outside the app. Injectable for tests.
+  final Future<bool> Function(Uri uri)? openUrl;
+
   @override
   State<NearbyAlumniScreen> createState() => _NearbyAlumniScreenState();
 }
 
 class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
   late Future<List<Map<String, dynamic>>> _future;
-  bool _showMap = false;
+  late final CityGroupRepository _groups =
+      widget.groups ?? CityGroupRepository();
+  Map<String, String> _links = {};
+  String? _city;
 
   @override
   void initState() {
     super.initState();
     _future = _fetchAlumni();
+    _loadLinks();
   }
 
   Future<List<Map<String, dynamic>>> _fetchAlumni() async {
@@ -96,18 +84,41 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     );
   }
 
-  void _openClusterSheet(_CityCluster cluster) {
-    showModalBottomSheet(
+  /// A failed links load only hides the WhatsApp buttons' current state; the
+  /// list itself still works.
+  Future<void> _loadLinks() async {
+    final id = widget.currentUser.value['id'];
+    if (id == null) return;
+    try {
+      final links = await _groups.list('$id');
+      if (mounted) setState(() => _links = links);
+    } catch (_) {}
+  }
+
+  Future<void> _join(String url) async {
+    final uri = Uri.parse(url);
+    final ok = widget.openUrl != null
+        ? await widget.openUrl!(uri)
+        : await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('WhatsApp tidak bisa dibuka.')),
+      );
+    }
+  }
+
+  Future<void> _editLink(String city) async {
+    final saved = await showDialog<String>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => SafeArea(
-        child: _CityClusterSheet(
-          cluster: cluster,
-          currentUser: widget.currentUser,
-          chat: widget.chat,
-        ),
+      builder: (_) => _GroupLinkDialog(
+        city: city,
+        initial: _links[city],
+        save: (url) =>
+            _groups.save('${widget.currentUser.value['id']}', city, url),
       ),
     );
+    if (saved == null || !mounted) return;
+    setState(() => _links = {..._links, city: saved});
   }
 
   /// Opens the profile editor, where the city is chosen, and refreshes
@@ -121,18 +132,6 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
     if (updated == null || !mounted) return;
     widget.currentUser.value = updated;
     setState(() {});
-  }
-
-  void _openProfile(Map<String, dynamic> profile) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProfileDetailScreen(
-          profile: profile,
-          currentUser: widget.currentUser,
-          showEditButton: false,
-        ),
-      ),
-    );
   }
 
   @override
@@ -167,28 +166,6 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(
-                  value: false,
-                  label: Text('List'),
-                  icon: Icon(Icons.list),
-                ),
-                ButtonSegment(
-                  value: true,
-                  label: Text('Map'),
-                  icon: Icon(Icons.map_outlined),
-                ),
-              ],
-              selected: {_showMap},
-              onSelectionChanged: (s) => setState(() => _showMap = s.first),
-            ),
-          ),
-        ),
         Expanded(
           child: FutureBuilder<List<Map<String, dynamic>>>(
             future: _future,
@@ -203,10 +180,10 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                   error: snapshot.error,
                   onRetry: () => setState(() {
                     _future = _fetchAlumni();
+                    _loadLinks();
                   }),
                 );
               }
-
               if (myCity == null || myCity.isEmpty) {
                 return Center(
                   child: Padding(
@@ -253,135 +230,88 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                 );
               }
 
-              if (_showMap) {
-                final byCity = <String, List<Map<String, dynamic>>>{};
-                final kmByCity = <String, int>{};
-                for (final e in withDistance) {
-                  final city = e.profile['city'] as String? ?? 'Unknown';
-                  byCity.putIfAbsent(city, () => []).add(e.profile);
-                  kmByCity[city] = e.km!;
-                }
-                final clusters = byCity.entries
-                    .map(
-                      (e) => _CityCluster(
-                        city: e.key,
-                        km: kmByCity[e.key]!,
-                        alumni: e.value,
-                      ),
-                    )
-                    .toList();
-                final pins = withDistance
-                    .map((e) => AlumniPin(profile: e.profile, km: e.km!))
-                    .toList();
-
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (kRealMap)
-                        RealNearbyMap(
-                          myCity: myCity,
-                          pins: pins,
-                          onPinTap: (pin) => _openProfile(pin.profile),
-                          onCityTap: (city) => _openClusterSheet(
-                            clusters.firstWhere((c) => c.city == city),
-                          ),
-                        )
-                      else
-                        NearbyMapView(
-                          myCity: myCity,
-                          pins: pins,
-                          onPinTap: (pin) => _openProfile(pin.profile),
-                        ),
-                      const SizedBox(height: 4),
-                      Text(
-                        kRealMap
-                            ? 'Pins show the city each alumnus set in their '
-                                  'profile, not where they are. Tap a pin to '
-                                  'see who is there.'
-                            : 'Pinch or drag to explore. Tap a marker to view '
-                                  'that alumnus, or hover for a quick preview.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Network with a whole city at once',
-                        style: theme.textTheme.labelLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final cluster in clusters)
-                            ActionChip(
-                              avatar: const Icon(
-                                Icons.groups_outlined,
-                                size: 18,
-                              ),
-                              label: Text(
-                                '${cluster.city} (${cluster.alumni.length})',
-                              ),
-                              onPressed: () => _openClusterSheet(cluster),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
+              final cities = <String, int>{};
+              for (final e in withDistance) {
+                final c = e.profile['city'] as String? ?? '';
+                cities[c] = (cities[c] ?? 0) + 1;
               }
+              final selected = cities.containsKey(_city) ? _city : null;
+              final shown = selected == null
+                  ? withDistance
+                  : withDistance
+                        .where((e) => e.profile['city'] == selected)
+                        .toList();
 
-              return ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: withDistance.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  final entry = withDistance[i];
-                  final p = entry.profile;
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      child: Text(
-                        (p['name'] as String? ?? '?')
-                            .trim()
-                            .split(RegExp(r'\s+'))
-                            .map((w) => w.isNotEmpty ? w[0] : '')
-                            .take(2)
-                            .join()
-                            .toUpperCase(),
-                        style: TextStyle(
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                    title: Text(p['name'] as String? ?? ''),
-                    subtitle: Text(
-                      '${p['current_role'] ?? ''} · ${p['city'] ?? ''}',
-                    ),
-                    trailing: Text(
-                      entry.km == 0 ? 'Same city' : '~${entry.km} km',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProfileDetailScreen(
-                            profile: p,
+              return Column(
+                children: [
+                  _CityFilter(
+                    cities: cities,
+                    total: withDistance.length,
+                    selected: selected,
+                    onSelected: (c) => setState(() => _city = c),
+                  ),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: shown.length + (selected == null ? 0 : 1),
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        if (selected != null && i == 0) {
+                          return _CityGroupCard(
+                            city: selected,
+                            count: cities[selected]!,
+                            link: _links[selected],
+                            chat: widget.chat,
                             currentUser: widget.currentUser,
-                            showEditButton: false,
+                            onJoin: _join,
+                            onEdit: () => _editLink(selected),
+                          );
+                        }
+                        final entry = shown[selected == null ? i : i - 1];
+                        final p = entry.profile;
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            child: Text(
+                              (p['name'] as String? ?? '?')
+                                  .trim()
+                                  .split(RegExp(r'\s+'))
+                                  .map((w) => w.isNotEmpty ? w[0] : '')
+                                  .take(2)
+                                  .join()
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                          title: Text(p['name'] as String? ?? ''),
+                          subtitle: Text(
+                            '${p['current_role'] ?? ''} · ${p['city'] ?? ''}',
+                          ),
+                          trailing: Text(
+                            entry.km == 0 ? 'Same city' : '~${entry.km} km',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ProfileDetailScreen(
+                                  profile: p,
+                                  currentUser: widget.currentUser,
+                                  showEditButton: false,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -391,124 +321,239 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
   }
 }
 
-/// Bottom sheet for a tapped city chip below the map: who's there, plus
-/// two networking actions in place of messaging each person one by
-/// one — an in-app group chat (real, functional) and a WhatsApp invite
-/// share (opens WhatsApp with a prefilled message the user sends
-/// manually; WhatsApp has no API to auto-create a group, so this is
-/// honestly an invite/share action, not automated group creation).
-class _CityClusterSheet extends StatelessWidget {
-  const _CityClusterSheet({
-    required this.cluster,
-    required this.currentUser,
-    required this.chat,
+/// Searchable city dropdown: "Semua" plus every city that has alumni, nearest
+/// first, each with its alumni count. Typing narrows the choices.
+class _CityFilter extends StatelessWidget {
+  const _CityFilter({
+    required this.cities,
+    required this.total,
+    required this.selected,
+    required this.onSelected,
   });
 
-  /// Whether the city group chat button shows (the app-wide switch).
+  final Map<String, int> cities;
+  final int total;
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+
+  // Value of the "Semua" entry; a real city is never empty.
+  static const _all = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: LayoutBuilder(
+        builder: (context, box) => DropdownMenu<String>(
+          key: const Key('nearby-city-field'),
+          width: box.maxWidth,
+          label: const Text('Kota'),
+          leadingIcon: const Icon(Icons.location_city_outlined),
+          trailingIcon: const Icon(
+            Icons.arrow_drop_down,
+            semanticLabel: 'Show Kota options',
+          ),
+          selectedTrailingIcon: const Icon(
+            Icons.arrow_drop_up,
+            semanticLabel: 'Hide Kota options',
+          ),
+          initialSelection: selected ?? _all,
+          enableFilter: true,
+          requestFocusOnTap: true,
+          menuHeight: 280,
+          dropdownMenuEntries: [
+            DropdownMenuEntry<String>(value: _all, label: 'Semua ($total)'),
+            for (final e in cities.entries)
+              DropdownMenuEntry<String>(
+                value: e.key,
+                label: '${e.key} (${e.value})',
+              ),
+          ],
+          onSelected: (v) => onSelected(v == null || v == _all ? null : v),
+        ),
+      ),
+    );
+  }
+}
+
+/// Top of the list once a city is picked: its WhatsApp group (join, or add the
+/// link when nobody has yet) and, when chat is on, the city group chat.
+class _CityGroupCard extends StatelessWidget {
+  const _CityGroupCard({
+    required this.city,
+    required this.count,
+    required this.link,
+    required this.chat,
+    required this.currentUser,
+    required this.onJoin,
+    required this.onEdit,
+  });
+
+  final String city;
+  final int count;
+  final String? link;
   final bool chat;
-
-  final _CityCluster cluster;
   final ValueNotifier<Map<String, dynamic>> currentUser;
+  final ValueChanged<String> onJoin;
+  final VoidCallback onEdit;
 
-  Future<void> _inviteViaWhatsApp(BuildContext context) async {
-    final text =
-        'Hi! Fellow Ikafe alumni in ${cluster.city} — let\'s connect. '
-        'I\'m starting a WhatsApp group for us, join in!';
-    final uri = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open WhatsApp.')));
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$city · $count alumni',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (link != null) ...[
+                FilledButton.icon(
+                  key: const Key('nearby-wa-join'),
+                  onPressed: () => onJoin(link!),
+                  icon: const Icon(Icons.chat_outlined),
+                  label: const Text('Gabung grup WhatsApp'),
+                ),
+                TextButton(
+                  key: const Key('nearby-wa-edit'),
+                  onPressed: onEdit,
+                  child: const Text('Ubah link'),
+                ),
+              ] else
+                OutlinedButton.icon(
+                  key: const Key('nearby-wa-add'),
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.add_link),
+                  label: const Text('Tambah link grup WhatsApp'),
+                ),
+              if (chat)
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CityGroupChatScreen(
+                        city: city,
+                        currentUser: currentUser,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.forum_outlined),
+                  label: Text('Open $city Group Chat'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Asks for a city's WhatsApp invite link. Pops with the saved link, or null.
+/// Checks the link shape here first; the database checks it again.
+class _GroupLinkDialog extends StatefulWidget {
+  const _GroupLinkDialog({
+    required this.city,
+    required this.initial,
+    required this.save,
+  });
+
+  final String city;
+  final String? initial;
+  final Future<void> Function(String url) save;
+
+  @override
+  State<_GroupLinkDialog> createState() => _GroupLinkDialogState();
+}
+
+class _GroupLinkDialogState extends State<_GroupLinkDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initial,
+  );
+  String? _error;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final url = _controller.text.trim();
+    if (!isWhatsAppInviteUrl(url)) {
+      setState(
+        () => _error = cityGroupErrorMessage(
+          const CityGroupException(CityGroupErrorCode.invalidInput),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _error = null;
+      _saving = true;
+    });
+    try {
+      await widget.save(url);
+      if (mounted) Navigator.of(context).pop(url);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = cityGroupErrorMessage(e);
+          _saving = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+    return AlertDialog(
+      title: Text('Grup WhatsApp ${widget.city}'),
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              cluster.city,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            const Text(
+              'Buat grup di WhatsApp, lalu tempel link undangannya di sini. '
+              'Semua alumni di kota ini bisa melihatnya.',
             ),
-            Text(
-              cluster.km == 0
-                  ? 'Same city as you · ${cluster.alumni.length} alumni'
-                  : '~${cluster.km} km away · ${cluster.alumni.length} alumni',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('Network with the group', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            if (chat) ...[
-              FilledButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CityGroupChatScreen(
-                        city: cluster.city,
-                        currentUser: currentUser,
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.forum_outlined),
-                label: Text('Open ${cluster.city} Group Chat'),
-              ),
-              const SizedBox(height: 8),
-            ],
-            OutlinedButton.icon(
-              onPressed: () => _inviteViaWhatsApp(context),
-              icon: const Icon(Icons.chat_outlined),
-              label: const Text('Invite via WhatsApp'),
-            ),
-            const SizedBox(height: 20),
-            Text('Alumni here', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 4),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 240),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: cluster.alumni.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  final p = cluster.alumni[i];
-                  return ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(p['name'] as String? ?? ''),
-                    subtitle: Text(p['current_role'] as String? ?? ''),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProfileDetailScreen(
-                            profile: p,
-                            currentUser: currentUser,
-                            showEditButton: false,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('nearby-wa-field'),
+              controller: _controller,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: 'Link undangan',
+                hintText: 'https://chat.whatsapp.com/...',
+                errorText: _error,
+                errorMaxLines: 3,
               ),
             ),
           ],
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          key: const Key('nearby-wa-save'),
+          onPressed: _saving ? null : _submit,
+          child: const Text('Simpan'),
+        ),
+      ],
     );
   }
 }
