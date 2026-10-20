@@ -13,7 +13,7 @@ class ErrorView extends StatelessWidget {
     required this.screen,
     this.error,
     this.onRetry,
-    this.retryLabel = 'Try again',
+    this.retryLabel = 'Coba lagi',
   });
 
   final String message;

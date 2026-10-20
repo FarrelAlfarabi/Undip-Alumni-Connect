@@ -779,7 +779,7 @@ void main() {
       api.results['admin_reports_list'] = [
         row(hidden: true, count: 0, reasons: []),
       ];
-      await tester.tap(find.text('Hidden'));
+      await tester.tap(find.byTooltip('Hidden items'));
       await tester.pumpAndSettle();
       expect(api.params['admin_reports_list']!['p_view'], 'hidden');
       expect(find.textContaining('Hidden: Palsu'), findsOneWidget);

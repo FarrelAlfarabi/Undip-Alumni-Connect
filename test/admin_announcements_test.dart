@@ -32,11 +32,8 @@ void main() {
   group('repository', () {
     test('create sends the admin id and trimmed text', () async {
       final api = FakeAdminApi()..results['admin_announcement_create'] = 'id1';
-      await AdminRepository(api).createAnnouncement(
-        'me',
-        title: '  Reuni  ',
-        body: ' Sabtu depan ',
-      );
+      await AdminRepository(api)
+          .createAnnouncement('me', title: '  Reuni  ', body: ' Sabtu depan ');
       expect(api.params['admin_announcement_create'], {
         'p_admin': 'me',
         'p_title': 'Reuni',

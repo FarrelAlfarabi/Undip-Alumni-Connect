@@ -130,13 +130,13 @@ void main() {
           find.text("Couldn't load jobs. Please try again."),
           findsOneWidget,
         );
-        expect(find.text('Try again'), findsOneWidget);
+        expect(find.text('Coba lagi'), findsOneWidget);
         expect(find.text('Send feedback'), findsOneWidget);
         expect(
           find.textContaining('Postgrest'),
           findsNothing,
         ); // the raw error is never shown
-        await tester.tap(find.text('Try again'));
+        await tester.tap(find.text('Coba lagi'));
         expect(retried, 1);
       },
     );
@@ -145,7 +145,7 @@ void main() {
       tester,
     ) async {
       await pumpError(tester);
-      expect(find.text('Try again'), findsNothing);
+      expect(find.text('Coba lagi'), findsNothing);
       expect(find.text('Send feedback'), findsOneWidget);
     });
 
@@ -294,7 +294,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('send-feedback')), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text('Coba lagi'), findsOneWidget);
     });
 
     testWidgets('Job board load error', (tester) async {

@@ -14,8 +14,13 @@ class AppTheme {
   /// Darker yellow for text or icons on a light background (yellow itself is
   /// 1.5:1 there). Passes 4.5:1 on paper, raised paper and soft yellow.
   static const yellowText = Color(0xFF7A5800);
-  static const paper = Color(0xFFF8F6F1);
-  static const paperRaised = Color(0xFFF5F3EC);
+
+  /// Neutral greys for every surface. No cream and no blue tint, so the yellow,
+  /// black and blue of the logo are the only colour on screen. Cards are white
+  /// on [paper] and separated by a hairline, not by a second tint.
+  static const paper = Color(0xFFF7F7F8);
+  static const paperRaised = Color(0xFFFFFFFF);
+  static const hairline = Color(0xFFDCDDE0);
   static const ink = black;
 
   static ThemeData light() {
@@ -34,9 +39,12 @@ class AppTheme {
           onSecondaryContainer: black,
           surface: paper,
           onSurface: ink,
-          surfaceContainerLowest: Colors.white,
+          surfaceContainerLowest: paperRaised,
+          surfaceContainerLow: paperRaised,
           surfaceContainer: paperRaised,
-          surfaceContainerHigh: const Color(0xFFE6E1D6),
+          surfaceContainerHigh: const Color(0xFFEBECEE),
+          surfaceContainerHighest: const Color(0xFFE4E5E8),
+          outlineVariant: hairline,
         );
 
     final baseText = GoogleFonts.ibmPlexSansTextTheme();

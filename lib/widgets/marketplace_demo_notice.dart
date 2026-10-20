@@ -12,21 +12,21 @@ class MarketplaceDemoNotice extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      color: theme.colorScheme.secondaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
           Icon(
             Icons.info_outline,
             size: 16,
-            color: theme.colorScheme.onSecondaryContainer,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSecondaryContainer,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
