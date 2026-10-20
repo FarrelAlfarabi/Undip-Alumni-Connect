@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Nearby city dropdown (19 Oct 2026)
+- City chips on Nearby replaced by a searchable dropdown (`DropdownMenu`, key `nearby-city-field`). Entries keep counts: "Semua (N)", "Semarang (8)". Typing narrows the list.
+- Filter behavior and the WhatsApp group card are unchanged. Client only, no migration.
+- Tests updated (`city_whatsapp_group_test`, `chat_switch_test`, `layout_stress_test`). Analyze clean, full suite passes.
+
 ## UX pass (19 Oct 2026)
 - A: Indonesian copy on Welcome, login, Home and the shared error button. B: Home has one "Cari alumni" button, tiles with a line of text, a requests card; no Businesses tile. C: profile shows "Permintaan terkirim" after a request. D: Directory count, City filter, empty-state clear button.
 - E: other profiles show work before study, contact action pinned at the bottom. F: Jobs is a Market segment (Products, Businesses, Jobs). G: no change (lists already clear the button by 88 dp). H: Home card until city and role are set. I: no exit dialog on web.
