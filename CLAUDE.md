@@ -9,7 +9,7 @@
 
 ## Commands
 - Flutter is pinned to 3.47.4 (see `.github/workflows/flutter-ci.yml`).
-- Setup: `cp .env.example .env && flutter pub get`
+- Setup: `bash scripts/setup_flutter.sh` (installs Flutter once, then `pub get`). Then `export PATH="$HOME/flutter/bin:$PATH"`.
 - Analyze: `flutter analyze`
 - Tests: `flutter test -r failures-only` (one file: add its path). The `failures-only` reporter exists in 3.47.4.
 - Release gate: `flutter test --dart-define=RELEASE_CHECK=true test/release_check_test.dart`
@@ -22,6 +22,10 @@
 - One stage per session. One commit per stage. Stop after the commit and wait for review.
 - Never apply migrations to a live project. Never put secrets in the repo.
 - Never use Haiku for SQL migrations, RLS, auth, or anything that exposes user data. Use the `reviewer` subagent on those.
+
+- One branch and one PR per theme (for example onboarding, admin tools). Add new requests of the same theme to the same thread.
+- One thread owns migration file numbers. Check `supabase/migrations` on main before naming a new one.
+- Migrations are applied by Farrel in the Supabase SQL Editor. Do not try the Supabase connector, a database string or an access token from the cloud.
 
 ## Token rules (every session)
 - At session start read only CLAUDE.md. Do not read `docs/` or root `*.md` files unless the task names them.
