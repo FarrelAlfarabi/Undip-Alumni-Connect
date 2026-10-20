@@ -141,7 +141,7 @@ class ClearFiltersButton extends StatelessWidget {
       child: TextButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-        label: const Text('Clear filters'),
+        label: const Text('Hapus filter'),
       ),
     );
   }

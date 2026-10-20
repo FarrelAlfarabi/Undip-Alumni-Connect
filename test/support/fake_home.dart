@@ -135,8 +135,13 @@ HomePages fakePages({
       if (marketBuilds != null) return CountingPage('Market', marketBuilds);
       return ValueListenableBuilder<int>(
         valueListenable: segment,
-        builder: (_, i, _) =>
-            MarkerPage(i == 0 ? 'Market Products' : 'Market Businesses'),
+        builder: (_, i, _) => MarkerPage(
+          i == 0
+              ? 'Market Products'
+              : i == 1
+              ? 'Market Businesses'
+              : 'Market Jobs',
+        ),
       );
     },
     myBusinesses: (u) {
