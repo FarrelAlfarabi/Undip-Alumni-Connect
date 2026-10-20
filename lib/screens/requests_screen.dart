@@ -85,7 +85,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
               what: 'your requests',
               emptyText:
                   'You have not asked anyone yet. Open an alumnus profile '
-                  'and tap "Request to contact".',
+                  'and tap "Minta kontak".',
               onRetry: _refresh,
               itemBuilder: (r) =>
                   _OutgoingCard(request: r, repository: _repo, myId: _myId),

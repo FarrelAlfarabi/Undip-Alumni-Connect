@@ -78,11 +78,11 @@ void main() {
         ),
       );
       await tester.enterText(find.byType(TextFormField), testEmail);
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Verifikasi'));
       await tester.pumpAndSettle();
       expect(find.textContaining('suspended'), findsWidgets);
       expect(find.textContaining(kContactEmail), findsWidgets);
-      expect(find.text('Something Went Wrong'), findsNothing);
+      expect(find.text('Terjadi Kesalahan'), findsNothing);
     });
 
     testWidgets('email code: a suspended person is told, not "wrong code"', (
@@ -101,12 +101,12 @@ void main() {
         ),
       );
       await tester.enterText(find.byKey(const Key('login-email')), testEmail);
-      await tester.tap(find.text('Send code'));
+      await tester.tap(find.text('Kirim kode'));
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
       await tester.enterText(find.byKey(const Key('login-code')), '123456');
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
       expect(find.textContaining('suspended'), findsWidgets);
-      expect(find.textContaining('wrong or has expired'), findsNothing);
+      expect(find.textContaining('salah atau sudah kedaluwarsa'), findsNothing);
     });
   });
 

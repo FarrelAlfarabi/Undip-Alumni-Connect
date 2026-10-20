@@ -21,6 +21,7 @@ class JobBoardScreen extends StatefulWidget {
     super.key,
     required this.currentUser,
     this.showBack = false,
+    this.embedded = false,
     this.fetchJobs,
   });
 
@@ -29,6 +30,10 @@ class JobBoardScreen extends StatefulWidget {
 
   /// True when pushed from the Home hub (shows a back arrow).
   final bool showBack;
+
+  /// True inside the Market tab, which already has the app bar. Then this
+  /// screen is just the list and its Post a Job button.
+  final bool embedded;
 
   /// The verified alumnus currently using the app, as a shared notifier —
   /// needed so a posted job records who posted it.
@@ -128,23 +133,25 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Job Board'),
-        automaticallyImplyLeading: widget.showBack,
-        actions: [
-          IconButton(
-            key: const Key('my-job-postings'),
-            tooltip: 'My job postings',
-            icon: const Icon(Icons.assignment_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    MyJobPostingsScreen(currentUser: widget.currentUser),
-              ),
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              title: const Text('Job Board'),
+              automaticallyImplyLeading: widget.showBack,
+              actions: [
+                IconButton(
+                  key: const Key('my-job-postings'),
+                  tooltip: 'My job postings',
+                  icon: const Icon(Icons.assignment_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          MyJobPostingsScreen(currentUser: widget.currentUser),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _postJob,
         icon: const Icon(Icons.add),

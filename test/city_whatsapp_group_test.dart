@@ -64,9 +64,16 @@ Future<List<Uri>> pump(
 }
 
 Future<void> pickCity(WidgetTester tester, String city) async {
-  final chip = find.byKey(Key('nearby-city-$city'));
-  await tester.ensureVisible(chip);
-  await tester.tap(chip);
+  await tester.tap(find.byKey(const Key('nearby-city-field')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.textContaining('$city (').last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> pickAll(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('nearby-city-field')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.textContaining('Semua (').last);
   await tester.pumpAndSettle();
 }
 
@@ -132,16 +139,28 @@ void main() {
       expect(find.text('Dimas Putra'), findsOneWidget);
     });
 
-    testWidgets('city chips filter the list', (tester) async {
+    testWidgets('city dropdown filters the list', (tester) async {
       await pump(tester, api: FakeCityApi());
       await pickCity(tester, 'Jakarta');
       expect(find.text('Bunga Ayu'), findsOneWidget);
       expect(find.text('Candra Dewi'), findsOneWidget);
       expect(find.text('Dimas Putra'), findsNothing);
-      await tester.ensureVisible(find.byKey(const Key('nearby-city-all')));
-      await tester.tap(find.byKey(const Key('nearby-city-all')));
-      await tester.pumpAndSettle();
+      await pickAll(tester);
       expect(find.text('Dimas Putra'), findsOneWidget);
+    });
+
+    testWidgets('typing in the city dropdown narrows the choices', (
+      tester,
+    ) async {
+      await pump(tester, api: FakeCityApi());
+      expect(find.byType(ChoiceChip), findsNothing);
+      await tester.enterText(
+        find.byKey(const Key('nearby-city-field')),
+        'jakar',
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Jakarta ('), findsWidgets);
+      expect(find.textContaining('Semarang ('), findsNothing);
     });
 
     testWidgets('no group card until a city is picked', (tester) async {

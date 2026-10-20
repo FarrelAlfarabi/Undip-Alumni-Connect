@@ -137,8 +137,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
       if (!mounted) return;
       setState(() => _state = _VerificationState.idle);
       _startCooldown();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('New code sent')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kode baru sudah dikirim')));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -185,8 +186,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
           _state = _VerificationState.idle;
           _codeError = network
               ? kNetworkError
-              : 'That code is wrong or has expired. Check it and try again, '
-                    'or send a new code.';
+              : 'Kode salah atau sudah kedaluwarsa. Periksa lagi, '
+                    'atau minta kode baru.';
           _codeController.clear();
         });
         return;
@@ -340,7 +341,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Verify Alumni Status'),
+        title: const Text('Verifikasi Status Alumni'),
         // On the code step the back arrow returns to the email box.
         leading: _codeSent && _state == _VerificationState.idle
             ? BackButton(onPressed: _reset)
@@ -456,8 +457,8 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             codeController != null
-                ? 'Enter the code'
-                : 'Verify Your Alumni Status',
+                ? 'Masukkan kode'
+                : 'Verifikasi Status Alumni Kamu',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -465,13 +466,14 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             codeController != null
-                ? 'If ${controller.text.trim()} is on the alumni list, we emailed '
-                      'a 6 digit code.'
+                ? 'Jika ${controller.text.trim()} ada di daftar alumni, kami sudah '
+                      'mengirim kode 6 digit ke email itu.'
                 : realLogin
-                ? 'Enter the email the Ikafe team has on file for you. '
-                      'We will email you a 6 digit code, no password needed.'
-                : 'Enter the email the Ikafe team has on file for you to '
-                      'confirm your alumni record.',
+                ? 'Masukkan email yang kamu berikan ke Ikafe saat mendaftar. '
+                      'Kami kirim kode 6 digit ke email itu, tanpa kata sandi. '
+                      'Lupa email yang dipakai? Hubungi tim lewat tombol di bawah.'
+                : 'Masukkan email yang kamu berikan ke Ikafe saat mendaftar '
+                      'untuk memastikan data alumni kamu.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -479,8 +481,8 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 24),
           if (codeController != null) ...[
             Text(
-              'Can\'t find it? Check your spam or junk folder. The code '
-              'expires after a while.',
+              'Belum masuk? Cek folder spam atau junk. Kode berlaku '
+              'untuk waktu terbatas.',
               key: const Key('code-sent-note'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -504,7 +506,7 @@ class _VerificationForm extends StatelessWidget {
               },
               onFieldSubmitted: (_) => onSubmit(),
               decoration: InputDecoration(
-                labelText: '6 digit code',
+                labelText: 'Kode 6 digit',
                 counterText: '',
                 errorText: codeError,
                 errorMaxLines: 3,
@@ -514,7 +516,7 @@ class _VerificationForm extends StatelessWidget {
               validator: (value) =>
                   RegExp(r'^\d{6}$').hasMatch((value ?? '').trim())
                   ? null
-                  : 'Enter the 6 digit code',
+                  : 'Masukkan kode 6 digit',
             ),
           ] else
             TextFormField(
@@ -537,9 +539,9 @@ class _VerificationForm extends StatelessWidget {
               ),
               validator: (value) {
                 final v = value?.trim() ?? '';
-                if (v.isEmpty) return 'Enter your email';
+                if (v.isEmpty) return 'Masukkan email kamu';
                 if (!v.contains('@') || !v.contains('.')) {
-                  return 'Enter a valid email';
+                  return 'Masukkan email yang valid';
                 }
                 return null;
               },
@@ -558,10 +560,10 @@ class _VerificationForm extends StatelessWidget {
                   )
                 : Text(
                     codeController != null
-                        ? 'Verify code'
+                        ? 'Verifikasi kode'
                         : realLogin
-                        ? 'Send code'
-                        : 'Verify',
+                        ? 'Kirim kode'
+                        : 'Verifikasi',
                   ),
           ),
           if (codeController != null) ...[
@@ -569,7 +571,9 @@ class _VerificationForm extends StatelessWidget {
               key: const Key('login-resend'),
               onPressed: loading || resendIn > 0 ? null : onResend,
               child: Text(
-                resendIn > 0 ? 'Resend code in ${resendIn}s' : 'Resend code',
+                resendIn > 0
+                    ? 'Kirim ulang kode dalam $resendIn dtk'
+                    : 'Kirim ulang kode',
               ),
             ),
             TextButton(
@@ -579,12 +583,14 @@ class _VerificationForm extends StatelessWidget {
                 error: null,
                 screen: 'Login help: no code or changed email',
               ),
-              child: const Text('No code, or email changed? Contact the team'),
+              child: const Text(
+                'Kode tidak masuk atau email berubah? Hubungi tim',
+              ),
             ),
             TextButton(
               key: const Key('login-change-email'),
               onPressed: loading ? null : onChangeEmail,
-              child: const Text('Use a different email'),
+              child: const Text('Pakai email lain'),
             ),
           ],
         ],
@@ -617,21 +623,21 @@ class _NotFoundResult extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'No Matching Record',
+          'Data Tidak Ditemukan',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'We couldn\'t find an alumni record for "$email". Use the email '
-          'the Ikafe team has for you, or contact the beta team.',
+          'Kami tidak menemukan data alumni untuk "$email". Pakai email yang '
+          'terdaftar di Ikafe, atau hubungi tim beta.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton(onPressed: onTryAgain, child: const Text('Try again')),
+        FilledButton(onPressed: onTryAgain, child: const Text('Coba lagi')),
       ],
     );
   }
@@ -708,7 +714,7 @@ class _ErrorResult extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Something Went Wrong',
+          'Terjadi Kesalahan',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -721,7 +727,7 @@ class _ErrorResult extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton(onPressed: onTryAgain, child: const Text('Try again')),
+        FilledButton(onPressed: onTryAgain, child: const Text('Coba lagi')),
         TextButton(
           key: const Key('send-feedback'),
           onPressed: () =>

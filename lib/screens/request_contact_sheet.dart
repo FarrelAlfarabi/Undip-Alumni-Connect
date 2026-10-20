@@ -27,8 +27,9 @@ Future<bool> showRequestContactSheet(
     ),
   );
   if (sent == true && context.mounted) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Request sent to $targetName.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Permintaan terkirim ke $targetName.')),
+    );
   }
   return sent == true;
 }
@@ -100,15 +101,16 @@ class _RequestSheetState extends State<_RequestSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Request to contact ${widget.targetName}',
+              'Minta kontak ke ${widget.targetName}',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'They will see your name and your message. If they accept, '
-              'they choose what contact detail to share with you.',
+              'Dia akan melihat namamu dan pesanmu. Kalau dia setuju, dia '
+              'sendiri yang memilih kontak apa yang dibagikan ke kamu. '
+              'Jawabannya muncul di Permintaan dan di Notifikasi.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -120,8 +122,8 @@ class _RequestSheetState extends State<_RequestSheet> {
               maxLength: kContactMessageMax,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Message (optional)',
-                hintText: 'For example: why you would like to connect',
+                labelText: 'Pesan (disarankan)',
+                hintText: 'Contoh: kenapa kamu ingin terhubung',
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -144,7 +146,7 @@ class _RequestSheetState extends State<_RequestSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
-                  : const Text('Send request'),
+                  : const Text('Kirim permintaan'),
             ),
           ],
         ),

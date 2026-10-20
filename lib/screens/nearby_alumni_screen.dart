@@ -321,7 +321,8 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
   }
 }
 
-/// Row of city chips: "Semua" plus every city that has alumni, nearest first.
+/// Searchable city dropdown: "Semua" plus every city that has alumni, nearest
+/// first, each with its alumni count. Typing narrows the choices.
 class _CityFilter extends StatelessWidget {
   const _CityFilter({
     required this.cities,
@@ -335,35 +336,41 @@ class _CityFilter extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onSelected;
 
+  // Value of the "Semua" entry; a real city is never empty.
+  static const _all = '';
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-      child: Row(
-        children: [
-          ChoiceChip(
-            key: const Key('nearby-city-all'),
-            label: Text('Semua ($total)'),
-            selected: selected == null,
-            onSelected: (_) => onSelected(null),
+      child: LayoutBuilder(
+        builder: (context, box) => DropdownMenu<String>(
+          key: const Key('nearby-city-field'),
+          width: box.maxWidth,
+          label: const Text('Kota'),
+          leadingIcon: const Icon(Icons.location_city_outlined),
+          trailingIcon: const Icon(
+            Icons.arrow_drop_down,
+            semanticLabel: 'Show Kota options',
           ),
-          for (final e in cities.entries) ...[
-            const SizedBox(width: 8),
-            ChoiceChip(
-              key: Key('nearby-city-${e.key}'),
-              label: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 180),
-                child: Text(
-                  '${e.key} (${e.value})',
-                  overflow: TextOverflow.ellipsis,
-                ),
+          selectedTrailingIcon: const Icon(
+            Icons.arrow_drop_up,
+            semanticLabel: 'Hide Kota options',
+          ),
+          initialSelection: selected ?? _all,
+          enableFilter: true,
+          requestFocusOnTap: true,
+          menuHeight: 280,
+          dropdownMenuEntries: [
+            DropdownMenuEntry<String>(value: _all, label: 'Semua ($total)'),
+            for (final e in cities.entries)
+              DropdownMenuEntry<String>(
+                value: e.key,
+                label: '${e.key} (${e.value})',
               ),
-              selected: selected == e.key,
-              onSelected: (_) => onSelected(e.key),
-            ),
           ],
-        ],
+          onSelected: (v) => onSelected(v == null || v == _all ? null : v),
+        ),
       ),
     );
   }

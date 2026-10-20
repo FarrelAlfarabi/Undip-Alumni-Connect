@@ -817,8 +817,9 @@ Widget _nearby({
 );
 
 Future<void> _pickJakarta(WidgetTester tester) async {
-  await tester.ensureVisible(find.byKey(const Key('nearby-city-Jakarta')));
-  await tester.tap(find.byKey(const Key('nearby-city-Jakarta')));
+  await tester.tap(find.byKey(const Key('nearby-city-field')));
+  await settle(tester);
+  await tester.tap(find.textContaining('Jakarta (').last);
   await settle(tester);
 }
 
