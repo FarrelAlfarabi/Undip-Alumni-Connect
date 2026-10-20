@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/theme.dart';
+import 'package:undip_alumni_connect/widgets/marketplace_demo_notice.dart';
 import 'package:undip_alumni_connect/data/marketplace_format.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/models/marketplace_listing.dart';
@@ -139,10 +141,36 @@ void main() {
       expect(find.text('No listings match these filters.'), findsOneWidget);
     });
 
+    testWidgets('sort is one icon next to search, not a full-width field', (
+      tester,
+    ) async {
+      await pumpMarket(tester);
+      expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+      expect(find.byKey(const Key('sort-menu')), findsOneWidget);
+      final search = tester.getRect(find.byType(TextField));
+      final sort = tester.getRect(find.byKey(const Key('sort-menu')));
+      expect((search.center.dy - sort.center.dy).abs(), lessThan(8));
+    });
+
+    testWidgets('the notice is a quiet line, not a yellow banner', (
+      tester,
+    ) async {
+      await pumpMarket(tester);
+      final box = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.text(MarketplaceDemoNotice.text),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect(box.color, isNot(AppTheme.light().colorScheme.secondaryContainer));
+    });
+
     testWidgets('sort by price low to high and high to low', (tester) async {
       await pumpMarket(tester);
       Future<void> pick(String label) async {
-        await tester.tap(find.byType(DropdownButtonFormField<String>));
+        await tester.tap(find.byKey(const Key('sort-menu')));
         await tester.pumpAndSettle();
         await tester.tap(find.text(label).last);
         await tester.pumpAndSettle();

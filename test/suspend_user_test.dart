@@ -210,7 +210,7 @@ void main() {
           hiddenReason: 'Akun palsu',
         ),
       ];
-      await tester.tap(find.text('Hidden'));
+      await tester.tap(find.byTooltip('Hidden items'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Suspended: Akun palsu'), findsOneWidget);
       expect(find.byKey(const Key('restore-u1')), findsNothing);
@@ -229,7 +229,7 @@ void main() {
       api.results['admin_reports_list'] = [
         row(type: 'job', id: 'j1', title: 'Staff', hidden: true),
       ];
-      await tester.tap(find.text('Hidden'));
+      await tester.tap(find.byTooltip('Hidden items'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('restore-j1')), findsOneWidget);
       expect(find.textContaining('Suspended'), findsNothing);

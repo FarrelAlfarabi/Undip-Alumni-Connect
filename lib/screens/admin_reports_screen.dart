@@ -23,17 +23,22 @@ class AdminReportsScreen extends StatefulWidget {
     super.key,
     required this.adminId,
     required this.repository,
+    this.showHidden = false,
   });
 
   final String adminId;
   final AdminRepository repository;
+
+  /// The list of hidden content and suspended people, opened from the icon in
+  /// the app bar. Not a tab: the main screen is only about open reports.
+  final bool showHidden;
 
   @override
   State<AdminReportsScreen> createState() => _AdminReportsScreenState();
 }
 
 class _AdminReportsScreenState extends State<AdminReportsScreen> {
-  bool _hidden = false;
+  late final bool _hidden = widget.showHidden;
   String _type = kAllFilter;
   String _reason = kAllFilter;
   String _period = kAllTime;
@@ -231,25 +236,29 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reports')),
+      appBar: AppBar(
+        title: Text(_hidden ? 'Hidden items' : 'Reports'),
+        actions: [
+          if (!_hidden)
+            IconButton(
+              icon: const Icon(Icons.visibility_off_outlined),
+              tooltip: 'Hidden items',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AdminReportsScreen(
+                    adminId: widget.adminId,
+                    repository: widget.repository,
+                    showHidden: true,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: false, label: Text('Open reports')),
-                ButtonSegment(value: true, label: Text('Hidden')),
-              ],
-              selected: {_hidden},
-              onSelectionChanged: (s) {
-                _hidden = s.first;
-                _reload();
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               children: [
                 TextField(
@@ -354,7 +363,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 16),
                   itemBuilder: (context, i) {
                     final r = items[i];
                     return _ReportCard(
@@ -465,54 +474,69 @@ class _ReportCard extends StatelessWidget {
                 '${r.hiddenReason != null ? ': ${r.hiddenReason}' : ''}',
                 style: TextStyle(color: theme.colorScheme.error),
               ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
-              children: [
-                if (!hiddenView) ...[
-                  OutlinedButton(
-                    key: Key('dismiss-${r.targetId}'),
-                    onPressed: busy ? null : onDismiss,
-                    child: const Text('Dismiss'),
-                  ),
-                  if (!r.canHide)
-                    OutlinedButton(
-                      key: Key('actioned-${r.targetId}'),
-                      onPressed: busy ? null : onActioned,
-                      child: const Text('Mark as handled'),
-                    ),
-                  if (r.canHide && !r.isHidden)
-                    FilledButton(
-                      key: Key('hide-${r.targetId}'),
-                      onPressed: busy ? null : onHide,
-                      child: const Text('Hide'),
-                    ),
-                  if (r.canSuspend && !r.isHidden)
-                    FilledButton(
-                      key: Key('suspend-${r.targetId}'),
-                      onPressed: busy ? null : onSuspend,
-                      child: const Text('Suspend user'),
-                    ),
-                ],
-                if (r.isHidden && r.targetType == ReportTarget.profile)
-                  FilledButton(
-                    key: Key('unsuspend-${r.targetId}'),
-                    onPressed: busy ? null : onUnsuspend,
-                    child: const Text('Lift suspension'),
-                  )
-                else if (r.isHidden)
-                  FilledButton(
-                    key: Key('restore-${r.targetId}'),
-                    onPressed: busy ? null : onRestore,
-                    child: const Text('Restore'),
-                  ),
-              ],
-            ),
+            const SizedBox(height: 16),
+            ..._actions(r),
           ],
         ),
       ),
     );
+  }
+
+  /// One layout for every card: the main action on top at full width, the
+  /// quieter ones in a single row under it.
+  List<Widget> _actions(AdminReport r) {
+    Widget main(Key key, String label, VoidCallback onTap) => SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        key: key,
+        onPressed: busy ? null : onTap,
+        child: Text(label),
+      ),
+    );
+    Widget quiet(Key key, String label, VoidCallback onTap) => Expanded(
+      child: OutlinedButton(
+        key: key,
+        onPressed: busy ? null : onTap,
+        child: Text(label),
+      ),
+    );
+
+    if (r.isHidden) {
+      return [
+        if (r.targetType == ReportTarget.profile)
+          main(Key('unsuspend-${r.targetId}'), 'Lift suspension', onUnsuspend)
+        else
+          main(Key('restore-${r.targetId}'), 'Restore', onRestore),
+      ];
+    }
+    if (hiddenView) return const [];
+
+    final dismiss = Key('dismiss-${r.targetId}');
+    final handled = Key('actioned-${r.targetId}');
+    if (r.canHide) {
+      return [
+        main(Key('hide-${r.targetId}'), 'Hide', onHide),
+        const SizedBox(height: 8),
+        Row(children: [quiet(dismiss, 'Dismiss', onDismiss)]),
+      ];
+    }
+    if (r.canSuspend) {
+      return [
+        main(Key('suspend-${r.targetId}'), 'Suspend user', onSuspend),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            quiet(dismiss, 'Dismiss', onDismiss),
+            const SizedBox(width: 8),
+            quiet(handled, 'Mark as handled', onActioned),
+          ],
+        ),
+      ];
+    }
+    return [
+      main(handled, 'Mark as handled', onActioned),
+      const SizedBox(height: 8),
+      Row(children: [quiet(dismiss, 'Dismiss', onDismiss)]),
+    ];
   }
 }

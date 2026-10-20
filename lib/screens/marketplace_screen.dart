@@ -294,16 +294,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
-          if (widget.embedded)
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: const Key('my-listings'),
-                onPressed: _openMine,
-                icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                label: const Text('My listings'),
-              ),
-            ),
           Expanded(
             child: FutureBuilder<List<MarketplaceListing>>(
               future: _future,
@@ -347,19 +337,41 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: ClearableSearchField(
-                        controller: _searchController,
-                        hintText: 'Search by title...',
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ClearableSearchField(
+                              controller: _searchController,
+                              hintText: 'Search by title...',
+                            ),
+                          ),
+                          PopupMenuButton<MarketplaceSort>(
+                            key: const Key('sort-menu'),
+                            tooltip: 'Sort: ${_sort.label}',
+                            icon: Icon(
+                              Icons.swap_vert,
+                              color: _sort == MarketplaceSort.newest
+                                  ? null
+                                  : Theme.of(context).colorScheme.secondary,
+                            ),
+                            initialValue: _sort,
+                            onSelected: (v) => setState(() => _sort = v),
+                            itemBuilder: (_) => [
+                              for (final s in MarketplaceSort.values)
+                                PopupMenuItem(value: s, child: Text(s.label)),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(
-                      height: 48,
+                      height: 64,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 8,
+                          vertical: 12,
                         ),
                         children: [
                           for (final c in [
@@ -379,25 +391,25 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                      child: FilterDropdown(
-                        label: 'Sort',
-                        value: _sort.label,
-                        options: [
-                          for (final s in MarketplaceSort.values) s.label,
-                        ],
-                        onChanged: (v) => setState(
-                          () => _sort = MarketplaceSort.values.firstWhere(
-                            (s) => s.label == v,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                      child: ClearFiltersButton(
-                        active: _hasActiveFilters,
-                        onPressed: _clearFilters,
+                      child: Row(
+                        children: [
+                          ClearFiltersButton(
+                            active: _hasActiveFilters,
+                            onPressed: _clearFilters,
+                          ),
+                          const Spacer(),
+                          if (widget.embedded)
+                            TextButton.icon(
+                              key: const Key('my-listings'),
+                              onPressed: _openMine,
+                              icon: const Icon(
+                                Icons.inventory_2_outlined,
+                                size: 18,
+                              ),
+                              label: const Text('My listings'),
+                            ),
+                        ],
                       ),
                     ),
                     Expanded(
@@ -406,10 +418,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               child: Text('No listings match these filters.'),
                             )
                           : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                               itemCount: listings.length,
                               separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 16),
                               itemBuilder: (context, i) => _ListingCard(
                                 listing: listings[i],
                                 onTap: () {
