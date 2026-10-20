@@ -4,6 +4,12 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Intro seen flag in Supabase (19 Oct 2026)
+- Migration `20261019120000_intro_seen.sql` (+ `rollback_intro_seen.sql`): `alumni_profiles.intro_seen_at`, `account_mark_intro_seen()`, `account_intro_seen()`. NOT applied to the live project; Farrel applies it.
+- `IntroGate` asks the server; a device with the old local flag skips the intro and saves it. If Supabase cannot answer (offline, migration not applied) the local flag decides. Nobody is backfilled.
+- Checks: analyze clean, full suite passes, `run_beta_local.sh` and `run_fresh_chain.sh` pass (new `19_intro_seen_test.sql`).
+
+
 ## Nearby city dropdown (19 Oct 2026)
 - City chips on Nearby replaced by a searchable dropdown (`DropdownMenu`, key `nearby-city-field`). Entries keep counts: "Semua (N)", "Semarang (8)". Typing narrows the list.
 - Filter behavior and the WhatsApp group card are unchanged. Client only, no migration.

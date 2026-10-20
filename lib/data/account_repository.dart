@@ -62,6 +62,26 @@ class AccountRepository {
     }
   }
 
+  /// Whether the intro is already recorded on the profile. Throws when the
+  /// database cannot say (offline, or the migration is not applied yet).
+  Future<bool> introSeen(String profileId) async {
+    try {
+      final r = await _api.rpc('account_intro_seen', {'p_profile': profileId});
+      return r == true;
+    } on PostgrestException catch (e) {
+      throw AccountException(e.message, e.message);
+    }
+  }
+
+  /// Records on the profile that the intro was seen. Safe to call twice.
+  Future<void> markIntroSeen(String profileId) async {
+    try {
+      await _api.rpc('account_mark_intro_seen', {'p_profile': profileId});
+    } on PostgrestException catch (e) {
+      throw AccountException(e.message, e.message);
+    }
+  }
+
   /// Deletes the account: lists the person's files, calls `account_delete`
   /// (one transaction, which also queues the files in storage_cleanup_queue),
   /// and only then removes the files from storage, best effort. This order

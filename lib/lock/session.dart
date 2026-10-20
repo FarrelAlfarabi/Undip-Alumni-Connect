@@ -14,7 +14,7 @@ import 'lock_service.dart';
 typedef HomeBuilder = Widget Function(Map<String, dynamic> profile);
 
 Widget defaultHomeBuilder(Map<String, dynamic> profile) => IntroGate(
-  profileId: profile['id'] as String?,
+  profile: profile,
   child: HomeShell(profile: profile),
 );
 
