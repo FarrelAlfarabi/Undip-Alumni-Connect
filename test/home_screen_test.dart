@@ -19,6 +19,7 @@ final user = ValueNotifier<Map<String, dynamic>>({
 Future<void> pumpHome(
   WidgetTester tester, {
   FakeHomeApi? api,
+  Map<String, dynamic>? profile,
   FakeApi? market,
   VoidCallback? onDirectory,
   Size size = const Size(390, 844),
@@ -36,7 +37,7 @@ Future<void> pumpHome(
           textScaler: TextScaler.linear(textScale),
         ),
         child: HomeScreen(
-          currentUser: user,
+          currentUser: profile == null ? user : ValueNotifier(profile),
           onOpenDirectory: onDirectory ?? () {},
           pages: fakePages(),
           api: api ?? FakeHomeApi(),
@@ -51,6 +52,7 @@ Future<void> pumpHome(
 }
 
 void main() {
+  hubTests();
   announcementDetailTests();
   testWidgets('app bar shows the Ikafe UNDIP lockup', (tester) async {
     await pumpHome(tester);
@@ -64,26 +66,37 @@ void main() {
     expect(find.text('by Ikafe UNDIP'), findsOneWidget);
   });
   group('pinned top bar', () {
-    testWidgets('greeting and notifications stay visible after scrolling',
-        (tester) async {
+    testWidgets('greeting and notifications stay visible after scrolling', (
+      tester,
+    ) async {
       await pumpHome(tester);
-      final greetingTop = tester.getTopLeft(find.byKey(const Key('home-greeting')));
-      await tester.drag(find.byKey(const Key('home-list')), const Offset(0, -600));
+      final greetingTop = tester.getTopLeft(
+        find.byKey(const Key('home-greeting')),
+      );
+      await tester.drag(
+        find.byKey(const Key('home-list')),
+        const Offset(0, -600),
+      );
       await tester.pump();
-      expect(find.byKey(const Key('home-greeting')).hitTestable(), findsOneWidget);
+      expect(
+        find.byKey(const Key('home-greeting')).hitTestable(),
+        findsOneWidget,
+      );
       expect(
         tester.getTopLeft(find.byKey(const Key('home-greeting'))),
         greetingTop,
       );
-      expect(find.byKey(const Key('home-notifications')).hitTestable(),
-          findsOneWidget);
+      expect(
+        find.byKey(const Key('home-notifications')).hitTestable(),
+        findsOneWidget,
+      );
     });
   });
 
   group('greeting', () {
     testWidgets('uses the first name only', (tester) async {
       await pumpHome(tester);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
 
     test('firstNameOf handles empty and missing names', () {
@@ -172,7 +185,7 @@ void main() {
 
       api.announcementsError = null;
       api.announcements = [announcementMap(1)];
-      await tester.tap(find.text('Try again').first);
+      await tester.tap(find.text('Coba lagi').first);
       await tester.pump();
       await tester.pump();
       expect(find.text('Announcement 1'), findsOneWidget);
@@ -265,8 +278,8 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester);
-      expect(find.textContaining('No jobs posted yet'), findsOneWidget);
-      expect(find.textContaining('No listings yet'), findsOneWidget);
+      expect(find.textContaining('Belum ada lowongan'), findsOneWidget);
+      expect(find.textContaining('Belum ada produk'), findsOneWidget);
       expect(
         find.textContaining(RegExp('fee|commission', caseSensitive: false)),
         findsNothing,
@@ -361,6 +374,56 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+}
+
+void hubTests() {
+  group('Home hub', () {
+    testWidgets('no requests card when nobody is waiting', (tester) async {
+      await pumpHome(tester);
+      expect(find.byKey(const Key('home-requests-card')), findsNothing);
+    });
+
+    testWidgets('a waiting request shows a card that opens Requests', (
+      tester,
+    ) async {
+      await pumpHome(tester, api: FakeHomeApi(pendingRequests: 2));
+      expect(find.byKey(const Key('home-requests-card')), findsOneWidget);
+      expect(find.textContaining('2 alumni ingin terhubung'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('home-requests-card')));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE Requests'), findsOneWidget);
+    });
+
+    testWidgets('a profile with no city or role gets a completion card', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      expect(find.byKey(const Key('home-profile-card')), findsOneWidget);
+      expect(find.textContaining('Lengkapi profilmu'), findsOneWidget);
+    });
+
+    testWidgets('a complete profile has no completion card', (tester) async {
+      await pumpHome(
+        tester,
+        profile: {
+          'id': 'me',
+          'name': 'Ahmad Ramadhan',
+          'city': 'Semarang',
+          'current_role': 'Analis',
+        },
+      );
+      expect(find.byKey(const Key('home-profile-card')), findsNothing);
+    });
+
+    testWidgets('tiles say what they are for; Businesses has no tile', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      expect(find.text('Cari alumni'), findsOneWidget);
+      expect(find.text('Lowongan dari alumni'), findsOneWidget);
+      expect(find.byKey(const Key('tile-businesses')), findsNothing);
+    });
   });
 }
 

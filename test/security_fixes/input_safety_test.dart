@@ -55,7 +55,7 @@ void main() {
         ),
       );
       await tester.enterText(find.byType(TextFormField), 'someone@example.com');
-      await tester.tap(find.text('Verify'));
+      await tester.tap(find.text('Verifikasi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.textContaining('supabase.co'), findsNothing);

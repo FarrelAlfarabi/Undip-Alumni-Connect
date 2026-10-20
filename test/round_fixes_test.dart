@@ -403,7 +403,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Insurance').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Clear filters'));
+      await tester.tap(find.text('Hapus filter'));
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(field()).controller!.text, 'All');
       expect(find.text('Ayu Lestari'), findsOneWidget);

@@ -161,7 +161,7 @@ void main() {
       expect(find.byKey(const Key('business-register-card')), findsNothing);
       expect(find.text('Kopi Ahmad'), findsOneWidget);
       expect(find.text('Approved'), findsOneWidget);
-      expect(find.text('Band: Micro'), findsOneWidget);
+      expect(find.text('Skala: Micro'), findsOneWidget);
       expect(
         find.text('Products posted: 2 of 3 allowed for free'),
         findsOneWidget,
@@ -231,7 +231,7 @@ void main() {
         FakeHomeApi(businesses: [biz(status: 'pending', band: null)]),
       );
       expect(find.text('Waiting for review'), findsOneWidget);
-      expect(find.text('Band you chose: Small'), findsOneWidget);
+      expect(find.text('Skala pilihanmu: Small'), findsOneWidget);
       expect(find.textContaining('Products:'), findsNothing);
     });
 
@@ -243,7 +243,7 @@ void main() {
         ),
       );
       expect(find.text('Not approved'), findsOneWidget);
-      expect(find.text('Reason: Link rusak'), findsOneWidget);
+      expect(find.text('Alasan: Link rusak'), findsOneWidget);
     });
 
     testWidgets(
@@ -290,7 +290,7 @@ void main() {
       await pumpHome(tester, FakeHomeApi(businessesError: Exception('boom')));
       expect(find.byKey(const Key('business-owner-card')), findsNothing);
       expect(find.byKey(const Key('business-register-card')), findsNothing);
-      expect(find.text('Hello, Ahmad'), findsOneWidget);
+      expect(find.text('Halo, Ahmad'), findsOneWidget);
     });
 
     testWidgets('Requests badge and notification bell are in the app bar', (
