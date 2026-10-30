@@ -41,6 +41,30 @@ jobs:
       - name: Test
         run: flutter test
 
+  # Web build, so a web-only break shows on the PR and not on Vercel.
+  # Uses the placeholder .env (nothing is deployed from here).
+  build-web:
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Create placeholder .env
+        run: cp .env.example .env
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release
+
   # SQL checks on a throwaway Postgres (never a Supabase project): a fresh
   # database must build from every migration, and the beta tests, rollbacks and
   # live checks must pass. Runs independently of the Flutter job.
