@@ -76,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
                   const IkafeLogo(height: 28),
                   const SizedBox(height: 32),
                   Text(
-                    'Direktori alumni yang dicocokkan dengan data Ikafe,\ndibuat untuk saling memajukan.',
+                    'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       height: 1.15,
@@ -84,8 +84,8 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Verifikasi dirimu, cari alumni berdasarkan jurusan '
-                    'dan angkatan, dan saling rekomendasikan ke lowongan kerja.',
+                    'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, '
+                    'dukung usaha alumni, dan rekomendasikan lowongan kerja.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,

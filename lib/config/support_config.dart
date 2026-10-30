@@ -19,6 +19,18 @@ class SupportContact {
     ),
     SupportContactKind.phone => Uri(scheme: 'tel', path: value),
   };
+
+  /// Like [uri], with a subject and body filled in for an email contact.
+  /// Other kinds ignore them.
+  Uri uriWith({String? subject, String? body}) {
+    if (kind != SupportContactKind.email) return uri;
+    final q = {'subject': ?subject, 'body': ?body};
+    return Uri(
+      scheme: 'mailto',
+      path: value,
+      queryParameters: q.isEmpty ? null : q,
+    );
+  }
 }
 
 /// How to reach the admin / customer service team. Shown on

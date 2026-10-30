@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Stage 8: login redesign (30 Oct 2026)
+- Welcome copy, inline "Email tidak terdaftar" (no code sent), contact link on the email step, outlined "Hubungi tim admin" on the code step (`login-help`), stop icon, Indonesian suspended and error screens, `ContactAdminScreen` in Indonesian with `fromLogin` intro and mailto subject and body, Indonesian lock screen text.
+- Not in this PR: forgot PIN code flow, mandatory PIN, web PIN and "Masuk lagi" (next PR). No migration: `login_email_known` already exists in `20261013120000_real_login.sql`.
+- Checks: analyze clean, full suite and release gate pass.
+
 ## Intro seen flag in Supabase (19 Oct 2026)
 - Migration `20261019120000_intro_seen.sql` (+ `rollback_intro_seen.sql`): `alumni_profiles.intro_seen_at`, `account_mark_intro_seen()`, `account_intro_seen()`. NOT applied to the live project; Farrel applies it.
 - `IntroGate` asks the server; a device with the old local flag skips the intro and saves it. If Supabase cannot answer (offline, migration not applied) the local flag decides. Nobody is backfilled.

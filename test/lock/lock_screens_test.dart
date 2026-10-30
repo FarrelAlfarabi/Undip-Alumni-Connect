@@ -54,13 +54,13 @@ void main() {
       await pumpEntry(tester, await makeRememberedLock());
       expect(find.byKey(const Key('lock-screen')), findsOneWidget);
       expect(find.text('Mulai'), findsNothing);
-      expect(find.text('Welcome back, Ahmad'), findsOneWidget);
+      expect(find.text('Selamat datang kembali, Ahmad'), findsOneWidget);
       expect(find.text('LINGKARAN'), findsOneWidget);
       expect(find.byType(IkafeLogo), findsOneWidget);
       expect(find.text('AR'), findsOneWidget); // initials avatar
       expect(find.byKey(const Key('pin-5')), findsOneWidget);
-      expect(find.text('Forgot PIN? Verify again'), findsOneWidget);
-      expect(find.text('Not you? Switch account'), findsOneWidget);
+      expect(find.text('Lupa PIN? Verifikasi ulang'), findsOneWidget);
+      expect(find.text('Bukan kamu? Ganti akun'), findsOneWidget);
     });
 
     testWidgets('web (lock disabled) always shows Welcome', (tester) async {
@@ -172,12 +172,12 @@ void main() {
         await tester.pump();
 
         await enterPin(tester, '000001');
-        expect(find.textContaining('4 attempts left'), findsOneWidget);
+        expect(find.textContaining('Sisa 4 percobaan'), findsOneWidget);
         await enterPin(tester, '000002');
-        expect(find.textContaining('3 attempts left'), findsOneWidget);
+        expect(find.textContaining('Sisa 3 percobaan'), findsOneWidget);
         await enterPin(tester, '000003');
-        expect(find.textContaining('2 attempts left'), findsOneWidget);
-        expect(find.textContaining('Try again in'), findsOneWidget);
+        expect(find.textContaining('Sisa 2 percobaan'), findsOneWidget);
+        expect(find.textContaining('Coba lagi dalam'), findsOneWidget);
 
         // The pad ignores taps during the delay.
         await tester.tap(find.byKey(const Key('pin-1')));
@@ -186,10 +186,10 @@ void main() {
 
         clock.advance(kWrongPinDelay + const Duration(seconds: 1));
         await tester.pump(const Duration(seconds: 12));
-        expect(find.textContaining('Try again in'), findsNothing);
+        expect(find.textContaining('Coba lagi dalam'), findsNothing);
 
         await enterPin(tester, '000004');
-        expect(find.textContaining('1 attempt left'), findsOneWidget);
+        expect(find.textContaining('Sisa 1 percobaan'), findsOneWidget);
         clock.advance(kWrongPinDelay + const Duration(seconds: 1));
         await tester.pump(const Duration(seconds: 12));
         await enterPin(tester, '000005');
@@ -244,7 +244,7 @@ void main() {
         await lock.setBiometricsEnabled(true);
         await pumpEntry(tester, lock);
         await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('Use your PIN instead.'), findsOneWidget);
+        expect(find.text('Pakai PIN kamu saja.'), findsOneWidget);
         expect(find.byKey(const Key('pin-1')), findsOneWidget);
         // The PIN still works.
         await enterPin(tester, testPin);

@@ -13,13 +13,17 @@ class FakeLoginApi implements LoginApi {
   bool known;
   bool session;
   Object? verifyError;
+  Object? emailKnownError;
   Map<String, dynamic>? profile = testProfile();
   final sent = <String>[];
   final checked = <String>[];
   var signedOut = 0;
 
   @override
-  Future<bool> emailKnown(String email) async => known;
+  Future<bool> emailKnown(String email) async {
+    if (emailKnownError != null) throw emailKnownError!;
+    return known;
+  }
 
   @override
   Future<void> sendCode(String email) async => sent.add(email);
@@ -86,7 +90,7 @@ void main() {
       expect(find.text('APP for ${testProfile()['name']}'), findsOneWidget);
     });
 
-    testWidgets('an unknown email looks the same but gets no code', (
+    testWidgets('an unknown email is stopped on the email step, no code', (
       tester,
     ) async {
       final api = FakeLoginApi(known: false);
@@ -98,9 +102,9 @@ void main() {
       await tester.tap(find.text('Kirim kode'));
       await settle(tester);
       expect(api.sent, isEmpty);
-      expect(find.byKey(const Key('login-code')), findsOneWidget);
+      expect(find.byKey(const Key('login-code')), findsNothing);
+      expect(find.text('Email tidak terdaftar'), findsOneWidget);
       expect(find.text('Data Tidak Ditemukan'), findsNothing);
-      expect(find.byKey(const Key('login-help')), findsOneWidget);
     });
 
     testWidgets('the code must be 6 digits before it is checked', (

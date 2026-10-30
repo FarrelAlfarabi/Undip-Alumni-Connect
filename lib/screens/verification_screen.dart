@@ -8,6 +8,7 @@ import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 import '../policy/consent_screen.dart';
+import 'contact_admin_screen.dart';
 import '../lock/pin_setup_screen.dart';
 import '../lock/session.dart';
 import '../util/friendly_error.dart';
@@ -79,6 +80,9 @@ class VerificationScreen extends StatefulWidget {
   State<VerificationScreen> createState() => _VerificationScreenState();
 }
 
+/// Inline error under the email box (placeholder until Natasya sends hers).
+const String kEmailNotRegistered = 'Email tidak terdaftar';
+
 enum _VerificationState { idle, loading, notFound, suspended, error }
 
 class _VerificationScreenState extends State<VerificationScreen> {
@@ -90,6 +94,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
   /// Shown under the code box when a code is wrong or expired, so the person
   /// stays on the code step instead of starting over.
   String? _codeError;
+
+  /// Shown under the email box when the email is not on the alumni list.
+  String? _emailError;
 
   /// Seconds before "Resend code" works again.
   int _resendIn = 0;
@@ -155,13 +162,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _state = _VerificationState.loading;
       _errorMessage = null;
       _codeError = null;
+      _emailError = null;
     });
     try {
       if (!_codeSent) {
-        // Same screen whether or not the email is on the list, so the app
-        // never tells a stranger who is an alumnus. Only known emails get a
-        // code.
-        if (await api.emailKnown(email)) await api.sendCode(email);
+        // Checked before any code is sent. An email that is not on the alumni
+        // list gets an inline error and no code (decided by Farrel, 30 Oct).
+        if (!await api.emailKnown(email)) {
+          if (!mounted) return;
+          setState(() {
+            _state = _VerificationState.idle;
+            _emailError = kEmailNotRegistered;
+          });
+          return;
+        }
+        await api.sendCode(email);
         if (!mounted) return;
         setState(() {
           _codeSent = true;
@@ -322,12 +337,29 @@ class _VerificationScreenState extends State<VerificationScreen> {
     );
   }
 
+  void _changeEmail() {
+    _emailController.clear();
+    _reset();
+  }
+
+  void _openContact() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ContactAdminScreen(
+          fromLogin: true,
+          typedEmail: _emailController.text,
+        ),
+      ),
+    );
+  }
+
   void _reset() {
     setState(() {
       _state = _VerificationState.idle;
       _errorMessage = null;
       _codeSent = false;
       _codeError = null;
+      _emailError = null;
       _resendTimer?.cancel();
       _resendIn = 0;
       _codeController.clear();
@@ -378,9 +410,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
         return _NotFoundResult(
           email: _emailController.text.trim(),
           onTryAgain: _reset,
+          onContact: _openContact,
         );
       case _VerificationState.suspended:
-        return _SuspendedResult(onTryAgain: _reset);
+        return _SuspendedResult(onTryAgain: _reset, onContact: _openContact);
       case _VerificationState.error:
         return _ErrorResult(
           message: _errorMessage!,
@@ -395,7 +428,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
           codeController: _codeSent ? _codeController : null,
           loading: _state == _VerificationState.loading,
           onSubmit: _verify,
-          onChangeEmail: _reset,
+          onChangeEmail: _changeEmail,
+          emailError: _emailError,
+          onContact: _openContact,
           codeError: _codeError,
           resendIn: _resendIn,
           onResend: _resend,
@@ -417,7 +452,12 @@ class _VerificationForm extends StatelessWidget {
     this.resendIn = 0,
     this.onResend,
     this.realLogin = false,
+    this.emailError,
+    this.onContact,
   });
+
+  final String? emailError;
+  final VoidCallback? onContact;
 
   final String? codeError;
   final int resendIn;
@@ -466,12 +506,10 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             codeController != null
-                ? 'Jika ${controller.text.trim()} ada di daftar alumni, kami sudah '
-                      'mengirim kode 6 digit ke email itu.'
+                ? 'Kami sudah mengirim kode 6 digit ke ${controller.text.trim()}.'
                 : realLogin
                 ? 'Masukkan email yang kamu berikan ke Ikafe saat mendaftar. '
-                      'Kami kirim kode 6 digit ke email itu, tanpa kata sandi. '
-                      'Lupa email yang dipakai? Hubungi tim lewat tombol di bawah.'
+                      'Kami kirim kode 6 digit ke email itu, tanpa kata sandi.'
                 : 'Masukkan email yang kamu berikan ke Ikafe saat mendaftar '
                       'untuk memastikan data alumni kamu.',
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -531,11 +569,12 @@ class _VerificationForm extends StatelessWidget {
               enableSuggestions: false,
               textCapitalization: TextCapitalization.none,
               onFieldSubmitted: (_) => onSubmit(),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Email',
                 hintText: 'name@example.com',
-                prefixIcon: Icon(Icons.mail_outline),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.mail_outline),
+                border: const OutlineInputBorder(),
+                errorText: emailError,
               ),
               validator: (value) {
                 final v = value?.trim() ?? '';
@@ -566,6 +605,19 @@ class _VerificationForm extends StatelessWidget {
                         : 'Verifikasi',
                   ),
           ),
+          if (codeController == null) ...[
+            if (emailError != null)
+              TextButton(
+                key: const Key('login-change-email'),
+                onPressed: loading ? null : onChangeEmail,
+                child: const Text('Pakai email lain'),
+              ),
+            TextButton(
+              key: const Key('login-contact-admin'),
+              onPressed: loading ? null : onContact,
+              child: const Text('Belum terdaftar? Hubungi tim admin'),
+            ),
+          ],
           if (codeController != null) ...[
             TextButton(
               key: const Key('login-resend'),
@@ -576,15 +628,36 @@ class _VerificationForm extends StatelessWidget {
                     : 'Kirim ulang kode',
               ),
             ),
-            TextButton(
-              key: const Key('login-help'),
-              onPressed: () => showFeedbackSheet(
-                context,
-                error: null,
-                screen: 'Login help: no code or changed email',
+            const SizedBox(height: 8),
+            Card(
+              elevation: 0,
+              color: theme.colorScheme.secondaryContainer,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
               ),
-              child: const Text(
-                'Kode tidak masuk atau email berubah? Hubungi tim',
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Kode tidak masuk atau email berubah?',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      key: const Key('login-help'),
+                      onPressed: onContact,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        foregroundColor: theme.colorScheme.onSurface,
+                        side: BorderSide(color: theme.colorScheme.onSurface),
+                      ),
+                      child: const Text('Hubungi tim admin'),
+                    ),
+                  ],
+                ),
               ),
             ),
             TextButton(
@@ -600,10 +673,15 @@ class _VerificationForm extends StatelessWidget {
 }
 
 class _NotFoundResult extends StatelessWidget {
-  const _NotFoundResult({required this.email, required this.onTryAgain});
+  const _NotFoundResult({
+    required this.email,
+    required this.onTryAgain,
+    required this.onContact,
+  });
 
   final String email;
   final VoidCallback onTryAgain;
+  final VoidCallback onContact;
 
   @override
   Widget build(BuildContext context) {
@@ -617,7 +695,7 @@ class _NotFoundResult extends StatelessWidget {
           radius: 28,
           backgroundColor: theme.colorScheme.errorContainer,
           child: Icon(
-            Icons.person_search_outlined,
+            Icons.block_outlined,
             color: theme.colorScheme.onErrorContainer,
           ),
         ),
@@ -631,22 +709,29 @@ class _NotFoundResult extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Kami tidak menemukan data alumni untuk "$email". Pakai email yang '
-          'terdaftar di Ikafe, atau hubungi tim beta.',
+          'terdaftar di Ikafe, atau hubungi tim admin.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 20),
         FilledButton(onPressed: onTryAgain, child: const Text('Coba lagi')),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const Key('login-contact-admin'),
+          onPressed: onContact,
+          child: const Text('Hubungi tim admin'),
+        ),
       ],
     );
   }
 }
 
 class _SuspendedResult extends StatelessWidget {
-  const _SuspendedResult({required this.onTryAgain});
+  const _SuspendedResult({required this.onTryAgain, required this.onContact});
 
   final VoidCallback onTryAgain;
+  final VoidCallback onContact;
 
   @override
   Widget build(BuildContext context) {
@@ -666,7 +751,7 @@ class _SuspendedResult extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Account Suspended',
+          'Akun ditangguhkan',
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -679,7 +764,13 @@ class _SuspendedResult extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton(onPressed: onTryAgain, child: const Text('Back')),
+        FilledButton(onPressed: onTryAgain, child: const Text('Kembali')),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          key: const Key('login-contact-admin'),
+          onPressed: onContact,
+          child: const Text('Hubungi tim admin'),
+        ),
       ],
     );
   }
@@ -732,7 +823,7 @@ class _ErrorResult extends StatelessWidget {
           key: const Key('send-feedback'),
           onPressed: () =>
               showFeedbackSheet(context, error: error, screen: 'Verification'),
-          child: const Text('Send feedback'),
+          child: const Text('Kirim masukan'),
         ),
       ],
     );

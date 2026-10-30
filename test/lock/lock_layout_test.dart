@@ -82,7 +82,7 @@ void main() {
       for (var i = 0; i < kDelayAfterAttempts; i++) {
         await enterPin(tester, '00000$i');
       }
-      expect(find.textContaining('Try again in'), findsOneWidget);
+      expect(find.textContaining('Coba lagi dalam'), findsOneWidget);
       expect(tester.takeException(), isNull);
       // Let the countdown timer finish so no timer is left pending.
       clock.advance(kWrongPinDelay + const Duration(seconds: 1));
