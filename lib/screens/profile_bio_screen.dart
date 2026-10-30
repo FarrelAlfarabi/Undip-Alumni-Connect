@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/profile_fields.dart';
 import '../theme.dart';
@@ -41,7 +42,9 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
         changes,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(updated ?? {...widget.profile, ...changes});
+      // No row back means nothing was stored.
+      if (updated == null) throw StateError('bio not saved');
+      Navigator.of(context).pop(updated);
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -80,6 +83,15 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
                 controller: _text,
                 enabled: !_saving,
                 maxLength: kBioMax,
+                maxLengthEnforcement: MaxLengthEnforcement.none,
+                inputFormatters: const [CodePointLimit(kBioMax)],
+                buildCounter: (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) =>
+                    Text('${_text.text.runes.length}/$kBioMax'),
                 maxLines: 5,
                 minLines: 4,
                 keyboardType: TextInputType.multiline,

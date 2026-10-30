@@ -83,7 +83,7 @@ class VerificationScreen extends StatefulWidget {
 /// Inline error under the email box (placeholder until Natasya sends hers).
 const String kEmailNotRegistered = 'Email tidak terdaftar';
 
-enum _VerificationState { idle, loading, notFound, suspended, error }
+enum _VerificationState { idle, loading, suspended, error }
 
 class _VerificationScreenState extends State<VerificationScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -208,7 +208,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
         return;
       }
       if (profile == null) {
-        setState(() => _state = _VerificationState.notFound);
+        // No usable profile behind a correct code: back to the email box
+        // with the same inline error as an unknown email (no extra page).
+        _showEmailNotRegistered();
         return;
       }
       if (!mounted) return;
@@ -237,13 +239,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
     setState(() {
       _state = _VerificationState.loading;
       _errorMessage = null;
+      _emailError = null;
     });
 
     try {
       final match = await widget.verifyEmail(email);
 
       if (match == null) {
-        setState(() => _state = _VerificationState.notFound);
+        _showEmailNotRegistered();
         return;
       }
 
@@ -353,6 +356,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
     );
   }
 
+  void _showEmailNotRegistered() {
+    if (!mounted) return;
+    _reset();
+    setState(() => _emailError = kEmailNotRegistered);
+  }
+
   void _reset() {
     setState(() {
       _state = _VerificationState.idle;
@@ -406,12 +415,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   Widget _buildContent(ThemeData theme) {
     switch (_state) {
-      case _VerificationState.notFound:
-        return _NotFoundResult(
-          email: _emailController.text.trim(),
-          onTryAgain: _reset,
-          onContact: _openContact,
-        );
       case _VerificationState.suspended:
         return _SuspendedResult(onTryAgain: _reset, onContact: _openContact);
       case _VerificationState.error:
@@ -668,61 +671,6 @@ class _VerificationForm extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _NotFoundResult extends StatelessWidget {
-  const _NotFoundResult({
-    required this.email,
-    required this.onTryAgain,
-    required this.onContact,
-  });
-
-  final String email;
-  final VoidCallback onTryAgain;
-  final VoidCallback onContact;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: theme.colorScheme.errorContainer,
-          child: Icon(
-            Icons.block_outlined,
-            color: theme.colorScheme.onErrorContainer,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Data Tidak Ditemukan',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Kami tidak menemukan data alumni untuk "$email". Pakai email yang '
-          'terdaftar di Ikafe, atau hubungi tim admin.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 20),
-        FilledButton(onPressed: onTryAgain, child: const Text('Coba lagi')),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          key: const Key('login-contact-admin'),
-          onPressed: onContact,
-          child: const Text('Hubungi tim admin'),
-        ),
-      ],
     );
   }
 }
