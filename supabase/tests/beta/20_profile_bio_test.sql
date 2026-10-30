@@ -44,7 +44,11 @@ select jt.expect_error(format($q$select profile_set_bio(%L, repeat('a', 201))$q$
 -- Empty or blank means no bio.
 select profile_set_bio((select v from t_ids where k = 'ahmad'), '   ');
 select jt.assert((select bio is null from alumni_profiles where id = (select v from t_ids where k = 'ahmad')), 'blank becomes null');
-select profile_set_bio((select v from t_ids where k = 'ahmad'), 'Halo');
+select profile_set_bio((select v from t_ids where k = 'ahmad'), E'\n\t \n');
+select jt.assert((select bio is null from alumni_profiles where id = (select v from t_ids where k = 'ahmad')), 'only line breaks becomes null');
+select jt.expect_error(format($q$select profile_set_bio(%L, 'a' || U&'\202E' || 'b')$q$, (select v from t_ids where k = 'ahmad')), 'bio_invalid');
+select jt.expect_error(format($q$select profile_set_bio(%L, 'a' || U&'\200B' || 'b')$q$, (select v from t_ids where k = 'ahmad')), 'bio_invalid');
+select profile_set_bio((select v from t_ids where k = 'ahmad'), 'Halo 👋 café');
 select profile_set_bio((select v from t_ids where k = 'ahmad'), null);
 select jt.assert((select bio is null from alumni_profiles where id = (select v from t_ids where k = 'ahmad')), 'null clears the bio');
 

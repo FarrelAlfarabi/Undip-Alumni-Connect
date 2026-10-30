@@ -29,7 +29,7 @@ trap cleanup EXIT
 
 $RUN "$PGBIN/initdb" -D "$WORK/data" -U postgres --auth=trust >/dev/null
 $RUN "$PGBIN/pg_ctl" -D "$WORK/data" -o "-k $WORK -p $PORT -c listen_addresses=''" -l "$WORK/pg.log" -w start >/dev/null
-$PSQL -d postgres -v ON_ERROR_STOP=1 -c "create database demo"
+$PSQL -d postgres -v ON_ERROR_STOP=1 -c "create database demo encoding 'UTF8' template template0"
 PSQL="$PSQL -d demo"
 
 echo "== stub, old migrations (errors tolerated), seeds"

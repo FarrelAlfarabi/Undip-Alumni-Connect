@@ -21,7 +21,7 @@ trap cleanup EXIT
 
 $RUN "$PGBIN/initdb" -D "$WORK/data" -U postgres --auth=trust >/dev/null
 $RUN "$PGBIN/pg_ctl" -D "$WORK/data" -o "-k $WORK -p $PORT -c listen_addresses=''" -l "$WORK/pg.log" -w start >/dev/null
-$PSQL -d postgres -c "create database fresh"
+$PSQL -d postgres -c "create database fresh encoding 'UTF8' template template0"
 PSQL="$PSQL -d fresh"
 
 $PSQL -f "$ROOT/supabase/tests/local_stub.sql"

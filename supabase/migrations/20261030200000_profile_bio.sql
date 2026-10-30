@@ -75,7 +75,7 @@ begin
      or new.bio is distinct from old.bio
   then
     raise exception
-      'Only current_employer, current_role, industry, company and city can be updated';
+      'Only current_employer, current_role, industry, company and city can be updated (bio: use profile_set_bio)';
   end if;
 
   if new.subscription_status is distinct from old.subscription_status then
@@ -94,7 +94,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v text := nullif(btrim(coalesce(p_bio, '')), '');
+  v text := nullif(regexp_replace(coalesce(p_bio, ''), '^\s+|\s+$', '', 'g'), '');
 begin
   perform assert_caller(p_profile);
   if p_profile is null or not exists (
@@ -109,7 +109,9 @@ begin
     end if;
     -- Control characters (tabs and line breaks are allowed). Text cannot hold
     -- a null character at all.
-    if v ~ '[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]' then
+    -- Also C1 controls, zero-width characters, line/paragraph separators and
+    -- bidi overrides, which would hide or reverse text for other members.
+    if v ~ '[\x01-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\u200B-\u200F\u2028-\u202E\u2060-\u2064\uFEFF]' then
       raise exception 'bio_invalid';
     end if;
   end if;
