@@ -7,11 +7,13 @@ import '../data/marketplace_repository.dart';
 import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../models/marketplace_listing.dart';
+import '../theme.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/brand_lockup.dart';
 import '../widgets/feedback_sheet.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
+import 'marketplace_screen.dart' show ListingImage;
 import 'profile_setup_screen.dart';
 
 /// First name for the greeting: the first word of `name`, or null.
@@ -108,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
       limit: kHomeListingFetchLimit,
     ); // already without blocked people
     final sorted = [...all]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return sorted.take(kHomeLatestLimit).toList();
+    return sorted.take(kHomeListingLimit).toList();
   }
 
   Future<void> _refresh() async {
@@ -119,6 +121,14 @@ class _HomeScreenState extends State<HomeScreen> {
       _listings.catchError((_) => <MarketplaceListing>[]),
     ]);
   }
+
+  void _openJobs() => widget.onOpenMarket != null
+      ? widget.onOpenMarket!(2)
+      : _push(widget.pages.jobs(_user));
+
+  void _openMarketplace() => widget.onOpenMarket != null
+      ? widget.onOpenMarket!(0)
+      : _push(widget.pages.marketplace(_user));
 
   void _push(Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
@@ -327,12 +337,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       _bannerSection(theme),
                       const SizedBox(height: 8),
                       _QuickActions(
-                        onJobs: () => widget.onOpenMarket != null
-                            ? widget.onOpenMarket!(2)
-                            : _push(widget.pages.jobs(_user)),
-                        onMarketplace: () => widget.onOpenMarket != null
-                            ? widget.onOpenMarket!(0)
-                            : _push(widget.pages.marketplace(_user)),
+                        onJobs: _openJobs,
+                        onMarketplace: _openMarketplace,
                         onDirectory: widget.onOpenDirectory,
                         onKontakIkafe: () =>
                             _push(widget.pages.kontakIkafe(_user)),
@@ -347,48 +353,41 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      _sectionTitle(theme, 'Terbaru'),
-                      const SizedBox(height: 8),
+                      _ProductsBlock(
+                        future: _listings,
+                        onRetry: () => setState(() {
+                          _listings = _fetchListings();
+                        }),
+                        onSeeAll: _openMarketplace,
+                        onOpen: (l) => _push(
+                          widget.pages.listingDetail(l, _market, _user),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       _LatestBlock<Map<String, dynamic>>(
                         key: const Key('latest-jobs'),
                         heading: 'Lowongan baru',
+                        seeAllKey: const Key('latest-jobs-see-all'),
+                        onSeeAll: _openJobs,
                         future: _jobs,
                         emptyIcon: Icons.work_outline,
                         emptyText: 'Belum ada lowongan. Lowongan baru akan muncul di sini.',
                         onRetry: () => setState(() {
                           _jobs = _latestJobs();
                         }),
-                        tileBuilder: (job) => _LatestTile(
-                          icon: Icons.work_outline,
-                          title: job['title'] as String? ?? '',
-                          subtitle: [
-                            job['company'] as String? ?? '',
-                            if ((job['industry'] as String?)?.isNotEmpty ==
-                                true)
-                              job['industry'] as String,
-                          ].where((s) => s.isNotEmpty).join(' · '),
-                          onTap: () =>
-                              _push(widget.pages.jobDetail(job, _user)),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _LatestBlock<MarketplaceListing>(
-                        key: const Key('latest-listings'),
-                        heading: 'Baru di Marketplace',
-                        future: _listings,
-                        emptyIcon: Icons.storefront_outlined,
-                        emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
-                        onRetry: () => setState(() {
-                          _listings = _fetchListings();
-                        }),
-                        tileBuilder: (l) => _LatestTile(
-                          icon: Icons.storefront_outlined,
-                          title: l.title,
-                          subtitle:
-                              '${l.category} · ${l.city} · ${formatRupiah(l.priceIdr)}',
-                          onTap: () => _push(
-                            widget.pages.listingDetail(l, _market, _user),
-                          ),
+                        builder: (jobs) => Column(
+                          children: [
+                            for (var i = 0; i < jobs.length; i++) ...[
+                              if (i > 0) const SizedBox(height: 8),
+                              _JobRow(
+                                job: jobs[i],
+                                index: i,
+                                onTap: () => _push(
+                                  widget.pages.jobDetail(jobs[i], _user),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -403,11 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _sectionTitle(ThemeData theme, String text) => Text(
-    text,
-    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-  );
 
   Widget _bannerSection(ThemeData theme) {
     return Column(
@@ -662,37 +656,78 @@ class _Tile extends StatelessWidget {
   }
 }
 
+/// Heading row: title on the left, blue "Lihat semua" link on the right.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.onSeeAll,
+    required this.seeAllKey,
+  });
+
+  final String title;
+  final VoidCallback onSeeAll;
+  final Key seeAllKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        TextButton(
+          key: seeAllKey,
+          style: TextButton.styleFrom(foregroundColor: AppTheme.blue),
+          onPressed: onSeeAll,
+          child: const Text('Lihat semua'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Loading, error and empty states shared by both Home lists. [builder]
+/// draws the list once there is at least one item.
 class _LatestBlock<T> extends StatelessWidget {
   const _LatestBlock({
     super.key,
     required this.heading,
+    required this.seeAllKey,
+    required this.onSeeAll,
     required this.future,
-    required this.tileBuilder,
+    required this.builder,
     required this.emptyIcon,
     required this.emptyText,
     required this.onRetry,
   });
 
   final String heading;
+  final Key seeAllKey;
+  final VoidCallback onSeeAll;
   final Future<List<T>> future;
-  final Widget Function(T item) tileBuilder;
+  final Widget Function(List<T> items) builder;
   final IconData emptyIcon;
   final String emptyText;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          heading,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        _SectionHeader(
+          title: heading,
+          onSeeAll: onSeeAll,
+          seeAllKey: seeAllKey,
         ),
-        const SizedBox(height: 6),
         FutureBuilder<List<T>>(
           future: future,
           builder: (context, snap) {
@@ -722,14 +757,7 @@ class _LatestBlock<T> extends StatelessWidget {
             if (items.isEmpty) {
               return _MessageCard(icon: emptyIcon, text: emptyText);
             }
-            return Column(
-              children: [
-                for (final item in items) ...[
-                  tileBuilder(item),
-                  const SizedBox(height: 8),
-                ],
-              ],
-            );
+            return builder(items);
           },
         ),
       ],
@@ -737,68 +765,255 @@ class _LatestBlock<T> extends StatelessWidget {
   }
 }
 
-class _LatestTile extends StatelessWidget {
-  const _LatestTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
+/// "Baru di Marketplace": a horizontal row of product cards.
+class _ProductsBlock extends StatelessWidget {
+  const _ProductsBlock({
+    required this.future,
+    required this.onRetry,
+    required this.onSeeAll,
+    required this.onOpen,
   });
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
+  final Future<List<MarketplaceListing>> future;
+  final VoidCallback onRetry;
+  final VoidCallback onSeeAll;
+  final void Function(MarketplaceListing) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return _LatestBlock<MarketplaceListing>(
+      key: const Key('latest-listings'),
+      heading: 'Baru di Marketplace',
+      seeAllKey: const Key('latest-listings-see-all'),
+      onSeeAll: onSeeAll,
+      future: future,
+      emptyIcon: Icons.storefront_outlined,
+      emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
+      onRetry: onRetry,
+      builder: (items) => _ProductRow(items: items, onOpen: onOpen),
+    );
+  }
+}
+
+class _ProductRow extends StatelessWidget {
+  const _ProductRow({required this.items, required this.onOpen});
+
+  final List<MarketplaceListing> items;
+  final void Function(MarketplaceListing) onOpen;
+
+  // Photo 93 + padding 10 + title 2 lines + category + city + price.
+  static const double _cardWidth = 140;
+
+  @override
+  Widget build(BuildContext context) {
+    // Cards in one row share a height that fits the text at the user's text
+    // size, so the price is never cut and the row does not jump.
+    final scale = MediaQuery.textScalerOf(context);
+    final textHeight =
+        scale.scale(13) * 1.3 * 2 +
+        scale.scale(12) * 1.3 * 2 +
+        scale.scale(14) * 1.3;
+    final height = _cardWidth / 1.5 + 10 + textHeight + 6 + 14;
+    return SizedBox(
+      height: height,
+      child: ListView.separated(
+        key: const Key('latest-listings-row'),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, i) =>
+            _ProductCard(listing: items[i], onTap: () => onOpen(items[i])),
+      ),
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  const _ProductCard({required this.listing, required this.onTap});
+
+  final MarketplaceListing listing;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: InkWell(
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Icon(icon, color: theme.colorScheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty)
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final l = listing;
+    return SizedBox(
+      width: _ProductRow._cardWidth,
+      child: Semantics(
+        button: true,
+        label: '${l.title}, ${formatRupiah(l.priceIdr)}',
+        excludeSemantics: true,
+        child: Material(
+          key: const ValueKey('home-product-card'),
+          color: AppTheme.paperRaised,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppTheme.hairline),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListingImage(
+                  url: l.imageUrl,
+                  aspectRatio: 3 / 2,
+                  semanticLabel: l.title,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        subtitle,
+                        l.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+                      Text(
+                        l.category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: muted,
+                      ),
+                      Text(
+                        l.city,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: muted,
+                      ),
+                      Text(
+                        formatRupiah(l.priceIdr),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Up to two letters from the company name ("Bank Mandiri" becomes "BM").
+String companyInitials(String company) {
+  final words = company
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .toList();
+  if (words.isEmpty) return '?';
+  return words.take(2).map((w) => w.substring(0, 1).toUpperCase()).join();
+}
+
+class _JobRow extends StatelessWidget {
+  const _JobRow({required this.job, required this.index, required this.onTap});
+
+  final Map<String, dynamic> job;
+  final int index;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = job['title'] as String? ?? '';
+    final company = job['company'] as String? ?? '';
+    final subtitle = [
+      company,
+      if ((job['industry'] as String?)?.isNotEmpty == true)
+        job['industry'] as String,
+    ].where((s) => s.isNotEmpty).join(' · ');
+    final even = index.isEven;
+    return Semantics(
+      button: true,
+      label: subtitle.isEmpty ? title : '$title, $subtitle',
+      excludeSemantics: true,
+      child: Material(
+        key: const ValueKey('home-job-row'),
+        color: AppTheme.paperRaised,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppTheme.hairline),
+        ),
+        child: InkWell(
+          customBorder: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 64),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: even
+                          ? theme.colorScheme.primaryContainer
+                          : AppTheme.black,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      companyInitials(company),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: even ? AppTheme.blue : AppTheme.yellow,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty)
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -937,24 +1152,32 @@ class _BusinessEntry extends StatelessWidget {
           return Card(
             key: const Key('business-register-card'),
             elevation: 0,
-            color: theme.colorScheme.secondaryContainer,
+            color: AppTheme.yellow,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       'Punya usaha? Biar sesama alumni bisa menemukannya.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSecondaryContainer,
+                        color: AppTheme.black,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                  const SizedBox(width: 12),
                   FilledButton(
                     key: const Key('business-register-button'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.black,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(48, 48),
+                      shape: const StadiumBorder(),
+                    ),
                     onPressed: onRegister,
                     child: const Text('Daftarkan'),
                   ),

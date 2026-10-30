@@ -10,8 +10,11 @@ const int kHomeBannerLimit = 5;
 /// How many items each "Latest" strip shows.
 const int kHomeLatestLimit = 3;
 
+/// How many products the Home product row shows at most.
+const int kHomeListingLimit = 10;
+
 /// How many newest listings Home asks the server for. More than
-/// [kHomeLatestLimit] because listings from people I blocked are dropped
+/// [kHomeListingLimit] because listings from people I blocked are dropped
 /// after the fetch, and Home should still fill its strip.
 const int kHomeListingFetchLimit = 20;
 

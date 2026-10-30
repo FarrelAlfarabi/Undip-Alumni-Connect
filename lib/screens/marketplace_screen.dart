@@ -542,10 +542,10 @@ class ListingImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget placeholder() => Container(
-      color: theme.colorScheme.surfaceContainerHigh,
+      color: theme.colorScheme.secondaryContainer,
       alignment: Alignment.center,
       child: Icon(
-        Icons.image_not_supported_outlined,
+        Icons.image_outlined,
         color: theme.colorScheme.onSurfaceVariant,
       ),
     );
