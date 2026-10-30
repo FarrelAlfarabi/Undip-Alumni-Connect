@@ -127,7 +127,7 @@ class AppTheme {
         showCheckmark: false,
         side: const BorderSide(color: hairline),
         shape: const StadiumBorder(),
-        labelStyle: GoogleFonts.ibmPlexSans(
+        labelStyle: GoogleFonts.plusJakartaSans(
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: WidgetStateColor.resolveWith(
