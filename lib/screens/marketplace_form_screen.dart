@@ -12,7 +12,6 @@ import '../widgets/image_size_hint.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
-import '../widgets/image_size_hint.dart';
 import '../widgets/searchable_choice.dart';
 
 /// Create or edit a listing. Pops with the saved [MarketplaceListing], or

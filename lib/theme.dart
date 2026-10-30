@@ -142,16 +142,6 @@ class AppTheme {
           textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
         ),
       ),
-      cardTheme: CardThemeData(
-        color: paperRaised,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: hairline),
-        ),
-      ),
       badgeTheme: const BadgeThemeData(
         backgroundColor: danger,
         textColor: Colors.white,
