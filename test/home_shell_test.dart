@@ -100,7 +100,7 @@ void main() {
     expect(destinations.map((d) => d.label).toList(), [
       'Home',
       'Members',
-      'Market',
+      'Explore',
       'Profile',
     ]);
     expect(find.text('Chat'), findsNothing);
@@ -121,7 +121,7 @@ void main() {
     expect(destinations.map((d) => d.label).toList(), [
       'Home',
       'Members',
-      'Market',
+      'Explore',
       'Chat',
       'Profile',
     ]);
@@ -132,7 +132,7 @@ void main() {
       tester,
     ) async {
       await pumpShell(tester, chat: true);
-      for (final tab in ['Members', 'Market', 'Chat', 'Profile']) {
+      for (final tab in ['Members', 'Explore', 'Chat', 'Profile']) {
         await tapNav(tester, tab);
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -173,7 +173,7 @@ void main() {
       tester,
     ) async {
       await pumpShell(tester);
-      await tapNav(tester, 'Market');
+      await tapNav(tester, 'Explore');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Exit the app?'), findsNothing);
@@ -190,7 +190,7 @@ void main() {
   ) async {
     final users = <ValueNotifier<Map<String, dynamic>>>[];
     await pumpShell(tester, users: users, chat: true);
-    for (final tab in ['Members', 'Market', 'Chat', 'Profile']) {
+    for (final tab in ['Members', 'Explore', 'Chat', 'Profile']) {
       await tapNav(tester, tab);
     }
     await tapNav(tester, 'Home');
@@ -315,7 +315,7 @@ void main() {
       tester,
     ) async {
       await pumpShell(tester);
-      await tapNav(tester, 'Market');
+      await tapNav(tester, 'Explore');
       expect(find.text('PAGE Market Products'), findsOneWidget);
       await tapNav(tester, 'Home');
       await tester.tap(find.byKey(const Key('tile-marketplace')));
@@ -334,7 +334,7 @@ void main() {
 
     testWidgets('back from Market goes to Home first', (tester) async {
       await pumpShell(tester);
-      await tapNav(tester, 'Market');
+      await tapNav(tester, 'Explore');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(HomeShell), findsOneWidget);

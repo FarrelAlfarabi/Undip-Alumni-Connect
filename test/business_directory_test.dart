@@ -8,6 +8,7 @@ import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
 import 'package:undip_alumni_connect/widgets/filter_dropdown.dart';
 
 import 'support/fake_business_api.dart';
+import 'support/choose_category.dart';
 
 void tall(WidgetTester tester) {
   tester.view.physicalSize = const Size(600, 3000);
@@ -212,10 +213,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Short description *'),
         'Kopi dari Semarang',
       );
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Food & Drink').last);
-      await tester.pumpAndSettle();
+      await chooseCategory(tester, 'Food & Drink');
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Instagram *'),
         'instagram.com/kopi_ahmad',
@@ -245,10 +243,7 @@ void main() {
           find.widgetWithText(TextFormField, 'Short description *'),
           'x',
         );
-        await tester.tap(find.byType(DropdownButtonFormField<String>));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Other').last);
-        await tester.pumpAndSettle();
+        await chooseCategory(tester, 'Other');
         await tester.enterText(
           find.widgetWithText(TextFormField, 'Instagram *'),
           '@kopi_ahmad',
@@ -403,9 +398,11 @@ void main() {
       expect(find.text('No businesses match this search.'), findsOneWidget);
     });
 
-    testWidgets('category chip filters', (tester) async {
+    testWidgets('category filter', (tester) async {
       await pumpDirectory(tester);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Fashion'));
+      await tester.tap(find.byKey(const Key('business-category')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Fashion').last);
       await tester.pumpAndSettle();
       expect(find.text('Kopi Ahmad'), findsNothing);
       expect(find.text('Batik Siti'), findsOneWidget);

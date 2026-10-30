@@ -15,6 +15,7 @@ import 'package:undip_alumni_connect/screens/profile_setup_screen.dart';
 import 'package:undip_alumni_connect/widgets/business_photo.dart';
 
 import 'support/fake_business_api.dart';
+import 'support/choose_category.dart';
 
 const _photoUrl =
     'https://x.supabase.co/storage/v1/object/public/business-photos/me/1_logo.png';
@@ -281,10 +282,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Short description *'),
         'Kopi dari Semarang',
       );
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Food & Drink').last);
-      await tester.pumpAndSettle();
+      await chooseCategory(tester, 'Food & Drink');
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Instagram *'),
         'instagram.com/kopi_ahmad',

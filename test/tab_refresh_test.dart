@@ -70,7 +70,7 @@ void main() {
     final market = <int>[];
     await pump(tester, directoryBuilds: <int>[], marketBuilds: market);
     final before = market.length;
-    await tapNav(tester, 'Market');
+    await tapNav(tester, 'Explore');
     expect(market.length, greaterThan(before));
   });
 
@@ -114,7 +114,7 @@ void main() {
     final market = <int>[];
     await pump(tester, directoryBuilds: dir, marketBuilds: market);
     await tapNav(tester, 'Members');
-    await tapNav(tester, 'Market');
+    await tapNav(tester, 'Explore');
     await tapNav(tester, 'Home');
     final d = dir.length;
     final m = market.length;

@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/marketplace_image_picker.dart';
+import '../data/marketplace_repository.dart' show imageContentType;
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/image_size_hint.dart';
+
+/// Stores the job photo and returns its public link. Replaced in tests.
+typedef JobPhotoUploader = Future<String> Function(
+  String posterId,
+  PickedImage image,
+);
+
+Future<String> _uploadJobPhoto(String posterId, PickedImage image) async {
+  final bucket = Supabase.instance.client.storage.from('job-photos');
+  final safe = image.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+  final path = '$posterId/${DateTime.now().millisecondsSinceEpoch}_$safe';
+  await bucket.uploadBinary(
+    path,
+    image.bytes,
+    fileOptions: FileOptions(contentType: imageContentType(image.name)),
+  );
+  return bucket.getPublicUrl(path);
+}
 
 /// A small curated set of common titles for the roles Ikafe/FEB alumni
 /// actually post (business, finance, and adjacent tech roles — matches
@@ -36,9 +57,16 @@ const List<String> _commonJobTitles = [
 /// post. Contact-button gating is Day 6's job, on the (not yet built) job
 /// detail view.
 class PostJobScreen extends StatefulWidget {
-  const PostJobScreen({super.key, required this.posterId});
+  const PostJobScreen({
+    super.key,
+    required this.posterId,
+    this.pickPhoto = pickListingImage,
+    this.uploadPhoto = _uploadJobPhoto,
+  });
 
   final String posterId;
+  final ImagePickerFn pickPhoto;
+  final JobPhotoUploader uploadPhoto;
 
   @override
   State<PostJobScreen> createState() => _PostJobScreenState();
@@ -51,12 +79,15 @@ class _PostJobScreenState extends State<PostJobScreen> {
   final _industryController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _contactController = TextEditingController();
+  final _titleFocus = FocusNode();
   bool _notifyOnApply = true;
   bool _requireCv = false;
   bool _requireLinkedin = false;
   bool _requirePortfolio = false;
   bool _requireCoverNote = false;
 
+  PickedImage? _picked;
+  String? _photoError;
   bool _saving = false;
   String? _error;
   Object? _lastError;
@@ -97,7 +128,25 @@ class _PostJobScreenState extends State<PostJobScreen> {
     _industryController.dispose();
     _descriptionController.dispose();
     _contactController.dispose();
+    _titleFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _choosePhoto() async {
+    try {
+      final picked = await widget.pickPhoto();
+      if (picked == null || !mounted) return;
+      setState(() {
+        _picked = picked;
+        _photoError = null;
+      });
+    } on ImagePickException catch (e) {
+      if (!mounted) return;
+      setState(() => _photoError = e.message);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _photoError = 'Could not open that image. Try another.');
+    }
   }
 
   Future<void> _submit() async {
@@ -109,7 +158,12 @@ class _PostJobScreenState extends State<PostJobScreen> {
     });
 
     try {
+      final photo = _picked;
+      final imageUrl = photo == null
+          ? null
+          : await widget.uploadPhoto(widget.posterId, photo);
       await Supabase.instance.client.from('job_posts').insert({
+        'image_url': ?imageUrl,
         'posted_by': widget.posterId,
         'title': _titleController.text.trim(),
         'company': _companyController.text.trim(),
@@ -151,6 +205,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                   children: [
                     Autocomplete<String>(
                       textEditingController: _titleController,
+                      focusNode: _titleFocus,
                       optionsBuilder: (textEditingValue) {
                         final query = textEditingValue.text
                             .trim()
@@ -222,6 +277,61 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       validator: (v) =>
                           (v == null || v.trim().isEmpty) ? 'Required' : null,
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Photo (optional)',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    if (_picked != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: AspectRatio(
+                            aspectRatio: 3 / 2,
+                            child: Image.memory(
+                              _picked!.bytes,
+                              key: const Key('job-photo-preview'),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          key: const Key('job-photo-pick'),
+                          onPressed: _saving ? null : _choosePhoto,
+                          icon: const Icon(Icons.add_photo_alternate_outlined),
+                          label: Text(
+                            _picked == null ? 'Choose photo' : 'Change photo',
+                          ),
+                        ),
+                        if (_picked != null)
+                          TextButton(
+                            onPressed: _saving
+                                ? null
+                                : () => setState(() => _picked = null),
+                            child: const Text('Remove'),
+                          ),
+                      ],
+                    ),
+                    const ImageSizeHint(),
+                    if (_photoError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          _photoError!,
+                          key: const Key('job-photo-error'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,

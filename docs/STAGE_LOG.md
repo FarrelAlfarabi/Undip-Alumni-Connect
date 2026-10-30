@@ -116,3 +116,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+
+## Stage 6: Explore tab (30 Oct 2026)
+- Tab is Explore, segment Marketplace. Categories load from a `categories` table (fallback: built-in 5) and use the searchable picker in filters and forms. One 3:2 `AppPhoto`, `ImageSizeHint` under every Choose photo, optional job photo, 3-page tour.
+- Migrations not applied: `20261030160000_categories.sql`, `20261030160100_job_photo.sql` (rollbacks in `supabase/`). Old 2:1 business photos now crop a little top and bottom.
+- Analyze clean, 783 tests pass, release gate and both SQL scripts pass.

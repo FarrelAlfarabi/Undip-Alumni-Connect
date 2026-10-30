@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
+import '../data/category_repository.dart';
 import '../data/marketplace_image_picker.dart';
 import '../models/business.dart';
 import '../util/safe_url.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
+import '../widgets/image_size_hint.dart';
+import '../widgets/searchable_choice.dart';
 
 /// What the owner is told after submitting.
 const String kBusinessSubmittedMessage =
@@ -46,6 +49,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   late final TextEditingController _description;
   late final TextEditingController _social;
   late final TextEditingController _website;
+  late final TextEditingController _categoryText;
   String? _category;
   BusinessBand? _band;
   bool _personal = false;
@@ -68,13 +72,15 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     _social = TextEditingController(text: e?.socialLink);
     _website = TextEditingController(text: e?.websiteLink);
     _category = e?.category;
+    _categoryText = TextEditingController(text: _category ?? '');
+    CategoryRepository.shared.load();
     _band = e?.requestedBand;
     _personal = e?.isPersonal ?? false;
   }
 
   @override
   void dispose() {
-    for (final c in [_name, _description, _social, _website]) {
+    for (final c in [_name, _description, _social, _website, _categoryText]) {
       c.dispose();
     }
     super.dispose();
@@ -232,25 +238,14 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
       children: [
         Text('Photo (optional)', style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
-        Text(
-          'A logo or a picture of your products. JPG, PNG or WebP, up to '
-          '2 MB. Best size: wide, 2:1 (1200 x 600 px). It is shown as a banner '
-          'and the edges get cropped, so keep the main part in the middle. An '
-          'admin sees it when reviewing.',
-          key: const Key('business-photo-help'),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
         const SizedBox(height: 8),
         if (_picked != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                height: 140,
-                width: double.infinity,
+              child: AspectRatio(
+                aspectRatio: 3 / 2,
                 child: Image.memory(
                   _picked!.bytes,
                   key: const Key('business-photo-preview'),
@@ -261,7 +256,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
             ),
           )
         else
-          BusinessPhoto(url: existingUrl),
+          BusinessPhoto(url: existingUrl, semanticLabel: _name.text),
         Wrap(
           spacing: 8,
           children: [
@@ -279,6 +274,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
               ),
           ],
         ),
+        const ImageSizeHint(),
         if (_photoError != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -353,22 +349,29 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       validator: _requiredDescription,
                     ),
                     const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
+                    FormField<String>(
+                      key: const Key('category-dropdown'),
                       initialValue: _category,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Category *',
-                        border: OutlineInputBorder(),
+                      validator: (v) => CategoryRepository.shared.validate(
+                        v,
+                        current: widget.existing?.category,
                       ),
-                      items: [
-                        for (final c in kBusinessCategories)
-                          DropdownMenuItem(value: c, child: Text(c)),
-                      ],
-                      onChanged: _saving
-                          ? null
-                          : (v) => setState(() => _category = v),
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Choose a category' : null,
+                      builder: (field) => ValueListenableBuilder<List<String>>(
+                        valueListenable: CategoryRepository.shared.names,
+                        builder: (context, names, _) => SearchableChoice(
+                          fieldKey: const Key('category-choice'),
+                          label: 'Category *',
+                          controller: _categoryText,
+                          options: names,
+                          selected: _category,
+                          enabled: !_saving,
+                          errorText: field.errorText,
+                          onSelected: (v) {
+                            setState(() => _category = v);
+                            field.didChange(v);
+                          },
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SwitchListTile(

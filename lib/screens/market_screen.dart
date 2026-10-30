@@ -6,7 +6,7 @@ import 'business_directory_screen.dart';
 import 'job_board_screen.dart';
 import 'marketplace_screen.dart';
 
-/// The Market tab: three segments, Products, Businesses and Jobs. [segment] can be
+/// The Explore tab: three segments, Marketplace, Businesses and Jobs. [segment] can be
 /// changed from outside (the Home tiles open the tab on the right segment).
 class MarketScreen extends StatefulWidget {
   const MarketScreen({
@@ -37,7 +37,7 @@ class _MarketScreenState extends State<MarketScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Market'),
+        title: const Text('Explore'),
         automaticallyImplyLeading: false,
       ),
       body: ValueListenableBuilder<int>(
@@ -53,7 +53,7 @@ class _MarketScreenState extends State<MarketScreen> {
                   segments: const [
                     ButtonSegment(
                       value: 0,
-                      label: Text('Products'),
+                      label: Text('Marketplace'),
                       icon: Icon(Icons.storefront_outlined),
                     ),
                     ButtonSegment(

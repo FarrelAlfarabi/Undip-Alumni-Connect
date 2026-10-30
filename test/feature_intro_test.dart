@@ -32,25 +32,6 @@ class FakeAccountApi implements AccountApi {
 }
 
 void main() {
-  testWidgets('intro explains Marketplace and Business, then finishes', (
-    tester,
-  ) async {
-    var done = 0;
-    await tester.pumpWidget(
-      MaterialApp(home: FeatureIntroScreen(onDone: (_) async => done++)),
-    );
-    expect(find.textContaining('Marketplace'), findsWidgets);
-    expect(find.byKey(const Key('intro-skip')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('intro-next')));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Business'), findsWidgets);
-
-    await tester.tap(find.byKey(const Key('intro-next')));
-    await tester.pumpAndSettle();
-    expect(done, 1);
-  });
-
   testWidgets('Skip finishes right away', (tester) async {
     var done = 0;
     await tester.pumpWidget(

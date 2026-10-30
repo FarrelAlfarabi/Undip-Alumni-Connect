@@ -20,6 +20,7 @@ import 'support/fake_admin_api.dart';
 import 'support/fake_business_api.dart';
 import 'support/fake_contact_api.dart';
 import 'support/fake_marketplace_api.dart';
+import 'support/choose_category.dart';
 
 void tall(WidgetTester tester) {
   tester.view.physicalSize = const Size(600, 3000);
@@ -67,10 +68,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Short description *'),
         'Kopi',
       );
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Other').last);
-      await tester.pumpAndSettle();
+      await chooseCategory(tester, 'Other');
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Instagram *'),
         'https://instagram.com/kopisolo',

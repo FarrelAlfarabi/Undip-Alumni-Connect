@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/admin_repository.dart';
+import '../data/category_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
@@ -388,7 +389,10 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                         fieldKey: const Key('admin-business-category'),
                         label: 'Category',
                         controller: _categoryText,
-                        options: const [kAllFilter, ...kBusinessCategories],
+                        options: [
+                          kAllFilter,
+                          ...CategoryRepository.shared.names.value,
+                        ],
                         selected: _category,
                         enabled: true,
                         dense: true,

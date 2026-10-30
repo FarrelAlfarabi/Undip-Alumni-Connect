@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../widgets/app_photo.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/report_repository.dart';
@@ -123,6 +126,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if ((widget.job['image_url'] as String?)?.isNotEmpty ==
+                      true) ...[
+                    AppPhoto(
+                      url: widget.job['image_url'] as String,
+                      semanticLabel: widget.job['title'] as String?,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Text(
                     widget.job['title'] as String? ?? '',
                     style: theme.textTheme.headlineSmall?.copyWith(

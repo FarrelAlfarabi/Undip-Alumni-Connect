@@ -79,12 +79,12 @@ void main() {
       tester,
     ) async {
       await pump(tester);
-      expect(find.text('Products'), findsOneWidget);
+      expect(find.text('Marketplace'), findsOneWidget);
       expect(find.text('Businesses'), findsOneWidget);
       expect(find.text('Kopi Arabika'), findsOneWidget);
       // One title only: the inner screens have no app bar of their own.
       expect(find.byType(AppBar), findsOneWidget);
-      expect(find.text('Market'), findsOneWidget);
+      expect(find.text('Explore'), findsOneWidget);
     });
 
     testWidgets(
