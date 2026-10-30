@@ -131,3 +131,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+## Stage 2: Home top half (30 Oct 2026)
+- White header with the IKAFE logo only (28 px, no chip), greeting second line (jurusan + angkatan), black hero card with yellow corner shape and "Lihat detail", dots + "Lihat semua pengumuman" on one row, 2 x 2 tiles (titles only, hints in semantics), white hairline cards. Welcome screen uses the Lingkaran mark.
+- Built on the PR 49 branch (Kontak Ikafe tile); rebase after PRs 48 and 49 merge. No migration. Full suite passes, analyze clean.

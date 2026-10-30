@@ -3,7 +3,7 @@ import '../widgets/closed_test_notice.dart';
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
-import '../widgets/brand_lockup.dart';
+import '../theme.dart';
 import '../util/app_info.dart';
 import 'verification_screen.dart';
 
@@ -23,6 +23,7 @@ class WelcomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -53,27 +54,24 @@ class WelcomeScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                   ],
                   const SizedBox(height: 12),
-                  const KawungMark(size: 48),
-                  const SizedBox(height: 20),
+                  const KawungMark(size: 64, color: AppTheme.black),
+                  const SizedBox(height: 12),
                   Text(
-                    'LINGKARAN',
+                    'Lingkaran',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 2,
-                      color: theme.colorScheme.onSurface,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   Text(
-                    'UNIVERSITAS DIPONEGORO',
+                    'by Ikafe Undip',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      letterSpacing: 1.6,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  const IkafeLogo(height: 28),
                   const SizedBox(height: 32),
                   Text(
                     'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',

@@ -10,6 +10,7 @@ import '../models/marketplace_listing.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/brand_lockup.dart';
 import '../widgets/feedback_sheet.dart';
+import '../theme.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 import 'profile_setup_screen.dart';
@@ -19,6 +20,20 @@ String? firstNameOf(Map<String, dynamic> profile) {
   final name = (profile['name'] as String? ?? '').trim();
   if (name.isEmpty) return null;
   return name.split(RegExp(r'\s+')).first;
+}
+
+/// Second greeting line: `<major> · Angkatan <year>`, only the parts that
+/// exist, or the question when neither does.
+String greetingSubtitle(Map<String, dynamic> profile) {
+  final major = (profile['major'] as String? ?? '').trim();
+  final year = profile['graduation_year']?.toString().trim() ?? '';
+  final parts = [
+    if (major.isNotEmpty) major,
+    if (year.isNotEmpty) 'Angkatan $year',
+  ];
+  return parts.isEmpty
+      ? 'Apa yang ingin kamu lakukan hari ini?'
+      : parts.join(' · ');
 }
 
 /// Dashboard home: greeting, announcement banners, quick-action tiles and a
@@ -174,6 +189,12 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const BrandLockup(),
         automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: AppTheme.hairline),
+        ),
         actions: [
           FutureBuilder<int>(
             future: _unreadNotifications,
@@ -239,11 +260,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       first == null ? 'Halo' : 'Halo, $first',
                       key: const Key('home-greeting'),
-                      style: theme.textTheme.headlineSmall,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Apa yang ingin kamu lakukan hari ini?',
+                      greetingSubtitle(_user.value),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -285,7 +310,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Material(
                             key: const Key('home-profile-card'),
                             color: theme.colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: const BorderSide(color: AppTheme.hairline),
+                            ),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(16),
                               onTap: _completeProfile,
@@ -410,55 +438,59 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   Widget _bannerSection(ThemeData theme) {
-    return Column(
+    final seeAll = TextButton(
+      key: const Key('see-all-announcements'),
+      onPressed: () => _push(widget.pages.announcements()),
+      child: const Text('Lihat semua pengumuman'),
+    );
+    Widget withSeeAll(Widget card) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FutureBuilder<List<Map<String, dynamic>>>(
-          future: _announcements,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return Container(
-                key: const Key('banner-loading'),
-                height: 172,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const CircularProgressIndicator(),
-              );
-            }
-            if (snap.hasError) {
-              return _MessageCard(
-                key: const Key('banner-error'),
-                icon: Icons.cloud_off_outlined,
-                text: "Couldn't load announcements.",
-                actionLabel: 'Coba lagi',
-                feedbackScreen: 'Home',
-                error: snap.error,
-                onAction: () => setState(() {
-                  _announcements = _api.latestAnnouncements(kHomeBannerLimit);
-                }),
-              );
-            }
-            final items = snap.data ?? const [];
-            if (items.isEmpty) return const WelcomeBannerCard();
-            return BannerCarousel(
-              items: items,
-              autoAdvance: widget.autoAdvance,
-              onOpen: (a) => _push(widget.pages.announcementDetail(a)),
-            );
-          },
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            key: const Key('see-all-announcements'),
-            onPressed: () => _push(widget.pages.announcements()),
-            child: const Text('Lihat semua pengumuman'),
-          ),
-        ),
+        card,
+        Align(alignment: Alignment.centerRight, child: seeAll),
       ],
+    );
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _announcements,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return withSeeAll(
+            Container(
+              key: const Key('banner-loading'),
+              height: heroHeightFor(context),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const CircularProgressIndicator(),
+            ),
+          );
+        }
+        if (snap.hasError) {
+          return withSeeAll(
+            _MessageCard(
+              key: const Key('banner-error'),
+              icon: Icons.cloud_off_outlined,
+              text: "Couldn't load announcements.",
+              actionLabel: 'Coba lagi',
+              feedbackScreen: 'Home',
+              error: snap.error,
+              onAction: () => setState(() {
+                _announcements = _api.latestAnnouncements(kHomeBannerLimit);
+              }),
+            ),
+          );
+        }
+        final items = snap.data ?? const [];
+        if (items.isEmpty) return withSeeAll(const WelcomeBannerCard());
+        return BannerCarousel(
+          items: items,
+          autoAdvance: widget.autoAdvance,
+          onOpen: (a) => _push(widget.pages.announcementDetail(a)),
+          trailing: seeAll,
+        );
+      },
     );
   }
 }
@@ -478,79 +510,70 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // Finding an alumnus is the main job of the app, so it is one wide
-    // button; the rest are smaller shortcuts. Directory is also a bottom tab.
+    // 2 x 2 grid built from Rows so the height follows the content.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
-          key: const Key('tile-directory'),
-          color: scheme.primaryContainer,
-          borderRadius: BorderRadius.circular(16),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: onDirectory,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.search, color: scheme.onPrimaryContainer),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Cari alumni',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: scheme.onPrimaryContainer),
-                        ),
-                        Text(
-                          'Berdasarkan jurusan, angkatan, dan industri',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onPrimaryContainer),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),
-                ],
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _Tile(
+                  key: const Key('tile-directory'),
+                  icon: Icons.search,
+                  iconBackground: AppTheme.blue,
+                  iconColor: Colors.white,
+                  label: 'Cari alumni',
+                  hint: 'Berdasarkan jurusan, angkatan, dan industri',
+                  onTap: onDirectory,
+                ),
               ),
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Tile(
+                  key: const Key('tile-jobs'),
+                  icon: Icons.work_outline,
+                  iconBackground: AppTheme.blue,
+                  iconColor: Colors.white,
+                  label: 'Jobs',
+                  hint: 'Lowongan dari alumni',
+                  onTap: onJobs,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _Tile(
-                key: const Key('tile-jobs'),
-                icon: Icons.work_outline,
-                label: 'Jobs',
-                subtitle: 'Lowongan dari alumni',
-                onTap: onJobs,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _Tile(
+                  key: const Key('tile-marketplace'),
+                  icon: Icons.storefront_outlined,
+                  iconBackground: AppTheme.yellow,
+                  iconColor: AppTheme.black,
+                  label: 'Marketplace',
+                  hint: 'Produk dan usaha alumni',
+                  onTap: onMarketplace,
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _Tile(
-                key: const Key('tile-marketplace'),
-                icon: Icons.storefront_outlined,
-                label: 'Marketplace',
-                subtitle: 'Produk dan usaha alumni',
-                onTap: onMarketplace,
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Tile(
+                  key: const Key('tile-kontak-ikafe'),
+                  icon: Icons.contact_phone_outlined,
+                  iconBackground: AppTheme.black,
+                  iconColor: AppTheme.yellow,
+                  label: 'Kontak Ikafe',
+                  hint: 'Kontak dan media sosial resmi',
+                  onTap: onKontakIkafe,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        _Tile(
-          key: const Key('tile-kontak-ikafe'),
-          icon: Icons.contact_phone_outlined,
-          label: 'Kontak Ikafe',
-          subtitle: 'Kontak dan media sosial resmi',
-          onTap: onKontakIkafe,
+            ],
+          ),
         ),
       ],
     );
@@ -568,8 +591,11 @@ class _RequestsCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Material(
       key: const Key('home-requests-card'),
-      color: scheme.tertiaryContainer,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
@@ -577,16 +603,16 @@ class _RequestsCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Icon(Icons.handshake_outlined, color: scheme.onTertiaryContainer),
+              Icon(Icons.handshake_outlined, color: scheme.onSurface),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '$count alumni ingin terhubung denganmu. Lihat permintaan',
                   style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: scheme.onTertiaryContainer),
+                      ?.copyWith(color: scheme.onSurface),
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onTertiaryContainer),
+              Icon(Icons.chevron_right, color: scheme.onSurface),
             ],
           ),
         ),
@@ -599,62 +625,73 @@ class _Tile extends StatelessWidget {
   const _Tile({
     super.key,
     required this.icon,
+    required this.iconBackground,
+    required this.iconColor,
     required this.label,
-    required this.subtitle,
+    required this.hint,
     required this.onTap,
   });
 
   final IconData icon;
+  final Color iconBackground;
+  final Color iconColor;
   final String label;
-  final String subtitle;
+
+  /// What the tile is for. Not drawn; read out by screen readers and shown as
+  /// the long-press tooltip.
+  final String hint;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-      child: InkWell(
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+    return Tooltip(
+      message: hint,
+      child: Semantics(
+        button: true,
+        label: '$label. $hint',
+        excludeSemantics: true,
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(icon, size: 20, color: scheme.primary),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: Material(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: scheme.outlineVariant),
+          ),
+          child: InkWell(
+            customBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
                   children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge,
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: iconBackground,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, size: 20, color: iconColor),
                     ),
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
