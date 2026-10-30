@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/kawung_mark.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 import 'package:undip_alumni_connect/theme.dart';
 import 'package:undip_alumni_connect/widgets/brand_lockup.dart';
@@ -169,7 +170,9 @@ void main() {
     expect(File('pubspec.yaml').readAsStringSync(), contains('assets/brand/'));
   });
 
-  testWidgets('lockup shows the logo and the app title', (tester) async {
+  testWidgets('header logo shows the Ikafe image without a chip', (
+    tester,
+  ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
       MaterialApp(
@@ -177,13 +180,12 @@ void main() {
         home: const Scaffold(body: BrandLockup()),
       ),
     );
-    expect(find.text('Lingkaran'), findsOneWidget);
-    expect(find.text('by Ikafe UNDIP'), findsOneWidget);
+    expect(find.text('Lingkaran'), findsNothing);
     final image = tester.widget<Image>(find.byType(Image));
     final resized = image.image as ResizeImage;
     expect((resized.imageProvider as AssetImage).assetName, kIkafeLogoAsset);
     expect(resized.height, isNotNull);
-    expect(find.bySemanticsLabel('Ikafe UNDIP'), findsOneWidget);
+    expect(find.bySemanticsLabel('IKAFE UNDIP'), findsOneWidget);
     handle.dispose();
   });
 
@@ -208,10 +210,17 @@ void main() {
     expect((box.decoration as BoxDecoration).color, Colors.white);
   });
 
-  testWidgets('the Welcome screen shows the Ikafe logo', (tester) async {
+  testWidgets('the Welcome screen shows the Lingkaran mark, not the logo', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(theme: AppTheme.light(), home: const WelcomeScreen()),
     );
-    expect(find.byType(IkafeLogo), findsOneWidget);
+    expect(find.byType(IkafeLogo), findsNothing);
+    expect(find.byType(KawungMark), findsOneWidget);
+    expect(find.text('Lingkaran'), findsOneWidget);
+    expect(find.text('by Ikafe Undip'), findsOneWidget);
+    expect(find.text('LINGKARAN'), findsNothing);
+    expect(find.text('UNIVERSITAS DIPONEGORO'), findsNothing);
   });
 }

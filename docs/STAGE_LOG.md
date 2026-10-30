@@ -147,3 +147,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Migration `20261030170000_profile_avatar.sql` (not applied): `avatar_url`, `avatars` bucket, `profile_set_avatar`, column grant, avatar listed in `account_files`, trigger clears the link on deletion. Rollback `supabase/rollback_profile_avatar.sql`; SQL test `20_profile_avatar_test.sql`.
 - App: `Avatar` widget (Members, Nearby, profile card), `ProfilePhotoScreen`, `ImageSizeHint(profile)`, photo row in first login. Links come from a separate query, so the app works before the migration.
 - Not done: Home header, Requests, Notifications, messages list and marketplace seller row still show initials. Tests: `test/profile_photo_test.dart`. Full suite and analyze pass.
+## Stage 2: Home top half (30 Oct 2026)
+- White header with the IKAFE logo only (28 px, no chip), greeting second line (jurusan + angkatan), black hero card with yellow corner shape and "Lihat detail", dots + "Lihat semua pengumuman" on one row, 2 x 2 tiles (titles only, hints in semantics), white hairline cards. Welcome screen uses the Lingkaran mark.
+- Built on the PR 49 branch (Kontak Ikafe tile); rebase after PRs 48 and 49 merge. No migration. Full suite passes, analyze clean.

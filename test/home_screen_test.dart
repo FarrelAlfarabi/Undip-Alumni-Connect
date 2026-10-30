@@ -4,6 +4,7 @@ import 'package:undip_alumni_connect/data/home_repository.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/announcement_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/home_screen.dart';
+import 'package:undip_alumni_connect/theme.dart';
 import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
 import 'package:undip_alumni_connect/widgets/brand_lockup.dart';
 
@@ -54,17 +55,193 @@ Future<void> pumpHome(
 void main() {
   hubTests();
   announcementDetailTests();
-  testWidgets('app bar shows the Ikafe UNDIP lockup', (tester) async {
+  testWidgets('app bar is white with only the Ikafe UNDIP logo', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
     await pumpHome(tester);
+    final appBar = tester.widget<AppBar>(find.byType(AppBar));
+    expect(appBar.backgroundColor, Colors.white);
     expect(
       find.descendant(
         of: find.byType(AppBar),
-        matching: find.byType(BrandLockup),
+        matching: find.byType(IkafeLogo),
       ),
       findsOneWidget,
     );
-    expect(find.text('by Ikafe UNDIP'), findsOneWidget);
+    final image = tester.widget<Image>(
+      find.descendant(of: find.byType(AppBar), matching: find.byType(Image)),
+    );
+    expect(image.height, 28);
+    expect(find.bySemanticsLabel('IKAFE UNDIP'), findsOneWidget);
+    // No chip around the logo and no app name in the header.
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Lingkaran'),
+      ),
+      findsNothing,
+    );
+    expect(find.text('by Ikafe UNDIP'), findsNothing);
+    for (final k in ['home-notifications', 'home-requests']) {
+      final size = tester.getSize(find.byKey(Key(k)));
+      expect(size.width, greaterThanOrEqualTo(48));
+      expect(size.height, greaterThanOrEqualTo(48));
+    }
+    handle.dispose();
   });
+
+  group('greeting second line', () {
+    testWidgets('shows major and angkatan', (tester) async {
+      await pumpHome(
+        tester,
+        profile: {
+          'id': 'me',
+          'name': 'Ahmad Ramadhan',
+          'major': 'Manajemen',
+          'graduation_year': 2019,
+        },
+      );
+      expect(find.text('Manajemen · Angkatan 2019'), findsOneWidget);
+    });
+
+    testWidgets('shows only the part that exists', (tester) async {
+      await pumpHome(
+        tester,
+        profile: {'id': 'me', 'name': 'Ahmad', 'graduation_year': 2019},
+      );
+      expect(find.text('Angkatan 2019'), findsOneWidget);
+    });
+
+    testWidgets('falls back to the question when both are empty', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+      expect(
+        find.text('Apa yang ingin kamu lakukan hari ini?'),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('hero card', () {
+    testWidgets('is black, has a Lihat detail button that opens the detail', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        api: FakeHomeApi(announcements: [announcementMap(1)]),
+      );
+      final card = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byKey(const Key('banner-hero-0')),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(card.color, AppTheme.black);
+      expect(find.text('IKAFE'), findsOneWidget);
+      await tester.tap(find.text('Lihat detail'));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE AnnouncementDetail an1'), findsOneWidget);
+    });
+
+    testWidgets('whole card still opens the detail', (tester) async {
+      await pumpHome(
+        tester,
+        api: FakeHomeApi(announcements: [announcementMap(1)]),
+      );
+      await tester.tap(find.text('Announcement 1'));
+      await tester.pumpAndSettle();
+      expect(find.text('PAGE AnnouncementDetail an1'), findsOneWidget);
+    });
+
+    testWidgets(
+      '360x640 at text scale 1.3: no overflow, title clear of shape',
+      (tester) async {
+        await pumpHome(
+          tester,
+          size: const Size(360, 640),
+          textScale: 1.3,
+          api: FakeHomeApi(
+            announcements: [
+              {
+                ...announcementMap(1),
+                'title':
+                    'Pengumuman penting tentang reuni akbar alumni FEB Undip',
+                'body':
+                    'Isi pengumuman yang cukup panjang untuk dua baris teks '
+                    'pada layar kecil dengan ukuran huruf besar.',
+              },
+              announcementMap(2),
+            ],
+            pendingRequests: 2,
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        final shape = tester.getRect(
+          find.byKey(const Key('hero-corner-shape')),
+        );
+        final title = tester.getRect(
+          find.text('Pengumuman penting tentang reuni akbar alumni FEB Undip'),
+        );
+        expect(title.overlaps(shape), isFalse);
+        expect(
+          tester.getSize(find.byKey(const Key('banner-pages'))).height,
+          greaterThan(172),
+        );
+      },
+    );
+
+    testWidgets('dots: active pill 18x6, inactive 6x6; see all on same row', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        api: FakeHomeApi(
+          announcements: [announcementMap(1), announcementMap(2)],
+        ),
+      );
+      final dots = find.descendant(
+        of: find.byKey(const Key('banner-dots')),
+        matching: find.byType(AnimatedContainer),
+      );
+      expect(tester.getSize(dots.at(0)), const Size(18, 6));
+      expect(tester.getSize(dots.at(1)), const Size(6, 6));
+      expect(
+        tester.getCenter(find.byKey(const Key('see-all-announcements'))).dy,
+        closeTo(tester.getCenter(find.byKey(const Key('banner-dots'))).dy, 2),
+      );
+    });
+  });
+
+  group('tiles 2x2', () {
+    testWidgets('grid order, size and semantics', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpHome(tester);
+      final d = tester.getRect(find.byKey(const Key('tile-directory')));
+      final j = tester.getRect(find.byKey(const Key('tile-jobs')));
+      final m = tester.getRect(find.byKey(const Key('tile-marketplace')));
+      final k = tester.getRect(find.byKey(const Key('tile-kontak-ikafe')));
+      expect(d.top, j.top);
+      expect(m.top, k.top);
+      expect(m.top, greaterThan(d.bottom - 1));
+      expect(d.left, m.left);
+      expect(j.left, k.left);
+      for (final r in [d, j, m, k]) {
+        expect(r.height, greaterThanOrEqualTo(64));
+      }
+      expect(find.text('Lowongan dari alumni'), findsNothing);
+      expect(
+        find.bySemanticsLabel(RegExp('Lowongan dari alumni')),
+        findsWidgets,
+      );
+      expect(find.byKey(const Key('tile-businesses')), findsNothing);
+      handle.dispose();
+    });
+  });
+
   group('pinned top bar', () {
     testWidgets('greeting and notifications stay visible after scrolling', (
       tester,
@@ -421,7 +598,10 @@ void hubTests() {
     ) async {
       await pumpHome(tester);
       expect(find.text('Cari alumni'), findsOneWidget);
-      expect(find.text('Lowongan dari alumni'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('Lowongan dari alumni')),
+        findsWidgets,
+      );
       expect(find.byKey(const Key('tile-businesses')), findsNothing);
     });
   });
