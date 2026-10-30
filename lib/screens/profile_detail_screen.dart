@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -78,8 +77,8 @@ class ProfileDetailScreen extends StatefulWidget {
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
-  /// A lock exists on this build (it is off on the public web build).
-  bool get _lockOn => widget.lock?.enabled ?? !(kIsWeb && !kWebLockTest);
+  /// A lock exists on this build (web included).
+  bool get _lockOn => widget.lock?.enabled ?? true;
 
   late Map<String, dynamic> _profile;
   bool _messaging = false;

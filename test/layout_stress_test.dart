@@ -30,7 +30,8 @@ import 'package:undip_alumni_connect/screens/marketplace_form_screen.dart';
 import 'package:undip_alumni_connect/screens/marketplace_report_sheet.dart';
 import 'package:undip_alumni_connect/screens/marketplace_screen.dart';
 import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
-import 'package:undip_alumni_connect/screens/nearby_alumni_screen.dart';
+import 'package:undip_alumni_connect/data/ikafe_contact_repository.dart';
+import 'package:undip_alumni_connect/screens/kontak_ikafe_screen.dart';
 import 'package:undip_alumni_connect/screens/notifications_screen.dart';
 import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/request_contact_sheet.dart';
@@ -699,30 +700,23 @@ List<Case> buildCases() {
       ),
     ),
     Case(
-      'NearbyAlumniScreen (list)',
-      () => _nearby(
-        currentUser: me,
-        chat: true,
-        fetchAlumni: () async => alumniRows(),
-      ),
-    ),
-    Case('NearbyAlumniScreen (city picked)', () {
-      BlockList.shared = BlockList.preloaded({});
-      return _nearby(
-        currentUser: ValueNotifier({...me.value, 'city': 'Semarang'}),
-        chat: true,
-        fetchAlumni: () async => alumniRows(),
-      );
-    }, after: _pickJakarta),
-    Case(
-      'NearbyAlumniScreen empty',
-      () => _nearby(currentUser: me, fetchAlumni: () async => []),
-    ),
-    Case(
-      'NearbyAlumniScreen error',
-      () => _nearby(
-        currentUser: me,
-        fetchAlumni: () async => throw Exception('network'),
+      'KontakIkafeScreen',
+      () => KontakIkafeScreen(
+        repository: IkafeContactRepository(
+          _ContactApi([
+            for (var i = 0; i < 4; i++)
+              {
+                'id': 'c$i',
+                'kind': ['whatsapp', 'email', 'instagram', 'website'][i],
+                'label':
+                    'Kontak resmi Ikafe Undip dengan nama yang sangat panjang sekali $i',
+                'value':
+                    'nilai-yang-panjang-sekali-untuk-menguji-tata-letak-$i@example.id',
+                'sort_order': i,
+                'active': true,
+              },
+          ]),
+        ),
       ),
     ),
     Case(
@@ -804,23 +798,11 @@ List<Case> buildCases() {
   ];
 }
 
-Widget _nearby({
-  required ValueNotifier<Map<String, dynamic>> currentUser,
-  bool chat = false,
-  required Future<List<Map<String, dynamic>>> Function() fetchAlumni,
-}) => Scaffold(
-  body: NearbyAlumniScreen(
-    currentUser: currentUser,
-    chat: chat,
-    fetchAlumni: fetchAlumni,
-  ),
-);
-
-Future<void> _pickJakarta(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('nearby-city-field')));
-  await settle(tester);
-  await tester.tap(find.textContaining('Jakarta (').last);
-  await settle(tester);
+class _ContactApi implements IkafeContactApi {
+  _ContactApi(this.rows);
+  final List<Map<String, dynamic>> rows;
+  @override
+  Future<List<Map<String, dynamic>>> activeRows() async => rows;
 }
 
 class _NoopAccountApi implements AccountApi {

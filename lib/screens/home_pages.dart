@@ -9,6 +9,7 @@ import 'announcements_screen.dart';
 import 'business_directory_screen.dart';
 import 'job_board_screen.dart';
 import 'job_detail_screen.dart';
+import 'kontak_ikafe_screen.dart';
 import 'marketplace_detail_screen.dart';
 import 'business_form_screen.dart';
 import 'market_screen.dart';
@@ -39,7 +40,7 @@ class HomePages {
     this.businesses = _businesses,
     this.requests = _requests,
     this.notifications = _notifications,
-    this.nearby = _nearby,
+    this.kontakIkafe = _kontakIkafe,
     this.announcements = _announcements,
     this.jobDetail = _jobDetail,
     this.listingDetail = _listingDetail,
@@ -68,7 +69,7 @@ class HomePages {
   final UserPageBuilder registerBusiness;
   final UserPageBuilder requests;
   final UserPageBuilder notifications;
-  final UserPageBuilder nearby;
+  final UserPageBuilder kontakIkafe;
   final Widget Function() announcements;
   final Widget Function(
     Map<String, dynamic> job,
@@ -116,8 +117,8 @@ class HomePages {
       NotificationsScreen(currentUser: user);
   static Widget _requests(ValueNotifier<Map<String, dynamic>> user) =>
       RequestsScreen(currentUser: user);
-  static Widget _nearby(ValueNotifier<Map<String, dynamic>> user) =>
-      AlumniScreen(currentUser: user, initialTab: 1, showBack: true);
+  static Widget _kontakIkafe(ValueNotifier<Map<String, dynamic>> user) =>
+      const KontakIkafeScreen();
   static Widget _announcements() => const AnnouncementsScreen(showBack: true);
 
   static Widget _jobDetail(

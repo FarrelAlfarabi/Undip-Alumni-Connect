@@ -48,6 +48,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
       MaterialPageRoute(
         builder: (_) => PinSetupScreen(
           lock: widget.lock,
+          mandatory: false,
           onDone: (ctx) async => Navigator.of(ctx).pop(),
         ),
       ),

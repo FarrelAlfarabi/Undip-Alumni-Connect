@@ -12,8 +12,8 @@ const String kNetworkError =
 /// Shown when sign-in is refused because an admin suspended the account. The
 /// database raises `account_suspended`; no reason is shared with the person.
 const String kSuspendedMessage =
-    'This account is suspended, so you cannot sign in. If you think this is a '
-    'mistake, contact the beta team at $kContactEmail.';
+    'Akun ini ditangguhkan, jadi kamu belum bisa masuk. Kalau kamu merasa ini '
+    'keliru, hubungi tim admin di $kContactEmail.';
 
 /// Whether [error] is the database refusing a suspended account.
 bool isSuspendedError(Object? error) =>

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/feature_flags.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/alumni_screen.dart';
+import 'package:undip_alumni_connect/screens/kontak_ikafe_screen.dart';
 import 'package:undip_alumni_connect/screens/home_pages.dart';
 import 'package:undip_alumni_connect/screens/home_shell.dart';
 import 'package:undip_alumni_connect/screens/job_board_screen.dart';
@@ -194,7 +195,7 @@ void main() {
       await tapNav(tester, tab);
     }
     await tapNav(tester, 'Home');
-    for (final tile in ['tile-jobs', 'tile-nearby']) {
+    for (final tile in ['tile-jobs', 'tile-kontak-ikafe']) {
       await tester.tap(find.byKey(Key(tile)));
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
@@ -255,9 +256,7 @@ void main() {
   });
 
   group('reachability: everything reachable before is still reachable', () {
-    testWidgets('Profile, Directory (and Nearby), Chat via bottom nav', (
-      tester,
-    ) async {
+    testWidgets('Profile, Directory, Chat via bottom nav', (tester) async {
       await pumpShell(tester, chat: true);
       await tapNav(tester, 'Profile');
       expect(find.text('PAGE Profile'), findsOneWidget);
@@ -267,10 +266,12 @@ void main() {
       expect(find.text('PAGE Chat'), findsOneWidget);
     });
 
-    testWidgets('Jobs, Marketplace, Nearby, News via Home', (tester) async {
+    testWidgets('Jobs, Marketplace, Kontak Ikafe, News via Home', (
+      tester,
+    ) async {
       await pumpShell(tester);
       final routes = {
-        'tile-nearby': 'Nearby',
+        'tile-kontak-ikafe': 'KontakIkafe',
         'see-all-announcements': 'Announcements',
       };
       for (final e in routes.entries) {
@@ -300,10 +301,7 @@ void main() {
       expect(pages.market(user, ValueNotifier(0)), isA<MarketScreen>());
       final dir = pages.directory(user) as AlumniScreen;
       expect(dir.showBack, isFalse);
-      expect(dir.initialTab, 0);
-      final nearby = pages.nearby(user) as AlumniScreen;
-      expect(nearby.showBack, isTrue);
-      expect(nearby.initialTab, 1);
+      expect(pages.kontakIkafe(user), isA<KontakIkafeScreen>());
       expect((pages.jobs(user) as JobBoardScreen).showBack, isTrue);
       expect((pages.marketplace(user) as MarketplaceScreen).showBack, isTrue);
       expect((pages.announcements() as AnnouncementsScreen).showBack, isTrue);

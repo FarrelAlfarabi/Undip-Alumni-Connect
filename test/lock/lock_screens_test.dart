@@ -54,13 +54,13 @@ void main() {
       await pumpEntry(tester, await makeRememberedLock());
       expect(find.byKey(const Key('lock-screen')), findsOneWidget);
       expect(find.text('Mulai'), findsNothing);
-      expect(find.text('Welcome back, Ahmad'), findsOneWidget);
+      expect(find.text('Selamat datang kembali, Ahmad'), findsOneWidget);
       expect(find.text('LINGKARAN'), findsOneWidget);
       expect(find.byType(IkafeLogo), findsOneWidget);
       expect(find.text('AR'), findsOneWidget); // initials avatar
       expect(find.byKey(const Key('pin-5')), findsOneWidget);
-      expect(find.text('Forgot PIN? Verify again'), findsOneWidget);
-      expect(find.text('Not you? Switch account'), findsOneWidget);
+      expect(find.text('Lupa PIN? Verifikasi ulang'), findsOneWidget);
+      expect(find.text('Bukan kamu? Ganti akun'), findsOneWidget);
     });
 
     testWidgets('web (lock disabled) always shows Welcome', (tester) async {
@@ -172,12 +172,12 @@ void main() {
         await tester.pump();
 
         await enterPin(tester, '000001');
-        expect(find.textContaining('4 attempts left'), findsOneWidget);
+        expect(find.textContaining('Sisa 4 percobaan'), findsOneWidget);
         await enterPin(tester, '000002');
-        expect(find.textContaining('3 attempts left'), findsOneWidget);
+        expect(find.textContaining('Sisa 3 percobaan'), findsOneWidget);
         await enterPin(tester, '000003');
-        expect(find.textContaining('2 attempts left'), findsOneWidget);
-        expect(find.textContaining('Try again in'), findsOneWidget);
+        expect(find.textContaining('Sisa 2 percobaan'), findsOneWidget);
+        expect(find.textContaining('Coba lagi dalam'), findsOneWidget);
 
         // The pad ignores taps during the delay.
         await tester.tap(find.byKey(const Key('pin-1')));
@@ -186,10 +186,10 @@ void main() {
 
         clock.advance(kWrongPinDelay + const Duration(seconds: 1));
         await tester.pump(const Duration(seconds: 12));
-        expect(find.textContaining('Try again in'), findsNothing);
+        expect(find.textContaining('Coba lagi dalam'), findsNothing);
 
         await enterPin(tester, '000004');
-        expect(find.textContaining('1 attempt left'), findsOneWidget);
+        expect(find.textContaining('Sisa 1 percobaan'), findsOneWidget);
         clock.advance(kWrongPinDelay + const Duration(seconds: 1));
         await tester.pump(const Duration(seconds: 12));
         await enterPin(tester, '000005');
@@ -244,7 +244,7 @@ void main() {
         await lock.setBiometricsEnabled(true);
         await pumpEntry(tester, lock);
         await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('Use your PIN instead.'), findsOneWidget);
+        expect(find.text('Pakai PIN kamu saja.'), findsOneWidget);
         expect(find.byKey(const Key('pin-1')), findsOneWidget);
         // The PIN still works.
         await enterPin(tester, testPin);
@@ -332,7 +332,7 @@ void main() {
       final done = <int>[];
       await pumpSetup(tester, lock, done);
       await enterPin(tester, testPin);
-      expect(find.text('Enter it again to confirm'), findsOneWidget);
+      expect(find.text('Masukkan lagi untuk konfirmasi'), findsOneWidget);
       await enterPin(tester, testPin);
       await tester.pump(const Duration(milliseconds: 100));
       expect(done, [1]);
@@ -347,7 +347,7 @@ void main() {
       await enterPin(tester, testPin);
       await enterPin(tester, '111222');
       expect(find.byKey(const Key('pin-setup-error')), findsOneWidget);
-      expect(find.text('Create a 6-digit PIN'), findsOneWidget);
+      expect(find.text('Buat PIN 6 digit'), findsOneWidget);
       expect(await lock.hasPin(), isFalse);
       expect(done, isEmpty);
     });
@@ -357,13 +357,31 @@ void main() {
       await pumpSetup(tester, lock, []);
       await enterPin(tester, '111111');
       expect(find.byKey(const Key('pin-setup-error')), findsOneWidget);
-      expect(find.text('Create a 6-digit PIN'), findsOneWidget);
+      expect(find.text('Buat PIN 6 digit'), findsOneWidget);
     });
 
-    testWidgets('skip leaves no PIN and continues', (tester) async {
+    testWidgets('the PIN is mandatory: no skip button', (tester) async {
+      final lock = makeLock();
+      await pumpSetup(tester, lock, []);
+      expect(find.byKey(const Key('pin-skip')), findsNothing);
+      expect(find.text('Skip for now'), findsNothing);
+      expect(find.text('Atur PIN'), findsOneWidget);
+    });
+
+    testWidgets('from Settings the person can still leave', (tester) async {
       final lock = makeLock();
       final done = <int>[];
-      await pumpSetup(tester, lock, done);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PinSetupScreen(
+            lock: lock,
+            mandatory: false,
+            onDone: (_) async => done.add(1),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Nanti saja'), findsOneWidget);
       await tester.tap(find.byKey(const Key('pin-skip')));
       await tester.pump();
       expect(done, [1]);
@@ -379,7 +397,7 @@ void main() {
         await pumpSetup(tester, lock, done);
         await enterPin(tester, testPin);
         await enterPin(tester, testPin);
-        expect(find.text('Unlock with fingerprint or face?'), findsOneWidget);
+        expect(find.text('Buka dengan sidik jari atau wajah?'), findsOneWidget);
         // A failed check does not turn it on.
         bio.result = BiometricResult.failed;
         await tester.tap(find.byKey(const Key('bio-enable')));
@@ -438,7 +456,9 @@ void main() {
       expect((await lock.load())!.profileId, 'p1');
       expect(store.data.values.join().contains(testEmail), isFalse);
 
-      await tester.tap(find.byKey(const Key('pin-skip')));
+      expect(find.byKey(const Key('pin-skip')), findsNothing);
+      await enterPin(tester, testPin);
+      await enterPin(tester, testPin);
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);

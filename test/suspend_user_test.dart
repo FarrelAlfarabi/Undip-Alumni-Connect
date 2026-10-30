@@ -52,7 +52,7 @@ void main() {
     test('friendlyError names the suspension and the contact address', () {
       final msg = friendlyError(pgError('account_suspended'));
       expect(msg, kSuspendedMessage);
-      expect(msg.toLowerCase(), contains('suspended'));
+      expect(msg.toLowerCase(), contains('ditangguhkan'));
       expect(msg, contains(kContactEmail));
       expect(msg, isNot(contains('account_suspended')));
     });
@@ -80,7 +80,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField), testEmail);
       await tester.tap(find.text('Verifikasi'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('suspended'), findsWidgets);
+      expect(find.textContaining('ditangguhkan'), findsWidgets);
       expect(find.textContaining(kContactEmail), findsWidgets);
       expect(find.text('Terjadi Kesalahan'), findsNothing);
     });
@@ -105,7 +105,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
       await tester.enterText(find.byKey(const Key('login-code')), '123456');
       await tester.pumpAndSettle(const Duration(milliseconds: 100));
-      expect(find.textContaining('suspended'), findsWidgets);
+      expect(find.textContaining('ditangguhkan'), findsWidgets);
       expect(find.textContaining('salah atau sudah kedaluwarsa'), findsNothing);
     });
   });

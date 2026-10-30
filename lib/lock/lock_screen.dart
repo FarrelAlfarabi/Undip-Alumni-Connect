@@ -125,7 +125,7 @@ class _LockScreenState extends State<LockScreen> {
       case PinWrong(:final attemptsLeft, :final waitUntil):
         setState(() {
           _attemptsLeft = attemptsLeft;
-          _message = 'Wrong PIN.';
+          _message = 'PIN salah.';
         });
         _startWait(waitUntil);
       case PinWait(:final until):
@@ -146,13 +146,13 @@ class _LockScreenState extends State<LockScreen> {
 
   Future<void> _tryBiometric() async {
     if (_busy) return;
-    final r = await widget.lock.authenticateBiometric('Unlock Lingkaran');
+    final r = await widget.lock.authenticateBiometric('Buka Lingkaran');
     if (!mounted) return;
     if (r == BiometricResult.success) {
       await _run(widget.onUnlocked);
     } else {
       // Failed, cancelled or unavailable: the PIN pad is always the fallback.
-      setState(() => _message = 'Use your PIN instead.');
+      setState(() => _message = 'Pakai PIN kamu saja.');
     }
   }
 
@@ -203,7 +203,7 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Welcome back, ${_first(widget.user.displayName)}',
+                    'Selamat datang kembali, ${_first(widget.user.displayName)}',
                     key: const Key('lock-welcome'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge?.copyWith(color: fg),
@@ -239,7 +239,7 @@ class _LockScreenState extends State<LockScreen> {
                     key: const Key('lock-forgot'),
                     onPressed: _busy ? null : () => _run(widget.onForgotPin),
                     style: TextButton.styleFrom(foregroundColor: fg),
-                    child: const Text('Forgot PIN? Verify again'),
+                    child: const Text('Lupa PIN? Verifikasi ulang'),
                   ),
                   TextButton(
                     key: const Key('lock-switch'),
@@ -247,7 +247,7 @@ class _LockScreenState extends State<LockScreen> {
                         ? null
                         : () => _run(widget.onSwitchAccount),
                     style: TextButton.styleFrom(foregroundColor: fg),
-                    child: const Text('Not you? Switch account'),
+                    child: const Text('Bukan kamu? Ganti akun'),
                   ),
                 ],
               ),
@@ -260,7 +260,7 @@ class _LockScreenState extends State<LockScreen> {
 
   List<Widget> _noPin(ThemeData theme) => [
     Text(
-      'Verify your email to continue.',
+      'Verifikasi emailmu untuk melanjutkan.',
       textAlign: TextAlign.center,
       style: theme.textTheme.bodyMedium?.copyWith(
         color: AppTheme.paper.withValues(alpha: 0.85),
@@ -276,7 +276,7 @@ class _LockScreenState extends State<LockScreen> {
           backgroundColor: AppTheme.yellow,
           foregroundColor: AppTheme.black,
         ),
-        child: const Text('Continue'),
+        child: const Text('Lanjut'),
       ),
     ),
   ];
@@ -287,15 +287,15 @@ class _LockScreenState extends State<LockScreen> {
     );
     final lines = <String>[];
     if (_waitUntil != null) {
-      lines.add('Try again in ${_secondsLeft}s.');
+      lines.add('Coba lagi dalam $_secondsLeft dtk.');
     } else if (_message != null) {
       lines.add(_message!);
     }
     if (_attemptsLeft < kMaxPinAttempts) {
       lines.add(
         _attemptsLeft == 1
-            ? '1 attempt left.'
-            : '$_attemptsLeft attempts left.',
+            ? 'Sisa 1 percobaan.'
+            : 'Sisa $_attemptsLeft percobaan.',
       );
     }
     return Text(
@@ -308,6 +308,6 @@ class _LockScreenState extends State<LockScreen> {
 
   String _first(String name) {
     final n = name.trim();
-    return n.isEmpty ? 'there' : n.split(RegExp(r'\s+')).first;
+    return n.isEmpty ? 'kamu' : n.split(RegExp(r'\s+')).first;
   }
 }
