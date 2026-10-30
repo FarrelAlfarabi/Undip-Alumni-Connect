@@ -47,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('settings-default-contact'),
                   icon: Icons.contact_phone_outlined,
-                  title: 'Default contact to share',
+                  title: 'Default kontak untuk dibagikan',
                   subtitle: 'Filled in when you accept a request',
                   onTap: () => _push(
                     context,

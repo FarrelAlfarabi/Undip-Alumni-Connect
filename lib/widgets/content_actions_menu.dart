@@ -53,24 +53,25 @@ class ContentActionsMenu extends StatelessWidget {
   }
 
   Future<void> _block(BuildContext context) async {
-    final name = ownerName ?? 'this person';
+    final name = ownerName ?? 'alumni ini';
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Block $name?'),
+        title: Text('Blokir $name?'),
         content: const Text(
-          'You will no longer see their profile, jobs, products or '
-          'businesses, and they cannot send you contact requests. They are '
-          'not told. You can unblock them later in Profile > Blocked users.',
+          'Kamu tidak akan melihat profil, lowongan, produk atau usahanya, dan '
+          'dia tidak bisa mengirim permintaan kontak kepadamu. Dia tidak '
+          'diberi tahu. Kamu bisa membuka blokirnya lagi di Profile > '
+          'Pengguna terblokir.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Block'),
+            child: const Text('Blokir'),
           ),
         ],
       ),
@@ -80,13 +81,13 @@ class ContentActionsMenu extends StatelessWidget {
     final navigator = Navigator.of(context);
     try {
       await (blockList ?? BlockList.shared).block(currentUserId, ownerId!);
-      messenger.showSnackBar(SnackBar(content: Text('Blocked $name.')));
+      messenger.showSnackBar(SnackBar(content: Text('$name diblokir.')));
       onBlocked?.call();
     } catch (e) {
       showErrorSnackBarOn(
         messenger,
         navigator: navigator,
-        message: 'Could not block. Please try again.',
+        message: 'Tidak bisa memblokir. Coba lagi.',
         screen: 'Block person',
         error: e,
       );
@@ -99,7 +100,7 @@ class ContentActionsMenu extends StatelessWidget {
     final canReport = reportType != null && targetId != null;
     return PopupMenuButton<String>(
       key: const Key('content-menu'),
-      tooltip: 'More',
+      tooltip: 'Menu lainnya',
       icon: const Icon(Icons.more_vert),
       onSelected: (v) {
         if (v == 'report') _report(context);
@@ -112,7 +113,7 @@ class ContentActionsMenu extends StatelessWidget {
             value: 'report',
             child: ListTile(
               leading: Icon(Icons.flag_outlined),
-              title: Text('Report'),
+              title: Text('Laporkan'),
               contentPadding: EdgeInsets.zero,
             ),
           ),
@@ -121,7 +122,7 @@ class ContentActionsMenu extends StatelessWidget {
           value: 'block',
           child: ListTile(
             leading: Icon(Icons.block),
-            title: Text('Block this person'),
+            title: Text('Blokir alumni ini'),
             contentPadding: EdgeInsets.zero,
           ),
         ),

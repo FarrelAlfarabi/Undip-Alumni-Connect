@@ -316,7 +316,7 @@ class BusinessDetailScreen extends StatelessWidget {
             ownerName: b.ownerName,
             reportType: ReportTarget.business,
             targetId: b.id,
-            what: 'this business',
+            what: 'usaha ini',
             onBlocked: () => Navigator.of(context).maybePop(),
           ),
         ],

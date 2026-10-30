@@ -160,3 +160,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Tab is Explore, segment Marketplace. Categories load from a `categories` table (fallback: built-in 5) and use the searchable picker in filters and forms. One 3:2 `AppPhoto`, `ImageSizeHint` under every Choose photo, optional job photo, 3-page tour.
 - Migrations not applied: `20261030160000_categories.sql`, `20261030160100_job_photo.sql` (rollbacks in `supabase/`). Old 2:1 business photos now crop a little top and bottom.
 - Analyze clean, 783 tests pass, release gate and both SQL scripts pass.
+## Stage 4: other tabs and Bio/LinkedIn (30 Oct 2026)
+- Theme: white hairline cards (radius 16, no shadow) and black/white filter chips from `theme.dart`; Upcoming cards use yellow-soft icon squares. Requests, report sheet and block dialog now Indonesian; contact field is "Kontak atau nama Online Shop yang akan dibagikan".
+- New Bio (200) and LinkedIn screens, shown on profile and a LinkedIn button on Members rows. Migration `20261030140000_profile_bio_linkedin.sql` (rollback and SQL test 20 included), not applied.
+- Not done: Stage 3 shared Market card and Job row (do not exist yet), Bio/LinkedIn on the first-login form, admin hide-bio.

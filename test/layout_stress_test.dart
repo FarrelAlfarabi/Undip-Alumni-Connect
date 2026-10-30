@@ -33,7 +33,9 @@ import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
 import 'package:undip_alumni_connect/data/ikafe_contact_repository.dart';
 import 'package:undip_alumni_connect/screens/kontak_ikafe_screen.dart';
 import 'package:undip_alumni_connect/screens/notifications_screen.dart';
+import 'package:undip_alumni_connect/screens/profile_bio_screen.dart';
 import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
+import 'package:undip_alumni_connect/screens/profile_linkedin_screen.dart';
 import 'package:undip_alumni_connect/screens/request_contact_sheet.dart';
 import 'package:undip_alumni_connect/screens/requests_screen.dart';
 import 'package:undip_alumni_connect/screens/verification_screen.dart';
@@ -683,6 +685,42 @@ List<Case> buildCases() {
         chat: true,
         contactRepository: ContactRepository(FakeContactApi()),
       ),
+    ),
+    Case(
+      'ProfileDetailScreen (own, long bio and LinkedIn)',
+      () => ProfileDetailScreen(
+        profile: {
+          ...me.value,
+          'bio': 'Suka diskusi karier dan analisis data. ' * 5,
+          'linkedin_url': 'https://www.linkedin.com/in/muhammad-fajar-ramadhan-nugroho-wijayakusuma-1234567890',
+        },
+        currentUser: me,
+        chat: true,
+        contactRepository: ContactRepository(FakeContactApi()),
+      ),
+    ),
+    Case(
+      'ProfileDetailScreen (other, long bio and LinkedIn)',
+      () => ProfileDetailScreen(
+        profile: {
+          ...me.value,
+          'id': 'u9',
+          'bio': 'Suka diskusi karier dan analisis data. ' * 5,
+          'linkedin_url': 'https://www.linkedin.com/in/muhammad-fajar-ramadhan-nugroho-wijayakusuma-1234567890',
+        },
+        currentUser: me,
+        showEditButton: false,
+        chat: true,
+        contactRepository: ContactRepository(FakeContactApi()),
+      ),
+    ),
+    Case(
+      'ProfileBioScreen',
+      () => ProfileBioScreen(profile: {...me.value, 'bio': 'a' * 190}),
+    ),
+    Case(
+      'ProfileLinkedInScreen',
+      () => ProfileLinkedInScreen(profile: me.value),
     ),
     Case('MarketplaceScreen', () => _marketplace()),
     Case('MarketplaceScreen empty', () => _marketplace(rows: [])),

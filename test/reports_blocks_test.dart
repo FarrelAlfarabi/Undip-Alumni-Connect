@@ -140,7 +140,7 @@ void main() {
     ) async {
       await open(tester);
       for (final r in ContentReportReason.values) {
-        expect(find.text(r.label), findsOneWidget);
+        expect(find.text(r.labelId), findsOneWidget);
       }
       expect(tester.widget<TextField>(find.byType(TextField)).maxLength, 300);
     });
@@ -149,14 +149,14 @@ void main() {
       tester,
     ) async {
       final api = await open(tester);
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Kirim Laporan'));
       await tester.pumpAndSettle();
-      expect(find.text('Pick a reason.'), findsOneWidget);
+      expect(find.text('Pilih alasan.'), findsOneWidget);
       expect(api.calls, isEmpty);
 
       await tester.tap(find.byKey(const Key('reason-spam_or_scam')));
       await tester.enterText(find.byType(TextField), 'Menipu');
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Kirim Laporan'));
       await tester.pumpAndSettle();
       expect(api.params['content_report_create'], {
         'p_reporter': 'me',
@@ -172,10 +172,10 @@ void main() {
       final api = await open(tester);
       api.throwOnCall = pgError('already_reported');
       await tester.tap(find.byKey(const Key('reason-other')));
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Kirim Laporan'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('report-error')), findsOneWidget);
-      expect(find.text('Send report'), findsOneWidget);
+      expect(find.text('Kirim Laporan'), findsOneWidget);
     });
   });
 
@@ -222,8 +222,8 @@ void main() {
       await pump(tester);
       await tester.tap(find.byKey(const Key('content-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Report'), findsOneWidget);
-      expect(find.text('Block this person'), findsOneWidget);
+      expect(find.text('Laporkan'), findsOneWidget);
+      expect(find.text('Blokir alumni ini'), findsOneWidget);
     });
 
     testWidgets('no Report entry when the thing keeps its own report flow', (
@@ -232,19 +232,19 @@ void main() {
       await pump(tester, type: null);
       await tester.tap(find.byKey(const Key('content-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Report'), findsNothing);
-      expect(find.text('Block this person'), findsOneWidget);
+      expect(find.text('Laporkan'), findsNothing);
+      expect(find.text('Blokir alumni ini'), findsOneWidget);
     });
 
     testWidgets('block asks first; cancel changes nothing', (tester) async {
       final (_, bApi, list) = await pump(tester);
       await tester.tap(find.byKey(const Key('content-menu')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Block this person'));
+      await tester.tap(find.text('Blokir alumni ini'));
       await tester.pumpAndSettle();
-      expect(find.text('Block Siti?'), findsOneWidget);
-      expect(find.textContaining('They are not told'), findsOneWidget);
-      await tester.tap(find.text('Cancel'));
+      expect(find.text('Blokir Siti?'), findsOneWidget);
+      expect(find.textContaining('Dia tidak diberi tahu'), findsOneWidget);
+      await tester.tap(find.text('Batal'));
       await tester.pumpAndSettle();
       expect(bApi.calls, isEmpty);
       expect(list.isBlocked('u2'), isFalse);
@@ -257,9 +257,9 @@ void main() {
       final (_, bApi, list) = await pump(tester, onBlocked: () => blocked++);
       await tester.tap(find.byKey(const Key('content-menu')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Block this person'));
+      await tester.tap(find.text('Blokir alumni ini'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Block'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Blokir'));
       await tester.pumpAndSettle();
       expect(bApi.params['user_block'], {'p_blocker': 'me', 'p_blocked': 'u2'});
       expect(list.isBlocked('u2'), isTrue);
@@ -363,8 +363,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('content-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('Report'), findsOneWidget);
-      expect(find.text('Block this person'), findsOneWidget);
+      expect(find.text('Laporkan'), findsOneWidget);
+      expect(find.text('Blokir alumni ini'), findsOneWidget);
     });
 
     testWidgets(
@@ -386,7 +386,7 @@ void main() {
         expect(find.text('Report listing'), findsOneWidget);
         await tester.tap(find.byKey(const Key('content-menu')));
         await tester.pumpAndSettle();
-        expect(find.text('Block this person'), findsOneWidget);
+        expect(find.text('Blokir alumni ini'), findsOneWidget);
         expect(find.byKey(const Key('menu-report')), findsNothing);
       },
     );

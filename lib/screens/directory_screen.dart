@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/safe_url.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/avatar_repository.dart';
@@ -315,6 +318,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             ].join('\n'),
                           ),
                           isThreeLine: true,
+                          trailing:
+                              ((p['linkedin_url'] as String?)?.trim() ?? '')
+                                  .isEmpty
+                              ? null
+                              : IconButton(
+                                  key: Key('member-linkedin-${p['id']}'),
+                                  tooltip: 'Buka LinkedIn',
+                                  icon: const Icon(Icons.open_in_new),
+                                  onPressed: () =>
+                                      openHttpUrl(p['linkedin_url'] as String?),
+                                ),
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
