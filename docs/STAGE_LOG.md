@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Stage 8b: mandatory PIN, PIN on web (30 Oct 2026)
+- PIN setup has no "Skip" on first sign in (Settings can still leave). PIN lock is on for web too (screen lock only, no biometrics). `WEB_LOCK_TEST` flag removed from Dart. Setup copy in Indonesian.
+- Forgot PIN stays "Lupa PIN? Verifikasi ulang" (wipes the device, then the email code). Not built: "Masuk lagi" returning screen on web, idle lock on web, "Hapus PIN" removal rule.
+- Checks: analyze clean, full suite passes. No migration.
+
 ## Kontak Ikafe replaces Nearby (30 Oct 2026)
 - Home tile `tile-kontak-ikafe` opens `KontakIkafeScreen`: Hubungi (WhatsApp, Email) and Media sosial (Instagram, LinkedIn, Website). Admin > Kontak Ikafe adds, edits, hides and deletes rows. Nearby screens, city WhatsApp group screens and their tests are removed.
 - Migration `20261030100000_ikafe_contacts.sql` (+ `rollback_ikafe_contacts.sql`, `20_ikafe_contacts_test.sql`). NOT applied; Farrel applies it. Seeds 5 EXAMPLE rows. Until it is applied the app shows built-in example contacts, labelled "Contoh data".

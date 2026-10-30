@@ -6,9 +6,6 @@ import 'lock_store.dart';
 import 'masking.dart';
 import 'pin_hasher.dart';
 
-/// True only in a web preview build (see [LockService.shared]).
-const bool kWebLockTest = bool.fromEnvironment('WEB_LOCK_TEST');
-
 /// What we remember about the verified person on this device. Deliberately
 /// small: an id, a display name and a masked email hint. Never the full
 /// profile and never the full email.
@@ -67,22 +64,18 @@ class LockService {
   }) : _hasher = hasher ?? PinHasher(),
        _now = clock ?? DateTime.now;
 
-  /// The real service the app uses. On web it is disabled (see README),
-  /// except in a PREVIEW build made with `--dart-define=WEB_LOCK_TEST=true`
-  /// (scripts/vercel-build.sh does that for Vercel previews only) so the lock
-  /// flow can be tried in a browser. Web storage is not real secure storage:
-  /// this is for testing the flow, never for production.
+  /// The real service the app uses. The PIN lock is on for web too (decided
+  /// 30 Oct 2026). On web it is a screen lock only: a browser has no secure
+  /// storage, so it does not stop someone who can open the developer tools.
+  /// There are no biometrics on web.
   static LockService? _shared;
-  static LockService get shared => _shared ??= (kIsWeb && !kWebLockTest)
-      ? LockService(
-          store: MemoryLockStore(),
-          biometrics: const NoBiometrics(),
-          enabled: false,
-        )
-      : LockService(
-          store: const SecureLockStore(),
-          biometrics: kIsWeb ? const NoBiometrics() : LocalAuthBiometrics(),
-        );
+  static LockService get shared =>
+      _shared ??= LockService.forPlatform(web: kIsWeb);
+
+  factory LockService.forPlatform({required bool web}) => LockService(
+    store: const SecureLockStore(),
+    biometrics: web ? const NoBiometrics() : LocalAuthBiometrics(),
+  );
 
   @visibleForTesting
   static set shared(LockService s) => _shared = s;
@@ -92,7 +85,7 @@ class LockService {
   final PinHasher _hasher;
   final DateTime Function() _now;
 
-  /// False on web: nothing is remembered and no lock is ever shown.
+  /// False only for a service built for tests or a platform without a lock.
   final bool enabled;
 
   /// True while a verified person is inside the app (HomeShell showing).

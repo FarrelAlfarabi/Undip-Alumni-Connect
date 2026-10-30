@@ -332,7 +332,7 @@ void main() {
       final done = <int>[];
       await pumpSetup(tester, lock, done);
       await enterPin(tester, testPin);
-      expect(find.text('Enter it again to confirm'), findsOneWidget);
+      expect(find.text('Masukkan lagi untuk konfirmasi'), findsOneWidget);
       await enterPin(tester, testPin);
       await tester.pump(const Duration(milliseconds: 100));
       expect(done, [1]);
@@ -347,7 +347,7 @@ void main() {
       await enterPin(tester, testPin);
       await enterPin(tester, '111222');
       expect(find.byKey(const Key('pin-setup-error')), findsOneWidget);
-      expect(find.text('Create a 6-digit PIN'), findsOneWidget);
+      expect(find.text('Buat PIN 6 digit'), findsOneWidget);
       expect(await lock.hasPin(), isFalse);
       expect(done, isEmpty);
     });
@@ -357,13 +357,31 @@ void main() {
       await pumpSetup(tester, lock, []);
       await enterPin(tester, '111111');
       expect(find.byKey(const Key('pin-setup-error')), findsOneWidget);
-      expect(find.text('Create a 6-digit PIN'), findsOneWidget);
+      expect(find.text('Buat PIN 6 digit'), findsOneWidget);
     });
 
-    testWidgets('skip leaves no PIN and continues', (tester) async {
+    testWidgets('the PIN is mandatory: no skip button', (tester) async {
+      final lock = makeLock();
+      await pumpSetup(tester, lock, []);
+      expect(find.byKey(const Key('pin-skip')), findsNothing);
+      expect(find.text('Skip for now'), findsNothing);
+      expect(find.text('Atur PIN'), findsOneWidget);
+    });
+
+    testWidgets('from Settings the person can still leave', (tester) async {
       final lock = makeLock();
       final done = <int>[];
-      await pumpSetup(tester, lock, done);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PinSetupScreen(
+            lock: lock,
+            mandatory: false,
+            onDone: (_) async => done.add(1),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Nanti saja'), findsOneWidget);
       await tester.tap(find.byKey(const Key('pin-skip')));
       await tester.pump();
       expect(done, [1]);
@@ -379,7 +397,7 @@ void main() {
         await pumpSetup(tester, lock, done);
         await enterPin(tester, testPin);
         await enterPin(tester, testPin);
-        expect(find.text('Unlock with fingerprint or face?'), findsOneWidget);
+        expect(find.text('Buka dengan sidik jari atau wajah?'), findsOneWidget);
         // A failed check does not turn it on.
         bio.result = BiometricResult.failed;
         await tester.tap(find.byKey(const Key('bio-enable')));
@@ -438,7 +456,9 @@ void main() {
       expect((await lock.load())!.profileId, 'p1');
       expect(store.data.values.join().contains(testEmail), isFalse);
 
-      await tester.tap(find.byKey(const Key('pin-skip')));
+      expect(find.byKey(const Key('pin-skip')), findsNothing);
+      await enterPin(tester, testPin);
+      await enterPin(tester, testPin);
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);

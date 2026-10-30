@@ -19,7 +19,16 @@ enum _Step { enter, confirm, biometric }
 /// Skipping is fine; the next launch then shows a "Continue" that re-runs
 /// verification.
 class PinSetupScreen extends StatefulWidget {
-  const PinSetupScreen({super.key, required this.lock, required this.onDone});
+  const PinSetupScreen({
+    super.key,
+    required this.lock,
+    required this.onDone,
+    this.mandatory = true,
+  });
+
+  /// First sign in: the PIN cannot be skipped. From Settings the person can
+  /// leave without setting one.
+  final bool mandatory;
 
   final LockService lock;
 
@@ -49,7 +58,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   Future<void> _entered(String pin) async {
     if (_step == _Step.enter) {
       if (isWeakPin(pin)) {
-        setState(() => _error = 'That PIN is too easy to guess. Try another.');
+        setState(
+          () => _error = 'PIN itu terlalu mudah ditebak. Coba yang lain.',
+        );
         return;
       }
       setState(() {
@@ -62,7 +73,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     if (pin != _first) {
       setState(() {
         _first = '';
-        _error = "The PINs didn't match. Start again.";
+        _error = 'PIN tidak sama. Ulangi dari awal.';
         _step = _Step.enter;
       });
       return;
@@ -90,7 +101,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
   Future<void> _enableBiometrics() async {
     final r = await widget.lock.authenticateBiometric(
-      'Confirm to turn on unlock with fingerprint or face',
+      'Konfirmasi untuk membuka dengan sidik jari atau wajah',
     );
     if (!mounted) return;
     if (r == BiometricResult.success) {
@@ -98,7 +109,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       await _finish();
     } else {
       setState(
-        () => _error = "That didn't work. You can try again or skip; your PIN still works.",
+        () => _error = 'Belum berhasil. Coba lagi atau lewati; PIN kamu tetap bisa dipakai.',
       );
     }
   }
@@ -109,14 +120,15 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     return Scaffold(
       key: const Key('pin-setup'),
       appBar: AppBar(
-        title: const Text('Set a PIN'),
+        title: const Text('Atur PIN'),
         automaticallyImplyLeading: false,
         actions: [
-          TextButton(
-            key: const Key('pin-skip'),
-            onPressed: _busy ? null : _finish,
-            child: const Text('Skip for now'),
-          ),
+          if (!widget.mandatory)
+            TextButton(
+              key: const Key('pin-skip'),
+              onPressed: _busy ? null : _finish,
+              child: const Text('Nanti saja'),
+            ),
         ],
       ),
       body: SafeArea(
@@ -130,9 +142,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 children: [
                   Text(
                     switch (_step) {
-                      _Step.enter => 'Create a $kPinLength-digit PIN',
-                      _Step.confirm => 'Enter it again to confirm',
-                      _Step.biometric => 'Unlock with fingerprint or face?',
+                      _Step.enter => 'Buat PIN $kPinLength digit',
+                      _Step.confirm => 'Masukkan lagi untuk konfirmasi',
+                      _Step.biometric => 'Buka dengan sidik jari atau wajah?',
                     },
                     key: const Key('pin-setup-title'),
                     textAlign: TextAlign.center,
@@ -141,11 +153,11 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _step == _Step.biometric
-                        ? 'Optional. Your PIN always works as well.'
-                        : 'It unlocks Lingkaran on this phone, so you do not '
-                              'have to verify every time. This is a '
-                              'convenience lock on this device, not extra '
-                              'protection for your account.',
+                        ? 'Opsional. PIN kamu tetap bisa dipakai.'
+                        : 'PIN membuka Lingkaran di perangkat ini, jadi kamu tidak '
+                              'perlu verifikasi tiap kali. Ini kunci praktis di '
+                              'perangkat ini, bukan perlindungan tambahan untuk '
+                              'akunmu.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -159,14 +171,14 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                         key: const Key('bio-enable'),
                         onPressed: _busy ? null : _enableBiometrics,
                         icon: const Icon(Icons.fingerprint),
-                        label: const Text('Turn on'),
+                        label: const Text('Aktifkan'),
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextButton(
                       key: const Key('bio-skip'),
                       onPressed: _busy ? null : _finish,
-                      child: const Text('Not now'),
+                      child: const Text('Nanti saja'),
                     ),
                   ] else
                     PinPad(enabled: !_busy, onCompleted: _entered),
