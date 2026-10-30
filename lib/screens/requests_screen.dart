@@ -57,8 +57,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
           title: const Text('Requests'),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Received'),
-              Tab(text: 'Sent'),
+              Tab(text: 'Diterima'),
+              Tab(text: 'Terkirim'),
             ],
           ),
         ),
@@ -66,10 +66,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
           children: [
             _ListTab<IncomingRequest>(
               future: _incoming,
-              what: 'requests',
+              what: 'permintaan',
               emptyText:
-                  'No requests yet. When another alumnus asks to contact '
-                  'you, it shows up here.',
+                  'Belum ada permintaan. Saat alumni lain ingin '
+                  'menghubungimu, permintaannya muncul di sini.',
               onRetry: _refresh,
               itemBuilder: (r) => _IncomingCard(
                 request: r,
@@ -82,10 +82,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
             ),
             _ListTab<OutgoingRequest>(
               future: _outgoing,
-              what: 'your requests',
+              what: 'permintaanmu',
               emptyText:
-                  'You have not asked anyone yet. Open an alumnus profile '
-                  'and tap "Minta kontak".',
+                  'Kamu belum meminta kontak siapa pun. Buka profil alumni '
+                  'dan ketuk "Minta kontak".',
               onRetry: _refresh,
               itemBuilder: (r) =>
                   _OutgoingCard(request: r, repository: _repo, myId: _myId),
@@ -188,7 +188,7 @@ class _IncomingCard extends StatelessWidget {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Accepted. ${request.requesterName} can now see what you shared.',
+            'Diterima. ${request.requesterName} sekarang bisa melihat kontak yang kamu bagikan.',
           ),
         ),
       );
@@ -210,7 +210,7 @@ class _IncomingCard extends StatelessWidget {
     try {
       await repository.reject(targetId: myId, requestId: request.id);
       messenger.showSnackBar(
-        const SnackBar(content: Text('Request declined.')),
+        const SnackBar(content: Text('Permintaan ditolak.')),
       );
     } catch (e) {
       showErrorSnackBarOn(
@@ -256,7 +256,7 @@ class _IncomingCard extends StatelessWidget {
                   ownerName: r.requesterName,
                   reportType: ReportTarget.contactRequest,
                   targetId: r.id,
-                  what: 'this request',
+                  what: 'permintaan ini',
                   onBlocked: onChanged,
                 ),
               ],
@@ -264,7 +264,7 @@ class _IncomingCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               (r.message == null || r.message!.isEmpty)
-                  ? 'No message.'
+                  ? 'Tanpa pesan.'
                   : r.message!,
             ),
             const SizedBox(height: 8),
@@ -275,21 +275,21 @@ class _IncomingCard extends StatelessWidget {
                   TextButton(
                     key: Key('reject-${r.id}'),
                     onPressed: () => _reject(context),
-                    child: const Text('Decline'),
+                    child: const Text('Tolak'),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     key: Key('accept-${r.id}'),
                     onPressed: () => _accept(context),
-                    child: const Text('Accept'),
+                    child: const Text('Terima'),
                   ),
                 ],
               )
             else
               Text(
                 r.status == ContactRequestStatus.accepted
-                    ? 'You accepted this request.'
-                    : 'You declined this request.',
+                    ? 'Kamu sudah menerima permintaan ini.'
+                    : 'Kamu sudah menolak permintaan ini.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -325,7 +325,7 @@ class _ShareDialogState extends State<_ShareDialog> {
   void _ok() {
     final t = _text.text.trim();
     if (t.isEmpty) {
-      setState(() => _error = 'Type what you want to share.');
+      setState(() => _error = 'Isi kontak yang ingin kamu bagikan.');
       return;
     }
     Navigator.of(context).pop(t);
@@ -334,16 +334,16 @@ class _ShareDialogState extends State<_ShareDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('What do you want to share?'),
+      title: const Text('Kontak apa yang ingin kamu bagikan?'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Your default contact is filled in (or your email if you have not '
-            'set one). Change it to anything you prefer: WhatsApp, Instagram, '
-            'phone, email... Only this person will see it. You can set your '
-            'default in Profile > Settings.',
+            'Kontak bawaanmu sudah terisi (atau emailmu bila belum diatur). '
+            'Ubah sesukamu: WhatsApp, Instagram, telepon, email, atau nama '
+            'online shop. Hanya orang ini yang bisa melihatnya. Atur kontak '
+            'bawaan di Profile > Pengaturan.',
           ),
           const SizedBox(height: 12),
           TextField(
@@ -351,7 +351,7 @@ class _ShareDialogState extends State<_ShareDialog> {
             controller: _text,
             maxLength: kSharedContactMax,
             decoration: InputDecoration(
-              labelText: 'Contact to share *',
+              labelText: 'Kontak atau nama Online Shop yang akan dibagikan *',
               errorText: _error,
               border: const OutlineInputBorder(),
             ),
@@ -361,9 +361,9 @@ class _ShareDialogState extends State<_ShareDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: const Text('Batal'),
         ),
-        FilledButton(onPressed: _ok, child: const Text('Accept and share')),
+        FilledButton(onPressed: _ok, child: const Text('Terima dan bagikan')),
       ],
     );
   }
@@ -412,10 +412,10 @@ class _OutgoingCardState extends State<_OutgoingCard> {
     final theme = Theme.of(context);
     final r = widget.request;
     final status = switch (r.status) {
-      ContactRequestStatus.pending => 'Waiting for an answer',
-      ContactRequestStatus.accepted => 'Accepted',
+      ContactRequestStatus.pending => 'Menunggu jawaban',
+      ContactRequestStatus.accepted => 'Diterima',
       // The requester only ever sees "not accepted".
-      ContactRequestStatus.rejected => 'Not accepted',
+      ContactRequestStatus.rejected => 'Belum diterima',
     };
     return Card(
       key: Key('outgoing-${r.id}'),
@@ -449,7 +449,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Show shared contact'),
+                      : const Text('Lihat daftar kontak'),
                 )
               else
                 Row(
@@ -462,7 +462,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Copy',
+                      tooltip: 'Salin',
                       icon: const Icon(Icons.copy_outlined),
                       onPressed: () =>
                           Clipboard.setData(ClipboardData(text: _shared!)),

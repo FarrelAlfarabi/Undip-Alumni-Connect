@@ -225,10 +225,13 @@ void main() {
 
     testWidgets('empty states', (tester) async {
       await pump(tester);
-      expect(find.textContaining('No requests yet'), findsOneWidget);
-      await tester.tap(find.text('Sent'));
+      expect(find.textContaining('Belum ada permintaan'), findsOneWidget);
+      await tester.tap(find.text('Terkirim'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('not asked anyone yet'), findsOneWidget);
+      expect(
+        find.textContaining('belum meminta kontak siapa pun'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('accept needs typed text and sends it', (tester) async {
@@ -237,16 +240,16 @@ void main() {
       await tester.tap(find.byKey(const Key('accept-r1')));
       await tester.pumpAndSettle();
       // Nothing typed: refused, nothing sent.
-      await tester.tap(find.text('Accept and share'));
+      await tester.tap(find.text('Terima dan bagikan'));
       await tester.pumpAndSettle();
-      expect(find.text('Type what you want to share.'), findsOneWidget);
+      expect(find.text('Isi kontak yang ingin kamu bagikan.'), findsOneWidget);
       expect(api.calls.contains('contact_request_respond'), isFalse);
 
       await tester.enterText(
         find.byKey(const Key('share-field')),
         'WA 0812-0000',
       );
-      await tester.tap(find.text('Accept and share'));
+      await tester.tap(find.text('Terima dan bagikan'));
       await tester.pumpAndSettle();
       expect(api.params['contact_request_respond'], {
         'p_target': 'me',
@@ -272,9 +275,9 @@ void main() {
           incomingMap(id: 'r2', status: 'rejected'),
         ],
       );
-      expect(find.text('Accept'), findsNothing);
-      expect(find.text('You accepted this request.'), findsOneWidget);
-      expect(find.text('You declined this request.'), findsOneWidget);
+      expect(find.text('Terima'), findsNothing);
+      expect(find.text('Kamu sudah menerima permintaan ini.'), findsOneWidget);
+      expect(find.text('Kamu sudah menolak permintaan ini.'), findsOneWidget);
     });
 
     testWidgets(
@@ -293,11 +296,11 @@ void main() {
         expect(find.byKey(const Key('status-a')), findsOneWidget);
         expect(
           tester.widget<Text>(find.byKey(const Key('status-a'))).data,
-          'Waiting for an answer',
+          'Menunggu jawaban',
         );
         expect(
           tester.widget<Text>(find.byKey(const Key('status-b'))).data,
-          'Not accepted',
+          'Belum diterima',
         );
         expect(find.byKey(const Key('show-b')), findsNothing);
         expect(find.byKey(const Key('show-a')), findsNothing);

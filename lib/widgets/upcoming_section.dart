@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme.dart';
+
 /// Shown in every preview sheet. Kept as one constant so tests and copy
 /// stay in sync.
 const String kPreviewNotice =
@@ -74,31 +76,40 @@ class _PreviewTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
     return Material(
       key: Key(feature.key),
-      color: scheme.surfaceContainer.withValues(alpha: 0.45),
+      color: AppTheme.paperRaised,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppTheme.hairline),
       ),
       child: InkWell(
         customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
         onTap: () => _open(context),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Icon(feature.icon, color: muted),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: scheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(feature.icon, color: AppTheme.black),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   feature.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(color: muted),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: AppTheme.ink,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

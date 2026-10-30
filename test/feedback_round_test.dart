@@ -174,7 +174,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('accept-r1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Accept and share'));
+    await tester.tap(find.text('Terima dan bagikan'));
     await tester.pumpAndSettle();
     expect(
       api.params['contact_request_respond']!['p_shared'],
@@ -296,7 +296,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('accept-r1')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Accept and share'));
+      await tester.tap(find.text('Terima dan bagikan'));
       await tester.pumpAndSettle();
       expect(
         api.params['contact_request_respond']!['p_shared'],

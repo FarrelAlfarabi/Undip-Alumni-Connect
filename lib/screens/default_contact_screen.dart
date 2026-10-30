@@ -75,8 +75,8 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
         SnackBar(
           content: Text(
             _text.text.trim().isEmpty
-                ? 'Default contact removed. Your email will be used.'
-                : 'Default contact saved.',
+                ? 'Kontak bawaan dihapus. Emailmu akan dipakai.'
+                : 'Kontak bawaan tersimpan.',
           ),
         ),
       );
@@ -112,9 +112,9 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'When you accept a contact request, this is filled in '
-                      'for you. You can still change it each time, and nothing '
-                      'is shared until you tap Accept.',
+                      'Terisi otomatis saat kamu menerima permintaan kontak. '
+                      'Kamu tetap bisa mengubahnya setiap kali, dan tidak '
+                      'ada yang dibagikan sebelum kamu menekan Terima.',
                       style: theme.textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -124,12 +124,14 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                       enabled: !_saving,
                       maxLength: kSharedContactMax,
                       decoration: const InputDecoration(
-                        labelText: 'Contact to share',
-                        hintText: 'For example: WA +62 812..., IG @name',
+                        labelText:
+                            'Kontak atau nama Online Shop yang akan '
+                            'dibagikan',
+                        hintText: 'WA: 08xxx',
                         helperText:
-                            'Any kind: WhatsApp, phone, email, Instagram, '
-                            'Telegram, LinkedIn... Leave empty to use your '
-                            'email.',
+                            'Contoh: WA: 08xxx, Shopee: Toko Natasya, '
+                            'Ig: Toko Natasya. Kosongkan untuk memakai '
+                            'emailmu.',
                         helperMaxLines: 3,
                         border: OutlineInputBorder(),
                       ),

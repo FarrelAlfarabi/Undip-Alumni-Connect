@@ -1,58 +1,52 @@
 import 'package:flutter/material.dart';
 
-import '../data/bio_repository.dart';
+import '../data/profile_fields.dart';
 import '../theme.dart';
 
-/// Profile > Bio > Ubah: a short text about yourself, 200 characters at most.
-/// Pops with the saved text (empty string when the bio was cleared).
+/// Profile > Bio, Ubah. One short text (200 characters) that other alumni see
+/// on my profile. Pops the updated profile row.
 class ProfileBioScreen extends StatefulWidget {
-  const ProfileBioScreen({
-    super.key,
-    required this.profileId,
-    this.initialBio,
-    this.repository,
-  });
+  const ProfileBioScreen({super.key, required this.profile, this.save});
 
-  final String profileId;
-  final String? initialBio;
-
-  /// Injectable for tests; defaults to the real repository.
-  final ProfileBioRepository? repository;
+  final Map<String, dynamic> profile;
+  final ProfileFieldSaver? save;
 
   @override
   State<ProfileBioScreen> createState() => _ProfileBioScreenState();
 }
 
 class _ProfileBioScreenState extends State<ProfileBioScreen> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.initialBio ?? '',
+  late final _text = TextEditingController(
+    text: widget.profile['bio'] as String? ?? '',
   );
   bool _saving = false;
-  bool _failed = false;
+  String? _error;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _text.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
+    final bio = _text.text.trim();
+    final changes = <String, dynamic>{'bio': bio.isEmpty ? null : bio};
     setState(() {
       _saving = true;
-      _failed = false;
+      _error = null;
     });
-    final text = _controller.text.trim();
     try {
-      await (widget.repository ?? ProfileBioRepository()).save(
-        widget.profileId,
-        text,
+      final updated = await (widget.save ?? saveProfileFields)(
+        widget.profile['id'] as String,
+        changes,
       );
-      if (mounted) Navigator.of(context).pop(text);
+      if (!mounted) return;
+      Navigator.of(context).pop(updated ?? {...widget.profile, ...changes});
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _failed = true;
+        _error = 'Bio belum tersimpan. Coba lagi.';
       });
     }
   }
@@ -63,76 +57,63 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Bio')),
       body: SafeArea(
-        child: ListView(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          children: [
-            Container(
-              key: const Key('bio-warning'),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.info_outline, color: AppTheme.yellowText),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Jangan menulis kata kasar, SARA, ujaran kebencian, '
-                      'konten dewasa, atau data pribadi orang lain. Bio yang '
-                      'dilaporkan bisa dihapus admin.',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              key: const Key('profile-bio-field'),
-              controller: _controller,
-              enabled: !_saving,
-              maxLength: kBioMaxLength,
-              maxLines: 5,
-              minLines: 3,
-              keyboardType: TextInputType.multiline,
-              textCapitalization: TextCapitalization.sentences,
-              buildCounter: (
-                context, {
-                required currentLength,
-                required isFocused,
-                required maxLength,
-              }) => Text('$currentLength/$maxLength'),
-              decoration: const InputDecoration(
-                labelText: 'Bio',
-                hintText: 'Ceritakan singkat tentang dirimu',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (_failed)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Bio belum tersimpan. Periksa koneksi, lalu coba lagi.',
-                  key: const Key('profile-bio-error'),
-                  style: TextStyle(color: theme.colorScheme.error),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Text(
+                  'Perhatian: Dilarang menulis kata kasar, SARA, ujaran '
+                  'kebencian, konten dewasa, atau data pribadi orang lain. '
+                  'Bio yang dilaporkan bisa dihapus admin.',
                 ),
               ),
-            const SizedBox(height: 16),
-            FilledButton(
-              key: const Key('profile-bio-save'),
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    )
-                  : const Text('Simpan'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                key: const Key('bio-field'),
+                controller: _text,
+                enabled: !_saving,
+                maxLength: kBioMax,
+                maxLines: 5,
+                minLines: 4,
+                keyboardType: TextInputType.multiline,
+                decoration: const InputDecoration(
+                  labelText: 'Bio',
+                  hintText: 'Ceritakan singkat tentang dirimu',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _error!,
+                  key: const Key('bio-error'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: AppTheme.black,
+                        ),
+                      )
+                    : const Text('Simpan'),
+              ),
+            ],
+          ),
         ),
       ),
     );
