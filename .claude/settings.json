@@ -1,5 +1,8 @@
 {
   "permissions": {
+    "allow": [
+      "mcp__Supabase__apply_migration"
+    ],
     "deny": [
       "Read(./build/**)",
       "Read(./.dart_tool/**)",
