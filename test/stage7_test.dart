@@ -108,6 +108,20 @@ void main() {
       },
     );
 
+    // Seen in the browser at 390 px: "Marketpl ace" and "Business es" broke
+    // over two lines. On a phone each label stays on one line.
+    testWidgets('segment labels stay on one line on a 360 px phone', (
+      tester,
+    ) async {
+      await pump(tester);
+      tester.view.physicalSize = const Size(360, 800);
+      await tester.pumpAndSettle();
+      final oneLine = tester.getSize(find.text('Jobs')).height;
+      for (final label in ['Marketplace', 'Businesses']) {
+        expect(tester.getSize(find.text(label)).height, oneLine, reason: label);
+      }
+    });
+
     testWidgets('each segment keeps its own actions', (tester) async {
       await pump(tester);
       expect(find.byKey(const Key('my-listings')), findsOneWidget);
