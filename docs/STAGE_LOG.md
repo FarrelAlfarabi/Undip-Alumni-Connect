@@ -135,3 +135,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - New `lib/platform/` (`breakpoints.dart`: phone <600, tablet 600-1023, desktop 1024+, max content 720/960; `platform_caps.dart`: camera, biometrics, push, file picker) and `lib/widgets/responsive_page.dart`. No screen uses them yet.
 - Tests in `test/platform/` at widths 390, 768, 1280. CI gets a `build-web` job. No colors, no migration. `kIsWeb` in the lock code is left for the web PIN stage.
 - Full suite passes, analyze clean.
+## Redesign stage 1: theme foundation (30 Oct 2026)
+- Font is Plus Jakarta Sans (5 weights bundled, hashes from `google_fonts`); Fraunces and IBM Plex removed. Headlines w700.
+- Nav bar (yellow pill indicator, 12 sp labels, hairline top), pill buttons, black pill style `AppTheme.blackPillButton`, cards, `danger` badge, sharper logo PNG decoded at drawn size.
+- No migration. Tests in `fonts_bundled_test` and `brand_palette_test`. Analyze clean, 775 tests pass.

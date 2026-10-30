@@ -23,6 +23,18 @@ class AppTheme {
   static const hairline = Color(0xFFDCDDE0);
   static const ink = black;
 
+  /// Alerts and the unread badge. White text on it is 4.5:1 or better.
+  static const danger = Color(0xFFD93025);
+
+  /// Black pill button with white text (used on the business card). Apply with
+  /// `FilledButton(style: AppTheme.blackPillButton, ...)`.
+  static final blackPillButton = FilledButton.styleFrom(
+    backgroundColor: black,
+    foregroundColor: Colors.white,
+    shape: const StadiumBorder(),
+    textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+  );
+
   static ThemeData light() {
     final colorScheme =
         ColorScheme.fromSeed(
@@ -47,36 +59,27 @@ class AppTheme {
           outlineVariant: hairline,
         );
 
-    final baseText = GoogleFonts.ibmPlexSansTextTheme();
+    final baseText = GoogleFonts.plusJakartaSansTextTheme();
     final textTheme = baseText.copyWith(
-      displayLarge: GoogleFonts.fraunces(
-        textStyle: baseText.displayLarge,
-        fontWeight: FontWeight.w600,
+      displayLarge: baseText.displayLarge?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
-      displayMedium: GoogleFonts.fraunces(
-        textStyle: baseText.displayMedium,
-        fontWeight: FontWeight.w600,
+      displayMedium: baseText.displayMedium?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
-      displaySmall: GoogleFonts.fraunces(
-        textStyle: baseText.displaySmall,
-        fontWeight: FontWeight.w600,
+      displaySmall: baseText.displaySmall?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
-      headlineLarge: GoogleFonts.fraunces(
-        textStyle: baseText.headlineLarge,
-        fontWeight: FontWeight.w600,
+      headlineLarge: baseText.headlineLarge?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
-      headlineMedium: GoogleFonts.fraunces(
-        textStyle: baseText.headlineMedium,
-        fontWeight: FontWeight.w600,
+      headlineMedium: baseText.headlineMedium?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
-      headlineSmall: GoogleFonts.fraunces(
-        textStyle: baseText.headlineSmall,
-        fontWeight: FontWeight.w600,
+      headlineSmall: baseText.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
-      titleLarge: GoogleFonts.fraunces(
-        textStyle: baseText.titleLarge,
-        fontWeight: FontWeight.w600,
-      ),
+      titleLarge: baseText.titleLarge?.copyWith(fontWeight: FontWeight.w700),
     );
 
     return ThemeData(
@@ -88,7 +91,7 @@ class AppTheme {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
-        titleTextStyle: GoogleFonts.ibmPlexSans(
+        titleTextStyle: GoogleFonts.plusJakartaSans(
           color: colorScheme.onSurface,
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -98,10 +101,55 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: yellow,
           foregroundColor: black,
+          shape: const StadiumBorder(),
+          textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: blue),
+        style: TextButton.styleFrom(
+          foregroundColor: blue,
+          textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: paperRaised,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: hairline),
+        ),
+      ),
+      badgeTheme: const BadgeThemeData(
+        backgroundColor: danger,
+        textColor: Colors.white,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: yellow,
+        indicatorShape: const StadiumBorder(),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        height: 72,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? black
+                : colorScheme.onSurfaceVariant,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: states.contains(WidgetState.selected)
+                ? black
+                : colorScheme.onSurfaceVariant,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }

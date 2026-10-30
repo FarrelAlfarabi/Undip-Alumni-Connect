@@ -10,7 +10,7 @@ import 'verification_screen.dart';
 /// The app's actual entry screen — a proper branded landing moment in
 /// front of the verification form, instead of dropping straight into a
 /// bare card. Matches the pitch landing page's identity (kawung mark,
-/// yellow, black and blue palette, Fraunces + IBM Plex Sans).
+/// yellow, black and blue palette, Plus Jakarta Sans).
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key, this.notice});
 

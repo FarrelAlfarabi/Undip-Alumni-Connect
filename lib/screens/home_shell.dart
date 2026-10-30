@@ -6,6 +6,7 @@ import '../config/feature_flags.dart';
 import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_repository.dart';
+import '../theme.dart';
 import 'home_pages.dart';
 import 'home_screen.dart';
 
@@ -249,37 +250,42 @@ class _HomeShellState extends State<HomeShell> {
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         body: IndexedStack(index: _index, children: tabs),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: _select,
-          destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.people_outline),
-              selectedIcon: Icon(Icons.people),
-              label: 'Members',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.storefront_outlined),
-              selectedIcon: Icon(Icons.storefront),
-              label: 'Market',
-            ),
-            if (widget.chat)
+        bottomNavigationBar: DecoratedBox(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: AppTheme.hairline)),
+          ),
+          child: NavigationBar(
+            selectedIndex: _index,
+            onDestinationSelected: _select,
+            destinations: [
               const NavigationDestination(
-                icon: Icon(Icons.chat_bubble_outline),
-                selectedIcon: Icon(Icons.chat_bubble),
-                label: 'Chat',
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home',
               ),
-            const NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
+              const NavigationDestination(
+                icon: Icon(Icons.people_outline),
+                selectedIcon: Icon(Icons.people),
+                label: 'Members',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.storefront_outlined),
+                selectedIcon: Icon(Icons.storefront),
+                label: 'Market',
+              ),
+              if (widget.chat)
+                const NavigationDestination(
+                  icon: Icon(Icons.chat_bubble_outline),
+                  selectedIcon: Icon(Icons.chat_bubble),
+                  label: 'Chat',
+                ),
+              const NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );
