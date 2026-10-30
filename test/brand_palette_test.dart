@@ -38,6 +38,69 @@ void main() {
     expect(style.foregroundColor!.resolve({}), AppTheme.blue);
   });
 
+  test('danger is red and white text on it meets 4.5:1', () {
+    expect(AppTheme.danger, const Color(0xFFD93025));
+    expect(_ratio(Colors.white, AppTheme.danger), greaterThanOrEqualTo(4.5));
+  });
+
+  test('badge is danger with white text', () {
+    final badge = AppTheme.light().badgeTheme;
+    expect(badge.backgroundColor, AppTheme.danger);
+    expect(badge.textColor, Colors.white);
+  });
+
+  test('nav bar has a yellow stadium indicator and always shows labels', () {
+    final nav = AppTheme.light().navigationBarTheme;
+    expect(nav.backgroundColor, Colors.white);
+    expect(nav.indicatorColor, AppTheme.yellow);
+    expect(nav.indicatorShape, isA<StadiumBorder>());
+    expect(nav.labelBehavior, NavigationDestinationLabelBehavior.alwaysShow);
+    expect(nav.height, 72);
+    expect(nav.surfaceTintColor, Colors.transparent);
+    final selected = nav.labelTextStyle!.resolve({WidgetState.selected})!;
+    final idle = nav.labelTextStyle!.resolve({})!;
+    expect(selected.fontSize, greaterThanOrEqualTo(12));
+    expect(idle.fontSize, greaterThanOrEqualTo(12));
+    expect(selected.fontWeight, FontWeight.w700);
+    expect(idle.fontWeight, FontWeight.w500);
+    expect(
+      nav.iconTheme!.resolve({WidgetState.selected})!.color,
+      AppTheme.black,
+    );
+    expect(
+      nav.iconTheme!.resolve({})!.color,
+      AppTheme.light().colorScheme.onSurfaceVariant,
+    );
+  });
+
+  test('buttons are pills; a black pill style exists', () {
+    final theme = AppTheme.light();
+    expect(
+      theme.filledButtonTheme.style!.shape!.resolve({}),
+      isA<StadiumBorder>(),
+    );
+    expect(
+      theme.filledButtonTheme.style!.textStyle!.resolve({})!.fontWeight,
+      FontWeight.w700,
+    );
+    final black = AppTheme.blackPillButton;
+    expect(black.backgroundColor!.resolve({}), AppTheme.black);
+    expect(black.foregroundColor!.resolve({}), Colors.white);
+    expect(black.shape!.resolve({}), isA<StadiumBorder>());
+    final link = theme.textButtonTheme.style!;
+    expect(link.textStyle!.resolve({})!.fontWeight, FontWeight.w600);
+  });
+
+  test('cards are white, radius 16, hairline border, flat', () {
+    final card = AppTheme.light().cardTheme;
+    expect(card.color, Colors.white);
+    expect(card.elevation, 0);
+    final shape = card.shape! as RoundedRectangleBorder;
+    expect(shape.borderRadius, BorderRadius.circular(16));
+    expect(shape.side.color, AppTheme.hairline);
+    expect(shape.side.width, 1);
+  });
+
   test('every text pairing meets WCAG AA 4.5:1', () {
     final scheme = AppTheme.light().colorScheme;
     final pairs = <String, double>{
@@ -96,6 +159,11 @@ void main() {
     }
   });
 
+  test('the logo asset is the sharp PNG and the old JPG is gone', () {
+    expect(kIkafeLogoAsset, 'assets/brand/ikafe_undip_logo.png');
+    expect(File('assets/brand/ikafe_undip_logo.jpg').existsSync(), isFalse);
+  });
+
   test('the logo asset exists and is declared in pubspec', () {
     expect(File(kIkafeLogoAsset).existsSync(), isTrue);
     expect(File('pubspec.yaml').readAsStringSync(), contains('assets/brand/'));
@@ -112,7 +180,9 @@ void main() {
     expect(find.text('Lingkaran'), findsOneWidget);
     expect(find.text('by Ikafe UNDIP'), findsOneWidget);
     final image = tester.widget<Image>(find.byType(Image));
-    expect((image.image as AssetImage).assetName, kIkafeLogoAsset);
+    final resized = image.image as ResizeImage;
+    expect((resized.imageProvider as AssetImage).assetName, kIkafeLogoAsset);
+    expect(resized.height, isNotNull);
     expect(find.bySemanticsLabel('Ikafe UNDIP'), findsOneWidget);
     handle.dispose();
   });

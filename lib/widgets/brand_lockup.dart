@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const kIkafeLogoAsset = 'assets/brand/ikafe_undip_logo.jpg';
+const kIkafeLogoAsset = 'assets/brand/ikafe_undip_logo.png';
 
 /// The Ikafe UNDIP logo on a white chip. The logo has black letters, so it
 /// always sits on white, whatever the background around it is.
@@ -22,6 +22,8 @@ class IkafeLogo extends StatelessWidget {
           kIkafeLogoAsset,
           height: height,
           semanticLabel: 'Ikafe UNDIP',
+          // Decode at the drawn size so the 1600 px file stays cheap.
+          cacheHeight: (height * MediaQuery.devicePixelRatioOf(context)).ceil(),
           filterQuality: FilterQuality.medium,
         ),
       ),

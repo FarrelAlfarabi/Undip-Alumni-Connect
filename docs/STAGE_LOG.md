@@ -116,3 +116,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+## Redesign stage 1: theme foundation (30 Oct 2026)
+- Font is Plus Jakarta Sans (5 weights bundled, hashes from `google_fonts`); Fraunces and IBM Plex removed. Headlines w700.
+- Nav bar (yellow pill indicator, 12 sp labels, hairline top), pill buttons, black pill style `AppTheme.blackPillButton`, cards, `danger` badge, sharper logo PNG decoded at drawn size.
+- No migration. Tests in `fonts_bundled_test` and `brand_palette_test`. Analyze clean, 775 tests pass.
