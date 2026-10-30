@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/feature_flags.dart';
 import '../data/admin_repository.dart';
+import '../data/avatar_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
@@ -11,6 +12,7 @@ import '../models/contact_request.dart';
 import '../lock/session.dart';
 import '../policy/policy_screen.dart';
 import '../util/friendly_error.dart';
+import '../widgets/avatar.dart';
 import '../widgets/content_actions_menu.dart';
 import 'admin_screen.dart';
 import 'my_businesses_screen.dart';
@@ -18,6 +20,7 @@ import 'my_job_postings_screen.dart';
 import 'help_screen.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
+import 'profile_photo_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
@@ -137,11 +140,30 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       MaterialPageRoute(builder: (_) => ProfileSetupScreen(profile: _profile)),
     );
     if (updated != null) {
-      setState(() => _profile = updated);
+      // The edit screen does not read the photo link; keep the one we have.
+      final merged = {'avatar_url': _profile['avatar_url'], ...updated};
+      setState(() => _profile = merged);
       if (_isOwnProfile) {
-        widget.currentUser.value = updated;
+        widget.currentUser.value = merged;
       }
     }
+  }
+
+  Future<void> _editPhoto() async {
+    final url = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ProfilePhotoScreen(
+          profileId: _profile['id'] as String,
+          name: _profile['name'] as String? ?? '',
+          currentUrl: _profile['avatar_url'] as String?,
+          repository: AvatarRepository(),
+        ),
+      ),
+    );
+    if (url == null) return;
+    final next = {..._profile, 'avatar_url': url.isEmpty ? null : url};
+    setState(() => _profile = next);
+    if (_isOwnProfile) widget.currentUser.value = next;
   }
 
   // True when I already have a request to this person that is waiting for
@@ -287,25 +309,34 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
-                                radius: 32,
-                                backgroundColor:
-                                    theme.colorScheme.primaryContainer,
-                                child: Text(
-                                  (_profile['name'] as String? ?? '?')
-                                      .trim()
-                                      .split(RegExp(r'\s+'))
-                                      .map((w) => w.isNotEmpty ? w[0] : '')
-                                      .take(2)
-                                      .join()
-                                      .toUpperCase(),
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              SizedBox(
+                                width: _isOwnProfile ? 84 : 64,
+                                height: _isOwnProfile ? 84 : 64,
+                                child: Stack(
+                                  children: [
+                                    Avatar(
+                                      url: _profile['avatar_url'] as String?,
+                                      name: _profile['name'] as String? ?? '',
+                                      radius: 32,
+                                    ),
+                                    if (_isOwnProfile)
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 0,
+                                        child: IconButton.filled(
+                                          key: const Key('avatar-edit'),
+                                          tooltip: 'Ubah foto profil',
+                                          onPressed: _editPhoto,
+                                          icon: const Icon(
+                                            Icons.photo_camera_outlined,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,

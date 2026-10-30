@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/avatar.dart';
 import '../widgets/filter_dropdown.dart';
 import 'chat_screen.dart';
 import '../widgets/error_view.dart';
@@ -174,8 +175,9 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                           final c = conversations[i];
                           final other = _otherParticipant(c);
                           return ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.person_outline),
+                            leading: Avatar(
+                              url: other['avatar_url'] as String?,
+                              name: other['name'] as String? ?? '',
                             ),
                             title: Text(other['name'] as String? ?? 'Alumni'),
                             subtitle:

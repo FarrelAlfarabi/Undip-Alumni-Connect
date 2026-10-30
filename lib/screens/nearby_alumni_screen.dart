@@ -3,11 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
+import '../data/avatar_repository.dart';
 import '../data/blocked_filter.dart';
 import '../data/city_distances.dart';
 import '../data/city_group_repository.dart';
 import '../data/profile_columns.dart';
 import '../util/friendly_error.dart';
+import '../widgets/avatar.dart';
 import '../widgets/error_view.dart';
 import 'city_group_chat_screen.dart';
 import 'profile_detail_screen.dart';
@@ -80,7 +82,10 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
         .eq('verification_status', 'verified')
         .order('name', ascending: true);
     return withoutBlockedProfiles(
-      List<Map<String, dynamic>>.from(rows as List),
+      AvatarRepository.withAvatars(
+        List<Map<String, dynamic>>.from(rows as List),
+        await AvatarRepository().urlsById(),
+      ),
     );
   }
 
@@ -270,20 +275,9 @@ class _NearbyAlumniScreenState extends State<NearbyAlumniScreen> {
                         final entry = shown[selected == null ? i : i - 1];
                         final p = entry.profile;
                         return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            child: Text(
-                              (p['name'] as String? ?? '?')
-                                  .trim()
-                                  .split(RegExp(r'\s+'))
-                                  .map((w) => w.isNotEmpty ? w[0] : '')
-                                  .take(2)
-                                  .join()
-                                  .toUpperCase(),
-                              style: TextStyle(
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
+                          leading: Avatar(
+                            url: p['avatar_url'] as String?,
+                            name: p['name'] as String? ?? '',
                           ),
                           title: Text(p['name'] as String? ?? ''),
                           subtitle: Text(
