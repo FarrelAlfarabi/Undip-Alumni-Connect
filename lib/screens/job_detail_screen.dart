@@ -109,7 +109,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             ownerName: posterName,
             reportType: ReportTarget.job,
             targetId: widget.job['id'] as String?,
-            what: 'this job',
+            what: 'lowongan ini',
             onBlocked: () => Navigator.of(context).maybePop(),
           ),
         ],

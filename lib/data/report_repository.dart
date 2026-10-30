@@ -14,18 +14,24 @@ enum ReportTarget {
 
 /// Why (the database values), with plain words for the picker.
 enum ContentReportReason {
-  spamOrScam('spam_or_scam', 'Spam or scam'),
-  inappropriate('inappropriate', 'Inappropriate'),
+  spamOrScam('spam_or_scam', 'Spam or scam', 'Spam atau penipuan'),
+  inappropriate('inappropriate', 'Inappropriate', 'Tidak pantas'),
   fakeOrImpersonation(
     'fake_or_impersonation',
     'Fake or pretending to be someone',
+    'Berpura-pura jadi orang lain',
   ),
-  wrongInfo('wrong_info', 'Wrong information'),
-  other('other', 'Other');
+  wrongInfo('wrong_info', 'Wrong information', 'Informasi salah'),
+  other('other', 'Other', 'Lainnya');
 
-  const ContentReportReason(this.value, this.label);
+  const ContentReportReason(this.value, this.label, this.labelId);
   final String value;
+
+  /// English, for admins.
   final String label;
+
+  /// Indonesian, for the person reporting.
+  final String labelId;
 
   static ContentReportReason? fromValue(String? v) {
     for (final r in values) {
@@ -39,8 +45,8 @@ enum ContentReportReason {
 const int kReportNoteMax = 300;
 
 const String kReportThanks =
-    'Thank you. An admin will take a look. The person is not told who '
-    'reported.';
+    'Terima kasih. Admin akan memeriksanya. Orangnya tidak diberi tahu siapa '
+    'yang melapor.';
 
 enum ReportErrorCode {
   notVerified,

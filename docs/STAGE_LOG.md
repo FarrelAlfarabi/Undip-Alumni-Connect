@@ -116,3 +116,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+## Stage 4: other tabs and Bio/LinkedIn (30 Oct 2026)
+- Theme: white hairline cards (radius 16, no shadow) and black/white filter chips from `theme.dart`; Upcoming cards use yellow-soft icon squares. Requests, report sheet and block dialog now Indonesian; contact field is "Kontak atau nama Online Shop yang akan dibagikan".
+- New Bio (200) and LinkedIn screens, shown on profile and a LinkedIn button on Members rows. Migration `20261030140000_profile_bio_linkedin.sql` (rollback and SQL test 20 included), not applied.
+- Not done: Stage 3 shared Market card and Job row (do not exist yet), Bio/LinkedIn on the first-login form, admin hide-bio.

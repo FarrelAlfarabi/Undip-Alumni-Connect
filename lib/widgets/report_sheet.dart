@@ -69,7 +69,7 @@ class _ReportSheetState extends State<_ReportSheet> {
 
   Future<void> _send() async {
     if (_reason == null) {
-      setState(() => _error = 'Pick a reason.');
+      setState(() => _error = 'Pilih alasan.');
       return;
     }
     setState(() {
@@ -111,14 +111,14 @@ class _ReportSheetState extends State<_ReportSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.what == null ? 'Report' : 'Report ${widget.what}',
+              widget.what == null ? 'Laporkan' : 'Laporkan ${widget.what}',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'An admin will look at it. The person is not told who reported.',
+              'Admin akan memeriksanya. Orangnya tidak diberi tahu siapa yang melapor.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -141,7 +141,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                       value: r,
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      title: Text(r.label),
+                      title: Text(r.labelId),
                     ),
                 ],
               ),
@@ -152,7 +152,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               maxLength: kReportNoteMax,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Note (optional)',
+                labelText: 'Catatan (opsional)',
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -182,7 +182,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
-                  : const Text('Send report'),
+                  : const Text('Kirim Laporan'),
             ),
           ],
         ),

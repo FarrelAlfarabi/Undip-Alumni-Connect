@@ -100,6 +100,37 @@ class AppTheme {
           foregroundColor: black,
         ),
       ),
+      // Cards are white with a hairline and no shadow, the same on every tab.
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: paperRaised,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: hairline),
+        ),
+      ),
+      // Filter chips: selected is black with white text, unselected is white
+      // with a hairline. The default tap target keeps them at 48 dp.
+      chipTheme: ChipThemeData(
+        backgroundColor: paperRaised,
+        selectedColor: black,
+        disabledColor: paperRaised,
+        surfaceTintColor: Colors.transparent,
+        showCheckmark: false,
+        side: const BorderSide(color: hairline),
+        shape: const StadiumBorder(),
+        labelStyle: GoogleFonts.ibmPlexSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: WidgetStateColor.resolveWith(
+            (states) =>
+                states.contains(WidgetState.selected) ? Colors.white : ink,
+          ),
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(foregroundColor: blue),
       ),

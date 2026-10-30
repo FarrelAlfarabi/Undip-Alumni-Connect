@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/feature_flags.dart';
 import '../data/admin_repository.dart';
 import '../data/contact_repository.dart';
+import '../data/profile_fields.dart' show ProfileFieldSaver;
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
 import '../models/contact_request.dart';
@@ -18,11 +19,14 @@ import 'my_job_postings_screen.dart';
 import 'help_screen.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
+import 'profile_bio_screen.dart';
+import 'profile_linkedin_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
 import '../widgets/error_view.dart';
 import '../widgets/menu_list.dart';
+import '../widgets/safe_link_chip.dart';
 
 /// Read-only view of an alumnus's profile. Identity fields (name, NIM,
 /// faculty, major, graduation year) came from verification and aren't
@@ -47,7 +51,11 @@ class ProfileDetailScreen extends StatefulWidget {
     this.adminCheck,
     this.nimLoader,
     this.lock,
+    this.saveFields,
   });
+
+  /// Saves my Bio or LinkedIn. Injectable for tests.
+  final ProfileFieldSaver? saveFields;
 
   /// The device lock. Injectable for tests; defaults to the real one.
   final LockService? lock;
@@ -131,6 +139,87 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   bool get _isOwnProfile => _profile['id'] == widget.currentUser.value['id'];
+
+  Future<void> _editField(Widget screen) async {
+    final updated = await Navigator.of(context)
+        .push<Map<String, dynamic>>(MaterialPageRoute(builder: (_) => screen));
+    if (updated != null && mounted) {
+      setState(() => _profile = {..._profile, ...updated});
+      if (_isOwnProfile) widget.currentUser.value = _profile;
+    }
+  }
+
+  /// Bio and LinkedIn: others see them only when filled; I always see both,
+  /// with Ubah, so I can add them.
+  List<Widget> _bioAndLinkedIn(ThemeData theme) {
+    final bio = (_profile['bio'] as String?)?.trim() ?? '';
+    final linkedin = (_profile['linkedin_url'] as String?)?.trim() ?? '';
+    final own = widget.showEditButton;
+    Widget ubah(Key key, Widget screen) => TextButton(
+      key: key,
+      onPressed: () => _editField(screen),
+      child: const Text('Ubah'),
+    );
+    return [
+      if (own || bio.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        KeyedSubtree(
+          key: const Key('profile-bio'),
+          child: _panel(
+            theme,
+            icon: Icons.notes_outlined,
+            title: 'Bio',
+            action: own
+                ? ubah(
+                    const Key('edit-bio'),
+                    ProfileBioScreen(
+                      profile: _profile,
+                      save: widget.saveFields,
+                    ),
+                  )
+                : null,
+            children: [_valueLine(theme, bio)],
+          ),
+        ),
+      ],
+      if (own || linkedin.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        KeyedSubtree(
+          key: const Key('profile-linkedin'),
+          child: _panel(
+            theme,
+            icon: Icons.link,
+            title: 'LinkedIn',
+            action: own
+                ? ubah(
+                    const Key('edit-linkedin'),
+                    ProfileLinkedInScreen(
+                      profile: _profile,
+                      save: widget.saveFields,
+                    ),
+                  )
+                : null,
+            children: [
+              if (linkedin.isEmpty)
+                _valueLine(theme, '')
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SafeLinkChip(
+                    icon: Icons.open_in_new,
+                    label: linkedin.replaceFirst(
+                      RegExp(r'^https://(www\.)?'),
+                      '',
+                    ),
+                    url: linkedin,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    ];
+  }
 
   Future<void> _editProfile() async {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
@@ -243,7 +332,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ownerName: _profile['name'] as String?,
               reportType: ReportTarget.profile,
               targetId: _profile['id'] as String?,
-              what: 'this profile',
+              what: 'profil ini',
               onBlocked: () => Navigator.of(context).maybePop(),
             ),
         ],
@@ -499,6 +588,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               ],
                             ),
                           ],
+                          ..._bioAndLinkedIn(theme),
                         ],
                       ),
                     ),
@@ -646,6 +736,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       ),
     );
   }
+
+  Widget _valueLine(ThemeData theme, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text(
+      value.isEmpty ? 'Belum diisi' : value,
+      style: theme.textTheme.bodyLarge?.copyWith(
+        color: value.isEmpty ? theme.colorScheme.onSurfaceVariant : null,
+      ),
+    ),
+  );
 
   /// Label above value, so a long value never squeezes the label and the two
   /// always line up.
