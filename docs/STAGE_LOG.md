@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Kontak Ikafe replaces Nearby (30 Oct 2026)
+- Home tile `tile-kontak-ikafe` opens `KontakIkafeScreen`: Hubungi (WhatsApp, Email) and Media sosial (Instagram, LinkedIn, Website). Admin > Kontak Ikafe adds, edits, hides and deletes rows. Nearby screens, city WhatsApp group screens and their tests are removed.
+- Migration `20261030100000_ikafe_contacts.sql` (+ `rollback_ikafe_contacts.sql`, `20_ikafe_contacts_test.sql`). NOT applied; Farrel applies it. Seeds 5 EXAMPLE rows. Until it is applied the app shows built-in example contacts, labelled "Contoh data".
+- Checks: analyze clean, full suite passes, `run_beta_local.sh` passes.
+
 ## Stage 8: login redesign (30 Oct 2026)
 - Welcome copy, inline "Email tidak terdaftar" (no code sent), contact link on the email step, outlined "Hubungi tim admin" on the code step (`login-help`), stop icon, Indonesian suspended and error screens, `ContactAdminScreen` in Indonesian with `fromLogin` intro and mailto subject and body, Indonesian lock screen text.
 - Not in this PR: forgot PIN code flow, mandatory PIN, web PIN and "Masuk lagi" (next PR). No migration: `login_email_known` already exists in `20261013120000_real_login.sql`.

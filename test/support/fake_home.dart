@@ -178,9 +178,9 @@ HomePages fakePages({
       note(u);
       return const MarkerPage('Businesses');
     },
-    nearby: (u) {
+    kontakIkafe: (u) {
       note(u);
-      return const MarkerPage('Nearby');
+      return const MarkerPage('KontakIkafe');
     },
     announcements: () => const MarkerPage('Announcements'),
     jobDetail: (job, u) => MarkerPage('JobDetail ${job['id']}'),

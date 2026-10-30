@@ -19,7 +19,6 @@ import 'package:undip_alumni_connect/screens/marketplace_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/marketplace_screen.dart';
 import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
 import 'package:undip_alumni_connect/screens/my_listings_screen.dart';
-import 'package:undip_alumni_connect/screens/nearby_alumni_screen.dart';
 import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/requests_screen.dart';
 import 'package:undip_alumni_connect/widgets/content_actions_menu.dart';
@@ -415,37 +414,6 @@ void main() {
                   'name': 'Budi Diblokir',
                   'major': 'Manajemen',
                   'graduation_year': 2020,
-                },
-              ],
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Siti Baik'), findsOneWidget);
-      expect(find.text('Budi Diblokir'), findsNothing);
-    });
-
-    testWidgets('Nearby', (tester) async {
-      phone(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: NearbyAlumniScreen(
-              currentUser: me,
-              fetchAlumni: () async => [
-                {'id': 'me', 'name': 'Me', 'city': 'Semarang'},
-                {
-                  'id': 'ok',
-                  'name': 'Siti Baik',
-                  'city': 'Jakarta',
-                  'current_role': 'x',
-                },
-                {
-                  'id': 'bad',
-                  'name': 'Budi Diblokir',
-                  'city': 'Jakarta',
-                  'current_role': 'x',
                 },
               ],
             ),

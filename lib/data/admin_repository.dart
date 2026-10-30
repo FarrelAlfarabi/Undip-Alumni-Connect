@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business.dart';
 import 'business_repository.dart';
+import 'ikafe_contact.dart';
 import 'report_repository.dart';
 
 enum AdminErrorCode {
@@ -265,6 +266,49 @@ class AdminRepository {
         'p_admin': adminId,
         'p_title': title.trim(),
         'p_body': body.trim(),
+      }),
+    );
+  }
+
+  /// Every Kontak Ikafe row, hidden ones too.
+  Future<List<IkafeContact>> ikafeContacts(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_ikafe_contact_list', {'p_admin': adminId}),
+    );
+    return [
+      for (final r in rows as List)
+        ?IkafeContact.tryFromMap(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Adds a Kontak Ikafe row, or changes it when [id] is given.
+  Future<void> saveIkafeContact(
+    String adminId, {
+    String? id,
+    required IkafeContactKind kind,
+    required String label,
+    required String value,
+    required int sortOrder,
+    required bool active,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_ikafe_contact_save', {
+        'p_admin': adminId,
+        'p_id': id,
+        'p_kind': kind.name,
+        'p_label': label.trim(),
+        'p_value': value.trim(),
+        'p_sort': sortOrder,
+        'p_active': active,
+      }),
+    );
+  }
+
+  Future<void> deleteIkafeContact(String adminId, String id) async {
+    await _guard(
+      () => _api.rpc('admin_ikafe_contact_delete', {
+        'p_admin': adminId,
+        'p_id': id,
       }),
     );
   }

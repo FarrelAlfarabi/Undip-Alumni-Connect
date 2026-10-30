@@ -203,7 +203,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   SearchableChoice(
                     fieldKey: const Key('profile-city'),
                     label: 'City',
-                    helper: 'Used for Nearby Alumni',
+                    helper: 'Kota tempat kamu tinggal',
                     controller: _cityController,
                     options: kNearbyCities,
                     selected: _city,

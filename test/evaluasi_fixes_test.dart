@@ -10,7 +10,6 @@ import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/business_directory_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
 import 'package:undip_alumni_connect/screens/directory_screen.dart';
-import 'package:undip_alumni_connect/screens/nearby_alumni_screen.dart';
 import 'package:undip_alumni_connect/screens/profile_setup_screen.dart';
 import 'package:undip_alumni_connect/widgets/business_photo.dart';
 
@@ -182,50 +181,6 @@ void main() {
     testWidgets('no employer, no "@"', (tester) async {
       await pumpDirectory(tester, {});
       expect(find.textContaining('@'), findsNothing);
-    });
-  });
-
-  group('Nearby: where to set the city', () {
-    testWidgets('no city shows a Set your city button that opens the editor', (
-      tester,
-    ) async {
-      phone(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: NearbyAlumniScreen(
-              currentUser: ValueNotifier({'id': 'me', 'name': 'Me'}),
-              fetchAlumni: () async => [],
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.textContaining('no city on file'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('nearby-set-city')));
-      await tester.pumpAndSettle();
-      expect(find.text('Edit Employment Info'), findsOneWidget);
-      expect(find.byKey(const Key('profile-city')), findsOneWidget);
-    });
-
-    testWidgets('with a city there is no such button', (tester) async {
-      phone(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: NearbyAlumniScreen(
-              currentUser: ValueNotifier({
-                'id': 'me',
-                'name': 'Me',
-                'city': 'Semarang',
-              }),
-              fetchAlumni: () async => [],
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('nearby-set-city')), findsNothing);
     });
   });
 

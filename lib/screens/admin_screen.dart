@@ -7,6 +7,7 @@ import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_feedback_screen.dart';
+import 'admin_ikafe_contacts_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
@@ -69,6 +70,14 @@ class _AdminScreenState extends State<AdminScreen> {
         subtitle: 'Post news for all members, search past posts',
         builder: (_) =>
             AdminAnnouncementsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-ikafe-contacts',
+        icon: Icons.contact_phone_outlined,
+        title: 'Kontak Ikafe',
+        subtitle: 'Edit the contacts and socials members see',
+        builder: (_) =>
+            AdminIkafeContactsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-businesses',

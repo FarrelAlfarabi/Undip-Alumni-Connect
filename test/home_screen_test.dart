@@ -246,8 +246,8 @@ void main() {
       (t) => tapAndExpect(t, 'tile-marketplace', 'Marketplace'),
     );
     testWidgets(
-      'Nearby Alumni opens Nearby',
-      (t) => tapAndExpect(t, 'tile-nearby', 'Nearby'),
+      'Kontak Ikafe opens Kontak Ikafe',
+      (t) => tapAndExpect(t, 'tile-kontak-ikafe', 'KontakIkafe'),
     );
 
     testWidgets('Directory switches to the Directory tab via the shell', (

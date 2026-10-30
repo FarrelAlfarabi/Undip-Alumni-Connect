@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ValueNotifier<Map<String, dynamic>> get _user => widget.currentUser;
 
-  // Directory, Nearby Alumni and Jobs work best when a person has filled in
+  // Directory and Jobs work best when a person has filled in
   // a city and a role, so Home keeps asking until both are there.
   bool get _profileIncomplete {
     bool empty(String k) => ((_user.value[k] as String?) ?? '').trim().isEmpty;
@@ -334,7 +334,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? widget.onOpenMarket!(0)
                             : _push(widget.pages.marketplace(_user)),
                         onDirectory: widget.onOpenDirectory,
-                        onNearby: () => _push(widget.pages.nearby(_user)),
+                        onKontakIkafe: () =>
+                            _push(widget.pages.kontakIkafe(_user)),
                       ),
                       const SizedBox(height: 12),
                       _BusinessEntry(
@@ -467,13 +468,13 @@ class _QuickActions extends StatelessWidget {
     required this.onJobs,
     required this.onMarketplace,
     required this.onDirectory,
-    required this.onNearby,
+    required this.onKontakIkafe,
   });
 
   final VoidCallback onJobs;
   final VoidCallback onMarketplace;
   final VoidCallback onDirectory;
-  final VoidCallback onNearby;
+  final VoidCallback onKontakIkafe;
 
   @override
   Widget build(BuildContext context) {
@@ -545,11 +546,11 @@ class _QuickActions extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         _Tile(
-          key: const Key('tile-nearby'),
-          icon: Icons.near_me_outlined,
-          label: 'Nearby Alumni',
-          subtitle: 'Alumni di kota yang sama denganmu',
-          onTap: onNearby,
+          key: const Key('tile-kontak-ikafe'),
+          icon: Icons.contact_phone_outlined,
+          label: 'Kontak Ikafe',
+          subtitle: 'Kontak dan media sosial resmi',
+          onTap: onKontakIkafe,
         ),
       ],
     );

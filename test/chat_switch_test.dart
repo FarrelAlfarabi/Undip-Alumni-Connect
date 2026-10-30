@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/feature_flags.dart';
-import 'package:undip_alumni_connect/screens/nearby_alumni_screen.dart';
 import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
 
 final me = {'id': 'me', 'name': 'Me', 'city': 'Semarang'};
@@ -31,28 +30,6 @@ Future<void> pumpProfile(WidgetTester tester, {required bool chat}) async {
   );
 }
 
-Future<void> openCity(WidgetTester tester, {required bool chat}) async {
-  tester.view.physicalSize = const Size(390, 900);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(
-        body: NearbyAlumniScreen(
-          currentUser: ValueNotifier(me),
-          chat: chat,
-          fetchAlumni: () async => [me, other],
-        ),
-      ),
-    ),
-  );
-  await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const Key('nearby-city-field')));
-  await tester.pumpAndSettle();
-  await tester.tap(find.textContaining('Jakarta (').last);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   test('the app ships with chat off', () => expect(chatEnabled, isFalse));
 
@@ -63,26 +40,12 @@ void main() {
       expect(find.text('Message'), findsNothing);
       expect(find.byIcon(Icons.chat_bubble_outline), findsNothing);
     });
-
-    testWidgets('no city group chat on Nearby, WhatsApp group stays', (
-      tester,
-    ) async {
-      await openCity(tester, chat: false);
-      expect(find.textContaining('Group Chat'), findsNothing);
-      expect(find.byKey(const Key('nearby-wa-add')), findsOneWidget);
-      expect(find.text('Bunga Ayu'), findsOneWidget);
-    });
   });
 
   group('switch on (everything comes back)', () {
     testWidgets('Message button shows', (tester) async {
       await pumpProfile(tester, chat: true);
       expect(find.text('Message'), findsOneWidget);
-    });
-
-    testWidgets('city group chat button shows', (tester) async {
-      await openCity(tester, chat: true);
-      expect(find.text('Open Jakarta Group Chat'), findsOneWidget);
     });
   });
 }
