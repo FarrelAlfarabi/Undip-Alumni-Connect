@@ -68,13 +68,10 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
           await _confirmRemove();
         }
       case PinWrong(:final attemptsLeft):
-        setState(
-          () => _error =
-              'Wrong PIN. $attemptsLeft ${attemptsLeft == 1 ? 'try' : 'tries'} left.',
-        );
+        setState(() => _error = 'PIN salah. Sisa $attemptsLeft kesempatan.');
       case PinWait():
         setState(
-          () => _error = 'Too many wrong tries. Wait a moment, then try again.',
+          () => _error = 'Terlalu banyak percobaan salah. Tunggu sebentar, lalu coba lagi.',
         );
       case PinLockedOut():
         // The lock wiped this device's unlock data. Start again from Welcome.
@@ -86,20 +83,20 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove the PIN?'),
+        title: const Text('Hapus PIN?'),
         content: const Text(
-          'Lingkaran will open on this phone without a PIN. You can set a new '
-          'one any time.',
+          'Lingkaran akan terbuka di ponsel ini tanpa PIN. Kamu bisa membuat '
+          'PIN baru kapan saja.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           FilledButton(
             key: const Key('pin-remove-confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Remove PIN'),
+            child: const Text('Hapus PIN'),
           ),
         ],
       ),
@@ -130,7 +127,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
       },
       child: Scaffold(
         key: const Key('pin-settings'),
-        appBar: AppBar(title: const Text('PIN lock')),
+        appBar: AppBar(title: const Text('PIN')),
         body: SafeArea(
           child: _hasPin == null
               ? const Center(child: CircularProgressIndicator())
@@ -150,9 +147,9 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
       children: [
         Text(
           has
-              ? 'A PIN opens Lingkaran on this phone. It is a convenience lock '
-                    'on this device, not extra protection for your account.'
-              : 'No PIN is set. Lingkaran opens on this phone without one.',
+              ? 'PIN membuka Lingkaran di ponsel ini. Ini pengaman praktis di '
+                    'perangkat, bukan perlindungan tambahan untuk akunmu.'
+              : 'Belum ada PIN. Lingkaran terbuka di ponsel ini tanpa PIN.',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
@@ -160,13 +157,13 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
           FilledButton(
             key: const Key('pin-set'),
             onPressed: _openSetup,
-            child: const Text('Set a PIN'),
+            child: const Text('Atur PIN'),
           )
         else ...[
           ListTile(
             key: const Key('pin-change'),
             leading: const Icon(Icons.password),
-            title: const Text('Change PIN'),
+            title: const Text('Ubah PIN'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => setState(() => _mode = _Mode.verifyChange),
           ),
@@ -174,7 +171,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
             key: const Key('pin-remove'),
             leading: Icon(Icons.lock_open, color: theme.colorScheme.error),
             title: Text(
-              'Remove PIN',
+              'Hapus PIN',
               style: TextStyle(color: theme.colorScheme.error),
             ),
             trailing: const Icon(Icons.chevron_right),
@@ -188,7 +185,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
   Widget _verify(ThemeData theme) => Column(
     children: [
       Text(
-        'Enter your current PIN',
+        'Masukkan PIN kamu saat ini',
         key: const Key('pin-verify-title'),
         style: theme.textTheme.titleLarge,
         textAlign: TextAlign.center,

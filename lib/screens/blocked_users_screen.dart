@@ -45,7 +45,9 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
         widget.currentUserId,
         p.id,
       );
-      messenger.showSnackBar(SnackBar(content: Text('Unblocked ${p.name}.')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Blokir ${p.name} dibuka.')),
+      );
       _busy.remove(p.id);
       if (mounted) _reload();
     } catch (e) {
@@ -63,7 +65,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Blocked users')),
+      appBar: AppBar(title: const Text('Pengguna terblokir')),
       body: FutureBuilder<List<BlockedPerson>>(
         future: _future,
         builder: (context, snap) {
@@ -84,7 +86,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'You have not blocked anyone.',
+                  'Kamu belum memblokir siapa pun.',
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -100,7 +102,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                 trailing: OutlinedButton(
                   key: Key('unblock-${p.id}'),
                   onPressed: _busy.contains(p.id) ? null : () => _unblock(p),
-                  child: const Text('Unblock'),
+                  child: const Text('Buka blokir'),
                 ),
               );
             },

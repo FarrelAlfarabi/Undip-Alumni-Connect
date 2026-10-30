@@ -164,3 +164,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: white hairline cards (radius 16, no shadow) and black/white filter chips from `theme.dart`; Upcoming cards use yellow-soft icon squares. Requests, report sheet and block dialog now Indonesian; contact field is "Kontak atau nama Online Shop yang akan dibagikan".
 - New Bio (200) and LinkedIn screens, shown on profile and a LinkedIn button on Members rows. Migration `20261030140000_profile_bio_linkedin.sql` (rollback and SQL test 20 included), not applied.
 - Not done: Stage 3 shared Market card and Job row (do not exist yet), Bio/LinkedIn on the first-login form, admin hide-bio.
+## Stage 10: Profil, Pengaturan, Akun (30 Oct 2026)
+- Profile: one "Akun" group (Pengaturan, Bantuan, Kebijakan Privasi dan Ketentuan). Settings, PIN, blocked users, delete account and default contact in Indonesian. "Pengenalan fitur" stays in Pengaturan.
+- Admin "Hapus bio" on a reported profile clears only the bio. Migration `20261030200000_admin_clear_bio.sql` (rollback `rollback_admin_clear_bio.sql`) is not applied anywhere; apply it after Stage 4's `20261030140000_profile_bio_linkedin.sql`.
+- Bio and LinkedIn themselves come from Stage 4; nothing duplicated here.
+- Left for others: Bantuan/feedback rewrite and Tentang aplikasi (G6, G7); points and own-email change are decisions for Farrel.

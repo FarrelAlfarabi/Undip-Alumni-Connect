@@ -82,7 +82,7 @@ void main() {
     await tester.pumpAndSettle();
     await enterPin(tester, testPin);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.text('Batal'));
     await tester.pumpAndSettle();
     expect(await lock.hasPin(), isTrue);
   });

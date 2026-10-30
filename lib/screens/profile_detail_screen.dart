@@ -801,7 +801,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 }
 
 /// Under my own profile: Admin (admins only),
-/// then My business and My job postings, then Settings, Privacy policy and Help, then Sign out.
+/// then My business and My job postings, then the Akun group (Pengaturan, Bantuan, Kebijakan Privasi dan
+/// Ketentuan), then Sign out.
 /// Rarely used things (PIN, blocked users, delete account, contact admin,
 /// feedback, about) live inside Settings and Help.
 class _ProfileMenu extends StatelessWidget {
@@ -866,27 +867,40 @@ class _ProfileMenu extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        MenuList(
-          items: [
-            MenuItem(
-              key: const Key('profile-settings'),
-              icon: Icons.settings_outlined,
-              title: 'Settings',
-              subtitle: 'Default contact, PIN lock, blocked users, account',
-              onTap: onSettings,
+        Column(
+          key: const Key('profile-menu-account'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+              child: Text(
+                'Akun',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
             ),
-            MenuItem(
-              key: const Key('profile-policy'),
-              icon: Icons.privacy_tip_outlined,
-              title: 'Privacy policy and community rules',
-              onTap: onPolicy,
-            ),
-            MenuItem(
-              key: const Key('profile-help'),
-              icon: Icons.help_outline,
-              title: 'Help',
-              subtitle: 'Contact admin, send feedback, about',
-              onTap: onHelp,
+            MenuList(
+              items: [
+                MenuItem(
+                  key: const Key('profile-settings'),
+                  icon: Icons.settings_outlined,
+                  title: 'Pengaturan',
+                  subtitle: 'Kontak, PIN, pengguna terblokir, hapus akun',
+                  onTap: onSettings,
+                ),
+                MenuItem(
+                  key: const Key('profile-help'),
+                  icon: Icons.help_outline,
+                  title: 'Bantuan',
+                  subtitle: 'Kontak admin, beri masukan, tentang aplikasi',
+                  onTap: onHelp,
+                ),
+                MenuItem(
+                  key: const Key('profile-policy'),
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Kebijakan Privasi dan Ketentuan',
+                  onTap: onPolicy,
+                ),
+              ],
             ),
           ],
         ),
