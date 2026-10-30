@@ -7,4 +7,4 @@ const String kProfileColumns =
     'id, user_id, name, email, faculty, major, graduation_year, '
     'current_employer, current_role, industry, company, city, '
     'verification_status, created_at, updated_at, '
-    'policy_version, policy_accepted_at, deleted_at';
+    'policy_version, policy_accepted_at, deleted_at, bio';

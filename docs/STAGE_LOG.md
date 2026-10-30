@@ -116,3 +116,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+## Stage 10: Profil, Pengaturan, Akun (30 Oct 2026)
+- Profile: one "Akun" group (Pengaturan, Bantuan, Kebijakan Privasi dan Ketentuan). Settings, PIN, blocked users, delete account and default contact in Indonesian ("Atur PIN", "Ubah PIN", "Hapus PIN", "Blokir pengguna", "Hapus akun saya"). "Pengenalan fitur" stays in Pengaturan.
+- Bio: card on own profile (Ubah, 200 characters, warning card) and on other profiles when set. Admin "Hapus bio" on a reported profile clears only the bio.
+- Migration `20261030200000_profile_bio.sql` (rollback `rollback_profile_bio.sql`) is not applied anywhere: `bio` column, `profile_set_bio`, `admin_clear_bio`, column lock, bio cleared on account deletion. Apply it before the app build ships (the build selects `bio`).
+- Left for others: LinkedIn (Stage 4 owns `linkedin_url`), Bantuan/feedback rewrite and Tentang aplikasi (G6, G7), points and own-email change (decisions for Farrel). 785 tests pass, analyze clean, both SQL runners pass.

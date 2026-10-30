@@ -233,6 +233,37 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     );
   }
 
+  /// Removes only the bio of a reported person. The account stays.
+  Future<void> _clearBio(AdminReport r) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus bio ini?'),
+        content: const Text(
+          'Hanya bio yang dihapus. Akun tidak ikut dihapus dan orangnya '
+          'masih bisa menulis bio baru.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            key: const Key('clear-bio-confirm'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Hapus bio'),
+          ),
+        ],
+      ),
+    );
+    if (sure != true) return;
+    await _run(
+      r,
+      () => widget.repository.clearBio(widget.adminId, r.targetId),
+      'Bio dihapus.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -383,6 +414,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       ),
                       onHide: () => _hide(r),
                       onSuspend: () => _suspend(r),
+                      onClearBio: () => _clearBio(r),
                       onUnsuspend: () => _run(
                         r,
                         () =>
@@ -416,6 +448,7 @@ class _ReportCard extends StatelessWidget {
     required this.onActioned,
     required this.onHide,
     required this.onSuspend,
+    required this.onClearBio,
     required this.onUnsuspend,
     required this.onRestore,
   });
@@ -427,6 +460,7 @@ class _ReportCard extends StatelessWidget {
   final VoidCallback onActioned;
   final VoidCallback onHide;
   final VoidCallback onSuspend;
+  final VoidCallback onClearBio;
   final VoidCallback onUnsuspend;
   final VoidCallback onRestore;
 
@@ -524,6 +558,17 @@ class _ReportCard extends StatelessWidget {
       return [
         main(Key('suspend-${r.targetId}'), 'Suspend user', onSuspend),
         const SizedBox(height: 8),
+        if (r.targetType == ReportTarget.profile) ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              key: Key('clear-bio-${r.targetId}'),
+              onPressed: busy ? null : onClearBio,
+              child: const Text('Hapus bio'),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         Row(
           children: [
             quiet(dismiss, 'Dismiss', onDismiss),

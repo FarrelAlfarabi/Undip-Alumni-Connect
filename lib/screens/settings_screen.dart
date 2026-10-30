@@ -9,7 +9,7 @@ import 'default_contact_screen.dart';
 import 'delete_account_screen.dart';
 import 'feature_intro_screen.dart';
 
-/// Profile > Settings: the things you set once and rarely come back to.
+/// Profile > Pengaturan: the things you set once and rarely come back to.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
@@ -37,7 +37,7 @@ class SettingsScreen extends StatelessWidget {
     final me = currentUser.value['id'] as String;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Pengaturan')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -47,8 +47,8 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('settings-default-contact'),
                   icon: Icons.contact_phone_outlined,
-                  title: 'Default contact to share',
-                  subtitle: 'Filled in when you accept a request',
+                  title: 'Default kontak untuk dibagikan',
+                  subtitle: 'Terisi ketika menerima request',
                   onTap: () => _push(
                     context,
                     DefaultContactScreen(
@@ -73,7 +73,7 @@ class SettingsScreen extends StatelessWidget {
                   MenuItem(
                     key: const Key('profile-pin'),
                     icon: Icons.pin_outlined,
-                    title: 'PIN lock',
+                    title: 'PIN',
                     onTap: () => _push(
                       context,
                       PinSettingsScreen(lock: lock ?? LockService.shared),
@@ -82,7 +82,8 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('profile-blocked'),
                   icon: Icons.block,
-                  title: 'Blocked users',
+                  title: 'Blokir pengguna',
+                  subtitle: 'Pengguna terblokir, buka blokir',
                   onTap: () =>
                       _push(context, BlockedUsersScreen(currentUserId: me)),
                 ),
@@ -90,7 +91,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Danger zone',
+              'Zona bahaya',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.error,
               ),
@@ -101,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('profile-delete'),
                   icon: Icons.delete_forever_outlined,
-                  title: 'Delete my account',
+                  title: 'Hapus akun saya',
                   color: theme.colorScheme.error,
                   onTap: () => _push(
                     context,

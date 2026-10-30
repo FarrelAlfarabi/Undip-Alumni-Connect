@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/feature_flags.dart';
 import '../data/admin_repository.dart';
+import '../data/bio_repository.dart';
 import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
@@ -18,6 +19,7 @@ import 'my_job_postings_screen.dart';
 import 'help_screen.dart';
 import 'settings_screen.dart';
 import 'chat_screen.dart';
+import 'profile_bio_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
 import 'verification_screen.dart';
@@ -47,7 +49,11 @@ class ProfileDetailScreen extends StatefulWidget {
     this.adminCheck,
     this.nimLoader,
     this.lock,
+    this.bioRepository,
   });
+
+  /// Saves the bio. Injectable for tests; defaults to the real one.
+  final ProfileBioRepository? bioRepository;
 
   /// The device lock. Injectable for tests; defaults to the real one.
   final LockService? lock;
@@ -142,6 +148,61 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         widget.currentUser.value = updated;
       }
     }
+  }
+
+  Future<void> _editBio() async {
+    final saved = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ProfileBioScreen(
+          profileId: _profile['id'] as String,
+          initialBio: _profile['bio'] as String?,
+          repository: widget.bioRepository,
+        ),
+      ),
+    );
+    if (saved == null || !mounted) return;
+    final updated = {..._profile, 'bio': saved.isEmpty ? null : saved};
+    setState(() => _profile = updated);
+    if (_isOwnProfile) widget.currentUser.value = updated;
+  }
+
+  /// The bio card under the header. On my own profile it is always there (it
+  /// invites me to add one); on someone else's only when they wrote one.
+  Widget _bioCard(ThemeData theme) {
+    final bio = (_profile['bio'] as String?)?.trim() ?? '';
+    final mine = widget.showEditButton;
+    if (!mine && bio.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: KeyedSubtree(
+        key: Key(mine ? 'profile-bio-card' : 'profile-bio-view'),
+        child: _panel(
+          theme,
+          icon: Icons.notes_outlined,
+          title: 'Bio',
+          action: mine
+              ? TextButton(
+                  key: const Key('profile-bio-edit'),
+                  onPressed: _editBio,
+                  child: const Text('Ubah'),
+                )
+              : null,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                bio.isEmpty ? 'Tambahkan bio' : bio,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: bio.isEmpty
+                      ? theme.colorScheme.onSurfaceVariant
+                      : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // True when I already have a request to this person that is waiting for
@@ -372,6 +433,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 20),
+                          _bioCard(theme),
                           if (widget.showEditButton) ...[
                             _panel(
                               theme,
@@ -671,7 +733,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 }
 
 /// Under my own profile: Admin (admins only),
-/// then My business and My job postings, then Settings, Privacy policy and Help, then Sign out.
+/// then My business and My job postings, then the Akun group (Pengaturan, Bantuan, Kebijakan Privasi dan
+/// Ketentuan), then Sign out.
 /// Rarely used things (PIN, blocked users, delete account, contact admin,
 /// feedback, about) live inside Settings and Help.
 class _ProfileMenu extends StatelessWidget {
@@ -736,27 +799,40 @@ class _ProfileMenu extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        MenuList(
-          items: [
-            MenuItem(
-              key: const Key('profile-settings'),
-              icon: Icons.settings_outlined,
-              title: 'Settings',
-              subtitle: 'Default contact, PIN lock, blocked users, account',
-              onTap: onSettings,
+        Column(
+          key: const Key('profile-menu-account'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+              child: Text(
+                'Akun',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
             ),
-            MenuItem(
-              key: const Key('profile-policy'),
-              icon: Icons.privacy_tip_outlined,
-              title: 'Privacy policy and community rules',
-              onTap: onPolicy,
-            ),
-            MenuItem(
-              key: const Key('profile-help'),
-              icon: Icons.help_outline,
-              title: 'Help',
-              subtitle: 'Contact admin, send feedback, about',
-              onTap: onHelp,
+            MenuList(
+              items: [
+                MenuItem(
+                  key: const Key('profile-settings'),
+                  icon: Icons.settings_outlined,
+                  title: 'Pengaturan',
+                  subtitle: 'Kontak, PIN, pengguna terblokir, hapus akun',
+                  onTap: onSettings,
+                ),
+                MenuItem(
+                  key: const Key('profile-help'),
+                  icon: Icons.help_outline,
+                  title: 'Bantuan',
+                  subtitle: 'Kontak admin, beri masukan, tentang aplikasi',
+                  onTap: onHelp,
+                ),
+                MenuItem(
+                  key: const Key('profile-policy'),
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Kebijakan Privasi dan Ketentuan',
+                  onTap: onPolicy,
+                ),
+              ],
             ),
           ],
         ),

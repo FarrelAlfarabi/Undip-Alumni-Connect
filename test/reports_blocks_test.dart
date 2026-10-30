@@ -647,7 +647,7 @@ void main() {
         'p_blocked': 'u2',
       });
       expect(list.isBlocked('u2'), isFalse);
-      expect(find.text('You have not blocked anyone.'), findsOneWidget);
+      expect(find.text('Kamu belum memblokir siapa pun.'), findsOneWidget);
     });
   });
 

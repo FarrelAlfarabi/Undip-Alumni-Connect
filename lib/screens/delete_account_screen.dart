@@ -84,7 +84,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete my account'),
+            child: const Text('Hapus akun saya'),
           ),
         ],
       ),
@@ -146,7 +146,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       ],
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Delete my account')),
+      appBar: AppBar(title: const Text('Hapus akun saya')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -223,7 +223,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2.5),
                           )
-                        : const Text('Delete my account'),
+                        : const Text('Hapus akun saya'),
                   ),
                 ],
               ),

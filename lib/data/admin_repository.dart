@@ -190,6 +190,17 @@ class AdminRepository {
   Future<void> unsuspendUser(String adminId, AdminReport r) =>
       _reportAction(adminId, r, 'unsuspend_user');
 
+  /// Removes only the bio of a reported person (admin_clear_bio). The account
+  /// and everything else stay.
+  Future<void> clearBio(String adminId, String profileId) async {
+    await _guard(
+      () => _api.rpc('admin_clear_bio', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+      }),
+    );
+  }
+
   Future<void> _reportAction(
     String adminId,
     AdminReport r,

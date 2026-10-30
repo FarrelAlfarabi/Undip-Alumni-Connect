@@ -351,9 +351,9 @@ void main() {
       expect(y('profile-admin') < y('profile-business'), isTrue);
       expect(y('profile-business') < y('profile-jobs'), isTrue);
       expect(y('profile-jobs') < y('profile-settings'), isTrue);
-      expect(y('profile-settings') < y('profile-policy'), isTrue);
-      expect(y('profile-policy') < y('profile-help'), isTrue);
-      expect(y('profile-help') < y('profile-signout'), isTrue);
+      expect(y('profile-settings') < y('profile-help'), isTrue);
+      expect(y('profile-help') < y('profile-policy'), isTrue);
+      expect(y('profile-policy') < y('profile-signout'), isTrue);
     });
 
     testWidgets(

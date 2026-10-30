@@ -95,7 +95,7 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Default contact to share')),
+      appBar: AppBar(title: const Text('Default kontak untuk dibagikan')),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -155,7 +155,7 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Save'),
+                          : const Text('Simpan'),
                     ),
                   ],
                 ),
