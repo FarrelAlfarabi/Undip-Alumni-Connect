@@ -13,6 +13,9 @@ import 'package:undip_alumni_connect/util/safe_url.dart';
 
 import 'support/fake_admin_api.dart';
 import 'support/fake_business_api.dart';
+import 'support/choose_category.dart';
+
+import 'package:undip_alumni_connect/widgets/image_size_hint.dart';
 
 void tall(WidgetTester tester) {
   tester.view.physicalSize = const Size(600, 3000);
@@ -72,10 +75,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Short description *'),
         'Kopi dari Semarang',
       );
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Food & Drink').last);
-      await tester.pumpAndSettle();
+      await chooseCategory(tester, 'Food & Drink');
       await tester.tap(find.byKey(const Key('band-small')));
       await tester.pump();
     }
@@ -129,14 +129,12 @@ void main() {
 
     testWidgets('photo helper states the real limits', (tester) async {
       await pumpForm(tester);
-      final helper = find.byKey(const Key('business-photo-help'));
-      expect(helper, findsOneWidget);
-      final text = tester.widget<Text>(helper).data!;
-      expect(text, contains('JPG, PNG or WebP'));
-      expect(text, contains('2 MB'));
-      expect(text, contains('2:1'));
-      expect(text, contains('1200 x 600'));
-      expect(text, contains('middle'));
+      expect(find.byType(ImageSizeHint), findsOneWidget);
+      expect(find.text(ImageSizeHint.sizeLine), findsOneWidget);
+      expect(find.text(ImageSizeHint.typeLine), findsOneWidget);
+      expect(ImageSizeHint.typeLine, contains('JPG, PNG atau WebP'));
+      expect(ImageSizeHint.typeLine, contains('2 MB'));
+      expect(ImageSizeHint.sizeLine, contains('3:2 (1200 x 800 px)'));
       // The numbers in the text are the ones the code enforces.
       expect(kListingImageMaxBytes, 2 * 1024 * 1024);
       expect(kListingImageExtensions, ['jpg', 'jpeg', 'png', 'webp']);

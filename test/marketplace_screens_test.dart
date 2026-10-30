@@ -112,18 +112,17 @@ void main() {
 
     testWidgets('search filters by title', (tester) async {
       await pumpMarket(tester);
-      await tester.enterText(find.byType(TextField), 'batik');
+      await tester.enterText(find.byType(TextField).first, 'batik');
       await tester.pumpAndSettle();
       expect(find.text('Batik Tulis'), findsOneWidget);
       expect(find.text('Kopi Arabika'), findsNothing);
     });
 
-    testWidgets('category chip filters, clear filters resets', (tester) async {
+    testWidgets('category filter, clear filters resets', (tester) async {
       await pumpMarket(tester);
-      final chip = find.widgetWithText(ChoiceChip, 'Fashion');
-      await tester.ensureVisible(chip);
+      await tester.tap(find.byKey(const Key('market-category')));
       await tester.pumpAndSettle();
-      await tester.tap(chip);
+      await tester.tap(find.text('Fashion').last);
       await tester.pumpAndSettle();
       expect(find.text('Batik Tulis'), findsOneWidget);
       expect(find.text('Laptop Bekas'), findsNothing);
@@ -136,7 +135,7 @@ void main() {
 
     testWidgets('no match shows the filtered empty message', (tester) async {
       await pumpMarket(tester);
-      await tester.enterText(find.byType(TextField), 'zzzz');
+      await tester.enterText(find.byType(TextField).first, 'zzzz');
       await tester.pumpAndSettle();
       expect(find.text('No listings match these filters.'), findsOneWidget);
     });
@@ -147,7 +146,7 @@ void main() {
       await pumpMarket(tester);
       expect(find.byType(DropdownButtonFormField<String>), findsNothing);
       expect(find.byKey(const Key('sort-menu')), findsOneWidget);
-      final search = tester.getRect(find.byType(TextField));
+      final search = tester.getRect(find.byType(TextField).first);
       final sort = tester.getRect(find.byKey(const Key('sort-menu')));
       expect((search.center.dy - sort.center.dy).abs(), lessThan(8));
     });

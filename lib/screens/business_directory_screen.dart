@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../data/block_list.dart';
 import '../data/business_repository.dart';
+import '../data/category_repository.dart';
 import '../data/report_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../widgets/content_actions_menu.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/safe_link_chip.dart';
+import '../widgets/searchable_choice.dart';
 import 'business_form_screen.dart';
 import 'my_businesses_screen.dart';
 import '../widgets/business_photo.dart';
@@ -59,6 +61,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
       widget.repository ?? BusinessRepository();
   final _search = TextEditingController();
   late Future<List<Business>> _future;
+  final _categoryText = TextEditingController(text: kAllFilter);
   String _category = kAllFilter;
 
   String get _myId => widget.currentUser.value['id'] as String;
@@ -68,11 +71,13 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
     super.initState();
     _future = _repo.directory(_myId);
     _search.addListener(() => setState(() {}));
+    CategoryRepository.shared.load();
   }
 
   @override
   void dispose() {
     _search.dispose();
+    _categoryText.dispose();
     super.dispose();
   }
 
@@ -142,25 +147,20 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
                 hintText: 'Search by name or category...',
               ),
             ),
-            SizedBox(
-              height: 48,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: ValueListenableBuilder<List<String>>(
+                valueListenable: CategoryRepository.shared.names,
+                builder: (context, names, _) => SearchableChoice(
+                  fieldKey: const Key('business-category'),
+                  label: 'Kategori',
+                  controller: _categoryText,
+                  options: [kAllFilter, ...names],
+                  selected: _category,
+                  enabled: true,
+                  onSelected: (v) =>
+                      setState(() => _category = v ?? kAllFilter),
                 ),
-                children: [
-                  for (final c in [kAllFilter, ...kBusinessCategories])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(c),
-                        selected: _category == c,
-                        onSelected: (_) => setState(() => _category = c),
-                      ),
-                    ),
-                ],
               ),
             ),
             Expanded(
@@ -258,7 +258,10 @@ class _BusinessCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BusinessPhoto(url: business.photoUrl),
+              BusinessPhoto(
+                url: business.photoUrl,
+                semanticLabel: business.name,
+              ),
               Text(
                 business.name,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -327,7 +330,7 @@ class BusinessDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  BusinessPhoto(url: b.photoUrl, height: 200),
+                  BusinessPhoto(url: b.photoUrl, semanticLabel: b.name),
                   Text(
                     b.name,
                     style: theme.textTheme.headlineSmall?.copyWith(

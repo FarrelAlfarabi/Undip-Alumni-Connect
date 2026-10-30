@@ -61,7 +61,7 @@ class SettingsScreen extends StatelessWidget {
                   key: const Key('settings-intro'),
                   icon: Icons.tour_outlined,
                   title: 'Pengenalan fitur',
-                  subtitle: 'Apa itu Marketplace dan Business',
+                  subtitle: 'Apa itu Marketplace, Business, dan Jobs',
                   onTap: () => _push(
                     context,
                     FeatureIntroScreen(

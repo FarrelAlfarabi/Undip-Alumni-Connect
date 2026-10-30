@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
+import '../data/category_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_messages.dart';
@@ -8,7 +9,9 @@ import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../models/marketplace_listing.dart';
 import '../util/friendly_error.dart';
+import '../widgets/app_photo.dart';
 import '../widgets/filter_dropdown.dart';
+import '../widgets/searchable_choice.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'business_form_screen.dart';
 import 'marketplace_form_screen.dart';
@@ -89,6 +92,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   late Future<List<MarketplaceListing>> _future;
 
   final _searchController = TextEditingController();
+  final _categoryText = TextEditingController(text: kAllFilter);
   String _category = kAllFilter;
   MarketplaceSort _sort = MarketplaceSort.newest;
 
@@ -98,11 +102,13 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     _repo = widget.repository ?? MarketplaceRepository();
     _future = _repo.fetchApproved(limit: kMarketplaceMaxRows);
     _searchController.addListener(() => setState(() {}));
+    CategoryRepository.shared.load();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _categoryText.dispose();
     super.dispose();
   }
 
@@ -121,6 +127,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     setState(() {
       _searchController.clear();
       _category = kAllFilter;
+      _categoryText.text = kAllFilter;
       _sort = MarketplaceSort.newest;
     });
   }
@@ -365,29 +372,20 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(
-                      height: 64,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: ValueListenableBuilder<List<String>>(
+                        valueListenable: CategoryRepository.shared.names,
+                        builder: (context, names, _) => SearchableChoice(
+                          fieldKey: const Key('market-category'),
+                          label: 'Kategori',
+                          controller: _categoryText,
+                          options: [kAllFilter, ...names],
+                          selected: _category,
+                          enabled: true,
+                          onSelected: (v) =>
+                              setState(() => _category = v ?? kAllFilter),
                         ),
-                        children: [
-                          for (final c in [
-                            kAllFilter,
-                            ...kMarketplaceCategories,
-                          ])
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text(c),
-                                selected: _category == c,
-                                onSelected: (_) =>
-                                    setState(() => _category = c),
-                              ),
-                            ),
-                        ],
                       ),
                     ),
                     Padding(
@@ -579,12 +577,11 @@ class ListingImage extends StatelessWidget {
     if (size != null) {
       return SizedBox(width: size, height: size, child: photo(size!));
     }
-    return AspectRatio(
+    return AppPhoto(
+      url: url,
       aspectRatio: aspectRatio ?? 3 / 2,
-      child: LayoutBuilder(
-        builder: (context, constraints) =>
-            photo(constraints.hasBoundedWidth ? constraints.maxWidth : 600),
-      ),
+      semanticLabel: semanticLabel,
+      radius: 0,
     );
   }
 }

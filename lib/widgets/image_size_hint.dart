@@ -3,12 +3,16 @@ import 'package:flutter/material.dart';
 enum ImageSizeKind { landscape, profile }
 
 /// Short lines under a "Choose photo" button: the best size and the
-/// accepted types. The one place this text is written.
+/// accepted types, so a person knows them before picking. The one place
+/// this text is written.
 class ImageSizeHint extends StatelessWidget {
   const ImageSizeHint([this.kind = ImageSizeKind.landscape, Key? key])
       : super(key: key);
 
   final ImageSizeKind kind;
+
+  static const String sizeLine = 'Foto terbaik: landscape 3:2 (1200 x 800 px).';
+  static const String typeLine = 'JPG, PNG atau WebP, maksimal 2 MB.';
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +33,8 @@ class ImageSizeHint extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Foto terbaik: landscape 3:2 (1200 x 800 px).', style: style),
-          Text('JPG, PNG atau WebP, maksimal 2 MB.', style: style),
+          Text(sizeLine, style: style),
+          Text(typeLine, style: style),
         ],
       ),
     );

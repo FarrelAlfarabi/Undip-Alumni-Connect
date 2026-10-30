@@ -22,6 +22,7 @@ import 'support/fake_admin_api.dart';
 import 'support/fake_business_api.dart';
 import 'support/fake_contact_api.dart';
 import 'support/fake_marketplace_api.dart';
+import 'support/choose_category.dart';
 
 class FakeFeedbackApi implements FeedbackApi {
   final rows = <Map<String, dynamic>>[];
@@ -346,10 +347,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Short description *'),
         'Kopi',
       );
-      await tester.tap(find.byType(DropdownButtonFormField<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Other').last);
-      await tester.pumpAndSettle();
+      await chooseCategory(tester, 'Other');
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Instagram *'),
         '@kopi_ahmad',

@@ -11,6 +11,7 @@ import 'package:undip_alumni_connect/screens/marketplace_form_screen.dart';
 import 'package:undip_alumni_connect/screens/my_listings_screen.dart';
 
 import 'support/fake_marketplace_api.dart';
+import 'support/choose_category.dart';
 
 // A valid 1x1 PNG so Image.memory can decode it.
 final pngBytes = base64Decode(
@@ -94,10 +95,7 @@ Future<void> fillValid(
     find.widgetWithText(TextFormField, 'Price (whole rupiah)'),
     '85000',
   );
-  await tester.tap(find.byType(DropdownButtonFormField<String>).first);
-  await tester.pumpAndSettle();
-  await tester.tap(find.text('Food & Drink').last);
-  await tester.pumpAndSettle();
+  await chooseCategory(tester, 'Food & Drink');
   await tester.enterText(
     find.widgetWithText(TextFormField, 'Contact info (optional)'),
     contact,

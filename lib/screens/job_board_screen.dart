@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../widgets/app_photo.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/block_list.dart';
@@ -287,6 +290,13 @@ class _JobCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if ((job['image_url'] as String?)?.isNotEmpty == true) ...[
+                AppPhoto(
+                  url: job['image_url'] as String,
+                  semanticLabel: job['title'] as String?,
+                ),
+                const SizedBox(height: 12),
+              ],
               Text(
                 job['title'] as String? ?? '',
                 style: theme.textTheme.titleMedium?.copyWith(

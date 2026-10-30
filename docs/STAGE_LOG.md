@@ -155,3 +155,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Admin > Home order: pin products and jobs, move up/down, Lepas; Pin greys out when Home is full (10 produk, 3 lowongan). Home shows pinned first (by rank), then newest; hidden, rejected, sold or blocked pins are skipped.
 - Migration `20261030150000_home_order.sql` (rollback `supabase/rollback_home_order.sql`, SQL test 20): `home_rank` on both tables, member write guard, `admin_set_home_order` (one atomic call), `admin_home_order_list`. Not applied to any project.
 - Not in this stage: review-list filters (H5) and the Urutan field on edit screens.
+
+## Stage 6: Explore tab (30 Oct 2026)
+- Tab is Explore, segment Marketplace. Categories load from a `categories` table (fallback: built-in 5) and use the searchable picker in filters and forms. One 3:2 `AppPhoto`, `ImageSizeHint` under every Choose photo, optional job photo, 3-page tour.
+- Migrations not applied: `20261030160000_categories.sql`, `20261030160100_job_photo.sql` (rollbacks in `supabase/`). Old 2:1 business photos now crop a little top and bottom.
+- Analyze clean, 783 tests pass, release gate and both SQL scripts pass.

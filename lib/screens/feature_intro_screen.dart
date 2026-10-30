@@ -14,28 +14,38 @@ class _IntroPage {
 
 const _pages = [
   _IntroPage(
-    Icons.storefront_outlined,
-    'Marketplace',
-    'Tempat alumni menjual dan mencari barang atau jasa satuan.',
+    Icons.people_outline,
+    'Cari alumni',
+    'Temukan sesama alumni yang telah terdaftar',
     [
-      'Pasang produk yang ingin kamu jual, lengkap dengan foto dan harga.',
-      'Cari barang dari sesama alumni, lalu hubungi penjualnya langsung.',
-      'Buka tab Market, pilih Products.',
+      'Cari alumni di Tab Members.',
+      'Kirim permintaan kontak.',
+      'Respon akan diterima pada Fitur Request.',
     ],
   ),
   _IntroPage(
-    Icons.business_center_outlined,
-    'Business',
-    'Tempat alumni memperkenalkan usahanya agar mudah ditemukan.',
+    Icons.storefront_outlined,
+    'Marketplace dan Business',
+    'Wadah bagi alumni mempromosikan usaha dan produknya',
     [
-      'Daftarkan usaha kamu sekali, supaya alumni lain tahu apa yang kamu kerjakan.',
-      'Cari usaha milik alumni untuk kerja sama, rekan, atau pelanggan.',
-      'Buka tab Market, pilih Businesses.',
+      'Daftarkan usahamu dulu.',
+      'Produk bisa dipasang setelah usaha disetujui.',
+      'Cari produk dan usaha di tab Explore.',
+    ],
+  ),
+  _IntroPage(
+    Icons.work_outline,
+    'Jobs',
+    'Tempat alumni memasang dan mencari lowongan kerja.',
+    [
+      'Pasang lowongan dari perusahaanmu.',
+      'Lamar lowongan dari sesama alumni.',
+      'Buka tab Explore, pilih Jobs.',
     ],
   ),
 ];
 
-/// A short, skippable tour of Marketplace and Business. Shown once after
+/// A short, skippable tour of Members, Marketplace, Business and Jobs. Shown once after
 /// sign-in and reachable again from Settings.
 class FeatureIntroScreen extends StatefulWidget {
   const FeatureIntroScreen({super.key, required this.onDone});

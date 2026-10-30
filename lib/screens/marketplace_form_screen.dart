@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../data/category_repository.dart';
 import '../data/cities.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
 import '../data/marketplace_validation.dart';
 import '../models/marketplace_listing.dart';
+import '../widgets/image_size_hint.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
@@ -51,6 +53,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
   late final TextEditingController _shop;
   late final TextEditingController _contact;
   late final TextEditingController _cityText;
+  late final TextEditingController _categoryText;
   String? _category;
   String? _city;
   PickedImage? _picked;
@@ -74,6 +77,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
     _shop = TextEditingController(text: e?.shopUrl);
     _contact = TextEditingController(text: e?.contactInfo);
     _category = e?.category;
+    _categoryText = TextEditingController(text: _category ?? '');
+    CategoryRepository.shared.load();
     _contact.addListener(() => setState(() {}));
   }
 
@@ -86,6 +91,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
       _shop,
       _contact,
       _cityText,
+      _categoryText,
     ]) {
       c.dispose();
     }
@@ -265,21 +271,33 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             validator: MarketplaceValidation.price,
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
+                          FormField<String>(
+                            key: const Key('category-dropdown'),
                             initialValue: _category,
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Category',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: [
-                              for (final c in kMarketplaceCategories)
-                                DropdownMenuItem(value: c, child: Text(c)),
-                            ],
-                            onChanged: _saving
-                                ? null
-                                : (v) => setState(() => _category = v),
-                            validator: MarketplaceValidation.category,
+                            validator: (v) =>
+                                CategoryRepository.shared.validate(
+                                  v,
+                                  current: widget.existing?.category,
+                                ),
+                            builder: (field) =>
+                                ValueListenableBuilder<List<String>>(
+                                  valueListenable:
+                                      CategoryRepository.shared.names,
+                                  builder: (context, names, _) =>
+                                      SearchableChoice(
+                                        fieldKey: const Key('category-choice'),
+                                        label: 'Category',
+                                        controller: _categoryText,
+                                        options: names,
+                                        selected: _category,
+                                        enabled: !_saving,
+                                        errorText: field.errorText,
+                                        onSelected: (v) {
+                                          setState(() => _category = v);
+                                          field.didChange(v);
+                                        },
+                                      ),
+                                ),
                           ),
                           const SizedBox(height: 16),
                           FormField<String>(
@@ -487,7 +505,9 @@ class _PhotoPicker extends StatelessWidget {
             picked != null || hasExisting ? 'Change photo' : 'Choose photo',
           ),
         ),
-        if (error != null)
+        if (error == null)
+          const ImageSizeHint()
+        else
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
@@ -496,18 +516,7 @@ class _PhotoPicker extends StatelessWidget {
                 color: theme.colorScheme.error,
               ),
             ),
-          )
-        else
-          const ImageSizeHint(),
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Text(
-            'Tepi foto bisa terpotong di layar.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
           ),
-        ),
       ],
     );
   }

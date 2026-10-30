@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../config/feature_flags.dart';
 import '../data/block_list.dart';
 import '../data/home_repository.dart';
+import '../data/category_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../theme.dart';
 import 'home_pages.dart';
@@ -91,6 +92,8 @@ class _HomeShellState extends State<HomeShell> {
     _currentUser = ValueNotifier(widget.profile);
     // Who I blocked: asked once per session, used by every list.
     BlockList.shared.load(widget.profile['id'] as String);
+    // Categories for Explore and the forms: asked once per session.
+    CategoryRepository.shared.load();
     _lastBlocked = {...BlockList.shared.blocked.value};
     BlockList.shared.blocked.addListener(_onBlockedChanged);
   }
@@ -269,9 +272,9 @@ class _HomeShellState extends State<HomeShell> {
                 label: 'Members',
               ),
               const NavigationDestination(
-                icon: Icon(Icons.storefront_outlined),
-                selectedIcon: Icon(Icons.storefront),
-                label: 'Market',
+                icon: Icon(Icons.public_outlined),
+                selectedIcon: Icon(Icons.public),
+                label: 'Explore',
               ),
               if (widget.chat)
                 const NavigationDestination(
