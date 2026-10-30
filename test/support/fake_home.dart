@@ -55,9 +55,20 @@ class FakeHomeApi implements HomeApi {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> latestJobs(int limit) async {
+  Future<List<Map<String, dynamic>>> latestJobs(
+    int limit, {
+    bool pinnedOnly = false,
+  }) async {
     jobCalls++;
     if (jobsError != null) throw jobsError!;
+    if (pinnedOnly) {
+      return [
+        for (final j in jobs)
+          if (j['home_rank'] != null) j,
+      ]..sort(
+        (a, b) => (a['home_rank'] as int).compareTo(b['home_rank'] as int),
+      );
+    }
     return jobs.take(limit).toList();
   }
 

@@ -269,6 +269,39 @@ class AdminRepository {
     );
   }
 
+  /// Products ('listing') or jobs ('job') for the Home order screen: every
+  /// pinned item (any status) and every item Home could show.
+  Future<List<HomeOrderItem>> homeOrderItems(
+    String adminId,
+    String kind,
+  ) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_home_order_list', {
+        'p_admin': adminId,
+        'p_kind': kind,
+      }),
+    );
+    return (rows as List)
+        .map((r) => HomeOrderItem.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Saves the whole pinned list of one kind in one call: [ids] in order
+  /// become 1, 2, 3... and every other item of that kind is unpinned.
+  Future<void> setHomeOrder({
+    required String adminId,
+    required String kind,
+    required List<String> ids,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_set_home_order', {
+        'p_admin': adminId,
+        'p_kind': kind,
+        'p_ids': ids,
+      }),
+    );
+  }
+
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
       return await run();
@@ -423,4 +456,47 @@ class AdminAnnouncement {
         postedByName: m['posted_by_name'] as String?,
         createdAt: DateTime.parse(m['created_at'] as String),
       );
+}
+
+/// One product or job on the Home order screen.
+class HomeOrderItem {
+  const HomeOrderItem({
+    required this.id,
+    required this.title,
+    required this.ownerName,
+    required this.status,
+    required this.rank,
+  });
+
+  final String id;
+  final String title;
+  final String? ownerName;
+
+  /// Products: pending, approved, rejected, sold or hidden. Jobs: active or
+  /// hidden.
+  final String status;
+
+  /// Place in the pinned list (1 first). Null: not pinned.
+  final int? rank;
+
+  /// True when Home would show this item if it were pinned.
+  bool get isShown => status == 'approved' || status == 'active';
+
+  /// Plain label for a status Home does not show. Null when it shows.
+  String? get statusLabel => switch (status) {
+    'sold' => 'Terjual',
+    'hidden' => 'Disembunyikan',
+    'rejected' => 'Ditolak',
+    'pending' => 'Menunggu tinjauan',
+    'approved' || 'active' => null,
+    _ => 'Tidak aktif',
+  };
+
+  factory HomeOrderItem.fromMap(Map<String, dynamic> m) => HomeOrderItem(
+    id: m['id'] as String,
+    title: m['title'] as String? ?? '',
+    ownerName: m['owner_name'] as String?,
+    status: m['status'] as String? ?? 'approved',
+    rank: (m['home_rank'] as num?)?.toInt(),
+  );
 }

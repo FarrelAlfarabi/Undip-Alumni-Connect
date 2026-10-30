@@ -75,6 +75,7 @@ class MarketplaceListing {
     this.businessId,
     this.hiddenAt,
     this.hiddenReason,
+    this.homeRank,
   });
 
   final String id;
@@ -105,6 +106,9 @@ class MarketplaceListing {
   final DateTime? hiddenAt;
   final String? hiddenReason;
 
+  /// Place in the list an admin pinned for Home (1 first). Null: not pinned.
+  final int? homeRank;
+
   bool get isHidden => hiddenAt != null;
 
   MarketplaceListing withSeller(MarketplaceSeller? seller) {
@@ -128,6 +132,7 @@ class MarketplaceListing {
       businessId: businessId,
       hiddenAt: hiddenAt,
       hiddenReason: hiddenReason,
+      homeRank: homeRank,
     );
   }
 
@@ -159,6 +164,7 @@ class MarketplaceListing {
           ? null
           : DateTime.tryParse('${map['hidden_at']}'),
       hiddenReason: map['hidden_reason'] as String?,
+      homeRank: (map['home_rank'] as num?)?.toInt(),
     );
   }
 }

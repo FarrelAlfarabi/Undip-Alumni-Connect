@@ -6,6 +6,7 @@ import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import 'admin_announcements_screen.dart';
+import 'admin_home_order_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
@@ -77,6 +78,14 @@ class _AdminScreenState extends State<AdminScreen> {
         subtitle: 'Approve, reject, suspend or restore',
         builder: (_) =>
             AdminBusinessesScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-home-order',
+        icon: Icons.push_pin_outlined,
+        title: 'Home order',
+        subtitle: 'Pilih produk dan lowongan yang tampil dulu di Home',
+        builder: (_) =>
+            AdminHomeOrderScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-marketplace',

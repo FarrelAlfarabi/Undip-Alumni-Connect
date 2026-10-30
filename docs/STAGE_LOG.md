@@ -116,3 +116,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+
+## Stage 5: Home order (30 Oct 2026)
+- Admin > Home order: pin products and jobs, move up/down, Lepas; Pin greys out when Home is full (10 produk, 3 lowongan). Home shows pinned first (by rank), then newest; hidden, rejected, sold or blocked pins are skipped.
+- Migration `20261030150000_home_order.sql` (rollback `supabase/rollback_home_order.sql`, SQL test 20): `home_rank` on both tables, member write guard, `admin_set_home_order` (one atomic call), `admin_home_order_list`. Not applied to any project.
+- Not in this stage: review-list filters (H5) and the Urutan field on edit screens.
