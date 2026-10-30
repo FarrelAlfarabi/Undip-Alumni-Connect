@@ -116,3 +116,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+## Stage 0: web and phone base (30 Oct 2026)
+- New `lib/platform/` (`breakpoints.dart`: phone <600, tablet 600-1023, desktop 1024+, max content 720/960; `platform_caps.dart`: camera, biometrics, push, file picker) and `lib/widgets/responsive_page.dart`. No screen uses them yet.
+- Tests in `test/platform/` at widths 390, 768, 1280. CI gets a `build-web` job. No colors, no migration. `kIsWeb` in the lock code is left for the web PIN stage.
+- Full suite passes, analyze clean.
