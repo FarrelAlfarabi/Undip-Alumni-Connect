@@ -150,3 +150,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Stage 2: Home top half (30 Oct 2026)
 - White header with the IKAFE logo only (28 px, no chip), greeting second line (jurusan + angkatan), black hero card with yellow corner shape and "Lihat detail", dots + "Lihat semua pengumuman" on one row, 2 x 2 tiles (titles only, hints in semantics), white hairline cards. Welcome screen uses the Lingkaran mark.
 - Built on the PR 49 branch (Kontak Ikafe tile); rebase after PRs 48 and 49 merge. No migration. Full suite passes, analyze clean.
+
+## Stage 5: Home order (30 Oct 2026)
+- Admin > Home order: pin products and jobs, move up/down, Lepas; Pin greys out when Home is full (10 produk, 3 lowongan). Home shows pinned first (by rank), then newest; hidden, rejected, sold or blocked pins are skipped.
+- Migration `20261030150000_home_order.sql` (rollback `supabase/rollback_home_order.sql`, SQL test 20): `home_rank` on both tables, member write guard, `admin_set_home_order` (one atomic call), `admin_home_order_list`. Not applied to any project.
+- Not in this stage: review-list filters (H5) and the Urutan field on edit screens.

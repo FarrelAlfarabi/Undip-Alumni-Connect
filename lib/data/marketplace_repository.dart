@@ -39,7 +39,13 @@ class MarketplaceException implements Exception {
 abstract class MarketplaceApi {
   /// Approved listings joined with their seller, newest first. [limit] caps
   /// how many rows come back (null: all of them).
-  Future<List<Map<String, dynamic>>> selectApprovedListings({int? limit});
+  ///
+  /// With [pinnedOnly], only listings an admin pinned (home_rank set), by
+  /// rank, with no limit.
+  Future<List<Map<String, dynamic>>> selectApprovedListings({
+    int? limit,
+    bool pinnedOnly = false,
+  });
 
   /// Calls a Postgres function. Returns the decoded JSON result.
   Future<dynamic> rpc(String function, Map<String, dynamic> params);
@@ -65,16 +71,19 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
   @override
   Future<List<Map<String, dynamic>>> selectApprovedListings({
     int? limit,
+    bool pinnedOnly = false,
   }) async {
-    final query = _client
+    final base = _client
         .from('marketplace_listings')
         .select(
           // Two links to alumni_profiles exist (seller_id, reviewed_by), so
           // the join names the seller one or the API rejects it as ambiguous.
           '*, seller:alumni_profiles!marketplace_listings_seller_id_fkey(id, name, faculty, major, graduation_year, city)',
         )
-        .eq('status', 'approved')
-        .order('created_at', ascending: false);
+        .eq('status', 'approved');
+    final query = pinnedOnly
+        ? base.not('home_rank', 'is', null).order('home_rank')
+        : base.order('created_at', ascending: false);
     final rows = await (limit == null ? query : query.limit(limit));
     return List<Map<String, dynamic>>.from(rows as List);
   }
@@ -154,6 +163,17 @@ class MarketplaceRepository {
     final rows = await _guard(() => _api.selectApprovedListings(limit: limit));
     final all = rows.map(MarketplaceListing.fromMap).toList();
     if (!applyBlocks) return all;
+    await BlockList.shared.ensureLoaded();
+    return BlockList.shared.filter(all, (l) => l.sellerId);
+  }
+
+  /// Approved listings an admin pinned for Home, by rank (not yet cut to the
+  /// Home limit). Products of people I blocked are left out.
+  Future<List<MarketplaceListing>> fetchPinnedApproved() async {
+    final rows = await _guard(
+      () => _api.selectApprovedListings(pinnedOnly: true),
+    );
+    final all = rows.map(MarketplaceListing.fromMap).toList();
     await BlockList.shared.ensureLoaded();
     return BlockList.shared.filter(all, (l) => l.sellerId);
   }

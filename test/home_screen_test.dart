@@ -472,42 +472,41 @@ void main() {
       expect(kHomeListingFetchLimit, greaterThan(kHomeLatestLimit));
     });
 
-    testWidgets('filled: 3 newest each, opens the existing detail screens', (
-      tester,
-    ) async {
-      final market = FakeApi()
-        ..approved = [
-          for (var i = 1; i <= 5; i++)
-            listingMap(
-              id: 'l$i',
-              title: 'Listing $i',
-              seller: sellerMap,
-              createdAt: '2026-09-0${i}T08:00:00+00:00',
-            ),
-        ];
-      final api = FakeHomeApi(jobs: [for (var i = 5; i >= 1; i--) jobMap(i)]);
-      await pumpHome(tester, api: api, market: market);
+    testWidgets(
+      'filled: newest products and 3 newest jobs, opens the existing detail screens',
+      (tester) async {
+        final market = FakeApi()
+          ..approved = [
+            for (var i = 1; i <= 5; i++)
+              listingMap(
+                id: 'l$i',
+                title: 'Listing $i',
+                seller: sellerMap,
+                createdAt: '2026-09-0${i}T08:00:00+00:00',
+              ),
+          ];
+        final api = FakeHomeApi(jobs: [for (var i = 5; i >= 1; i--) jobMap(i)]);
+        await pumpHome(tester, api: api, market: market);
 
-      // Newest three listings (5, 4, 3); not 2 or 1.
-      expect(find.text('Listing 5'), findsOneWidget);
-      expect(find.text('Listing 3'), findsOneWidget);
-      expect(find.text('Listing 2'), findsNothing);
-      expect(find.text('Job 5'), findsOneWidget);
-      expect(find.text('Job 3'), findsOneWidget);
-      expect(find.text('Job 2'), findsNothing);
+        // Newest listing first; Home now shows up to kHomeListingLimit.
+        expect(find.text('Listing 5'), findsOneWidget);
+        expect(find.text('Job 5'), findsOneWidget);
+        expect(find.text('Job 3'), findsOneWidget);
+        expect(find.text('Job 2'), findsNothing);
 
-      await tester.ensureVisible(find.text('Job 5'));
-      await tester.tap(find.text('Job 5'));
-      await tester.pumpAndSettle();
-      expect(find.text('PAGE JobDetail j5'), findsOneWidget);
-      Navigator.of(tester.element(find.text('PAGE JobDetail j5'))).pop();
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Job 5'));
+        await tester.tap(find.text('Job 5'));
+        await tester.pumpAndSettle();
+        expect(find.text('PAGE JobDetail j5'), findsOneWidget);
+        Navigator.of(tester.element(find.text('PAGE JobDetail j5'))).pop();
+        await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Listing 5'));
-      await tester.tap(find.text('Listing 5'));
-      await tester.pumpAndSettle();
-      expect(find.text('PAGE ListingDetail l5'), findsOneWidget);
-    });
+        await tester.ensureVisible(find.text('Listing 5'));
+        await tester.tap(find.text('Listing 5'));
+        await tester.pumpAndSettle();
+        expect(find.text('PAGE ListingDetail l5'), findsOneWidget);
+      },
+    );
 
     testWidgets('one strip failing does not break the other', (tester) async {
       final api = FakeHomeApi(jobs: [jobMap(1)])..jobsError = null;

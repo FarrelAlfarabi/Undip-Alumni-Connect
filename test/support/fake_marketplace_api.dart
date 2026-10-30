@@ -17,6 +17,7 @@ Map<String, dynamic> listingMap({
   String? rejectedReason,
   String? approvedAt = '2026-09-20T10:00:00+00:00',
   String createdAt = '2026-09-19T08:00:00+00:00',
+  int? homeRank,
 }) => {
   'id': id,
   'seller_id': 's1',
@@ -34,6 +35,7 @@ Map<String, dynamic> listingMap({
   'updated_at': createdAt,
   'approved_at': approvedAt,
   'seller': seller,
+  'home_rank': homeRank,
 };
 
 const sellerMap = {
@@ -74,10 +76,19 @@ class FakeApi implements MarketplaceApi {
   @override
   Future<List<Map<String, dynamic>>> selectApprovedListings({
     int? limit,
+    bool pinnedOnly = false,
   }) async {
-    calls.add('select');
-    lastLimit = limit;
+    calls.add(pinnedOnly ? 'select-pinned' : 'select');
     if (throwOnCall != null) throw throwOnCall!;
+    if (pinnedOnly) {
+      return [
+        for (final r in approved)
+          if (r['home_rank'] != null && r['status'] == 'approved') r,
+      ]..sort(
+        (a, b) => (a['home_rank'] as int).compareTo(b['home_rank'] as int),
+      );
+    }
+    lastLimit = limit;
     return limit == null ? approved : approved.take(limit).toList();
   }
 

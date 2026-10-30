@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
@@ -11,7 +10,6 @@ import '../theme.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/brand_lockup.dart';
 import '../widgets/feedback_sheet.dart';
-import '../theme.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 import 'marketplace_screen.dart' show ListingImage;
@@ -114,19 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return _BusinessSummary(mine, {for (final u in usage) u.businessId: u});
   }
 
-  Future<List<Map<String, dynamic>>> _latestJobs() async {
-    final jobs = await _api.latestJobs(kHomeLatestLimit);
-    await BlockList.shared.ensureLoaded();
-    return BlockList.shared.filter(jobs, (j) => j['posted_by'] as String?);
-  }
+  Future<List<Map<String, dynamic>>> _latestJobs() => homeJobs(_api);
 
-  Future<List<MarketplaceListing>> _fetchListings() async {
-    final all = await _market.fetchApproved(
-      limit: kHomeListingFetchLimit,
-    ); // already without blocked people
-    final sorted = [...all]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return sorted.take(kHomeListingLimit).toList();
-  }
+  Future<List<MarketplaceListing>> _fetchListings() => homeListings(_market);
 
   Future<void> _refresh() async {
     setState(_load);
