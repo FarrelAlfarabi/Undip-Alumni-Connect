@@ -143,3 +143,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Home: yellow business card with black pill button; Marketplace row first (up to 10 horizontal product cards, 3:2 photo, category and city on separate lines), then Jobs (3 rows with initials square). Header "Lihat semua" links only; no arrow card (Edit 8).
 - New `ImageSizeHint` (3:2, 1200 x 800, 2 MB) used in the product form. Photo placeholder is soft yellow. `kHomeListingLimit = 10`.
 - No migration, no new queries. Tests: `test/home_stage3_test.dart`. Other listing photos (Market grid, detail, My listings, admin) already use 3:2.
+## Redesign Stage 7: profile photo (30 Oct 2026)
+- Migration `20261030170000_profile_avatar.sql` (not applied): `avatar_url`, `avatars` bucket, `profile_set_avatar`, column grant, avatar listed in `account_files`, trigger clears the link on deletion. Rollback `supabase/rollback_profile_avatar.sql`; SQL test `20_profile_avatar_test.sql`.
+- App: `Avatar` widget (Members, Nearby, profile card), `ProfilePhotoScreen`, `ImageSizeHint(profile)`, photo row in first login. Links come from a separate query, so the app works before the migration.
+- Not done: Home header, Requests, Notifications, messages list and marketplace seller row still show initials. Tests: `test/profile_photo_test.dart`. Full suite and analyze pass.

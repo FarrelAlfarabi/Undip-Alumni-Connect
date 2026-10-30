@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/avatar_repository.dart';
 import '../data/contact_repository.dart';
+import '../widgets/avatar.dart';
+import '../widgets/image_size_hint.dart';
 import 'default_contact_screen.dart';
+import 'profile_photo_screen.dart';
 import 'profile_setup_screen.dart';
 
 /// Internal marker on the profile map handed over right after a person's first
@@ -18,6 +22,7 @@ class FirstLoginProfileScreen extends StatefulWidget {
     required this.profile,
     required this.onDone,
     this.contactRepository,
+    this.avatarRepository,
   });
 
   final Map<String, dynamic> profile;
@@ -28,6 +33,7 @@ class FirstLoginProfileScreen extends StatefulWidget {
 
   /// Injectable for tests.
   final ContactRepository? contactRepository;
+  final AvatarRepository? avatarRepository;
 
   @override
   State<FirstLoginProfileScreen> createState() =>
@@ -46,6 +52,24 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
     if (updated == null || !mounted) return;
     setState(() {
       _profile = {..._profile, ...updated};
+      _profileSaved = true;
+    });
+  }
+
+  Future<void> _editPhoto() async {
+    final url = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ProfilePhotoScreen(
+          profileId: _profile['id'] as String,
+          name: _profile['name'] as String? ?? '',
+          currentUrl: _profile['avatar_url'] as String?,
+          repository: widget.avatarRepository ?? AvatarRepository(),
+        ),
+      ),
+    );
+    if (url == null || !mounted) return;
+    setState(() {
+      _profile = {..._profile, 'avatar_url': url.isEmpty ? null : url};
       _profileSaved = true;
     });
   }
@@ -91,6 +115,27 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Avatar(
+                        url: _profile['avatar_url'] as String?,
+                        name: name,
+                        radius: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: const Key('first-login-photo'),
+                          onPressed: _editPhoto,
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          label: const Text('Pilih foto'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const ImageSizeHint(ImageSizeKind.profile),
+                  const SizedBox(height: 16),
                   OutlinedButton.icon(
                     key: const Key('first-login-profile-edit'),
                     onPressed: _editProfile,

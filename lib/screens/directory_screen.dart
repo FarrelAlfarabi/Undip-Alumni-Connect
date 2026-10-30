@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../data/avatar_repository.dart';
 import '../data/blocked_filter.dart';
 import '../data/profile_columns.dart';
+import '../widgets/avatar.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/filter_dropdown.dart';
@@ -104,7 +106,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         .limit(kDirectoryMaxRows);
     return _withDefaultYear(
       await withoutBlockedProfiles(
-        List<Map<String, dynamic>>.from(rows as List),
+        AvatarRepository.withAvatars(
+          List<Map<String, dynamic>>.from(rows as List),
+          await AvatarRepository().urlsById(),
+        ),
       ),
     );
   }
@@ -295,19 +300,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       itemBuilder: (context, i) {
                         final p = filtered[i];
                         return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer,
-                            child: Text(
-                              (p['name'] as String? ?? '?')
-                                  .trim()
-                                  .split(RegExp(r'\s+'))
-                                  .map((w) => w.isNotEmpty ? w[0] : '')
-                                  .take(2)
-                                  .join()
-                                  .toUpperCase(),
-                            ),
+                          leading: Avatar(
+                            url: p['avatar_url'] as String?,
+                            name: p['name'] as String? ?? '',
                           ),
                           title: Text(p['name'] as String? ?? ''),
                           subtitle: Text(

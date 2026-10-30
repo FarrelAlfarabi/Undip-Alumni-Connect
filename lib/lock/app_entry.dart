@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/login_api.dart';
 import '../data/account_repository.dart';
+import '../data/avatar_repository.dart';
 import '../data/profile_columns.dart';
 import '../screens/verification_screen.dart';
 import '../screens/welcome_screen.dart';
@@ -20,7 +21,9 @@ Future<Map<String, dynamic>?> defaultProfileFetcher(String id) async {
       .select(kProfileColumns)
       .eq('id', id)
       .maybeSingle();
-  return row == null ? null : Map<String, dynamic>.from(row);
+  if (row == null) return null;
+  final urls = await AvatarRepository().urlsById(id: id);
+  return {...row, if (urls[id] != null) 'avatar_url': urls[id]};
 }
 
 const String kSignInFailedNotice =

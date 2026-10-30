@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/marketplace_listing.dart';
+import 'avatar_repository.dart';
 import 'block_list.dart';
 import 'profile_columns.dart';
 
@@ -96,7 +97,10 @@ class SupabaseMarketplaceApi implements MarketplaceApi {
         .select(kProfileColumns)
         .eq('id', id)
         .maybeSingle();
-    return row == null ? null : Map<String, dynamic>.from(row);
+    if (row == null) return null;
+    final urls = await AvatarRepository(SupabaseAvatarApi(_client))
+        .urlsById(id: id);
+    return {...row, if (urls[id] != null) 'avatar_url': urls[id]};
   }
 
   @override
