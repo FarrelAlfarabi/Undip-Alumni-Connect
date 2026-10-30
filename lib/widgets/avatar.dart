@@ -43,7 +43,6 @@ class Avatar extends StatelessWidget {
           fit: BoxFit.cover,
           // Decode at the size it is drawn, not at full resolution.
           cacheWidth: (radius * 2 * dpr).round(),
-          gaplessPlayback: true,
           semanticLabel: 'Foto $name',
           errorBuilder: (_, _, _) => initials,
         ),

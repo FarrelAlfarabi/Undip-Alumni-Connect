@@ -67,6 +67,8 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
       if (mounted) Navigator.of(context).pop(url);
     } on AvatarException catch (e) {
       if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Foto belum tersimpan. Coba lagi.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

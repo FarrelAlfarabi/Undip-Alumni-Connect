@@ -118,5 +118,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Tests updated. Analyze clean, 747 tests pass.
 ## Redesign Stage 7: profile photo (30 Oct 2026)
 - Migration `20261030170000_profile_avatar.sql` (not applied): `avatar_url`, `avatars` bucket, `profile_set_avatar`, column grant, avatar listed in `account_files`, trigger clears the link on deletion. Rollback `supabase/rollback_profile_avatar.sql`; SQL test `20_profile_avatar_test.sql`.
-- App: `Avatar` widget (Members, Nearby, profile card, messages list), `ProfilePhotoScreen`, `ImageSizeHint(profile)`, photo row in first login. Links come from a separate query, so the app works before the migration.
-- Not done: Home header, Requests, Notifications and marketplace seller row still show initials. Tests: `test/profile_photo_test.dart`. Full suite and analyze pass.
+- App: `Avatar` widget (Members, Nearby, profile card), `ProfilePhotoScreen`, `ImageSizeHint(profile)`, photo row in first login. Links come from a separate query, so the app works before the migration.
+- Not done: Home header, Requests, Notifications, messages list and marketplace seller row still show initials. Tests: `test/profile_photo_test.dart`. Full suite and analyze pass.

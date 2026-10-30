@@ -28,7 +28,7 @@ alter table alumni_profiles add constraint alumni_profiles_avatar_url_check
   check (
     avatar_url is null
     or (char_length(avatar_url) <= 500
-        and avatar_url ~ '/object/public/avatars/[^?#]+')
+        and avatar_url ~ '^https://[^/]+/storage/v1/object/public/avatars/[^?#]+')
   );
 
 grant select (avatar_url) on alumni_profiles to anon, authenticated;
@@ -59,7 +59,9 @@ create policy "avatars_public_upload" on storage.objects
   );
 
 -- ---------------------------------------------------------------------------
--- Set or clear my own photo. An empty value clears it.
+-- Set or clear my own photo. An empty value clears it. The link must point to
+-- a file under my own profile id in the avatars bucket (the app uploads it
+-- there), so nobody can link another person's file or an outside address.
 -- ---------------------------------------------------------------------------
 create or replace function profile_set_avatar(p_profile uuid, p_url text)
 returns text
@@ -80,7 +82,8 @@ begin
   if v_status <> 'verified' then raise exception 'not_verified'; end if;
   if v_url is not null
      and (char_length(v_url) > 500
-          or v_url !~ '/object/public/avatars/[^?#]+') then
+          or v_url !~ ('^https://[^/]+/storage/v1/object/public/avatars/'
+                       || p_profile::text || '/[^?#]+$')) then
     raise exception 'invalid_input';
   end if;
 
