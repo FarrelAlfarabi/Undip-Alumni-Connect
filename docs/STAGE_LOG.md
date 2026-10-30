@@ -116,3 +116,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Theme: cream `paper` is now neutral grey `F7F7F8`, cards white with a hairline, no blue-tinted containers. Yellow/black/blue unchanged.
 - Market Products: Sort is one icon beside search; notice is a quiet line; more spacing. Admin Reports: Hidden tab removed, list moved behind an app bar icon; every card has the main action on top, full width.
 - Tests updated. Analyze clean, 747 tests pass.
+## Redesign Stage 3: Home bottom half (30 Oct 2026)
+- Home: yellow business card with black pill button; Marketplace row first (up to 10 horizontal product cards, 3:2 photo, category and city on separate lines), then Jobs (3 rows with initials square). Header "Lihat semua" links only; no arrow card (Edit 8).
+- New `ImageSizeHint` (3:2, 1200 x 800, 2 MB) used in the product form. Photo placeholder is soft yellow. `kHomeListingLimit = 10`.
+- No migration, no new queries. Tests: `test/home_stage3_test.dart`. Other listing photos (Market grid, detail, My listings, admin) already use 3:2.

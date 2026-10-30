@@ -10,6 +10,7 @@ import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
+import '../widgets/image_size_hint.dart';
 import '../widgets/searchable_choice.dart';
 
 /// Create or edit a listing. Pops with the saved [MarketplaceListing], or
@@ -486,14 +487,24 @@ class _PhotoPicker extends StatelessWidget {
             picked != null || hasExisting ? 'Change photo' : 'Choose photo',
           ),
         ),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              error!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          )
+        else
+          const ImageSizeHint(),
         Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.only(top: 2),
           child: Text(
-            error ?? 'One photo. JPG, PNG or WebP, up to 2 MB.',
+            'Tepi foto bisa terpotong di layar.',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: error == null
-                  ? theme.colorScheme.onSurfaceVariant
-                  : theme.colorScheme.error,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
