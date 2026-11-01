@@ -51,7 +51,9 @@ class _ProfileLinkedInScreenState extends State<ProfileLinkedInScreen> {
         changes,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(updated ?? {...widget.profile, ...changes});
+      // No row back means nothing was stored.
+      if (updated == null) throw StateError('link not saved');
+      Navigator.of(context).pop(updated);
     } catch (_) {
       if (!mounted) return;
       setState(() {

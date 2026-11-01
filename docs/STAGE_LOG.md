@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Review fixes after the redesign merge (30 Oct 2026)
+- Web loads without a service worker (old builds stayed cached). Bio counts code points like the database; Bio and LinkedIn treat "no row saved" as an error. Explore segments stay on one line on phones.
+- Migration `20261030210000_review_security_fixes.sql` (+ rollback, `22_review_security_fixes_test.sql`): hidden categories really blocked, no avatars list policy, avatar link tied to own folder. NOT applied.
+- Checks: analyze clean, full suite, `run_beta_local.sh` and `run_fresh_chain.sh` pass. Browser walk on a stand-in backend at 360, 390, 768, 1440 px.
+
 ## Stage 8b: mandatory PIN, PIN on web (30 Oct 2026)
 - PIN setup has no "Skip" on first sign in (Settings can still leave). PIN lock is on for web too (screen lock only, no biometrics). `WEB_LOCK_TEST` flag removed from Dart. Setup copy in Indonesian.
 - Forgot PIN stays "Lupa PIN? Verifikasi ulang" (wipes the device, then the email code). Not built: "Masuk lagi" returning screen on web, idle lock on web, "Hapus PIN" removal rule.

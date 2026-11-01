@@ -218,6 +218,59 @@ void main() {
       expect(find.byKey(const Key('bio-error')), findsOneWidget);
       expect(find.byType(ProfileBioScreen), findsOneWidget);
     });
+
+    testWidgets('a save that stored nothing shows a message and stays', (
+      tester,
+    ) async {
+      phone(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: ProfileBioScreen(
+            profile: const {'id': 'me'},
+            save: (id, changes) async => null,
+          ),
+        ),
+      );
+      await tester.enterText(find.byKey(const Key('bio-field')), 'Halo');
+      await tester.tap(find.text('Simpan'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('bio-error')), findsOneWidget);
+      expect(find.byType(ProfileBioScreen), findsOneWidget);
+    });
+
+    // The database counts code points; one flag emoji is 2 of them.
+    testWidgets('counts like the database, so emoji cannot pass the limit', (
+      tester,
+    ) async {
+      phone(tester);
+      var called = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: ProfileBioScreen(
+            profile: const {'id': 'me'},
+            save: (id, changes) async {
+              called = true;
+              return {'id': id, ...changes};
+            },
+          ),
+        ),
+      );
+      await tester.enterText(
+        find.byKey(const Key('bio-field')),
+        '\u{1F1EE}\u{1F1E9}' * 150,
+      );
+      await tester.pump();
+      final text = tester
+          .widget<TextField>(find.byKey(const Key('bio-field')))
+          .controller!
+          .text;
+      expect(text.runes.length, lessThanOrEqualTo(kBioMax));
+      await tester.tap(find.text('Simpan'));
+      await tester.pumpAndSettle();
+      expect(called, isTrue);
+    });
   });
 
   group('LinkedIn screen', () {

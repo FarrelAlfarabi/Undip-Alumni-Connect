@@ -29,6 +29,16 @@ void main() {
     );
   });
 
+  // A cached Flutter service worker kept serving the old design after a
+  // deploy. The web build loads without one. Without service worker settings
+  // Flutter writes a flutter_service_worker.js that unregisters an old one.
+  test('Web build does not register a service worker', () {
+    final bootstrap = File('web/flutter_bootstrap.js').readAsStringSync();
+    expect(bootstrap, contains('{{flutter_js}}'));
+    expect(bootstrap, contains('{{flutter_build_config}}'));
+    expect(bootstrap, isNot(contains('serviceWorkerSettings')));
+  });
+
   test('CI runs the SQL checks', () {
     expect(ci, contains('supabase/tests/run_fresh_chain.sh'));
     expect(ci, contains('supabase/tests/run_beta_local.sh'));

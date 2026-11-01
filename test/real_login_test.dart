@@ -183,7 +183,9 @@ void main() {
       await settle(tester);
       await tester.enterText(find.byKey(const Key('login-code')), '123456');
       await settle(tester);
-      expect(find.text('Data Tidak Ditemukan'), findsOneWidget);
+      expect(find.text('Data Tidak Ditemukan'), findsNothing);
+      expect(find.text(kEmailNotRegistered), findsOneWidget);
+      expect(find.byKey(const Key('login-code')), findsNothing);
     });
 
     testWidgets('"Use a different email" goes back to the email box', (

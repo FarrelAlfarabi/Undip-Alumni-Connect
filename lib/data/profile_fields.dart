@@ -1,9 +1,32 @@
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'profile_columns.dart';
 
 /// Longest Bio (also enforced in the database).
 const int kBioMax = 200;
+
+/// Stops typing at [max] code points, which is how the database counts
+/// (char_length). The default TextField limit counts emoji as one, so a bio
+/// full of emoji could pass the field and still be refused on save.
+class CodePointLimit extends TextInputFormatter {
+  const CodePointLimit(this.max);
+
+  final int max;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.runes.length <= max) return newValue;
+    final cut = String.fromCharCodes(newValue.text.runes.take(max));
+    return TextEditingValue(
+      text: cut,
+      selection: TextSelection.collapsed(offset: cut.length),
+    );
+  }
+}
 
 /// Longest LinkedIn link (also enforced in the database).
 const int kLinkedInMax = 200;

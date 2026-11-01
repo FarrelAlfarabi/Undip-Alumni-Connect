@@ -3,9 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/support_config.dart';
 import 'package:undip_alumni_connect/screens/contact_admin_screen.dart';
+import 'package:undip_alumni_connect/screens/verification_screen.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 
+import 'account_test.dart' show appHome, phone, withPolicyBundle;
 import 'real_login_test.dart' show FakeLoginApi, pumpVerify, settle;
+import 'support/fake_lock.dart';
 
 Future<void> toCodeStep(WidgetTester tester, FakeLoginApi api) async {
   await pumpVerify(tester, api);
@@ -107,18 +110,49 @@ void main() {
   });
 
   group('dead ends', () {
-    testWidgets('no profile after a correct code: contact button, stop icon', (
+    // The plan removes the "Data Tidak Ditemukan" page (inline email error,
+    // decided 30 Oct). No profile after a correct code goes back to the email
+    // box with the inline error and the contact link.
+    testWidgets(
+      'no profile after a correct code: back to email, inline error',
+      (tester) async {
+        final api = FakeLoginApi()..profile = null;
+        await toCodeStep(tester, api);
+        await tester.enterText(find.byKey(const Key('login-code')), '123456');
+        await settle(tester);
+        expect(find.text('Data Tidak Ditemukan'), findsNothing);
+        expect(find.text(kEmailNotRegistered), findsOneWidget);
+        expect(find.byKey(const Key('login-code')), findsNothing);
+        expect(find.byKey(const Key('login-email')), findsOneWidget);
+        expect(find.byKey(const Key('login-contact-admin')), findsOneWidget);
+      },
+    );
+
+    testWidgets('email match login: unknown email is an inline error', (
       tester,
     ) async {
-      final api = FakeLoginApi()..profile = null;
-      await toCodeStep(tester, api);
-      await tester.enterText(find.byKey(const Key('login-code')), '123456');
-      await settle(tester);
-      expect(find.text('Data Tidak Ditemukan'), findsOneWidget);
+      phone(tester);
+      await tester.pumpWidget(
+        withPolicyBundle(
+          MaterialApp(
+            home: VerificationScreen(
+              lock: makeLock(enabled: false),
+              verifyEmail: (_) async => null,
+              homeBuilder: appHome,
+            ),
+          ),
+        ),
+      );
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'nobody@example.com',
+      );
+      await tester.tap(find.text('Verifikasi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Data Tidak Ditemukan'), findsNothing);
+      expect(find.text(kEmailNotRegistered), findsOneWidget);
+      expect(find.byKey(const Key('login-change-email')), findsOneWidget);
       expect(find.byKey(const Key('login-contact-admin')), findsOneWidget);
-      expect(find.byIcon(Icons.person_search_outlined), findsNothing);
-      expect(find.byIcon(Icons.block_outlined), findsOneWidget);
-      expect(find.textContaining('hubungi tim admin'), findsOneWidget);
     });
 
     testWidgets('suspended: Indonesian title, Kembali, contact button', (
