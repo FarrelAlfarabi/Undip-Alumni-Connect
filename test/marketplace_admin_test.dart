@@ -144,7 +144,7 @@ void main() {
       expect(find.text('By Bunga Citra Ayu'), findsNWidgets(2));
       expect(
         find.text(
-          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );

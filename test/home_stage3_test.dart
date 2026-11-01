@@ -38,7 +38,7 @@ void main() {
     ) async {
       await pumpHome(tester, market: marketWith(2));
       expect(find.text('Terbaru'), findsNothing);
-      final market = tester.getTopLeft(find.text('Baru di Marketplace')).dy;
+      final market = tester.getTopLeft(find.text('Dukung Usaha Alumni')).dy;
       final jobs = tester.getTopLeft(find.text('Lowongan baru')).dy;
       expect(market, lessThan(jobs));
     });

@@ -197,7 +197,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
         widget.existing!.businessId == null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Edit product' : 'Add a product')),
+      appBar: AppBar(title: Text(_isEdit ? 'Ubah produk' : 'Tambah produk')),
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
@@ -374,7 +374,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                                   )
                                 : InlineError(
                                     message: _error!,
-                                    screen: 'Add a product',
+                                    screen: 'Tambah produk',
                                     error: _lastError,
                                   ),
                           ],

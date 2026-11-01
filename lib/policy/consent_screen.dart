@@ -87,7 +87,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
     return Scaffold(
       key: const Key('consent-screen'),
       appBar: AppBar(
-        title: const Text('Before you start'),
+        title: const Text('Syarat dan Ketentuan Aplikasi'),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -118,8 +118,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          'Scroll to the bottom to continue. (Gulir sampai '
-                          'bawah untuk melanjutkan.)',
+                          'Gulir sampai bawah untuk melanjutkan.',
                           key: const Key('consent-scroll-hint'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
@@ -135,9 +134,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           ? null
                           : (v) => setState(() => _checked = v ?? false),
                       title: const Text(
-                        'I have read and accept the privacy policy and community '
-                        'rules. (Saya sudah membaca dan menyetujui kebijakan '
-                        'privasi dan aturan komunitas.)',
+                        'Saya sudah membaca dan menyetujui Syarat dan Ketentuan Aplikasi',
                       ),
                     ),
                     if (_error != null)
@@ -159,7 +156,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Continue'),
+                          : const Text('Saya Setuju'),
                     ),
                     TextButton(
                       key: const Key('consent-back'),
@@ -171,7 +168,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                               lock: widget.lock,
                             ),
                       child: Text(
-                        'Back and sign out',
+                        'Kembali dan keluar',
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

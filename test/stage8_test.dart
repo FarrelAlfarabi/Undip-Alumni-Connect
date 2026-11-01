@@ -4,9 +4,9 @@ import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
 import 'package:undip_alumni_connect/widgets/marketplace_demo_notice.dart';
 
 void main() {
-  test('marketplace notice no longer says demo and warns about payment', () {
+  test('marketplace notice no longer says demo and states alumni responsibility', () {
     expect(MarketplaceDemoNotice.text.toLowerCase(), isNot(contains('demo')));
-    expect(MarketplaceDemoNotice.text, contains('payments'));
+    expect(MarketplaceDemoNotice.text, contains('tanggung jawab'));
   });
 
   testWidgets('Profile has a Send feedback row that opens the sheet', (

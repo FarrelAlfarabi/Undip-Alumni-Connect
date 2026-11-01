@@ -795,7 +795,7 @@ class _LatestBlock<T> extends StatelessWidget {
   }
 }
 
-/// "Baru di Marketplace": a horizontal row of product cards.
+/// "Dukung Usaha Alumni": a horizontal row of product cards.
 class _ProductsBlock extends StatelessWidget {
   const _ProductsBlock({
     required this.future,
@@ -813,7 +813,7 @@ class _ProductsBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return _LatestBlock<MarketplaceListing>(
       key: const Key('latest-listings'),
-      heading: 'Baru di Marketplace',
+      heading: 'Dukung Usaha Alumni',
       seeAllKey: const Key('latest-listings-see-all'),
       onSeeAll: onSeeAll,
       future: future,
@@ -1192,7 +1192,7 @@ class _BusinessEntry extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Punya usaha? Biar sesama alumni bisa menemukannya.',
+                      'Memiliki usaha? Biar sesama alumni bisa menemukannya.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppTheme.black,
                         fontWeight: FontWeight.w600,

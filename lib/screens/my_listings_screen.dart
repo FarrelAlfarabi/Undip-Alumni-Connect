@@ -54,7 +54,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   void _toastError(Object e) => showErrorSnackBar(
     context,
     message: marketplaceErrorMessage(e),
-    screen: 'My listings',
+    screen: 'Produk saya',
     error: e,
   );
 
@@ -135,7 +135,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My listings')),
+      appBar: AppBar(title: const Text('Produk saya')),
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
@@ -149,7 +149,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                 if (snapshot.hasError) {
                   return ErrorView(
                     message: 'Could not load your listings. Try again.',
-                    screen: 'My listings',
+                    screen: 'Produk saya',
                     error: snapshot.error,
                     onRetry: _reload,
                     retryLabel: 'Retry',
@@ -161,8 +161,8 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                        'You have no listings yet. Use "Add a product" on '
-                        'the marketplace to add one.',
+                        'Kamu belum punya produk. Gunakan "Tambah produk" di '
+                        'Marketplace untuk memasangnya.',
                         textAlign: TextAlign.center,
                       ),
                     ),
