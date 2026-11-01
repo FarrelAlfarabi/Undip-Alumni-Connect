@@ -44,7 +44,7 @@ select jt.expect_error(format($q$select business_update(%L, %L, 'Salon Ahmad Bar
 -- The dashboard role may still set any value; renames cascade; used names cannot be deleted.
 reset role;
 select jt.expect_error($q$update businesses set category = 'Nonsense'$q$, 'violates foreign key');
-select jt.expect_error($q$delete from categories where name = 'Other'$q$, 'violates foreign key|still referenced');
+select jt.expect_error($q$delete from categories where name = 'Other'$q$, 'violates foreign key|violates RESTRICT|still referenced');
 select jt.expect_error($q$insert into categories (name) values (' Padded ')$q$, 'categories_name_check');
 select jt.expect_error($q$insert into categories (name) values ('beauty & health')$q$, 'categories_name_lower_idx');
 update businesses set category = 'Beauty & Health' where name = 'Salon Ahmad Baru';

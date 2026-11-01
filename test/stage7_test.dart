@@ -108,17 +108,13 @@ void main() {
       },
     );
 
-    // Seen in the browser at 390 px: "Marketpl ace" and "Business es" broke
-    // over two lines. On a phone each label stays on one line.
-    testWidgets('segment labels stay on one line on a 360 px phone', (
-      tester,
-    ) async {
+    testWidgets('segment labels stay on one line at 360px', (tester) async {
       await pump(tester);
-      tester.view.physicalSize = const Size(360, 800);
+      tester.view.physicalSize = const Size(360, 2200);
       await tester.pumpAndSettle();
-      final oneLine = tester.getSize(find.text('Jobs')).height;
-      for (final label in ['Marketplace', 'Businesses']) {
-        expect(tester.getSize(find.text(label)).height, oneLine, reason: label);
+      for (final label in ['Marketplace', 'Businesses', 'Jobs']) {
+        final box = tester.getSize(find.text(label));
+        expect(box.height, lessThan(30), reason: '$label wrapped');
       }
     });
 
@@ -152,6 +148,18 @@ void main() {
       }
       return api;
     }
+
+    testWidgets('"Lihat semua pengumuman" stays on one line at 360px', (
+      tester,
+    ) async {
+      await pumpHome(tester, FakeHomeApi());
+      tester.view.physicalSize = const Size(360, 2200);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSize(find.text('Lihat semua pengumuman')).height,
+        lessThan(24),
+      );
+    });
 
     testWidgets('no business: a "register your business" card instead', (
       tester,

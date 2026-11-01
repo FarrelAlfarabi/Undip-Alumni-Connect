@@ -143,7 +143,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                   : const SizedBox.shrink(),
             ),
             if (widget.trailing != null)
-              Expanded(
+              Flexible(
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: widget.trailing,

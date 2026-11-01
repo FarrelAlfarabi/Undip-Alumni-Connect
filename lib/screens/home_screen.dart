@@ -423,7 +423,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final seeAll = TextButton(
       key: const Key('see-all-announcements'),
       onPressed: () => _push(widget.pages.announcements()),
-      child: const Text('Lihat semua pengumuman'),
+      child: const Text(
+        'Lihat semua pengumuman',
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
     Widget withSeeAll(Widget card) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

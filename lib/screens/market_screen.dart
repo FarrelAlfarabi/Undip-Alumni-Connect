@@ -46,49 +46,27 @@ class _MarketScreenState extends State<MarketScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              // On a phone the icons and the check mark leave too little
-              // room, and "Marketplace" broke over two lines. There each
-              // label is text only and shrinks to fit one line.
-              child: LayoutBuilder(
-                builder: (context, box) {
-                  final wide = box.maxWidth >= 480;
-                  Widget label(String text) => wide
-                      ? Text(text)
-                      : FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(text, maxLines: 1, softWrap: false),
-                        );
-                  return SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<int>(
-                      key: const Key('market-segments'),
-                      showSelectedIcon: wide,
-                      segments: [
-                        ButtonSegment(
-                          value: 0,
-                          label: label('Marketplace'),
-                          icon: wide
-                              ? const Icon(Icons.storefront_outlined)
-                              : null,
-                        ),
-                        ButtonSegment(
-                          value: 1,
-                          label: label('Businesses'),
-                          icon: wide
-                              ? const Icon(Icons.business_center_outlined)
-                              : null,
-                        ),
-                        ButtonSegment(
-                          value: 2,
-                          label: label('Jobs'),
-                          icon: wide ? const Icon(Icons.work_outline) : null,
-                        ),
-                      ],
-                      selected: {index},
-                      onSelectionChanged: (s) => widget.segment.value = s.first,
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<int>(
+                  key: const Key('market-segments'),
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    padding: WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 4),
                     ),
-                  );
-                },
+                  ),
+                  segments: const [
+                    ButtonSegment(
+                      value: 0,
+                      label: _SegmentLabel('Marketplace'),
+                    ),
+                    ButtonSegment(value: 1, label: _SegmentLabel('Businesses')),
+                    ButtonSegment(value: 2, label: _SegmentLabel('Jobs')),
+                  ],
+                  selected: {index},
+                  onSelectionChanged: (s) => widget.segment.value = s.first,
+                ),
               ),
             ),
             Expanded(
@@ -118,4 +96,18 @@ class _MarketScreenState extends State<MarketScreen> {
       ),
     );
   }
+}
+
+/// Segment label that never wraps mid-word; shrinks slightly on very
+/// narrow phones instead.
+class _SegmentLabel extends StatelessWidget {
+  const _SegmentLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => FittedBox(
+    fit: BoxFit.scaleDown,
+    child: Text(text, maxLines: 1, softWrap: false),
+  );
 }
