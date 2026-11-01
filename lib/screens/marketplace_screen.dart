@@ -178,7 +178,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           children: [
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text('Add a product to which business?'),
+              child: Text('Tambah produk ke usaha yang mana?'),
             ),
             for (final b in approved)
               ListTile(
@@ -222,7 +222,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
     if (approved.isEmpty) {
       await _info(
-        'Add a product',
+        'Tambah produk',
         kProductsNeedBusinessMessage,
         action: 'Register a business',
         onAction: () => Navigator.of(context).push(
@@ -289,14 +289,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 IconButton(
                   onPressed: _openMine,
                   icon: const Icon(Icons.inventory_2_outlined),
-                  tooltip: 'My listings',
+                  tooltip: 'Produk saya',
                 ),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Add a product'),
+        label: const Text('Tambah produk'),
       ),
       body: Column(
         children: [
@@ -405,7 +405,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 Icons.inventory_2_outlined,
                                 size: 18,
                               ),
-                              label: const Text('My listings'),
+                              label: const Text('Produk saya'),
                             ),
                         ],
                       ),

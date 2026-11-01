@@ -121,7 +121,7 @@ void main() {
     testWidgets('each segment keeps its own actions', (tester) async {
       await pump(tester);
       expect(find.byKey(const Key('my-listings')), findsOneWidget);
-      expect(find.text('Add a product'), findsOneWidget);
+      expect(find.text('Tambah produk'), findsOneWidget);
       await tester.tap(find.text('Businesses'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('my-businesses')), findsOneWidget);

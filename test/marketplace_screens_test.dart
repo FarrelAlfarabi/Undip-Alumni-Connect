@@ -91,7 +91,7 @@ void main() {
       expect(find.text('Electronics · Jakarta'), findsOneWidget);
       expect(
         find.text(
-          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );
@@ -210,7 +210,7 @@ void main() {
       expect(find.textContaining('No listings yet'), findsOneWidget);
       expect(
         find.text(
-          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );
@@ -244,7 +244,7 @@ void main() {
       );
       expect(
         find.text(
-          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );
@@ -299,7 +299,7 @@ void main() {
       expect(find.textContaining('Class of 2016'), findsOneWidget);
       expect(
         find.text(
-          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );

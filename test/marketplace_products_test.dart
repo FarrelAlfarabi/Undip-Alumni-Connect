@@ -181,7 +181,7 @@ void main() {
     });
   });
 
-  group('Add a product flow', () {
+  group('Tambah produk flow', () {
     Future<FakeBusinessApi> pump(
       WidgetTester tester, {
       required List<Map<String, dynamic>> businesses,
@@ -208,7 +208,7 @@ void main() {
 
     testWidgets('no business: explains and offers to register', (tester) async {
       await pump(tester, businesses: [], usage: []);
-      await tester.tap(find.text('Add a product'));
+      await tester.tap(find.text('Tambah produk'));
       await tester.pumpAndSettle();
       expect(find.text(kProductsNeedBusinessMessage), findsOneWidget);
       await tester.tap(find.text('Register a business'));
@@ -222,7 +222,7 @@ void main() {
         businesses: [businessMap(status: 'pending')],
         usage: [usageMap(canPost: false)],
       );
-      await tester.tap(find.text('Add a product'));
+      await tester.tap(find.text('Tambah produk'));
       await tester.pumpAndSettle();
       expect(find.text(kProductsNeedBusinessMessage), findsOneWidget);
       expect(find.text('Post product'), findsNothing);
@@ -236,7 +236,7 @@ void main() {
           businesses: [businessMap(status: 'approved', approvedBand: 'micro')],
           usage: [usageMap(used: 3, canPost: false)],
         );
-        await tester.tap(find.text('Add a product'));
+        await tester.tap(find.text('Tambah produk'));
         await tester.pumpAndSettle();
         expect(find.text('Free limit reached'), findsOneWidget);
         expect(
@@ -258,7 +258,7 @@ void main() {
         businesses: [businessMap(status: 'approved', approvedBand: 'micro')],
         usage: [usageMap(used: 1)],
       );
-      await tester.tap(find.text('Add a product'));
+      await tester.tap(find.text('Tambah produk'));
       await tester.pumpAndSettle();
       expect(find.text('Post product'), findsOneWidget);
     });
@@ -285,9 +285,9 @@ void main() {
           usageMap(id: 'b2'),
         ],
       );
-      await tester.tap(find.text('Add a product'));
+      await tester.tap(find.text('Tambah produk'));
       await tester.pumpAndSettle();
-      expect(find.text('Add a product to which business?'), findsOneWidget);
+      expect(find.text('Tambah produk ke usaha yang mana?'), findsOneWidget);
       await tester.tap(find.byKey(const Key('pick-b2')));
       await tester.pumpAndSettle();
       expect(find.text('Post product'), findsOneWidget);

@@ -178,3 +178,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Text wrap fixes (web, 360px)
 - "Lihat semua pengumuman" no longer wraps (banner trailing slot is Flexible, text one line).
 - Explore segments: icons removed, labels one line (shrink if needed). Tests in stage7_test.
+## Indonesian wording gaps (1 Nov 2026)
+- Consent screen: "Syarat dan Ketentuan Aplikasi", "Saya Setuju". Home: "Dukung Usaha Alumni", "Memiliki usaha?". Marketplace notice now the plan's responsibility text (3 lines, tap for full); "Tambah produk", "Ubah produk", "Produk saya".
+- No migration. Still English: Jobs/Apply, Bantuan, most admin screens. Notice wording needs a legal check against the Terms.

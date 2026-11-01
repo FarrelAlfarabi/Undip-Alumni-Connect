@@ -13,7 +13,7 @@ import 'package:undip_alumni_connect/screens/my_listings_screen.dart';
 import 'support/fake_marketplace_api.dart';
 
 const notice =
-    'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.';
+    'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.';
 
 final longTitle =
     'Laptop Bekas Core i5 Generasi Kedelapan dengan RAM 8 GB dan SSD 256 GB '

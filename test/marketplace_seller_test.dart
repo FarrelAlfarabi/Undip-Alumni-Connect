@@ -324,7 +324,7 @@ void main() {
       expect(find.text('Rejected: Foto kurang jelas'), findsOneWidget);
       expect(
         find.text(
-          'Lingkaran does not handle payments or delivery. Deal directly with the seller and check before you pay.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );
@@ -336,7 +336,7 @@ void main() {
 
     testWidgets('empty state', (tester) async {
       await pumpMine(tester, []);
-      expect(find.textContaining('no listings yet'), findsOneWidget);
+      expect(find.textContaining('belum punya produk'), findsOneWidget);
     });
 
     testWidgets('error state offers retry', (tester) async {
@@ -420,7 +420,7 @@ void main() {
         'p_seller': 's1',
         'p_listing': 'p',
       });
-      expect(find.textContaining('no listings yet'), findsOneWidget);
+      expect(find.textContaining('belum punya produk'), findsOneWidget);
     });
 
     testWidgets('mark as sold asks first, then calls the function', (
