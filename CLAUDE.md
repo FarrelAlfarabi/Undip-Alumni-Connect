@@ -25,7 +25,6 @@
 
 - One branch and one PR per theme (for example onboarding, admin tools). Add new requests of the same theme to the same thread.
 - One thread owns migration file numbers. Check `supabase/migrations` on main before naming a new one.
-- Migrations are applied by Farrel in the Supabase SQL Editor. Do not try the Supabase connector, a database string or an access token from the cloud.
 
 ## Token rules (every session)
 - At session start read only CLAUDE.md. Do not read `docs/` or root `*.md` files unless the task names them.
