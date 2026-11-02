@@ -217,6 +217,32 @@ void main() {
   });
 
   group('tiles 2x2', () {
+    testWidgets('every tile has its own icon colors', (tester) async {
+      await pumpHome(tester);
+      final combos = <String>{};
+      for (final k in [
+        'tile-directory',
+        'tile-jobs',
+        'tile-marketplace',
+        'tile-kontak-ikafe',
+      ]) {
+        final icon = tester.widget<Icon>(
+          find.descendant(of: find.byKey(Key(k)), matching: find.byType(Icon)),
+        );
+        final box = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byWidget(icon),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final bg = (box.decoration as BoxDecoration).color;
+        combos.add('$bg/${icon.color}');
+      }
+      expect(combos.length, 4);
+    });
+
     testWidgets('grid order, size and semantics', (tester) async {
       final handle = tester.ensureSemantics();
       await pumpHome(tester);

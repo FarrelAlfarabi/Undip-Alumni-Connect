@@ -1,3 +1,5 @@
+import 'package:undip_alumni_connect/lock/lock_store.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -286,6 +288,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: DirectoryScreen(
+              flagStore: MemoryLockStore(),
               currentUser: ValueNotifier({'id': 'me'}),
               fetchAlumni: () async =>
                   throw Exception('SocketException: Failed host lookup'),

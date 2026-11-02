@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/avatar_repository.dart';
 import '../data/blocked_filter.dart';
 import '../data/profile_columns.dart';
+import '../lock/lock_store.dart';
+import '../widgets/linkedin_logo.dart';
 import '../widgets/avatar.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
@@ -45,7 +47,12 @@ class DirectoryScreen extends StatefulWidget {
     super.key,
     required this.currentUser,
     this.fetchAlumni,
+    this.flagStore,
   });
+
+  /// Remembers on this device that the own-year default was already used.
+  /// Injectable for tests; defaults to secure storage.
+  final LockStore? flagStore;
 
   /// Injectable for tests; defaults to the Supabase query.
   final Future<List<Map<String, dynamic>>> Function()? fetchAlumni;
@@ -82,10 +89,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.dispose();
   }
 
-  /// Opens on the user's own graduation year. Skipped when the profile has
-  /// no year, or nobody in the list shares it (the dropdown would have no
-  /// matching option). Only applied while the year filter is still "All".
-  List<Map<String, dynamic>> _withDefaultYear(List<Map<String, dynamic>> rows) {
+  static const _yearDefaultKey = 'directory_year_default_used';
+
+  /// Opens on the user's own graduation year, but only the very first time
+  /// this device opens the directory. Later visits start with no filter. If
+  /// the flag cannot be read, no default is applied. Skipped when the profile
+  /// has no year, or nobody in the list shares it.
+  Future<List<Map<String, dynamic>>> _withDefaultYear(
+    List<Map<String, dynamic>> rows,
+  ) async {
+    final store = widget.flagStore ?? const SecureLockStore();
+    try {
+      if (await store.read(_yearDefaultKey) != null) return rows;
+      await store.write(_yearDefaultKey, '1');
+    } catch (_) {
+      return rows;
+    }
     final own = widget.currentUser.value['graduation_year']?.toString();
     if (own != null &&
         _year == kAllFilter &&
@@ -325,7 +344,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               : IconButton(
                                   key: Key('member-linkedin-${p['id']}'),
                                   tooltip: 'Buka LinkedIn',
-                                  icon: const Icon(Icons.open_in_new),
+                                  icon: const LinkedInLogo(),
                                   onPressed: () =>
                                       openHttpUrl(p['linkedin_url'] as String?),
                                 ),
