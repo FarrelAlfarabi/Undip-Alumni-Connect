@@ -509,8 +509,8 @@ class _QuickActions extends StatelessWidget {
                 child: _Tile(
                   key: const Key('tile-directory'),
                   icon: Icons.search,
-                  iconBackground: AppTheme.blue,
-                  iconColor: Colors.white,
+                  iconBackground: AppTheme.yellow,
+                  iconColor: AppTheme.blue,
                   label: 'Cari alumni',
                   hint: 'Berdasarkan jurusan, angkatan, dan industri',
                   onTap: onDirectory,

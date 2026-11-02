@@ -1,3 +1,4 @@
+import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/screens/directory_screen.dart';
@@ -19,6 +20,7 @@ Future<void> pumpDirectory(WidgetTester tester) async {
     MaterialApp(
       home: Scaffold(
         body: DirectoryScreen(
+          flagStore: MemoryLockStore(),
           currentUser: ValueNotifier({'id': 'me'}),
           fetchAlumni: () async => [
             person('1', 'Ayu Lestari', 'Semarang'),

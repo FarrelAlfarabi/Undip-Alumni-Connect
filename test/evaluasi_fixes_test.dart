@@ -1,3 +1,5 @@
+import 'package:undip_alumni_connect/lock/lock_store.dart';
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -145,6 +147,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: DirectoryScreen(
+              flagStore: MemoryLockStore(),
               currentUser: ValueNotifier({'id': 'me'}),
               fetchAlumni: () async => [
                 {
