@@ -373,30 +373,24 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                      child: ValueListenableBuilder<List<String>>(
-                        valueListenable: CategoryRepository.shared.names,
-                        builder: (context, names, _) => SearchableChoice(
-                          fieldKey: const Key('market-category'),
-                          label: 'Kategori',
-                          controller: _categoryText,
-                          options: [kAllFilter, ...names],
-                          selected: _category,
-                          enabled: true,
-                          onSelected: (v) =>
-                              setState(() => _category = v ?? kAllFilter),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
                       child: Row(
                         children: [
-                          ClearFiltersButton(
-                            active: _hasActiveFilters,
-                            onPressed: _clearFilters,
+                          Expanded(
+                            child: ValueListenableBuilder<List<String>>(
+                              valueListenable: CategoryRepository.shared.names,
+                              builder: (context, names, _) => SearchableChoice(
+                                fieldKey: const Key('market-category'),
+                                label: 'Kategori',
+                                controller: _categoryText,
+                                options: [kAllFilter, ...names],
+                                selected: _category,
+                                enabled: true,
+                                onSelected: (v) =>
+                                    setState(() => _category = v ?? kAllFilter),
+                              ),
+                            ),
                           ),
-                          const Spacer(),
                           if (widget.embedded)
                             TextButton.icon(
                               key: const Key('my-listings'),
@@ -410,6 +404,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                         ],
                       ),
                     ),
+                    if (_hasActiveFilters)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                        child: ClearFiltersButton(
+                          active: true,
+                          onPressed: _clearFilters,
+                        ),
+                      ),
                     Expanded(
                       child: listings.isEmpty
                           ? const Center(

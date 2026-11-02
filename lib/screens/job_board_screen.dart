@@ -227,13 +227,16 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                child: ClearFiltersButton(
-                  active: _hasActiveFilters,
-                  onPressed: _clearFilters,
-                ),
-              ),
+              if (_hasActiveFilters)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  child: ClearFiltersButton(
+                    active: true,
+                    onPressed: _clearFilters,
+                  ),
+                )
+              else
+                const SizedBox(height: 4),
               Expanded(
                 child: jobs.isEmpty
                     ? const Center(child: Text('No jobs match these filters.'))

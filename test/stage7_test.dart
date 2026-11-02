@@ -118,6 +118,21 @@ void main() {
       }
     });
 
+    testWidgets('Kategori shares one row with Produk saya at 320px', (
+      tester,
+    ) async {
+      await pump(tester);
+      tester.view.physicalSize = const Size(320, 2200);
+      await tester.pumpAndSettle();
+      final cat = tester.getRect(find.byKey(const Key('market-category')));
+      final mine = tester.getRect(find.byKey(const Key('my-listings')));
+      expect((cat.center.dy - mine.center.dy).abs(), lessThan(12));
+      expect(cat.right, lessThanOrEqualTo(mine.left));
+      // The test font is wider than the real one, so only require room.
+      expect(cat.width, greaterThan(80));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('each segment keeps its own actions', (tester) async {
       await pump(tester);
       expect(find.byKey(const Key('my-listings')), findsOneWidget);
