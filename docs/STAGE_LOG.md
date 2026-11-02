@@ -184,3 +184,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Four UI fixes (2 Nov 2026)
 - Marketplace notice: Tutup closes the dialog and hides the card until app restart. Members: LinkedIn logo button. Directory opens on own year only the first time on a device (flag in secure storage).
 - Home: "Cari alumni" tile now yellow with blue icon, so all four tiles differ. No migration.
+## LinkedIn confirmation (2 Nov 2026)
+- Member LinkedIn button asks "Buka LinkedIn member ini?" (Batal / Buka) before opening the link. No migration.
