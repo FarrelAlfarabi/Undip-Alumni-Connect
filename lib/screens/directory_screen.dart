@@ -278,25 +278,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  _hasActiveFilters
-                      ? '${filtered.length} dari ${all.length} alumni'
-                      : '${all.length} alumni',
-                  key: const Key('directory-count'),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _hasActiveFilters
+                          ? '${filtered.length} dari ${all.length} alumni'
+                          : '${all.length} alumni',
+                      key: const Key('directory-count'),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-              child: ClearFiltersButton(
-                active: _hasActiveFilters,
-                onPressed: _clearFilters,
+                  ClearFiltersButton(
+                    active: _hasActiveFilters,
+                    onPressed: _clearFilters,
+                  ),
+                ],
               ),
             ),
             Expanded(
