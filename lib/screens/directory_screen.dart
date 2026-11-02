@@ -48,7 +48,11 @@ class DirectoryScreen extends StatefulWidget {
     required this.currentUser,
     this.fetchAlumni,
     this.flagStore,
+    this.openLink,
   });
+
+  /// Opens a web link. Injectable for tests; defaults to the system browser.
+  final Future<bool> Function(String? url)? openLink;
 
   /// Remembers on this device that the own-year default was already used.
   /// Injectable for tests; defaults to secure storage.
@@ -134,6 +138,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ),
       ),
     );
+  }
+
+  /// Asks before leaving the app for a member's LinkedIn page.
+  Future<void> _confirmOpenLinkedIn(String? url) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: const Text('Buka LinkedIn member ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Buka'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await (widget.openLink ?? openHttpUrl)(url);
   }
 
   List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {
@@ -345,8 +370,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                   key: Key('member-linkedin-${p['id']}'),
                                   tooltip: 'Buka LinkedIn',
                                   icon: const LinkedInLogo(),
-                                  onPressed: () =>
-                                      openHttpUrl(p['linkedin_url'] as String?),
+                                  onPressed: () => _confirmOpenLinkedIn(
+                                    p['linkedin_url'] as String?,
+                                  ),
                                 ),
                           onTap: () {
                             Navigator.of(context).push(
