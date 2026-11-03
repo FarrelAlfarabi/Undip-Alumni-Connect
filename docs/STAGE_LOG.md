@@ -193,6 +193,8 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## City edit (3 Nov 2026)
 - Own profile has a "Kota" panel with its own Ubah (same pattern as Bio/LinkedIn); city removed from Edit Employment Info. Saves only `city`.
 - DB: 20261018100000 already lets members edit city; no new migration. Live DB must have it applied (check with Farrel).
+## Marketplace notice stays closed (3 Nov 2026)
+- Tutup is now saved on the device (secure storage key `marketplace_notice_dismissed`), read at app start. Survives restart, login, logout and Switch account. Not per user and not synced, so a second device shows it once. No migration.
 ## OTP request limits (3 Nov 2026)
 - Code login screen: email service rate limit shows "Terlalu banyak permintaan kode" (60 s resend wait); 5 wrong codes in a row need a new code. Tests in real_login_test.
 - Migration `20261103120000_apply_real_login` re-applies the never-run real login SQL (dormant, require_login stays off). It skips current_profile_id and claim_alumni_profile so the suspend versions stay. Fresh chain OK.

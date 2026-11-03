@@ -9,10 +9,11 @@ void main() {
   testWidgets('Tutup closes the dialog and hides the notice card', (
     tester,
   ) async {
-    MarketplaceDemoNotice.resetForTest();
+    MarketplaceDemoNotice.resetForTest(MemoryLockStore());
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: MarketplaceDemoNotice())),
     );
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('marketplace-notice')), findsOneWidget);
     await tester.tap(find.byKey(const Key('marketplace-notice')));
     await tester.pumpAndSettle();
@@ -21,7 +22,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.byKey(const Key('marketplace-notice')), findsNothing);
-    MarketplaceDemoNotice.resetForTest();
+  });
+
+  testWidgets('Tutup is remembered after the app restarts or logs in again', (
+    tester,
+  ) async {
+    final store = MemoryLockStore();
+    MarketplaceDemoNotice.resetForTest(store);
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: MarketplaceDemoNotice())),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('marketplace-notice')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tutup'));
+    await tester.pumpAndSettle();
+
+    // Simulate a fresh launch: memory state is gone, the device store stays.
+    MarketplaceDemoNotice.resetForTest(store);
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: SizedBox())),
+    );
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: MarketplaceDemoNotice())),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('marketplace-notice')), findsNothing);
   });
 
   testWidgets('member LinkedIn button shows the LinkedIn logo', (tester) async {

@@ -8,6 +8,7 @@ import 'lock/app_entry.dart';
 import 'lock/lock_overlay.dart';
 import 'lock/lock_service.dart';
 import 'theme.dart';
+import 'widgets/marketplace_demo_notice.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL'] ?? '',
     publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
+
+  // Read the saved "Tutup" answer before any marketplace screen is built.
+  await MarketplaceDemoNotice.preload();
 
   runApp(const MyApp());
 }
