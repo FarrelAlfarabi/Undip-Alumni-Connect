@@ -20,10 +20,10 @@
 ## Work rules
 - Test first: write a failing test, then the code, then run the tests.
 - One stage per session. One commit per stage. Stop after the commit and wait for review.
-- Never apply migrations to a live project by hand or through the Supabase connector. Never put secrets in the repo.
-- Migrations reach live only through `.github/workflows/supabase-deploy.yml`, which runs `supabase db push` when a PR that adds one is merged to main. Merging is Farrel's approval.
+- Never put secrets in the repo.
+- Migrations reach live only through `.github/workflows/supabase-deploy.yml`, which runs `supabase db push` when a PR that adds one is merged to main.
 - Never edit or renumber a migration that is already on main. Fix it with a new file.
-- `20261013120000_real_login` is marked applied in the live history but is NOT live. To apply it, add a new migration file with its SQL, after Farrel's OK.
+- `20261013120000_real_login` is marked applied in the live history but is NOT live. To apply it, add a new migration file with its SQL.
 - Never use Haiku for SQL migrations, RLS, auth, or anything that exposes user data. Use the `reviewer` subagent on those.
 
 - One branch and one PR per theme (for example onboarding, admin tools). Add new requests of the same theme to the same thread.
