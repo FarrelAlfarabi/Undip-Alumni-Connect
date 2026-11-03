@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// One photo box for products, businesses and jobs: 3:2, cropped to fill,
@@ -36,18 +37,23 @@ class AppPhoto extends StatelessWidget {
       child: AspectRatio(
         aspectRatio: aspectRatio,
         child: LayoutBuilder(
-          builder: (context, box) => Image.network(
-            url,
-            fit: BoxFit.cover,
-            // Decode at the size it is drawn, not at full resolution.
-            cacheWidth: box.hasBoundedWidth
-                ? (box.maxWidth * dpr).round()
-                : (600 * dpr).round(),
-            gaplessPlayback: true,
-            semanticLabel: semanticLabel,
-            errorBuilder: (_, _, _) => placeholder(),
-            loadingBuilder: (context, child, progress) =>
-                progress == null ? child : placeholder(),
+          builder: (context, box) => Semantics(
+            label: semanticLabel,
+            image: true,
+            excludeSemantics: semanticLabel != null,
+            // Cached on the device, so photos are not downloaded again.
+            child: CachedNetworkImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              // Decode at the size it is drawn, not at full resolution.
+              memCacheWidth: box.hasBoundedWidth
+                  ? (box.maxWidth * dpr).round()
+                  : (600 * dpr).round(),
+              fadeInDuration: Duration.zero,
+              useOldImageOnUrlChange: true,
+              placeholder: (_, _) => placeholder(),
+              errorWidget: (_, _, _) => placeholder(),
+            ),
           ),
         ),
       ),

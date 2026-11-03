@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
@@ -555,16 +556,20 @@ class ListingImage extends StatelessWidget {
     // saving on the list, where the photo is a small thumbnail.
     Widget photo(double width) {
       final dpr = MediaQuery.devicePixelRatioOf(context);
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        cacheWidth: (width * dpr).round(),
-        gaplessPlayback: true,
-        semanticLabel: semanticLabel,
-        excludeFromSemantics: semanticLabel == null,
-        errorBuilder: (_, _, _) => placeholder(),
-        loadingBuilder: (context, child, progress) =>
-            progress == null ? child : placeholder(),
+      return Semantics(
+        label: semanticLabel,
+        image: semanticLabel != null,
+        excludeSemantics: true,
+        // Cached on the device, so photos are not downloaded again.
+        child: CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          memCacheWidth: (width * dpr).round(),
+          fadeInDuration: Duration.zero,
+          useOldImageOnUrlChange: true,
+          placeholder: (_, _) => placeholder(),
+          errorWidget: (_, _, _) => placeholder(),
+        ),
       );
     }
 

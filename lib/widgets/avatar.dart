@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../lock/masking.dart' show initialsOf;
@@ -38,13 +39,20 @@ class Avatar extends StatelessWidget {
       width: radius * 2,
       height: radius * 2,
       child: ClipOval(
-        child: Image.network(
-          u,
-          fit: BoxFit.cover,
-          // Decode at the size it is drawn, not at full resolution.
-          cacheWidth: (radius * 2 * dpr).round(),
-          semanticLabel: 'Foto $name',
-          errorBuilder: (_, _, _) => initials,
+        child: Semantics(
+          label: 'Foto $name',
+          image: true,
+          excludeSemantics: true,
+          // Cached on the device, so photos are not downloaded again.
+          child: CachedNetworkImage(
+            imageUrl: u,
+            fit: BoxFit.cover,
+            // Decode at the size it is drawn, not at full resolution.
+            memCacheWidth: (radius * 2 * dpr).round(),
+            fadeInDuration: Duration.zero,
+            placeholder: (_, _) => initials,
+            errorWidget: (_, _, _) => initials,
+          ),
         ),
       ),
     );

@@ -176,9 +176,7 @@ void main() {
           ),
         ),
       );
-      final img = tester.widget<Image>(find.byType(Image));
-      expect(img.semanticLabel, 'Kopi');
-      expect(img.excludeFromSemantics, isFalse);
+      expect(find.bySemanticsLabel('Kopi'), findsOneWidget);
     });
   });
 

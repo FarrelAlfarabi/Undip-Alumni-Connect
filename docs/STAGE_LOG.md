@@ -193,3 +193,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Code login screen: email service rate limit shows "Terlalu banyak permintaan kode" (60 s resend wait); 5 wrong codes in a row need a new code. Tests in real_login_test.
 - Migration `20261103120000_apply_real_login` re-applies the never-run real login SQL (dormant, require_login stays off). It skips current_profile_id and claim_alumni_profile so the suspend versions stay. Fresh chain OK.
 - Still needed: REAL_LOGIN=true on the build, then cutover_real_login.sql by hand.
+## Image cache (3 Nov 2026)
+- Avatars, AppPhoto and ListingImage use `cached_network_image`: photos stay on the device, so less mobile data and Supabase egress. Same sizes, initials/placeholder on error, labels kept. No data caching, no service worker, no migration.
+- Tests: `image_cache_test.dart`; label checks in stage6_test and profile_photo_test updated.
