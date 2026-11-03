@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## PIN kept when the sign in expires (3 Nov 2026)
+- App start with REAL_LOGIN and no stored session wiped the PIN (`clear()`), so the next login asked to create a new PIN. Now it signs out only; the PIN stays with its owner.
+- Test: `test/real_login_test.dart` (PIN still there after session expiry). Analyze clean, full suite passes.
+
 ## Review fixes after the redesign merge (30 Oct 2026)
 - Web loads without a service worker (old builds stayed cached). Bio counts code points like the database; Bio and LinkedIn treat "no row saved" as an error. Explore segments stay on one line on phones.
 - Migration `20261030210000_review_security_fixes.sql` (+ rollback, `22_review_security_fixes_test.sql`): hidden categories really blocked, no avatars list policy, avatar link tied to own folder. NOT applied.

@@ -83,8 +83,10 @@ class _AppEntryState extends State<AppEntry> {
   Future<void> _unlock(RememberedUser user) async {
     final login = widget.loginApi ?? (kRealLogin ? SupabaseLoginApi() : null);
     if (login != null && !login.hasSession) {
-      // The sign in expired or was removed: the PIN alone is not enough.
-      await _lock.clear();
+      // The sign in expired or was removed: the PIN alone is not enough, so
+      // the person signs in again. Same as Sign out: the PIN stays with its
+      // owner, so they enter it instead of making a new one.
+      await _lock.signOut();
       if (mounted) _showWelcome(kSessionExpiredNotice);
       return;
     }
