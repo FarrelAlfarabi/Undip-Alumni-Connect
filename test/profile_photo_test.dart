@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/data/avatar_repository.dart';
@@ -60,7 +61,7 @@ void main() {
           home: Avatar(url: kUrl, name: 'Siti Azizah'),
         ),
       );
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(CachedNetworkImage), findsOneWidget);
     });
 
     testWidgets('shows initials without a URL', (tester) async {
@@ -276,7 +277,7 @@ void main() {
         'name': 'Siti',
         'avatar_url': kUrl,
       }, own: false);
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(CachedNetworkImage), findsOneWidget);
     });
   });
 
