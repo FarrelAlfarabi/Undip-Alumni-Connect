@@ -561,7 +561,13 @@ void main() {
       );
       await tester.pump();
       expect(find.byKey(const Key('profile-city-line')), findsOneWidget);
-      expect(find.text('Bandung'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('profile-city-line')),
+          matching: find.text('Bandung'),
+        ),
+        findsOneWidget,
+      );
       await tester.pumpWidget(screen({'id': 'me', 'name': 'X'}));
       await tester.pump();
       expect(find.byKey(const Key('profile-city-line')), findsNothing);

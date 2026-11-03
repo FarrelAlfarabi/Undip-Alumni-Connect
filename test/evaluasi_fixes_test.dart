@@ -104,9 +104,9 @@ void main() {
       expect(fieldText(tester, 'profile-industry'), 'Konstruksi lama');
     });
 
-    testWidgets('City is a picker too', (tester) async {
+    testWidgets('City is edited on its own screen, not here', (tester) async {
       await pumpSetup(tester, {'id': 'me', 'city': 'Semarang'});
-      expect(fieldText(tester, 'profile-city'), 'Semarang');
+      expect(find.byKey(const Key('profile-city')), findsNothing);
     });
 
     test('the industry list is tidy: no repeats, Other is last', () {

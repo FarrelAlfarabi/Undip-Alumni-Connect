@@ -186,3 +186,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Home: "Cari alumni" tile now yellow with blue icon, so all four tiles differ. No migration.
 ## LinkedIn confirmation (2 Nov 2026)
 - Member LinkedIn button asks "Buka LinkedIn member ini?" (Batal / Buka) before opening the link. No migration.
+## City edit (3 Nov 2026)
+- Own profile has a "Kota" panel with its own Ubah (same pattern as Bio/LinkedIn); city removed from Edit Employment Info. Saves only `city`.
+- DB: 20261018100000 already lets members edit city; no new migration. Live DB must have it applied (check with Farrel).
