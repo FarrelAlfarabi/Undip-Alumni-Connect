@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../widgets/cv_link_chip.dart';
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
 import '../widgets/safe_link_chip.dart';
@@ -35,11 +36,6 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
         .eq('job_post_id', widget.job['id'])
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(rows as List);
-  }
-
-  String? _cvUrl(String? cvPath) {
-    if (cvPath == null || cvPath.isEmpty) return null;
-    return Supabase.instance.client.storage.from('cvs').getPublicUrl(cvPath);
   }
 
   @override
@@ -83,7 +79,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, i) {
               final a = applicants[i];
-              final cvUrl = _cvUrl(a['cv_path'] as String?);
+              final cvPath = a['cv_path'] as String?;
 
               return Card(
                 elevation: 0,
@@ -142,12 +138,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                               label: 'Portfolio',
                               url: a['portfolio_url'] as String,
                             ),
-                          if (cvUrl != null)
-                            SafeLinkChip(
-                              icon: Icons.description_outlined,
-                              label: 'CV',
-                              url: cvUrl,
-                            ),
+                          if (cvPath != null && cvPath.isNotEmpty)
+                            CvLinkChip(path: cvPath),
                         ],
                       ),
                     ],

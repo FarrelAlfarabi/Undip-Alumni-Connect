@@ -41,7 +41,7 @@ $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed.sql" >/dev/null
 $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed_marketplace.sql" >/dev/null
 
 shopt -s nullglob
-MIGS=("$ROOT"/supabase/migrations/2026100[3-9]*.sql "$ROOT"/supabase/migrations/202610[1-3]*.sql)
+MIGS=("$ROOT"/supabase/migrations/2026100[3-9]*.sql "$ROOT"/supabase/migrations/202610[1-3]*.sql "$ROOT"/supabase/migrations/202611*.sql)
 
 apply_all() {
   for f in "${MIGS[@]}"; do

@@ -104,5 +104,16 @@ select check_name, ok, detail from (
     from information_schema.columns c
    where c.table_schema = 'public' and c.table_name = 'alumni_profiles'
      and c.column_name <> 'nim'
+  union all
+  -- 10. CVs are private, and deleting an account removes the login too.
+  select 'cvs bucket is private',
+         coalesce((select not public from storage.buckets where id = 'cvs'), false),
+         'the cvs bucket is public: apply 20261103150000_private_cvs.sql'
+  union all
+  select 'account deletion removes the auth user',
+         exists (select 1 from pg_trigger
+                  where tgrelid = 'public.alumni_profiles'::regclass
+                    and tgname = 'alumni_profiles_delete_auth_user'),
+         'trigger missing: apply 20261103150100_delete_auth_user_on_account_delete.sql'
 ) checks
 order by ok, check_name;

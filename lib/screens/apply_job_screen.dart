@@ -133,8 +133,12 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
       if (_cvFile != null) {
         final bytes = await _cvFile!.xFile.readAsBytes();
         final safeName = _cvFile!.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
-        cvPath =
-            '${widget.job['id']}/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+        cvPath = cvStoragePath(
+          userId: client.auth.currentUser?.id,
+          jobId: widget.job['id'] as Object,
+          safeName: safeName,
+          millis: DateTime.now().millisecondsSinceEpoch,
+        );
         await client.storage
             .from('cvs')
             .uploadBinary(

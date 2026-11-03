@@ -66,9 +66,10 @@ applied before the new build ships.
 - Tables the app reads directly (for example the alumni directory) are still
   readable by the anonymous role. This work scopes WRITES and the identity
   based functions, not reads. Check `supabase/checks/live_db_checks.sql`.
-- Storage buckets still accept uploads from the anonymous role.
-- Deleting an account removes the alumni data but not the Supabase Auth user
-  row. Remove it in the dashboard if someone asks.
+- The `cvs` bucket is private with signed links (20261103150000). The other
+  buckets (photos) still accept uploads from the anonymous role.
+- Deleting an account removes the alumni data and, since
+  20261103150100, the Supabase Auth user too (a trigger on `deleted_at`).
 - The first sign in links the auth user to the alumni row by email. If two
   alumni rows share an email, the first match wins.
 - Not tested against real Supabase Auth or real email delivery. Everything

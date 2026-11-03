@@ -202,3 +202,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Image cache (3 Nov 2026)
 - Avatars, AppPhoto and ListingImage use `cached_network_image`: photos stay on the device, so less mobile data and Supabase egress. Same sizes, initials/placeholder on error, labels kept. No data caching, no service worker, no migration.
 - Tests: `image_cache_test.dart`; label checks in stage6_test and profile_photo_test updated.
+## Web beta fixes: private CVs, delete Auth user (3 Nov 2026)
+- `cvs` bucket private (migration 20261103150000): CVs open by 5-minute signed link (`CvLinkChip`); upload only to own folder, read only by applicant and the job poster. Open rules until the cutover, strict after.
+- Trigger (20261103150100) deletes the Auth user when a profile gets `deleted_at`. Rollbacks: `rollback_private_cvs.sql`, `rollback_delete_auth_user_on_account_delete.sql`, `rollback_apply_real_login.sql`.
+- SQL runners now include 202611* migrations (they were skipped). Tests: `23_*` SQL, `private_cv_test.dart`.

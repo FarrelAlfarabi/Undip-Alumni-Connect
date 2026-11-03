@@ -18,3 +18,18 @@ String? cvContentType(String fileName) {
   if (dot < 0 || dot == fileName.length - 1) return null;
   return _types[fileName.substring(dot + 1).toLowerCase()];
 }
+
+/// Where a CV is stored in the private `cvs` bucket.
+///
+/// Signed in (real login): the first folder is the auth user id, which is what
+/// the bucket's upload rule requires. Not signed in (old build before the
+/// cutover): the old path, first folder = job id.
+String cvStoragePath({
+  required String? userId,
+  required Object jobId,
+  required String safeName,
+  required int millis,
+}) {
+  if (userId == null || userId.isEmpty) return '$jobId/${millis}_$safeName';
+  return '$userId/${jobId}_${millis}_$safeName';
+}
