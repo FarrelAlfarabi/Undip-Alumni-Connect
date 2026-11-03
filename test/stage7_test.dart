@@ -133,6 +133,22 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets(
+      'Businesses: Kategori shares one row with My businesses at 320px',
+      (tester) async {
+        await pump(tester);
+        tester.view.physicalSize = const Size(320, 2200);
+        await tester.tap(find.text('Businesses'));
+        await tester.pumpAndSettle();
+        final cat = tester.getRect(find.byKey(const Key('business-category')));
+        final mine = tester.getRect(find.byKey(const Key('my-businesses')));
+        expect((cat.center.dy - mine.center.dy).abs(), lessThan(12));
+        expect(cat.right, lessThanOrEqualTo(mine.left));
+        expect(cat.width, greaterThan(80));
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('each segment keeps its own actions', (tester) async {
       await pump(tester);
       expect(find.byKey(const Key('my-listings')), findsOneWidget);

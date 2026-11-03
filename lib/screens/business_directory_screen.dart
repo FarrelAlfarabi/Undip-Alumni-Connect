@@ -102,6 +102,25 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
     if (mounted) _reload();
   }
 
+  Widget _mineButton() {
+    // On very narrow phones the label would squeeze Kategori, so show only
+    // the icon (with a tooltip) there.
+    if (MediaQuery.sizeOf(context).width < 360) {
+      return IconButton(
+        key: const Key('my-businesses'),
+        onPressed: _openMine,
+        icon: const Icon(Icons.storefront_outlined),
+        tooltip: 'My businesses',
+      );
+    }
+    return TextButton.icon(
+      key: const Key('my-businesses'),
+      onPressed: _openMine,
+      icon: const Icon(Icons.storefront_outlined, size: 18),
+      label: const Text('My businesses'),
+    );
+  }
+
   Widget _body() {
     return FutureBuilder<List<Business>>(
       future: _future,
@@ -122,7 +141,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
           (b) => b.ownerId,
         );
         if (all.isEmpty) {
-          return const Center(
+          const empty = Center(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
@@ -131,6 +150,14 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
+          );
+          if (!widget.embedded) return empty;
+          // Keep "My businesses" reachable when the list is empty.
+          return Column(
+            children: [
+              Align(alignment: Alignment.centerRight, child: _mineButton()),
+              const Expanded(child: empty),
+            ],
           );
         }
         final items = applyBusinessFilters(
@@ -148,19 +175,26 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: ValueListenableBuilder<List<String>>(
-                valueListenable: CategoryRepository.shared.names,
-                builder: (context, names, _) => SearchableChoice(
-                  fieldKey: const Key('business-category'),
-                  label: 'Kategori',
-                  controller: _categoryText,
-                  options: [kAllFilter, ...names],
-                  selected: _category,
-                  enabled: true,
-                  onSelected: (v) =>
-                      setState(() => _category = v ?? kAllFilter),
-                ),
+              padding: EdgeInsets.fromLTRB(16, 8, widget.embedded ? 8 : 16, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ValueListenableBuilder<List<String>>(
+                      valueListenable: CategoryRepository.shared.names,
+                      builder: (context, names, _) => SearchableChoice(
+                        fieldKey: const Key('business-category'),
+                        label: 'Kategori',
+                        controller: _categoryText,
+                        options: [kAllFilter, ...names],
+                        selected: _category,
+                        enabled: true,
+                        onSelected: (v) =>
+                            setState(() => _category = v ?? kAllFilter),
+                      ),
+                    ),
+                  ),
+                  if (widget.embedded) _mineButton(),
+                ],
               ),
             ),
             Expanded(
@@ -199,23 +233,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
       label: const Text('Register a business'),
     );
     if (widget.embedded) {
-      return Scaffold(
-        floatingActionButton: fab,
-        body: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: const Key('my-businesses'),
-                onPressed: _openMine,
-                icon: const Icon(Icons.storefront_outlined, size: 18),
-                label: const Text('My businesses'),
-              ),
-            ),
-            Expanded(child: _body()),
-          ],
-        ),
-      );
+      return Scaffold(floatingActionButton: fab, body: _body());
     }
     return Scaffold(
       appBar: AppBar(
