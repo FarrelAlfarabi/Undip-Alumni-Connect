@@ -1,0 +1,45 @@
+name: supabase-deploy
+
+# Applies new files in supabase/migrations to the live Supabase project when
+# they reach main. Merging the PR is the approval. Needs the repository secret
+# SUPABASE_DB_URL (Session pooler connection string, with the password).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/deploy/**'
+      - '.github/workflows/supabase-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+
+      - name: Check the secret is set
+        run: test -n "$SUPABASE_DB_URL" || { echo "Add the SUPABASE_DB_URL secret first."; exit 1; }
+
+      - name: Fix migration history (one time, safe to repeat)
+        run: bash supabase/deploy/repair_history.sh
+
+      - name: Show what will be applied
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
+
+      - name: Apply new migrations
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --yes
