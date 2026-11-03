@@ -1,24 +1,68 @@
 import 'package:flutter/material.dart';
 
+import '../lock/lock_store.dart';
+
 /// Unobtrusive banner shown on every marketplace screen.
-class MarketplaceDemoNotice extends StatelessWidget {
+class MarketplaceDemoNotice extends StatefulWidget {
   const MarketplaceDemoNotice({super.key});
 
-  /// True once the person pressed Tutup. The card stays hidden on every
-  /// marketplace screen until the app restarts.
-  static final _hidden = ValueNotifier<bool>(false);
+  static const _storeKey = 'marketplace_notice_dismissed';
+
+  /// Device storage. It is not touched by sign out or "Switch account", so
+  /// Tutup stays permanent on this device.
+  static LockStore _store = const SecureLockStore();
+
+  /// null = not read yet (card shows), true = dismissed. Call [preload] at
+  /// app start so the saved answer is known before the first marketplace
+  /// screen is built.
+  static final _hidden = ValueNotifier<bool?>(null);
+  static Future<void>? _loading;
 
   @visibleForTesting
-  static void resetForTest() => _hidden.value = false;
+  static void resetForTest([LockStore? store]) {
+    _store = store ?? const SecureLockStore();
+    _hidden.value = null;
+    _loading = null;
+  }
+
+  static Future<void> preload() => _load();
+
+  static Future<void> _load() => _loading ??= () async {
+    try {
+      _hidden.value = await _store.read(_storeKey) != null;
+    } catch (_) {
+      _hidden.value = false; // cannot read: show the card
+    }
+  }();
+
+  static Future<void> _dismiss() async {
+    _hidden.value = true;
+    try {
+      await _store.write(_storeKey, '1');
+    } catch (_) {
+      // Still hidden for this run; it may show again next launch.
+    }
+  }
 
   static const text =
       'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.';
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
-    valueListenable: _hidden,
+  State<MarketplaceDemoNotice> createState() => _MarketplaceDemoNoticeState();
+}
+
+class _MarketplaceDemoNoticeState extends State<MarketplaceDemoNotice> {
+  @override
+  void initState() {
+    super.initState();
+    MarketplaceDemoNotice._load();
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<bool?>(
+    valueListenable: MarketplaceDemoNotice._hidden,
     builder: (context, hidden, _) =>
-        hidden ? const SizedBox.shrink() : _card(context),
+        hidden == true ? const SizedBox.shrink() : _card(context),
   );
 
   Widget _card(BuildContext context) {
@@ -30,11 +74,11 @@ class MarketplaceDemoNotice extends StatelessWidget {
       onTap: () => showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          content: const Text(text),
+          content: const Text(MarketplaceDemoNotice.text),
           actions: [
             TextButton(
               onPressed: () {
-                _hidden.value = true;
+                MarketplaceDemoNotice._dismiss();
                 Navigator.of(dialogContext).pop();
               },
               child: const Text('Tutup'),
@@ -56,7 +100,7 @@ class MarketplaceDemoNotice extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                text,
+                MarketplaceDemoNotice.text,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
