@@ -22,6 +22,7 @@ import 'settings_screen.dart';
 import 'chat_screen.dart';
 import 'profile_photo_screen.dart';
 import 'profile_bio_screen.dart';
+import 'profile_city_screen.dart';
 import 'profile_linkedin_screen.dart';
 import 'profile_setup_screen.dart';
 import 'request_contact_sheet.dart';
@@ -153,6 +154,32 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   /// Bio and LinkedIn: others see them only when filled; I always see both,
   /// with Ubah, so I can add them.
+  /// My city, with its own Ubah (only on my own profile; others see it in
+  /// the header line).
+  List<Widget> _cityPanel(ThemeData theme) {
+    if (!widget.showEditButton) return const [];
+    final city = (_profile['city'] as String?)?.trim() ?? '';
+    return [
+      const SizedBox(height: 12),
+      KeyedSubtree(
+        key: const Key('profile-city'),
+        child: _panel(
+          theme,
+          icon: Icons.location_on_outlined,
+          title: 'Kota',
+          action: TextButton(
+            key: const Key('edit-city'),
+            onPressed: () => _editField(
+              ProfileCityScreen(profile: _profile, save: widget.saveFields),
+            ),
+            child: const Text('Ubah'),
+          ),
+          children: [_valueLine(theme, city)],
+        ),
+      ),
+    ];
+  }
+
   List<Widget> _bioAndLinkedIn(ThemeData theme) {
     final bio = (_profile['bio'] as String?)?.trim() ?? '';
     final linkedin = (_profile['linkedin_url'] as String?)?.trim() ?? '';
@@ -618,6 +645,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               ],
                             ),
                           ],
+                          ..._cityPanel(theme),
                           ..._bioAndLinkedIn(theme),
                         ],
                       ),
