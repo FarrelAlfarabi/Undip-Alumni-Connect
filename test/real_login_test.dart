@@ -308,7 +308,10 @@ void main() {
       await tester.pump();
       expect(find.text(kSessionExpiredNotice), findsOneWidget);
       expect(find.text('Mulai'), findsOneWidget);
+      // Signed out, but the PIN stays with its owner so the next login
+      // asks for it instead of making a new one.
       expect(await lock.load(), isNull);
+      expect(await lock.hasPin(), isTrue);
     });
 
     testWidgets('with a stored sign in the PIN opens the app', (tester) async {
