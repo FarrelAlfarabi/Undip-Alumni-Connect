@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:undip_alumni_connect/auth/login_api.dart';
 import 'package:undip_alumni_connect/lock/app_entry.dart';
 import 'package:undip_alumni_connect/screens/verification_screen.dart';
+import 'package:undip_alumni_connect/util/friendly_error.dart';
 
 import 'account_test.dart' show appHome, phone, withPolicyBundle;
 import 'support/fake_lock.dart';
@@ -14,6 +16,7 @@ class FakeLoginApi implements LoginApi {
   bool session;
   Object? verifyError;
   Object? emailKnownError;
+  Object? sendError;
   Map<String, dynamic>? profile = testProfile();
   final sent = <String>[];
   final checked = <String>[];
@@ -26,7 +29,10 @@ class FakeLoginApi implements LoginApi {
   }
 
   @override
-  Future<void> sendCode(String email) async => sent.add(email);
+  Future<void> sendCode(String email) async {
+    if (sendError != null) throw sendError!;
+    sent.add(email);
+  }
 
   @override
   Future<Map<String, dynamic>?> verifyCode(String email, String code) async {
@@ -169,6 +175,81 @@ void main() {
       await settle(tester);
       expect(api.sent.length, 2);
       expect(find.text('Kirim ulang kode dalam 30 dtk'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 31));
+    });
+
+    testWidgets('too many code requests shows a wait message, not a crash', (
+      tester,
+    ) async {
+      final api = FakeLoginApi()
+        ..sendError = const AuthException(
+          'email rate limit exceeded',
+          statusCode: '429',
+          code: 'over_email_send_rate_limit',
+        );
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Kirim kode'));
+      await settle(tester);
+      expect(find.text(kCodeRateLimited), findsOneWidget);
+      expect(find.text('Terjadi Kesalahan'), findsNothing);
+      expect(find.byKey(const Key('login-email')), findsOneWidget);
+    });
+
+    testWidgets('a rate limit on resend shows the wait message and waits', (
+      tester,
+    ) async {
+      final api = FakeLoginApi();
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Kirim kode'));
+      await settle(tester);
+      await tester.pump(const Duration(seconds: 31));
+      api.sendError = const AuthException(
+        'rate limit',
+        statusCode: '429',
+        code: 'over_email_send_rate_limit',
+      );
+      await tester.tap(find.byKey(const Key('login-resend')));
+      await settle(tester);
+      expect(find.text(kCodeRateLimited), findsOneWidget);
+      expect(find.text('Kirim ulang kode dalam 60 dtk'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 61));
+    });
+
+    testWidgets('five wrong codes in a row need a new code', (tester) async {
+      final api = FakeLoginApi()..verifyError = Exception('otp_expired');
+      await pumpVerify(tester, api);
+      await tester.enterText(
+        find.byKey(const Key('login-email')),
+        'a@example.com',
+      );
+      await tester.tap(find.text('Kirim kode'));
+      await settle(tester);
+      for (var i = 0; i < 5; i++) {
+        await tester.enterText(find.byKey(const Key('login-code')), '00000$i');
+        await settle(tester);
+      }
+      expect(api.checked.length, 5);
+      expect(find.text(kTooManyCodeAttempts), findsOneWidget);
+      // A sixth try is not sent to the server.
+      await tester.enterText(find.byKey(const Key('login-code')), '111111');
+      await settle(tester);
+      expect(api.checked.length, 5);
+      // A new code clears the lock.
+      await tester.pump(const Duration(seconds: 31));
+      await tester.tap(find.byKey(const Key('login-resend')));
+      await settle(tester);
+      api.verifyError = null;
+      await tester.enterText(find.byKey(const Key('login-code')), '222222');
+      await settle(tester);
+      expect(api.checked.length, 6);
       await tester.pump(const Duration(seconds: 31));
     });
 
