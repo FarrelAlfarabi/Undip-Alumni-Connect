@@ -15,6 +15,23 @@ const String kSuspendedMessage =
     'Akun ini ditangguhkan, jadi kamu belum bisa masuk. Kalau kamu merasa ini '
     'keliru, hubungi tim admin di $kContactEmail.';
 
+/// Shown when the email service refuses to send another login code for now.
+const String kCodeRateLimited =
+    'Terlalu banyak permintaan kode. Tunggu beberapa menit, lalu coba lagi.';
+
+/// Shown after five wrong codes in a row. A new code is needed.
+const String kTooManyCodeAttempts =
+    'Terlalu banyak kode yang salah. Minta kode baru untuk lanjut.';
+
+/// Whether [error] is the email service saying "too many codes requested".
+bool isRateLimitError(Object? error) {
+  final text = error.toString().toLowerCase();
+  return text.contains('over_email_send_rate_limit') ||
+      text.contains('over_request_rate_limit') ||
+      text.contains('rate limit') ||
+      text.contains('statuscode: 429');
+}
+
 /// Whether [error] is the database refusing a suspended account.
 bool isSuspendedError(Object? error) =>
     error.toString().contains('account_suspended');

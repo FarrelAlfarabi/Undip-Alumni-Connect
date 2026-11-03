@@ -100,6 +100,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   /// Seconds before "Resend code" works again.
   int _resendIn = 0;
+  int _wrongCodes = 0;
   Timer? _resendTimer;
 
   _VerificationState _state = _VerificationState.idle;
@@ -117,9 +118,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
   LoginApi? get _login =>
       widget.loginApi ?? (kRealLogin ? SupabaseLoginApi() : null);
 
-  void _startCooldown() {
+  void _startCooldown([int seconds = 30]) {
     _resendTimer?.cancel();
-    setState(() => _resendIn = 30);
+    setState(() => _resendIn = seconds);
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted || _resendIn <= 1) {
         t.cancel();
@@ -142,17 +143,22 @@ class _VerificationScreenState extends State<VerificationScreen> {
     try {
       await api.sendCode(email);
       if (!mounted) return;
-      setState(() => _state = _VerificationState.idle);
+      setState(() {
+        _state = _VerificationState.idle;
+        _wrongCodes = 0;
+      });
       _startCooldown();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Kode baru sudah dikirim')));
     } catch (e) {
       if (!mounted) return;
+      final limited = isRateLimitError(e);
       setState(() {
         _state = _VerificationState.idle;
-        _codeError = friendlyError(e);
+        _codeError = limited ? kCodeRateLimited : friendlyError(e);
       });
+      if (limited) _startCooldown(60);
     }
   }
 
@@ -176,13 +182,32 @@ class _VerificationScreenState extends State<VerificationScreen> {
           });
           return;
         }
-        await api.sendCode(email);
+        try {
+          await api.sendCode(email);
+        } catch (e) {
+          if (!mounted) return;
+          if (!isRateLimitError(e)) rethrow;
+          setState(() {
+            _state = _VerificationState.idle;
+            _emailError = kCodeRateLimited;
+          });
+          return;
+        }
         if (!mounted) return;
         setState(() {
           _codeSent = true;
+          _wrongCodes = 0;
           _state = _VerificationState.idle;
         });
         _startCooldown();
+        return;
+      }
+      if (_wrongCodes >= 5) {
+        setState(() {
+          _state = _VerificationState.idle;
+          _codeError = kTooManyCodeAttempts;
+          _codeController.clear();
+        });
         return;
       }
       Map<String, dynamic>? profile;
@@ -197,10 +222,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
         // A wrong or expired code is the most common slip: keep the person
         // on the code step with a plain message and let them retry or resend.
         final network = friendlyError(e) == kNetworkError;
+        if (!network) _wrongCodes++;
         setState(() {
           _state = _VerificationState.idle;
           _codeError = network
               ? kNetworkError
+              : _wrongCodes >= 5
+              ? kTooManyCodeAttempts
               : 'Kode salah atau sudah kedaluwarsa. Periksa lagi, '
                     'atau minta kode baru.';
           _codeController.clear();
@@ -371,6 +399,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _emailError = null;
       _resendTimer?.cancel();
       _resendIn = 0;
+      _wrongCodes = 0;
       _codeController.clear();
     });
   }
