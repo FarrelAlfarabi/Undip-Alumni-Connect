@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin Announcements: past posts with search and a Period filter, and a
 /// button to post a new one. Reached only from the Admin home; the database
@@ -42,6 +46,39 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
     super.dispose();
   }
 
+  Future<void> _delete(AdminAnnouncement a) async {
+    final ok = await confirmDelete(
+      context,
+      title: tr('Hapus pengumuman ini?'),
+      body: '"${a.title}" akan dihapus permanen untuk semua orang.',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await widget.repository.deleteAnnouncement(widget.adminId, a.id);
+      if (!mounted) return;
+      showUndoSnackBar(
+        context,
+        message: tr('Pengumuman dihapus.'),
+        screen: 'Admin announcements',
+        errorText: adminErrorMessage,
+        onUndo: () async {
+          await widget.repository.restoreAnnouncement(widget.adminId, a);
+          if (mounted) _reload();
+        },
+      );
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: adminErrorMessage(e),
+          screen: 'Admin announcements',
+          error: e,
+        );
+      }
+    }
+  }
+
   void _reload() => setState(() {
     _future = widget.repository.announcements(widget.adminId);
   });
@@ -60,7 +97,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   }
 
   Future<void> _new() async {
-    final posted = await Navigator.of(context).push<bool>(
+    final newId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => AnnouncementFormScreen(
           adminId: widget.adminId,
@@ -68,18 +105,30 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
         ),
       ),
     );
-    if (posted == true && mounted) _reload();
+    if (newId == null || !mounted) return;
+    _reload();
+    if (newId.isEmpty) return;
+    showUndoSnackBar(
+      context,
+      message: tr('Pengumuman diposting.'),
+      screen: 'Admin announcements',
+      errorText: adminErrorMessage,
+      onUndo: () async {
+        await widget.repository.deleteAnnouncement(widget.adminId, newId);
+        if (mounted) _reload();
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Announcements')),
+      appBar: AppBar(title: Text(tr('Announcements'))),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('announcement-new'),
         onPressed: _new,
         icon: const Icon(Icons.add),
-        label: const Text('New announcement'),
+        label: Text(tr('New announcement')),
       ),
       body: FutureBuilder<List<AdminAnnouncement>>(
         future: _future,
@@ -110,7 +159,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                       child: ClearableSearchField(
                         key: const Key('admin-announcements-search'),
                         controller: _search,
-                        hintText: 'Search title, message or poster...',
+                        hintText: tr('Search title, message or poster...'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -142,8 +191,10 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
                         itemCount: shown.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) =>
-                            _AnnouncementTile(a: shown[i]),
+                        itemBuilder: (context, i) => _AnnouncementTile(
+                          a: shown[i],
+                          onDelete: () => _delete(shown[i]),
+                        ),
                       ),
               ),
             ],
@@ -155,9 +206,10 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 }
 
 class _AnnouncementTile extends StatelessWidget {
-  const _AnnouncementTile({required this.a});
+  const _AnnouncementTile({required this.a, required this.onDelete});
 
   final AdminAnnouncement a;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -190,6 +242,18 @@ class _AnnouncementTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(a.body, maxLines: 4, overflow: TextOverflow.ellipsis),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: Key('delete-announcement-${a.id}'),
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Hapus'),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -200,7 +264,8 @@ class _AnnouncementTile extends StatelessWidget {
 const kAnnouncementTitleMax = 120;
 const kAnnouncementBodyMax = 2000;
 
-/// The post form. Pops `true` after the database accepted the post.
+/// The post form. Pops the new announcement's id after the database accepted
+/// the post.
 class AnnouncementFormScreen extends StatefulWidget {
   const AnnouncementFormScreen({
     super.key,
@@ -232,13 +297,13 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
-      await widget.repository.createAnnouncement(
+      final id = await widget.repository.createAnnouncement(
         widget.adminId,
         title: _title.text,
         body: _body.text,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(id);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -254,7 +319,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New announcement')),
+      appBar: AppBar(title: Text(tr('New announcement'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -306,7 +371,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Post announcement'),
+                      : Text(tr('Post announcement')),
                 ),
               ],
             ),

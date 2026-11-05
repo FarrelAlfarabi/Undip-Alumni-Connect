@@ -365,6 +365,20 @@ void main() {
       expect(lastIds(api), ['j1']);
     });
 
+    testWidgets('Announcements chip pins with kind announcement', (
+      tester,
+    ) async {
+      final api = await open(tester, products: [orderRow('a', 'Kopi')]);
+      api.results['admin_home_order_list'] = [orderRow('n1', 'Reuni')];
+      await tester.tap(find.byKey(const Key('home-order-announcements')));
+      await tester.pumpAndSettle();
+      expect(api.params['admin_home_order_list']!['p_kind'], 'announcement');
+      await tester.tap(find.byKey(const Key('home-order-pin-n1')));
+      await tester.pumpAndSettle();
+      expect(api.params['admin_set_home_order']!['p_kind'], 'announcement');
+      expect(lastIds(api), ['n1']);
+    });
+
     testWidgets('a failed save shows the error and reloads the list', (
       tester,
     ) async {

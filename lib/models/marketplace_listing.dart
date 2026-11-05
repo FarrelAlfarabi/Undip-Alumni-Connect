@@ -76,6 +76,7 @@ class MarketplaceListing {
     this.hiddenAt,
     this.hiddenReason,
     this.homeRank,
+    this.priceNegotiable = false,
   });
 
   final String id;
@@ -83,9 +84,14 @@ class MarketplaceListing {
   final String title;
   final String description;
 
-  /// Whole rupiah.
-  final int priceIdr;
+  /// Whole rupiah. Null when the seller wrote no price (negotiable).
+  final int? priceIdr;
+
+  /// The seller is open to negotiating the price.
+  final bool priceNegotiable;
   final String category;
+
+  /// Empty when the seller gave no city.
   final String city;
   final String imageUrl;
   final String? shopUrl;
@@ -118,6 +124,7 @@ class MarketplaceListing {
       title: title,
       description: description,
       priceIdr: priceIdr,
+      priceNegotiable: priceNegotiable,
       category: category,
       city: city,
       imageUrl: imageUrl,
@@ -143,7 +150,8 @@ class MarketplaceListing {
       sellerId: map['seller_id'] as String,
       title: map['title'] as String,
       description: map['description'] as String? ?? '',
-      priceIdr: (map['price_idr'] as num).toInt(),
+      priceIdr: (map['price_idr'] as num?)?.toInt(),
+      priceNegotiable: map['price_negotiable'] == true,
       category: map['category'] as String,
       city: map['city'] as String? ?? '',
       imageUrl: map['image_url'] as String? ?? '',
@@ -178,13 +186,15 @@ class MarketplaceListingInput {
     required this.category,
     required this.city,
     required this.imageUrl,
+    this.priceNegotiable = false,
     this.shopUrl,
     this.contactInfo,
   });
 
   final String title;
   final String description;
-  final int priceIdr;
+  final int? priceIdr;
+  final bool priceNegotiable;
   final String category;
   final String city;
   final String imageUrl;
@@ -200,6 +210,48 @@ enum ReportReason {
 
   const ReportReason(this.label);
   final String label;
+}
+
+/// Admin view: everything reported about one product.
+class ReportDetail {
+  const ReportDetail({
+    required this.listingId,
+    required this.title,
+    required this.sellerName,
+    required this.count,
+    required this.reporters,
+    required this.reasons,
+    required this.notes,
+    this.hiddenReason,
+    this.isHidden = false,
+  });
+
+  final String listingId;
+  final String title;
+  final String? sellerName;
+  final int count;
+  final List<String> reporters;
+  final List<String> reasons;
+  final List<String> notes;
+  final bool isHidden;
+  final String? hiddenReason;
+
+  factory ReportDetail.fromMap(Map<String, dynamic> m) {
+    List<String> list(String k) => [
+      for (final v in (m[k] as List? ?? const [])) '$v',
+    ];
+    return ReportDetail(
+      listingId: m['listing_id'] as String,
+      title: m['title'] as String? ?? '',
+      sellerName: m['seller_name'] as String?,
+      count: (m['report_count'] as num).toInt(),
+      reporters: list('reporters'),
+      reasons: list('reasons'),
+      notes: list('notes'),
+      isHidden: m['hidden_at'] != null,
+      hiddenReason: m['hidden_reason'] as String?,
+    );
+  }
 }
 
 /// Admin view: how many reports a listing has received.

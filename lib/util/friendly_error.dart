@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../config/policy_config.dart';
+import 'app_language.dart';
 
 /// What we show when something fails. Never include the exception text:
 /// Supabase and network errors can carry the project URL, status codes and
@@ -23,6 +24,11 @@ const String kCodeRateLimited =
 const String kTooManyCodeAttempts =
     'Terlalu banyak kode yang salah. Minta kode baru untuk lanjut.';
 
+/// Shown when the database refuses a new job post (too many).
+const String kJobLimitMessage =
+    'Kamu sudah memasang terlalu banyak lowongan. Maksimal 5 per hari dan '
+    '20 lowongan aktif. Tutup atau hapus yang lama dulu.';
+
 /// Whether [error] is the email service saying "too many codes requested".
 bool isRateLimitError(Object? error) {
   final text = error.toString().toLowerCase();
@@ -38,23 +44,35 @@ bool isSuspendedError(Object? error) =>
 
 /// A short, safe message for [error]. The error itself is not shown.
 String friendlyError(Object? error) {
-  if (error is TimeoutException) return kNetworkError;
-  if (isSuspendedError(error)) return kSuspendedMessage;
+  if (error is TimeoutException) return tr(kNetworkError);
+  if (isSuspendedError(error)) return tr(kSuspendedMessage);
   // Looked at only to choose a message, never displayed.
   final text = error.toString();
+  if (text.contains('job_daily_limit') || text.contains('job_open_limit')) {
+    return tr(kJobLimitMessage);
+  }
+  if (text.contains('job_closed')) return tr('Lowongan ini sudah ditutup.');
   if (RegExp(
     r'SocketException|ClientException|XMLHttpRequest|Failed host lookup|'
     r'Connection (refused|closed|reset)|Network is unreachable',
     caseSensitive: false,
   ).hasMatch(text)) {
-    return kNetworkError;
+    return tr(kNetworkError);
   }
-  return kGenericError;
+  return tr(kGenericError);
 }
 
 /// Same, for "failed to load" screens: a message naming the thing that failed.
 String friendlyLoadError(String thing, Object? error) {
-  final network = friendlyError(error) == kNetworkError;
+  final network = friendlyError(error) == tr(kNetworkError);
+  final id =
+      AppLanguage.shared.current.value == AppLang.id &&
+      !AppLanguage.shared.passthrough;
+  if (id) {
+    return network
+        ? 'Gagal memuat $thing. Periksa koneksimu lalu coba lagi.'
+        : 'Gagal memuat $thing. Coba lagi.';
+  }
   return network
       ? "Couldn't load $thing. Check your connection and try again."
       : "Couldn't load $thing. Please try again.";

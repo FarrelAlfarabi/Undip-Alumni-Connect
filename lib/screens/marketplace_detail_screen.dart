@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/marketplace_format.dart';
@@ -53,14 +56,14 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
     final messenger = ScaffoldMessenger.of(context);
     if (uri == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('This shop link is not valid.')),
+        SnackBar(content: Text(tr('This shop link is not valid.'))),
       );
       return;
     }
     final ok = await widget.openUrl(uri);
     if (!ok) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Could not open the shop link.')),
+        SnackBar(content: Text(tr('Could not open the shop link.'))),
       );
     }
   }
@@ -75,7 +78,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
       if (!mounted) return;
       if (profile == null) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Seller profile not found.')),
+          SnackBar(content: Text(tr('Seller profile not found.'))),
         );
         return;
       }
@@ -90,7 +93,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
       );
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Could not open the seller profile.')),
+        SnackBar(content: Text(tr('Could not open the seller profile.'))),
       );
     } finally {
       if (mounted) setState(() => _openingProfile = false);
@@ -159,7 +162,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          formatRupiah(_l.priceIdr),
+                          priceLabel(_l.priceIdr, _l.priceNegotiable),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: theme.colorScheme.primary,
@@ -174,13 +177,14 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                               avatar: const Icon(Icons.sell_outlined, size: 16),
                               label: Text(_l.category),
                             ),
-                            Chip(
-                              avatar: const Icon(
-                                Icons.place_outlined,
-                                size: 16,
+                            if (_l.city.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(
+                                  Icons.place_outlined,
+                                  size: 16,
+                                ),
+                                label: Text(_l.city),
                               ),
-                              label: Text(_l.city),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -205,7 +209,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                             child: FilledButton.icon(
                               onPressed: _visitShop,
                               icon: const Icon(Icons.storefront_outlined),
-                              label: const Text('Visit shop'),
+                              label: Text(tr('Visit shop')),
                             ),
                           ),
                         if (hasShop && hasContact) const SizedBox(height: 8),
@@ -216,7 +220,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                               onPressed: () =>
                                   setState(() => _showContact = !_showContact),
                               icon: const Icon(Icons.chat_outlined),
-                              label: const Text('Contact seller'),
+                              label: Text(tr('Contact seller')),
                             ),
                           ),
                         if (hasContact && _showContact) ...[
@@ -240,7 +244,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                           child: TextButton.icon(
                             onPressed: _report,
                             icon: const Icon(Icons.flag_outlined, size: 18),
-                            label: const Text('Report listing'),
+                            label: Text(tr('Report listing')),
                           ),
                         ),
                       ],

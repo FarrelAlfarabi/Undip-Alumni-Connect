@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/contact_repository.dart';
+import '../util/app_language.dart';
 import '../data/report_repository.dart';
 import '../models/contact_request.dart';
 import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/content_actions_menu.dart';
 import '../widgets/error_view.dart';
 
@@ -50,15 +52,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       initialIndex: widget.initialTab,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Requests'),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Diterima'),
-              Tab(text: 'Terkirim'),
+              Tab(text: tr('Diterima')),
+              Tab(text: tr('Terkirim')),
+              Tab(text: tr('Kontak')),
             ],
           ),
         ),
@@ -87,12 +90,166 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   'Kamu belum meminta kontak siapa pun. Buka profil alumni '
                   'dan ketuk "Minta kontak".',
               onRetry: _refresh,
-              itemBuilder: (r) =>
-                  _OutgoingCard(request: r, repository: _repo, myId: _myId),
+              itemBuilder: (r) => _OutgoingCard(
+                request: r,
+                repository: _repo,
+                myId: _myId,
+                onChanged: _refresh,
+              ),
+            ),
+            _ContactsTab(
+              future: _outgoing,
+              repository: _repo,
+              myId: _myId,
+              onRetry: _refresh,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// "Kontak": every contact I was given (my accepted requests), always on
+/// the page so I do not have to open each request again.
+class _ContactsTab extends StatefulWidget {
+  const _ContactsTab({
+    required this.future,
+    required this.repository,
+    required this.myId,
+    required this.onRetry,
+  });
+
+  final Future<List<OutgoingRequest>> future;
+  final ContactRepository repository;
+  final String myId;
+  final VoidCallback onRetry;
+
+  @override
+  State<_ContactsTab> createState() => _ContactsTabState();
+}
+
+class _ContactsTabState extends State<_ContactsTab>
+    with AutomaticKeepAliveClientMixin {
+  late Future<List<(OutgoingRequest, String?)>> _load = _fetch();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void didUpdateWidget(_ContactsTab old) {
+    super.didUpdateWidget(old);
+    if (old.future != widget.future) _load = _fetch();
+  }
+
+  Future<List<(OutgoingRequest, String?)>> _fetch() async {
+    final all = await widget.future;
+    final accepted = [
+      for (final r in all)
+        if (r.status == ContactRequestStatus.accepted) r,
+    ];
+    return Future.wait([
+      for (final r in accepted)
+        () async {
+          try {
+            final text = await widget.repository.sharedContact(
+              requesterId: widget.myId,
+              requestId: r.id,
+            );
+            return (r, text);
+          } catch (_) {
+            return (r, null);
+          }
+        }(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final theme = Theme.of(context);
+    return FutureBuilder<List<(OutgoingRequest, String?)>>(
+      future: _load,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return ErrorView(
+            message: friendlyLoadError('kontakmu', snap.error),
+            screen: 'Requests',
+            error: snap.error,
+            onRetry: widget.onRetry,
+          );
+        }
+        final items = snap.data ?? const [];
+        if (items.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Belum ada kontak. Kontak yang dibagikan alumni lain setelah '
+                'menerima permintaanmu akan tersimpan di sini.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, i) {
+            final (r, text) = items[i];
+            return Card(
+              key: Key('contact-${r.id}'),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      r.targetName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (text == null)
+                      Text(
+                        'Kontak belum bisa dimuat. Coba lagi nanti.',
+                        style: TextStyle(color: theme.colorScheme.error),
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SelectableText(
+                              text,
+                              key: Key('contact-text-${r.id}'),
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Salin',
+                            icon: const Icon(Icons.copy_outlined),
+                            onPressed: () =>
+                                Clipboard.setData(ClipboardData(text: text)),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -210,7 +367,7 @@ class _IncomingCard extends StatelessWidget {
     try {
       await repository.reject(targetId: myId, requestId: request.id);
       messenger.showSnackBar(
-        const SnackBar(content: Text('Permintaan ditolak.')),
+        SnackBar(content: Text(tr('Permintaan ditolak.'))),
       );
     } catch (e) {
       showErrorSnackBarOn(
@@ -264,7 +421,7 @@ class _IncomingCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               (r.message == null || r.message!.isEmpty)
-                  ? 'Tanpa pesan.'
+                  ? tr('Tanpa pesan.')
                   : r.message!,
             ),
             const SizedBox(height: 8),
@@ -275,21 +432,21 @@ class _IncomingCard extends StatelessWidget {
                   TextButton(
                     key: Key('reject-${r.id}'),
                     onPressed: () => _reject(context),
-                    child: const Text('Tolak'),
+                    child: Text(tr('Tolak')),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     key: Key('accept-${r.id}'),
                     onPressed: () => _accept(context),
-                    child: const Text('Terima'),
+                    child: Text(tr('Terima')),
                   ),
                 ],
               )
             else
               Text(
                 r.status == ContactRequestStatus.accepted
-                    ? 'Kamu sudah menerima permintaan ini.'
-                    : 'Kamu sudah menolak permintaan ini.',
+                    ? tr('Kamu sudah menerima permintaan ini.')
+                    : tr('Kamu sudah menolak permintaan ini.'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -334,7 +491,7 @@ class _ShareDialogState extends State<_ShareDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Kontak apa yang ingin kamu bagikan?'),
+      title: Text(tr('Kontak apa yang ingin kamu bagikan?')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,7 +508,9 @@ class _ShareDialogState extends State<_ShareDialog> {
             controller: _text,
             maxLength: kSharedContactMax,
             decoration: InputDecoration(
-              labelText: 'Kontak atau nama Online Shop yang akan dibagikan *',
+              labelText: tr(
+                'Kontak atau nama Online Shop yang akan dibagikan *',
+              ),
               errorText: _error,
               border: const OutlineInputBorder(),
             ),
@@ -363,7 +522,7 @@ class _ShareDialogState extends State<_ShareDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Batal'),
         ),
-        FilledButton(onPressed: _ok, child: const Text('Terima dan bagikan')),
+        FilledButton(onPressed: _ok, child: Text(tr('Terima dan bagikan'))),
       ],
     );
   }
@@ -374,11 +533,13 @@ class _OutgoingCard extends StatefulWidget {
     required this.request,
     required this.repository,
     required this.myId,
+    required this.onChanged,
   });
 
   final OutgoingRequest request;
   final ContactRepository repository;
   final String myId;
+  final VoidCallback onChanged;
 
   @override
   State<_OutgoingCard> createState() => _OutgoingCardState();
@@ -388,6 +549,25 @@ class _OutgoingCardState extends State<_OutgoingCard> {
   String? _shared;
   String? _error;
   bool _loading = false;
+
+  Future<void> _cancel() async {
+    final ok = await confirmDelete(
+      context,
+      title: tr('Batalkan permintaan?'),
+      body: 'Permintaan ke ${widget.request.targetName} akan ditarik.',
+      action: 'Batalkan',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await widget.repository.cancel(
+        requesterId: widget.myId,
+        requestId: widget.request.id,
+      );
+      if (mounted) widget.onChanged();
+    } catch (e) {
+      if (mounted) setState(() => _error = contactErrorMessage(e));
+    }
+  }
 
   Future<void> _show() async {
     setState(() {
@@ -412,10 +592,11 @@ class _OutgoingCardState extends State<_OutgoingCard> {
     final theme = Theme.of(context);
     final r = widget.request;
     final status = switch (r.status) {
-      ContactRequestStatus.pending => 'Menunggu jawaban',
-      ContactRequestStatus.accepted => 'Diterima',
+      ContactRequestStatus.pending => tr('Menunggu jawaban'),
+      ContactRequestStatus.accepted => tr('Diterima'),
       // The requester only ever sees "not accepted".
-      ContactRequestStatus.rejected => 'Belum diterima',
+      ContactRequestStatus.rejected => tr('Belum diterima'),
+      ContactRequestStatus.cancelled => tr('Dibatalkan'),
     };
     return Card(
       key: Key('outgoing-${r.id}'),
@@ -437,6 +618,19 @@ class _OutgoingCardState extends State<_OutgoingCard> {
             ),
             const SizedBox(height: 4),
             Text(status, key: Key('status-${r.id}')),
+            if (r.status == ContactRequestStatus.pending) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  key: Key('cancel-${r.id}'),
+                  onPressed: _cancel,
+                  child: Text(tr('Batalkan')),
+                ),
+              ),
+              if (_error != null)
+                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
             if (r.status == ContactRequestStatus.accepted) ...[
               const SizedBox(height: 8),
               if (_shared == null)
@@ -449,7 +643,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Lihat daftar kontak'),
+                      : Text(tr('Lihat daftar kontak')),
                 )
               else
                 Row(

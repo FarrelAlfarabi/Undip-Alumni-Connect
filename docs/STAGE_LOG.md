@@ -202,3 +202,42 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Image cache (3 Nov 2026)
 - Avatars, AppPhoto and ListingImage use `cached_network_image`: photos stay on the device, so less mobile data and Supabase egress. Same sizes, initials/placeholder on error, labels kept. No data caching, no service worker, no migration.
 - Tests: `image_cache_test.dart`; label checks in stage6_test and profile_photo_test updated.
+## Delete own content (5 Nov 2026)
+- Owner can delete own business (with its products), own job post (with applications), admin can delete announcements. Confirm dialog first (`confirmDelete`).
+- Migration `20261105100000_delete_own_content` adds `business_delete`, `job_post_delete`, `admin_announcement_delete` (assert_caller + owner/admin check). Rollback: `supabase/rollback_delete_own_content.sql`.
+- Tests: `delete_own_content_test.dart`. Fresh chain OK. Photos in storage are not removed yet (later stage).
+## Contact request fix and cancel (5 Nov 2026)
+- "Cannot send a request right now" came from two cases, a rejection in the last 30 days or a block. Cooldown now says so in plain words; block stays vague. Contact errors are Indonesian.
+- Sender can cancel a pending request (new status `cancelled`, still counts for 5 per day). Applicant can withdraw a job application. Migration `20261105110000_contact_request_cancel`, rollback file included.
+## Admin: no band, red tags, undo (5 Nov 2026)
+- Approve business is one tap (owner's band is used). Red tags on Admin and on Businesses, Reports, Feedback, Marketplace review (`admin_pending_counts`).
+- Every admin action shows "Urungkan" inside the bottom notification for 8 seconds. Migration `20261105120000_admin_undo_and_counts`, rollback file included. Beta runner now also applies 202611* migrations.
+## Product price/city and photo adjuster (5 Nov 2026)
+- Product price can be empty with "Harga bisa nego"; city is optional ("Kota (opsional)"). Migration `20261105130000_product_optional_price_city` (new 11-arg create/update), rollback file included.
+- Photo adjuster (move and zoom, saved as square-ready PNG) after picking a photo for products, businesses, jobs and profile. Tests: `product_price_city_test.dart`, `photo_adjust_test.dart`.
+## Admin approval summary, reassurance, job take-down (5 Nov 2026)
+- Admin home shows one red banner ("Menunggu kamu: N bisnis perlu disetujui, ...") plus the existing red counts. New Admin "Jobs" list: find any job, take it down with a reason (poster is notified by the existing trigger) or show it again, with Urungkan. Migration `20261105140000_admin_jobs_list`, rollback included.
+- Owners see "Menunggu persetujuan" and a "request received, being processed" note on pending businesses and products; the submit message says the same. Jobs stay instant. Notification texts still English (stage 8).
+## Reports tab, Kontak tab, announcements order (5 Nov 2026)
+- Marketplace review > Reports: per product shows seller, each reporter with reason and note; Abaikan laporan (kept, can reopen), Sembunyikan produk with reason (owner notified), all with Urungkan. Migration `20261105150000_marketplace_reports_tab`.
+- Requests has a third tab "Kontak" listing every contact I was given. Home order can pin announcements (Home shows pinned first). Migration `20261105160000_home_order_announcements`. Both with rollback files.
+## Private applications, close/edit job, clear notifications (5 Nov 2026)
+- Job applications (name, email, phone) were readable by anyone; now only the poster reads them (functions `job_applicants_list`, `job_applicant_counts`, `job_application_exists`; direct table read closed). Migration `20261105170000_job_applications_private`.
+- Own job: edit text and close/reopen (closed hidden from Jobs and Home). Migration `20261105180000_job_close_edit`. Notifications: delete one (swipe) or all. Migration `20261105190000_notifications_clear`. Rollback files for all.
+- Not done yet from the audit list: storage cleanup, posting limits for jobs/listings/feedback, admin action log, pull-to-refresh sweep, delete-account end-to-end check.
+## Language setting (5 Nov 2026)
+- Settings > Bahasa: Bahasa Indonesia (default) or English, saved on the device, applies at once. `tr(text)` swaps a text using `strings_id.dart` (English to Indonesian) and `strings_en.dart` (Indonesian to English); a text with no entry stays as written. Tests show text as written (`passthrough`).
+- Done so far: Settings, Requests, all error messages (contact, business, marketplace, report, admin, generic). Most screen labels still need `tr()` (next batches). Notification texts come from the database and are still English.
+## Storage cleanup, job limit, admin log (5 Nov 2026)
+- Deleting a business, product, job or application queues its photo/CV in `storage_cleanup_queue` (trigger, any delete path). Files are still removed by hand from the dashboard. Migration `20261105200000_storage_cleanup_triggers`.
+- Jobs: max 5 posts per day and 20 open ones per person (`20261105210000_job_posting_limit`). Feedback already had a 10 per day limit; product posting is limited per business.
+- Admin "Riwayat" screen lists the last 200 admin actions (`20261105220000_admin_action_log`). Rollback files for all three.
+## Translation batch 1 and database notification texts (5 Nov 2026)
+- Admin, Marketplace, business, jobs and profile screens now go through `tr()`. Notification times ("Baru saja", "menit lalu") follow the language.
+- Database notification texts are Indonesian (`20261105230000_notifications_indonesian`, rollback file restores English). Owners now get "Permintaan diterima" when a business is sent for review (type `business_received`). Old notifications keep their old text.
+## Code review fixes on PR 77 (5 Nov 2026)
+- Real-login guard (`assert_caller`) kept in the contact lists and product create/update functions; owner checks use `is distinct from`; a closed job takes no applications (`job_closed`). Edited inside the unmerged migrations, rollback updated.
+- Left as is, on purpose: URL-encoded photo paths in the cleanup queue, undo to pending sends an admin notice, daily job limit counts only live rows, owner can delete a suspended business.
+## Leftovers: refresh, delete-account, posting limit (5 Nov 2026)
+- Pull-to-refresh on Jobs, Alumni, Marketplace, Business, Notifications, My jobs/businesses/products and admin Jobs.
+- Daily job limit now counts a post log (`job_post_log`), so delete and repost no longer bypasses it. Edited in the unmerged migration `20261105210000`. Delete-account SQL test covers closed jobs, cancelled requests and admin log.

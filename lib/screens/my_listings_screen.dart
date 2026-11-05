@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/marketplace_format.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/marketplace_messages.dart';
@@ -71,7 +73,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(tr('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -100,7 +102,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
   Future<void> _markSold(MarketplaceListing l) async {
     final ok = await _confirm(
-      title: 'Mark as sold?',
+      title: tr('Mark as sold?'),
       body: 'It will disappear from the marketplace. This cannot be undone.',
       action: 'Mark as sold',
     );
@@ -117,7 +119,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
   Future<void> _delete(MarketplaceListing l) async {
     final ok = await _confirm(
-      title: 'Delete this listing?',
+      title: tr('Delete this listing?'),
       body: '"${l.title}" will be removed for good.',
       action: 'Delete',
     );
@@ -135,7 +137,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Produk saya')),
+      appBar: AppBar(title: Text(tr('Produk saya'))),
       body: Column(
         children: [
           const MarketplaceDemoNotice(),
@@ -148,7 +150,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                 }
                 if (snapshot.hasError) {
                   return ErrorView(
-                    message: 'Could not load your listings. Try again.',
+                    message: tr('Could not load your listings. Try again.'),
                     screen: 'Produk saya',
                     error: snapshot.error,
                     onRetry: _reload,
@@ -168,15 +170,24 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     ),
                   );
                 }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _MyListingCard(
-                    listing: items[i],
-                    onEdit: () => _edit(items[i]),
-                    onSold: () => _markSold(items[i]),
-                    onDelete: () => _delete(items[i]),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _reload();
+                    try {
+                      await _future;
+                    } catch (_) {}
+                  },
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) => _MyListingCard(
+                      listing: items[i],
+                      onEdit: () => _edit(items[i]),
+                      onSold: () => _markSold(items[i]),
+                      onDelete: () => _delete(items[i]),
+                    ),
                   ),
                 );
               },
@@ -243,7 +254,7 @@ class _MyListingCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        formatRupiah(l.priceIdr),
+                        priceLabel(l.priceIdr, l.priceNegotiable),
                         style: theme.textTheme.titleSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,
@@ -264,6 +275,17 @@ class _MyListingCard extends StatelessWidget {
                 key: Key('hidden-${l.id}'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+            if (l.status == ListingStatus.pending) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Permintaanmu sudah kami terima dan sedang diproses admin. '
+                'Kamu akan mendapat pemberitahuan begitu ada keputusan.',
+                key: Key('pending-note-${l.id}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -290,18 +312,18 @@ class _MyListingCard extends StatelessWidget {
                   TextButton.icon(
                     onPressed: onEdit,
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('Edit'),
+                    label: Text(tr('Edit')),
                   ),
                 if (l.status == ListingStatus.approved)
                   TextButton.icon(
                     onPressed: onSold,
                     icon: const Icon(Icons.sell_outlined, size: 18),
-                    label: const Text('Mark as sold'),
+                    label: Text(tr('Mark as sold')),
                   ),
                 TextButton.icon(
                   onPressed: onDelete,
                   icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Delete'),
+                  label: Text(tr('Delete')),
                 ),
               ],
             ),
@@ -322,7 +344,7 @@ class StatusBadge extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final (label, bg, fg) = switch (status) {
       ListingStatus.pending => (
-        'Pending review',
+        'Menunggu persetujuan',
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
       ),

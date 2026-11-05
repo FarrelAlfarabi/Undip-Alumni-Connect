@@ -191,10 +191,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kirim permintaan'));
       await tester.pumpAndSettle();
-      expect(
-        find.textContaining('already have an open request'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('sudah punya permintaan'), findsOneWidget);
       expect(find.text('Kirim permintaan'), findsOneWidget);
     });
   });
@@ -317,6 +314,30 @@ void main() {
         expect(find.text('clara@example.com'), findsOneWidget);
       },
     );
+
+    testWidgets('Kontak tab lists every contact I was given', (tester) async {
+      phone(tester);
+      final api = FakeContactApi()
+        ..results['contact_requests_outgoing'] = [
+          outgoingMap(id: 'a', status: 'pending'),
+          outgoingMap(id: 'c', status: 'accepted', name: 'Clara'),
+        ]
+        ..results['contact_request_shared_contact'] = 'clara@example.com';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RequestsScreen(
+            currentUser: ValueNotifier(me),
+            repository: ContactRepository(api),
+            initialTab: 2,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('contact-c')), findsOneWidget);
+      expect(find.byKey(const Key('contact-a')), findsNothing);
+      expect(find.text('Clara'), findsOneWidget);
+      expect(find.text('clara@example.com'), findsOneWidget);
+    });
 
     testWidgets('a failed load shows a friendly message and Try again', (
       tester,

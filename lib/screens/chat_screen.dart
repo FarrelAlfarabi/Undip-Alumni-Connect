@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
@@ -126,8 +129,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       enabled: !_sending,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message...',
+                      decoration: InputDecoration(
+                        hintText: tr('Type a message...'),
                         border: OutlineInputBorder(),
                         isDense: true,
                       ),

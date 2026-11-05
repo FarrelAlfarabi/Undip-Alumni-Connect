@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/home_repository.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
@@ -387,7 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         onSeeAll: _openJobs,
                         future: _jobs,
                         emptyIcon: Icons.work_outline,
-                        emptyText: 'Belum ada lowongan. Lowongan baru akan muncul di sini.',
+                        emptyText: tr(
+                          'Belum ada lowongan. Lowongan baru akan muncul di sini.',
+                        ),
                         onRetry: () => setState(() {
                           _jobs = _latestJobs();
                         }),
@@ -511,7 +515,7 @@ class _QuickActions extends StatelessWidget {
                   icon: Icons.search,
                   iconBackground: AppTheme.yellow,
                   iconColor: AppTheme.blue,
-                  label: 'Cari alumni',
+                  label: tr('Cari alumni'),
                   hint: 'Berdasarkan jurusan, angkatan, dan industri',
                   onTap: onDirectory,
                 ),
@@ -554,7 +558,7 @@ class _QuickActions extends StatelessWidget {
                   icon: Icons.contact_phone_outlined,
                   iconBackground: AppTheme.black,
                   iconColor: AppTheme.yellow,
-                  label: 'Kontak Ikafe',
+                  label: tr('Kontak Ikafe'),
                   hint: 'Kontak dan media sosial resmi',
                   onTap: onKontakIkafe,
                 ),
@@ -717,7 +721,7 @@ class _SectionHeader extends StatelessWidget {
           key: seeAllKey,
           style: TextButton.styleFrom(foregroundColor: AppTheme.blue),
           onPressed: onSeeAll,
-          child: const Text('Lihat semua'),
+          child: Text(tr('Lihat semua')),
         ),
       ],
     );
@@ -818,7 +822,9 @@ class _ProductsBlock extends StatelessWidget {
       onSeeAll: onSeeAll,
       future: future,
       emptyIcon: Icons.storefront_outlined,
-      emptyText: 'Belum ada produk. Produk yang disetujui akan muncul di sini.',
+      emptyText: tr(
+        'Belum ada produk. Produk yang disetujui akan muncul di sini.',
+      ),
       onRetry: onRetry,
       builder: (items) => _ProductRow(items: items, onOpen: onOpen),
     );
@@ -875,7 +881,7 @@ class _ProductCard extends StatelessWidget {
       width: _ProductRow._cardWidth,
       child: Semantics(
         button: true,
-        label: '${l.title}, ${formatRupiah(l.priceIdr)}',
+        label: '${l.title}, ${priceLabel(l.priceIdr, l.priceNegotiable)}',
         excludeSemantics: true,
         child: Material(
           key: const ValueKey('home-product-card'),
@@ -916,14 +922,15 @@ class _ProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: muted,
                       ),
+                      if (l.city.isNotEmpty)
+                        Text(
+                          l.city,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: muted,
+                        ),
                       Text(
-                        l.city,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: muted,
-                      ),
-                      Text(
-                        formatRupiah(l.priceIdr),
+                        priceLabel(l.priceIdr, l.priceNegotiable),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -1113,7 +1120,7 @@ class _MessageCard extends StatelessWidget {
                     error: error,
                     screen: feedbackScreen!,
                   ),
-                  child: const Text('Send feedback'),
+                  child: Text(tr('Send feedback')),
                 ),
               ],
             ),

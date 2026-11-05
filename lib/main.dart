@@ -8,6 +8,7 @@ import 'lock/app_entry.dart';
 import 'lock/lock_overlay.dart';
 import 'lock/lock_service.dart';
 import 'theme.dart';
+import 'util/app_language.dart';
 import 'widgets/marketplace_demo_notice.dart';
 
 Future<void> main() async {
@@ -24,6 +25,7 @@ Future<void> main() async {
 
   // Read the saved "Tutup" answer before any marketplace screen is built.
   await MarketplaceDemoNotice.preload();
+  await AppLanguage.shared.load();
 
   runApp(const MyApp());
 }

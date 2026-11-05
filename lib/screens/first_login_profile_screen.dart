@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/avatar_repository.dart';
 import '../data/contact_repository.dart';
 import '../widgets/avatar.dart';
@@ -128,7 +130,7 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
                           key: const Key('first-login-photo'),
                           onPressed: _editPhoto,
                           icon: const Icon(Icons.photo_camera_outlined),
-                          label: const Text('Pilih foto'),
+                          label: Text(tr('Pilih foto')),
                         ),
                       ),
                     ],
@@ -153,7 +155,7 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
                     key: const Key('first-login-contact-edit'),
                     onPressed: _editContact,
                     icon: const Icon(Icons.share_outlined),
-                    label: const Text('Kontak yang mau dibagikan'),
+                    label: Text(tr('Kontak yang mau dibagikan')),
                   ),
                   const SizedBox(height: 8),
                   Text(

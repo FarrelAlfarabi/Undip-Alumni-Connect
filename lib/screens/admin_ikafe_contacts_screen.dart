@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/ikafe_contact.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin > Kontak Ikafe: the contacts and socials members see on Home. Shows
 /// hidden rows too. The database refuses every change for non-admins.
@@ -36,7 +39,7 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
   });
 
   Future<void> _edit([IkafeContact? contact]) async {
-    final saved = await Navigator.of(context).push<bool>(
+    final change = await Navigator.of(context).push<IkafeChange>(
       MaterialPageRoute(
         builder: (_) => IkafeContactFormScreen(
           adminId: widget.adminId,
@@ -45,19 +48,30 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
         ),
       ),
     );
-    if (saved == true && mounted) _reload();
+    if (change == null || !mounted) return;
+    _reload();
+    showUndoSnackBar(
+      context,
+      message: change.message,
+      screen: 'Kontak Ikafe',
+      errorText: adminErrorMessage,
+      onUndo: () async {
+        await change.undo();
+        if (mounted) _reload();
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Kontak Ikafe')),
+      appBar: AppBar(title: Text(tr('Kontak Ikafe'))),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('ikafe-contact-new'),
         onPressed: _edit,
         icon: const Icon(Icons.add),
-        label: const Text('Tambah kontak'),
+        label: Text(tr('Tambah kontak')),
       ),
       body: FutureBuilder<List<IkafeContact>>(
         future: _future,
@@ -77,7 +91,7 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
           }
           final items = snap.data ?? const [];
           if (items.isEmpty) {
-            return const Center(child: Text('Belum ada kontak.'));
+            return Center(child: Text(tr('Belum ada kontak.')));
           }
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
@@ -114,6 +128,13 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
 }
 
 /// Add or change one contact. Pops `true` after a save or delete.
+/// What the form hands back: the notification text and how to undo it.
+class IkafeChange {
+  const IkafeChange(this.message, this.undo);
+  final String message;
+  final Future<void> Function() undo;
+}
+
 class IkafeContactFormScreen extends StatefulWidget {
   const IkafeContactFormScreen({
     super.key,
@@ -164,11 +185,11 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
     return null;
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _run(Future<IkafeChange> Function() action) async {
     setState(() => _busy = true);
     try {
-      await action();
-      if (mounted) Navigator.of(context).pop(true);
+      final change = await action();
+      if (mounted) Navigator.of(context).pop(change);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -184,24 +205,43 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    await _run(
-      () => widget.repository.saveIkafeContact(
+    final before = widget.contact;
+    await _run(() async {
+      final id = await widget.repository.saveIkafeContact(
         widget.adminId,
-        id: widget.contact?.id,
+        id: before?.id,
         kind: _kind,
         label: _label.text,
         value: _value.text,
         sortOrder: int.tryParse(_sort.text.trim()) ?? 0,
         active: _active,
-      ),
-    );
+      );
+      return IkafeChange(
+        before == null ? 'Kontak ditambahkan.' : 'Kontak disimpan.',
+        () async {
+          if (before == null) {
+            await widget.repository.deleteIkafeContact(widget.adminId, id);
+          } else {
+            await widget.repository.saveIkafeContact(
+              widget.adminId,
+              id: before.id,
+              kind: before.kind,
+              label: before.label,
+              value: before.value,
+              sortOrder: before.sortOrder,
+              active: before.active,
+            );
+          }
+        },
+      );
+    });
   }
 
   Future<void> _delete() async {
     final yes = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus kontak ini?'),
+        title: Text(tr('Hapus kontak ini?')),
         content: const Text(
           'Kontak hilang dari Kontak Ikafe. Pilih Sembunyikan kalau mau '
           'menyimpannya.',
@@ -220,12 +260,14 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
       ),
     );
     if (yes != true) return;
-    await _run(
-      () => widget.repository.deleteIkafeContact(
-        widget.adminId,
-        widget.contact!.id,
-      ),
-    );
+    final before = widget.contact!;
+    await _run(() async {
+      await widget.repository.deleteIkafeContact(widget.adminId, before.id);
+      return IkafeChange(
+        'Kontak dihapus.',
+        () => widget.repository.restoreIkafeContact(widget.adminId, before),
+      );
+    });
   }
 
   @override
@@ -270,8 +312,8 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 controller: _label,
                 enabled: !_busy,
                 maxLength: 60,
-                decoration: const InputDecoration(
-                  labelText: 'Nama kontak',
+                decoration: InputDecoration(
+                  labelText: tr('Nama kontak'),
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
@@ -284,8 +326,8 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 enabled: !_busy,
                 autocorrect: false,
                 keyboardType: TextInputType.url,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor, email, @akun atau link',
+                decoration: InputDecoration(
+                  labelText: tr('Nomor, email, @akun atau link'),
                   border: OutlineInputBorder(),
                 ),
                 validator: _checkValue,
@@ -296,15 +338,15 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 controller: _sort,
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Urutan (angka kecil tampil lebih dulu)',
+                decoration: InputDecoration(
+                  labelText: tr('Urutan (angka kecil tampil lebih dulu)'),
                   border: OutlineInputBorder(),
                 ),
               ),
               SwitchListTile(
                 key: const Key('ikafe-active'),
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Tampil di Kontak Ikafe'),
+                title: Text(tr('Tampil di Kontak Ikafe')),
                 value: _active,
                 onChanged: _busy ? null : (v) => setState(() => _active = v),
               ),

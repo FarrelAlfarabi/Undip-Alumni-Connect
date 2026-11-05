@@ -283,7 +283,7 @@ void main() {
         tester,
         FakeHomeApi(businesses: [biz(status: 'pending', band: null)]),
       );
-      expect(find.text('Waiting for review'), findsOneWidget);
+      expect(find.text('Menunggu persetujuan'), findsOneWidget);
       expect(find.text('Skala pilihanmu: Small'), findsOneWidget);
       expect(find.textContaining('Products:'), findsNothing);
     });

@@ -12,6 +12,13 @@ abstract class NotificationApi {
 
   /// The job, or null when it is gone or hidden.
   Future<Map<String, dynamic>?> job(String jobId);
+
+  /// Deletes all of my notifications.
+  Future<void> clearAll(String recipientId) async => throw UnimplementedError();
+
+  /// Deletes one of my notifications.
+  Future<void> deleteOne(String recipientId, String id) async =>
+      throw UnimplementedError();
 }
 
 class SupabaseNotificationApi implements NotificationApi {
@@ -48,6 +55,22 @@ class SupabaseNotificationApi implements NotificationApi {
   }
 
   @override
+  Future<void> clearAll(String recipientId) async {
+    await _client.rpc(
+      'notifications_clear',
+      params: {'p_recipient': recipientId},
+    );
+  }
+
+  @override
+  Future<void> deleteOne(String recipientId, String id) async {
+    await _client.rpc(
+      'notification_delete',
+      params: {'p_recipient': recipientId, 'p_id': id},
+    );
+  }
+
+  @override
   Future<Map<String, dynamic>?> job(String jobId) async {
     final row = await _client
         .from('job_posts')
@@ -79,4 +102,9 @@ class NotificationRepository {
   Future<void> markAllRead(String recipientId) => _api.markAllRead(recipientId);
 
   Future<Map<String, dynamic>?> job(String jobId) => _api.job(jobId);
+
+  Future<void> clearAll(String recipientId) => _api.clearAll(recipientId);
+
+  Future<void> deleteOne(String recipientId, String id) =>
+      _api.deleteOne(recipientId, id);
 }

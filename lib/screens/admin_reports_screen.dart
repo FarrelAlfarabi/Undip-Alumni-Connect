@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/report_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 import '../widgets/filter_dropdown.dart';
 
 String reportTargetLabel(ReportTarget t) => switch (t) {
@@ -95,17 +98,33 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   void _toast(String m) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
+  /// Runs one action. [undo], when given, is offered next to the notification
+  /// for a few seconds.
   Future<void> _run(
     AdminReport r,
     Future<void> Function() action,
-    String done,
-  ) async {
+    String done, {
+    Future<void> Function()? undo,
+  }) async {
     setState(() => _busy.add(r.targetId));
     try {
       await action();
       if (!mounted) return;
-      _toast(done);
       _busy.remove(r.targetId);
+      if (undo == null) {
+        _toast(done);
+      } else {
+        showUndoSnackBar(
+          context,
+          message: done,
+          screen: 'Admin reports',
+          errorText: adminErrorMessage,
+          onUndo: () async {
+            await undo();
+            if (mounted) _reload();
+          },
+        );
+      }
       _reload();
     } catch (e) {
       if (!mounted) return;
@@ -119,6 +138,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     }
   }
 
+  AdminRepository get _repo => widget.repository;
+  String get _admin => widget.adminId;
+
   Future<void> _hide(AdminReport r) async {
     final controller = TextEditingController();
     final reason = await showDialog<String>(
@@ -127,14 +149,14 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: const Text('Hide this content?'),
+            title: Text(tr('Hide this content?')),
             content: TextField(
               controller: controller,
               autofocus: true,
               maxLines: 3,
               maxLength: 300,
               decoration: InputDecoration(
-                labelText: 'Reason (shown to the owner)',
+                labelText: tr('Reason (shown to the owner)'),
                 errorText: error,
                 border: const OutlineInputBorder(),
               ),
@@ -142,7 +164,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -153,7 +175,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Hide'),
+                child: Text(tr('Hide')),
               ),
             ],
           ),
@@ -164,7 +186,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     await _run(
       r,
       () => widget.repository.hideContent(widget.adminId, r, reason),
-      'Hidden. It no longer shows for anyone.',
+      'Disembunyikan. Tidak tampil lagi untuk siapa pun.',
+      undo: () async {
+        await _repo.restoreContent(_admin, r);
+        await _repo.reopenReports(_admin, r);
+      },
     );
   }
 
@@ -197,7 +223,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   maxLines: 3,
                   maxLength: 300,
                   decoration: InputDecoration(
-                    labelText: 'Reason (kept for admins)',
+                    labelText: tr('Reason (kept for admins)'),
                     errorText: error,
                     border: const OutlineInputBorder(),
                   ),
@@ -207,7 +233,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -218,7 +244,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Suspend'),
+                child: Text(tr('Suspend')),
               ),
             ],
           ),
@@ -229,7 +255,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     await _run(
       r,
       () => widget.repository.suspendUser(widget.adminId, r, reason),
-      'Suspended. They cannot sign in.',
+      'Ditangguhkan. Orangnya tidak bisa masuk.',
+      undo: () async {
+        await _repo.unsuspendUser(_admin, r);
+        await _repo.reopenReports(_admin, r);
+      },
     );
   }
 
@@ -238,7 +268,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus bio ini?'),
+        title: Text(tr('Hapus bio ini?')),
         content: const Text(
           'Hanya bio yang dihapus. Akun tidak ikut dihapus dan orangnya '
           'masih bisa menulis bio baru.',
@@ -251,16 +281,23 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           FilledButton(
             key: const Key('clear-bio-confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Hapus bio'),
+            child: Text(tr('Hapus bio')),
           ),
         ],
       ),
     );
     if (sure != true) return;
+    String? oldBio;
     await _run(
       r,
-      () => widget.repository.clearBio(widget.adminId, r.targetId),
+      () async {
+        oldBio = await _repo.clearBio(_admin, r.targetId);
+      },
       'Bio dihapus.',
+      undo: () async {
+        final bio = oldBio;
+        if (bio != null) await _repo.restoreBio(_admin, r.targetId, bio);
+      },
     );
   }
 
@@ -273,7 +310,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           if (!_hidden)
             IconButton(
               icon: const Icon(Icons.visibility_off_outlined),
-              tooltip: 'Hidden items',
+              tooltip: tr('Hidden items'),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => AdminReportsScreen(
@@ -296,13 +333,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   key: const Key('admin-report-search'),
                   controller: _search,
                   decoration: InputDecoration(
-                    hintText: 'Search title, owner, note or reason...',
+                    hintText: tr('Search title, owner, note or reason...'),
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _search.text.isEmpty
                         ? null
                         : IconButton(
                             icon: const Icon(Icons.clear),
-                            tooltip: 'Clear search',
+                            tooltip: tr('Clear search'),
                             onPressed: _search.clear,
                           ),
                     border: const OutlineInputBorder(),
@@ -389,7 +426,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 }
                 final items = _visible(all);
                 if (items.isEmpty) {
-                  return const Center(child: Text('Nothing matches.'));
+                  return Center(child: Text(tr('Nothing matches.')));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -405,12 +442,14 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         r,
                         () =>
                             widget.repository.dismissReports(widget.adminId, r),
-                        'Dismissed.',
+                        'Laporan diabaikan.',
+                        undo: () => _repo.reopenReports(_admin, r),
                       ),
                       onActioned: () => _run(
                         r,
                         () => widget.repository.markActioned(widget.adminId, r),
-                        'Marked as handled.',
+                        'Ditandai selesai.',
+                        undo: () => _repo.reopenReports(_admin, r),
                       ),
                       onHide: () => _hide(r),
                       onSuspend: () => _suspend(r),
@@ -419,13 +458,23 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         r,
                         () =>
                             widget.repository.unsuspendUser(widget.adminId, r),
-                        'Suspension lifted. They can sign in again.',
+                        'Penangguhan dicabut. Orangnya bisa masuk lagi.',
+                        undo: () => _repo.suspendUser(
+                          _admin,
+                          r,
+                          r.hiddenReason ?? 'Diurungkan',
+                        ),
                       ),
                       onRestore: () => _run(
                         r,
                         () =>
                             widget.repository.restoreContent(widget.adminId, r),
-                        'Restored. It shows again.',
+                        'Dipulihkan. Tampil lagi.',
+                        undo: () => _repo.hideContent(
+                          _admin,
+                          r,
+                          r.hiddenReason ?? 'Diurungkan',
+                        ),
                       ),
                     );
                   },
@@ -564,7 +613,7 @@ class _ReportCard extends StatelessWidget {
             child: OutlinedButton(
               key: Key('clear-bio-${r.targetId}'),
               onPressed: busy ? null : onClearBio,
-              child: const Text('Hapus bio'),
+              child: Text(tr('Hapus bio')),
             ),
           ),
           const SizedBox(height: 8),

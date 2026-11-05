@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/account_repository.dart';
 import '../data/block_list.dart';
 import '../data/feedback_repository.dart';
@@ -71,12 +73,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete your account for good?'),
-        content: const Text('This cannot be undone.'),
+        title: Text(tr('Delete your account for good?')),
+        content: Text(tr('This cannot be undone.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(tr('Cancel')),
           ),
           FilledButton(
             key: const Key('delete-final'),
@@ -161,7 +163,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
-                  Text('What is removed', style: theme.textTheme.titleSmall),
+                  Text(
+                    tr('What is removed'),
+                    style: theme.textTheme.titleSmall,
+                  ),
                   const SizedBox(height: 4),
                   bullets(const [
                     'Your businesses and products',
@@ -174,7 +179,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     'On this phone: your PIN and everything remembered',
                   ]),
                   const SizedBox(height: 12),
-                  Text('What is kept', style: theme.textTheme.titleSmall),
+                  Text(tr('What is kept'), style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),
                   bullets(const [
                     'Reports you filed, or that were filed about others, for moderation, without your note or any personal detail',

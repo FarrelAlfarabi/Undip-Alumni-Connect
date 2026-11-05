@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/city_distances.dart';
 import '../data/profile_fields.dart';
 import '../theme.dart';
@@ -60,7 +62,7 @@ class _ProfileCityScreenState extends State<ProfileCityScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Kota')),
+      appBar: AppBar(title: Text(tr('Kota'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -69,7 +71,7 @@ class _ProfileCityScreenState extends State<ProfileCityScreen> {
             children: [
               SearchableChoice(
                 fieldKey: const Key('city-field'),
-                label: 'Kota',
+                label: tr('Kota'),
                 helper: 'Kota tempat kamu tinggal',
                 controller: _controller,
                 options: kNearbyCities,
@@ -97,7 +99,7 @@ class _ProfileCityScreenState extends State<ProfileCityScreen> {
                           color: AppTheme.black,
                         ),
                       )
-                    : const Text('Simpan'),
+                    : Text(tr('Simpan')),
               ),
             ],
           ),

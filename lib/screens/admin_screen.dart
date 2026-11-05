@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/category_repository.dart';
 import '../data/marketplace_repository.dart';
@@ -10,12 +12,15 @@ import 'admin_announcements_screen.dart';
 import 'admin_home_order_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_ikafe_contacts_screen.dart';
+import 'admin_jobs_screen.dart';
+import 'admin_log_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/searchable_choice.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
 /// only when the database says this profile is an admin.
@@ -44,6 +49,22 @@ class _AdminScreenState extends State<AdminScreen> {
       widget.adminRepository ?? AdminRepository();
   late final MarketplaceRepository _market =
       widget.marketplaceRepository ?? MarketplaceRepository();
+  AdminCounts _counts = const AdminCounts();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCounts();
+  }
+
+  /// The red tags. A failure just shows no tags.
+  Future<void> _loadCounts() async {
+    try {
+      final c = await _admin.pendingCounts(widget.adminId);
+      if (mounted) setState(() => _counts = c);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final adminId = widget.adminId;
@@ -51,66 +72,89 @@ class _AdminScreenState extends State<AdminScreen> {
       ...widget.extraSections,
       AdminSection(
         key: 'admin-reports',
+        badge: _counts.reports,
         icon: Icons.flag_outlined,
-        title: 'Reports',
-        subtitle: 'Reported content: dismiss, hide, restore',
+        title: tr('Reports'),
+        subtitle: tr('Reported content: dismiss, hide, restore'),
         builder: (_) =>
             AdminReportsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-feedback',
+        badge: _counts.feedback,
         icon: Icons.feedback_outlined,
-        title: 'Feedback',
-        subtitle: 'What testers sent from the Send feedback button',
+        title: tr('Feedback'),
+        subtitle: tr('What testers sent from the Send feedback button'),
         builder: (_) =>
             AdminFeedbackScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-announcements',
         icon: Icons.campaign_outlined,
-        title: 'Announcements',
-        subtitle: 'Post news for all members, search past posts',
+        title: tr('Announcements'),
+        subtitle: tr('Post news for all members, search past posts'),
         builder: (_) =>
             AdminAnnouncementsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-ikafe-contacts',
         icon: Icons.contact_phone_outlined,
-        title: 'Kontak Ikafe',
-        subtitle: 'Edit the contacts and socials members see',
+        title: tr('Kontak Ikafe'),
+        subtitle: tr('Edit the contacts and socials members see'),
         builder: (_) =>
             AdminIkafeContactsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-businesses',
+        badge: _counts.businesses,
         icon: Icons.business_center_outlined,
-        title: 'Businesses',
-        subtitle: 'Approve, reject, suspend or restore',
+        title: tr('Businesses'),
+        subtitle: tr(
+          'Setujui, tolak, tangguhkan. Produk bisnis yang disetujui langsung tayang',
+        ),
         builder: (_) =>
             AdminBusinessesScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
+        key: 'admin-jobs',
+        icon: Icons.work_outline,
+        title: 'Jobs',
+        subtitle: tr('Lihat semua lowongan, turunkan atau tampilkan lagi'),
+        builder: (_) => AdminJobsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-log',
+        icon: Icons.history,
+        title: 'Riwayat',
+        subtitle: tr(
+          'Siapa menyetujui, menolak, menyembunyikan atau menghapus apa',
+        ),
+        builder: (_) => AdminLogScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
         key: 'admin-home-order',
         icon: Icons.push_pin_outlined,
-        title: 'Home order',
-        subtitle: 'Pilih produk dan lowongan yang tampil dulu di Home',
+        title: tr('Home order'),
+        subtitle: tr('Pilih produk dan lowongan yang tampil dulu di Home'),
         builder: (_) =>
             AdminHomeOrderScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-marketplace',
+        badge: _counts.listings,
         icon: Icons.storefront_outlined,
-        title: 'Marketplace review',
-        subtitle: 'Old listings waiting for review, report counts',
+        title: tr('Marketplace review'),
+        subtitle: tr('Old listings waiting for review, report counts'),
         builder: (_) =>
             MarketplaceAdminScreen(adminId: adminId, repository: _market),
       ),
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin')),
+      appBar: AppBar(title: Text(tr('Admin'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_counts.total > 0) _PendingBanner(counts: _counts),
           for (final s in sections)
             Card(
               key: Key(s.key),
@@ -125,13 +169,65 @@ class _AdminScreenState extends State<AdminScreen> {
                 leading: Icon(s.icon),
                 title: Text(s.title),
                 subtitle: Text(s.subtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: s.builder)),
+                trailing: s.badge > 0
+                    ? Badge(
+                        key: Key('badge-${s.key}'),
+                        label: Text('${s.badge}'),
+                        child: const Icon(Icons.chevron_right),
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: () async {
+                  await Navigator.of(context)
+                      .push(MaterialPageRoute(builder: s.builder));
+                  _loadCounts();
+                },
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Top of the Admin home: one sentence saying what waits, split by type.
+class _PendingBanner extends StatelessWidget {
+  const _PendingBanner({required this.counts});
+
+  final AdminCounts counts;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final parts = [
+      if (counts.businesses > 0) '${counts.businesses} bisnis perlu disetujui',
+      if (counts.listings > 0) '${counts.listings} produk lama perlu ditinjau',
+      if (counts.reports > 0) '${counts.reports} laporan baru',
+      if (counts.feedback > 0) '${counts.feedback} masukan baru',
+    ];
+    return Card(
+      key: const Key('admin-pending-banner'),
+      color: theme.colorScheme.errorContainer,
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.notifications_active_outlined,
+              color: theme.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Menunggu kamu: ${parts.join(', ')}.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -144,9 +240,13 @@ class AdminSection {
     required this.title,
     required this.subtitle,
     required this.builder,
+    this.badge = 0,
   });
 
   final String key;
+
+  /// Red number on the button when above zero: things waiting for an admin.
+  final int badge;
 
   /// Shows the number of reports no admin has seen yet.
   final IconData icon;
@@ -225,9 +325,8 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     _future = widget.repository.businesses(widget.adminId, status: _status);
   });
 
-  void _toast(String m) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
-
+  /// Runs one decision. [done] is the notification text; the Urungkan button
+  /// next to it puts the business back to how it was.
   Future<void> _run(
     Business b,
     Future<Business> Function() action,
@@ -237,8 +336,17 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     try {
       await action();
       if (!mounted) return;
-      _toast(done);
       _busy.remove(b.id);
+      showUndoSnackBar(
+        context,
+        message: done,
+        screen: 'Admin businesses',
+        errorText: adminErrorMessage,
+        onUndo: () async {
+          await widget.repository.setBusinessState(widget.adminId, b);
+          if (mounted) _reload();
+        },
+      );
       _reload();
     } catch (e) {
       if (!mounted) return;
@@ -252,23 +360,16 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     }
   }
 
-  Future<void> _approve(Business b) async {
-    final band = await showDialog<BusinessBand>(
-      context: context,
-      builder: (ctx) => _BandDialog(initial: b.requestedBand),
-    );
-    if (band == null) return;
-    await _run(
-      b,
-      () => widget.repository.approve(widget.adminId, b.id, band),
-      'Approved ${b.name} as ${band.label}.',
-    );
-  }
+  Future<void> _approve(Business b) => _run(
+    b,
+    () => widget.repository.approve(widget.adminId, b.id),
+    'Disetujui: ${b.name}.',
+  );
 
   Future<void> _reject(Business b) async {
     final reason = await _askReason(
-      title: 'Reject business',
-      label: 'Reason (shown to the owner)',
+      title: tr('Reject business'),
+      label: tr('Reason (shown to the owner)'),
       required: true,
       action: 'Reject',
     );
@@ -276,14 +377,14 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     await _run(
       b,
       () => widget.repository.reject(widget.adminId, b.id, reason),
-      'Rejected ${b.name}.',
+      'Ditolak: ${b.name}.',
     );
   }
 
   Future<void> _suspend(Business b) async {
     final reason = await _askReason(
-      title: 'Suspend business',
-      label: 'Reason (shown to the owner, optional)',
+      title: tr('Suspend business'),
+      label: tr('Reason (shown to the owner, optional)'),
       required: false,
       action: 'Suspend',
     );
@@ -291,14 +392,14 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     await _run(
       b,
       () => widget.repository.suspend(widget.adminId, b.id, reason: reason),
-      'Suspended ${b.name}. Its products are hidden.',
+      'Ditangguhkan: ${b.name}. Produknya disembunyikan.',
     );
   }
 
   Future<void> _restore(Business b) => _run(
     b,
     () => widget.repository.restore(widget.adminId, b.id),
-    'Restored ${b.name}.',
+    'Dipulihkan: ${b.name}.',
   );
 
   Future<String?> _askReason({
@@ -329,7 +430,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -352,7 +453,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Businesses')),
+      appBar: AppBar(title: Text(tr('Businesses'))),
       body: Column(
         children: [
           Padding(
@@ -367,13 +468,13 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                         key: const Key('admin-business-search'),
                         controller: _search,
                         decoration: InputDecoration(
-                          hintText: 'Search name, owner or link...',
+                          hintText: tr('Search name, owner or link...'),
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _search.text.isEmpty
                               ? null
                               : IconButton(
                                   icon: const Icon(Icons.clear),
-                                  tooltip: 'Clear search',
+                                  tooltip: tr('Clear search'),
                                   onPressed: _search.clear,
                                 ),
                           border: const OutlineInputBorder(),
@@ -454,11 +555,11 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                 }
                 final all = snap.data ?? const <Business>[];
                 if (all.isEmpty) {
-                  return const Center(child: Text('Nothing here.'));
+                  return Center(child: Text(tr('Nothing here.')));
                 }
                 final items = _visible(all);
                 if (items.isEmpty) {
-                  return const Center(child: Text('Nothing matches.'));
+                  return Center(child: Text(tr('Nothing matches.')));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -478,62 +579,6 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BandDialog extends StatefulWidget {
-  const _BandDialog({this.initial});
-  final BusinessBand? initial;
-
-  @override
-  State<_BandDialog> createState() => _BandDialogState();
-}
-
-class _BandDialogState extends State<_BandDialog> {
-  BusinessBand? _band;
-
-  @override
-  void initState() {
-    super.initState();
-    _band = widget.initial;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Approve with which band?'),
-      content: SingleChildScrollView(
-        child: RadioGroup<BusinessBand>(
-          groupValue: _band,
-          onChanged: (v) => setState(() => _band = v),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final b in BusinessBand.values)
-                RadioListTile<BusinessBand>(
-                  key: Key('approve-band-${b.name}'),
-                  value: b,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(b.label),
-                  subtitle: Text(b.range),
-                ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _band == null
-              ? null
-              : () => Navigator.of(context).pop(_band),
-          child: const Text('Approve'),
-        ),
-      ],
     );
   }
 }
@@ -564,31 +609,31 @@ class _AdminBusinessCard extends StatelessWidget {
         OutlinedButton(
           key: Key('reject-${b.id}'),
           onPressed: busy ? null : onReject,
-          child: const Text('Reject'),
+          child: Text(tr('Reject')),
         ),
         FilledButton(
           key: Key('approve-${b.id}'),
           onPressed: busy ? null : onApprove,
-          child: const Text('Approve'),
+          child: Text(tr('Approve')),
         ),
       ],
       if (b.status == BusinessStatus.rejected)
         FilledButton(
           key: Key('approve-${b.id}'),
           onPressed: busy ? null : onApprove,
-          child: const Text('Approve'),
+          child: Text(tr('Approve')),
         ),
       if (b.status == BusinessStatus.approved)
         OutlinedButton(
           key: Key('suspend-${b.id}'),
           onPressed: busy ? null : onSuspend,
-          child: const Text('Suspend'),
+          child: Text(tr('Suspend')),
         ),
       if (b.status == BusinessStatus.suspended)
         FilledButton(
           key: Key('restore-${b.id}'),
           onPressed: busy ? null : onRestore,
-          child: const Text('Restore'),
+          child: Text(tr('Restore')),
         ),
     ];
     return Card(

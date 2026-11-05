@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/home_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 import '../widgets/filter_dropdown.dart';
 
 /// Admin > Home order: choose which products and jobs Home shows first and in
@@ -26,6 +29,7 @@ class AdminHomeOrderScreen extends StatefulWidget {
 class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   static const _products = 'listing';
   static const _jobs = 'job';
+  static const _news = 'announcement';
 
   final _search = TextEditingController();
   String _kind = _products;
@@ -35,7 +39,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   bool _busy = false;
 
   bool get _isProducts => _kind == _products;
-  int get _limit => _isProducts ? kHomeListingLimit : kHomeJobLimit;
+  int get _limit => switch (_kind) {
+    _products => kHomeListingLimit,
+    _news => kHomeBannerLimit,
+    _ => kHomeJobLimit,
+  };
 
   @override
   void initState() {
@@ -97,12 +105,30 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
       _busy = true;
       _saveError = null;
     });
+    final before = _pinnedIds;
+    final kind = _kind;
     try {
       await widget.repository.setHomeOrder(
         adminId: widget.adminId,
-        kind: _kind,
+        kind: kind,
         ids: ids,
       );
+      if (mounted) {
+        showUndoSnackBar(
+          context,
+          message: tr('Urutan Home disimpan.'),
+          screen: 'Home order',
+          errorText: adminErrorMessage,
+          onUndo: () async {
+            await widget.repository.setHomeOrder(
+              adminId: widget.adminId,
+              kind: kind,
+              ids: before,
+            );
+            if (mounted && kind == _kind) await _load();
+          },
+        );
+      }
     } catch (e) {
       _saveError = adminErrorMessage(e);
     }
@@ -133,7 +159,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Home order')),
+      appBar: AppBar(title: Text(tr('Home order'))),
       body: Column(
         children: [
           if (_busy) const LinearProgressIndicator(),
@@ -144,15 +170,21 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
               children: [
                 ChoiceChip(
                   key: const Key('home-order-products'),
-                  label: const Text('Products'),
+                  label: Text(tr('Products')),
                   selected: _isProducts,
                   onSelected: _busy ? null : (_) => _switchKind(_products),
                 ),
                 ChoiceChip(
                   key: const Key('home-order-jobs'),
                   label: const Text('Jobs'),
-                  selected: !_isProducts,
+                  selected: _kind == _jobs,
                   onSelected: _busy ? null : (_) => _switchKind(_jobs),
+                ),
+                ChoiceChip(
+                  key: const Key('home-order-announcements'),
+                  label: Text(tr('Announcements')),
+                  selected: _kind == _news,
+                  onSelected: _busy ? null : (_) => _switchKind(_news),
                 ),
               ],
             ),
@@ -200,11 +232,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
 
     if (items.isEmpty) {
       return Center(
-        child: Text(
-          _isProducts
-              ? 'Belum ada produk yang disetujui.'
-              : 'Belum ada lowongan aktif.',
-        ),
+        child: Text(switch (_kind) {
+          _products => 'Belum ada produk yang disetujui.',
+          _news => 'Belum ada pengumuman.',
+          _ => 'Belum ada lowongan aktif.',
+        }),
       );
     }
 
@@ -230,7 +262,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
         for (var i = 0; i < pinned.length; i++)
           _pinnedRow(theme, pinned[i], i, pinned.length),
         const SizedBox(height: 20),
-        Text('Belum dipin', style: theme.textTheme.titleSmall),
+        Text(tr('Belum dipin'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),
         if (_full)
           Padding(
@@ -244,7 +276,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
         ClearableSearchField(
           key: const Key('home-order-search'),
           controller: _search,
-          hintText: _isProducts ? 'Cari produk...' : 'Cari lowongan...',
+          hintText: switch (_kind) {
+            _products => 'Cari produk...',
+            _news => 'Cari pengumuman...',
+            _ => 'Cari lowongan...',
+          },
         ),
         const SizedBox(height: 8),
         if (others.isEmpty)

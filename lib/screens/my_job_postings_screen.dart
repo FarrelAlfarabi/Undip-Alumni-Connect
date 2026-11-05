@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import 'job_applicants_screen.dart';
 import 'post_job_screen.dart';
@@ -9,12 +13,25 @@ import 'post_job_screen.dart';
 /// The jobs I posted, newest first, with how many people applied. Tap one to
 /// see its applicants.
 class MyJobPostingsScreen extends StatefulWidget {
-  const MyJobPostingsScreen({super.key, required this.currentUser, this.fetch});
+  const MyJobPostingsScreen({
+    super.key,
+    required this.currentUser,
+    this.fetch,
+    this.deleteJob,
+    this.rpc,
+  });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   /// Injectable for tests: returns my jobs, each with an `applicant_count`.
   final Future<List<Map<String, dynamic>>> Function(String myId)? fetch;
+
+  /// Injectable for tests: deletes one of my jobs.
+  final Future<void> Function(String myId, String jobId)? deleteJob;
+
+  /// Injectable for tests: runs a database function (close, edit).
+  final Future<void> Function(String function, Map<String, dynamic> params)?
+  rpc;
 
   @override
   State<MyJobPostingsScreen> createState() => _MyJobPostingsScreenState();
@@ -51,13 +68,14 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
     // One query for all counts. A failure only hides the numbers.
     final counts = <String, int>{};
     try {
-      final apps = await client
-          .from('job_applications')
-          .select('job_post_id')
-          .inFilter('job_post_id', [for (final r in rows) r['id']]);
+      final apps = await client.rpc(
+        'job_applicant_counts',
+        params: {'p_poster': myId},
+      );
       for (final a in apps as List) {
-        final id = (a as Map)['job_post_id'] as String;
-        counts[id] = (counts[id] ?? 0) + 1;
+        final m = a as Map;
+        counts[m['job_post_id'] as String] = (m['applicant_count'] as num)
+            .toInt();
       }
     } catch (_) {
       return rows;
@@ -71,6 +89,151 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
     _future = _load();
   });
 
+  Future<void> _delete(Map<String, dynamic> j) async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus lowongan ini?',
+      body: '"${j['title']}" dan semua lamarannya akan dihapus permanen.',
+    );
+    if (!ok || !mounted) return;
+    try {
+      final custom = widget.deleteJob;
+      if (custom != null) {
+        await custom(_myId, j['id'] as String);
+      } else {
+        await Supabase.instance.client.rpc(
+          'job_post_delete',
+          params: {'p_owner': _myId, 'p_job': j['id']},
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Lowongan dihapus.')));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'My job postings',
+          error: e,
+        );
+      }
+    }
+  }
+
+  Future<void> _call(String function, Map<String, dynamic> params) async {
+    final custom = widget.rpc;
+    if (custom != null) return custom(function, params);
+    await Supabase.instance.client.rpc(function, params: params);
+  }
+
+  Future<void> _toggleClosed(Map<String, dynamic> j) async {
+    final close = j['closed_at'] == null;
+    try {
+      await _call('job_post_set_closed', {
+        'p_owner': _myId,
+        'p_job': j['id'],
+        'p_closed': close,
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            close
+                ? 'Lowongan ditutup. Tidak tampil lagi di Jobs.'
+                : 'Lowongan dibuka lagi.',
+          ),
+        ),
+      );
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'My job postings',
+          error: e,
+        );
+      }
+    }
+  }
+
+  Future<void> _edit(Map<String, dynamic> j) async {
+    final title = TextEditingController(text: j['title'] as String? ?? '');
+    final company = TextEditingController(text: j['company'] as String? ?? '');
+    final desc = TextEditingController(text: j['description'] as String? ?? '');
+    final contact = TextEditingController(
+      text: j['contact_info'] as String? ?? '',
+    );
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ubah lowongan'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final (key, label, c, lines) in [
+                ('edit-title', 'Judul', title, 1),
+                ('edit-company', 'Perusahaan', company, 1),
+                ('edit-description', 'Deskripsi', desc, 5),
+                ('edit-contact', 'Kontak', contact, 1),
+              ])
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TextField(
+                    key: Key(key),
+                    controller: c,
+                    maxLines: lines,
+                    decoration: InputDecoration(
+                      labelText: label,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            key: const Key('edit-save'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (save != true || !mounted) return;
+    try {
+      await _call('job_post_update', {
+        'p_owner': _myId,
+        'p_job': j['id'],
+        'p_title': title.text,
+        'p_company': company.text,
+        'p_description': desc.text,
+        'p_contact': contact.text,
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Lowongan diperbarui.')));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'My job postings',
+          error: e,
+        );
+      }
+    }
+  }
+
   Future<void> _post() async {
     final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => PostJobScreen(posterId: _myId)),
@@ -82,11 +245,11 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('My job postings')),
+      appBar: AppBar(title: Text(tr('My job postings'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Post a Job'),
+        label: Text(tr('Post a Job')),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,
@@ -115,40 +278,81 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: jobs.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              final j = jobs[i];
-              final hidden = j['hidden_at'] != null;
-              final n = j['applicant_count'] as int?;
-              return Card(
-                key: Key('my-job-${j['id']}'),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: theme.colorScheme.outlineVariant),
-                ),
-                child: ListTile(
-                  title: Text(j['title'] as String? ?? ''),
-                  subtitle: Text(
-                    [
-                      j['company'] as String? ?? '',
-                      if (n != null)
-                        '$n ${n == 1 ? 'applicant' : 'applicants'}',
-                      if (hidden) 'Hidden by an admin',
-                    ].where((s) => s.isNotEmpty).join(' · '),
+          return RefreshIndicator(
+            onRefresh: () async {
+              _reload();
+              try {
+                await _future;
+              } catch (_) {}
+            },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+              itemCount: jobs.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                final j = jobs[i];
+                final hidden = j['hidden_at'] != null;
+                final n = j['applicant_count'] as int?;
+                return Card(
+                  key: Key('my-job-${j['id']}'),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: theme.colorScheme.outlineVariant),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => JobApplicantsScreen(job: j),
+                  child: ListTile(
+                    title: Text(j['title'] as String? ?? ''),
+                    subtitle: Text(
+                      [
+                        j['company'] as String? ?? '',
+                        if (n != null)
+                          '$n ${n == 1 ? 'applicant' : 'applicants'}',
+                        if (hidden) 'Hidden by an admin',
+                        if (j['closed_at'] != null) 'Ditutup',
+                      ].where((s) => s.isNotEmpty).join(' · '),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          key: Key('edit-job-${j['id']}'),
+                          tooltip: 'Ubah lowongan',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _edit(j),
+                        ),
+                        IconButton(
+                          key: Key('close-job-${j['id']}'),
+                          tooltip: j['closed_at'] == null
+                              ? 'Tutup lowongan'
+                              : 'Buka lagi',
+                          icon: Icon(
+                            j['closed_at'] == null
+                                ? Icons.lock_outline
+                                : Icons.lock_open_outlined,
+                          ),
+                          onPressed: () => _toggleClosed(j),
+                        ),
+                        IconButton(
+                          key: Key('delete-job-${j['id']}'),
+                          tooltip: 'Hapus lowongan',
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: theme.colorScheme.error,
+                          ),
+                          onPressed: () => _delete(j),
+                        ),
+                      ],
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => JobApplicantsScreen(job: j),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

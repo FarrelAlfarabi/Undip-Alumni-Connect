@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/contact_request.dart';
@@ -44,44 +46,57 @@ String contactErrorMessage(Object error) {
   if (error is ContactException) {
     switch (error.code) {
       case ContactErrorCode.notVerified:
-        return 'Only verified alumni can use this.';
+        return tr('Hanya alumni terverifikasi yang bisa memakai fitur ini.');
       case ContactErrorCode.cannotRequestSelf:
-        return 'You cannot send a request to yourself.';
+        return tr('Kamu tidak bisa mengirim permintaan ke dirimu sendiri.');
       case ContactErrorCode.requestAlreadyOpen:
-        return 'You already have an open request to this person. Please '
-            'wait for an answer.';
+        return tr(
+          'Kamu sudah punya permintaan yang belum dijawab ke orang ini. '
+          'Tunggu jawabannya dulu.',
+        );
       case ContactErrorCode.cooldownActive:
+        return tr(
+          'Orang ini menolak permintaanmu dalam 30 hari terakhir. Kamu '
+          'bisa mengirim lagi setelah 30 hari.',
+        );
       case ContactErrorCode.blocked:
-        return 'You cannot send a request to this person right now.';
+        return tr('Kamu belum bisa mengirim permintaan ke orang ini.');
       case ContactErrorCode.dailyLimitReached:
-        return 'You have sent $kDailyRequestMax requests today. Please try '
-            'again tomorrow.';
+        return tr(
+          'Kamu sudah mengirim $kDailyRequestMax permintaan hari ini. '
+          'Coba lagi besok.',
+        );
       case ContactErrorCode.tooManyOpen:
-        return 'You have $kOpenRequestMax requests waiting for an answer. '
-            'You can send more once some are answered.';
+        return tr(
+          'Ada $kOpenRequestMax permintaanmu yang belum dijawab. Kamu '
+          'bisa mengirim lagi setelah ada yang dijawab, atau batalkan '
+          'salah satunya.',
+        );
       case ContactErrorCode.alreadyShared:
-        return 'This person already shared their contact with you. Find it '
-            'under Requests.';
+        return tr(
+          'Orang ini sudah membagikan kontaknya ke kamu. Lihat di '
+          'Requests.',
+        );
       case ContactErrorCode.messageTooLong:
-        return 'The message is too long (200 characters at most).';
+        return tr('Pesannya terlalu panjang (maksimal 200 karakter).');
       case ContactErrorCode.sharedRequired:
-        return 'Type what you want to share.';
+        return tr('Isi kontak yang ingin kamu bagikan.');
       case ContactErrorCode.sharedTooLong:
-        return 'That is too long (200 characters at most).';
+        return tr('Terlalu panjang (maksimal 200 karakter).');
       case ContactErrorCode.notFound:
-        return 'This request no longer exists.';
+        return tr('Permintaan ini sudah tidak ada.');
       case ContactErrorCode.notTarget:
       case ContactErrorCode.notRequester:
-        return 'This request is not yours.';
+        return tr('Permintaan ini bukan milikmu.');
       case ContactErrorCode.notAccepted:
-        return 'This request was not accepted.';
+        return tr('Permintaan ini belum diterima.');
       case ContactErrorCode.invalidState:
-        return 'This request was already answered.';
+        return tr('Permintaan ini sudah dijawab.');
       case ContactErrorCode.unknown:
         break;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return tr('Terjadi kesalahan. Coba lagi.');
 }
 
 /// Thin seam over the Supabase client (every call is a database function).
@@ -114,6 +129,19 @@ class ContactRepository {
         'p_requester': requesterId,
         'p_target': targetId,
         'p_message': (text == null || text.isEmpty) ? null : text,
+      }),
+    );
+  }
+
+  /// Takes back a request that nobody answered yet.
+  Future<void> cancel({
+    required String requesterId,
+    required String requestId,
+  }) async {
+    await _guard(
+      () => _api.rpc('contact_request_cancel', {
+        'p_requester': requesterId,
+        'p_request': requestId,
       }),
     );
   }

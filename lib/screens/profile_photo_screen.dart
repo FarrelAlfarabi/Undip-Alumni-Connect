@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/avatar_repository.dart';
 import '../data/marketplace_image_picker.dart';
+import 'photo_adjust_screen.dart';
 import '../widgets/avatar.dart';
 import '../widgets/image_size_hint.dart';
 
@@ -39,7 +42,14 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
   Future<void> _choose() async {
     setState(() => _error = null);
     try {
-      final img = await widget.pickPhoto();
+      final raw = await widget.pickPhoto();
+      if (raw == null || !mounted) return;
+      final img = await PhotoAdjust.run(
+        context,
+        raw,
+        aspectRatio: 1,
+        circle: true,
+      );
       if (img != null && mounted) setState(() => _picked = img);
     } on ImagePickException catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -94,7 +104,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
     final theme = Theme.of(context);
     final picked = _picked;
     return Scaffold(
-      appBar: AppBar(title: const Text('Foto profil')),
+      appBar: AppBar(title: Text(tr('Foto profil'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -150,7 +160,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
                 TextButton(
                   key: const Key('photo-remove'),
                   onPressed: _busy ? null : _remove,
-                  child: const Text('Hapus foto'),
+                  child: Text(tr('Hapus foto')),
                 ),
               ],
             ],

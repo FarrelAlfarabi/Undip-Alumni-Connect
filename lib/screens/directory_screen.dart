@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../util/safe_url.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -145,7 +147,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        content: const Text('Buka LinkedIn member ini?'),
+        content: Text(tr('Buka LinkedIn member ini?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -245,7 +247,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: ClearableSearchField(
                 controller: _searchController,
-                hintText: 'Cari nama atau perusahaan...',
+                hintText: tr('Cari nama atau perusahaan...'),
               ),
             ),
             Padding(
@@ -330,63 +332,73 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Tidak ada alumni yang cocok.'),
+                          Text(tr('Tidak ada alumni yang cocok.')),
                           if (_hasActiveFilters)
                             TextButton(
                               key: const Key('directory-empty-clear'),
                               onPressed: _clearFilters,
-                              child: const Text('Hapus filter'),
+                              child: Text(tr('Hapus filter')),
                             ),
                         ],
                       ),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, i) {
-                        final p = filtered[i];
-                        return ListTile(
-                          leading: Avatar(
-                            url: p['avatar_url'] as String?,
-                            name: p['name'] as String? ?? '',
-                          ),
-                          title: Text(p['name'] as String? ?? ''),
-                          subtitle: Text(
-                            [
-                              if ((p['current_role'] as String?)?.isNotEmpty ==
-                                  true)
-                                '${p['current_role']}'
-                                    '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
-                              '${p['major']} · Angkatan ${p['graduation_year']}',
-                            ].join('\n'),
-                          ),
-                          isThreeLine: true,
-                          trailing:
-                              ((p['linkedin_url'] as String?)?.trim() ?? '')
-                                  .isEmpty
-                              ? null
-                              : IconButton(
-                                  key: Key('member-linkedin-${p['id']}'),
-                                  tooltip: 'Buka LinkedIn',
-                                  icon: const LinkedInLogo(),
-                                  onPressed: () => _confirmOpenLinkedIn(
-                                    p['linkedin_url'] as String?,
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        setState(() => _future = _fetchAlumni());
+                        try {
+                          await _future;
+                        } catch (_) {}
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, i) {
+                          final p = filtered[i];
+                          return ListTile(
+                            leading: Avatar(
+                              url: p['avatar_url'] as String?,
+                              name: p['name'] as String? ?? '',
+                            ),
+                            title: Text(p['name'] as String? ?? ''),
+                            subtitle: Text(
+                              [
+                                if ((p['current_role'] as String?)
+                                        ?.isNotEmpty ==
+                                    true)
+                                  '${p['current_role']}'
+                                      '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
+                                '${p['major']} · Angkatan ${p['graduation_year']}',
+                              ].join('\n'),
+                            ),
+                            isThreeLine: true,
+                            trailing:
+                                ((p['linkedin_url'] as String?)?.trim() ?? '')
+                                    .isEmpty
+                                ? null
+                                : IconButton(
+                                    key: Key('member-linkedin-${p['id']}'),
+                                    tooltip: tr('Buka LinkedIn'),
+                                    icon: const LinkedInLogo(),
+                                    onPressed: () => _confirmOpenLinkedIn(
+                                      p['linkedin_url'] as String?,
+                                    ),
+                                  ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProfileDetailScreen(
+                                    profile: p,
+                                    showEditButton: false,
+                                    currentUser: widget.currentUser,
                                   ),
                                 ),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ProfileDetailScreen(
-                                  profile: p,
-                                  showEditButton: false,
-                                  currentUser: widget.currentUser,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],

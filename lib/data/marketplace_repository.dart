@@ -218,6 +218,71 @@ class MarketplaceRepository {
     return MarketplaceListing.fromMap(_single(row));
   }
 
+  /// Puts a reviewed listing back in the queue (the undo of a review).
+  Future<void> unreview({
+    required String adminId,
+    required String listingId,
+  }) async {
+    await _guard(
+      () => _api.rpc('marketplace_review_listing', {
+        'p_admin': adminId,
+        'p_listing': listingId,
+        'p_decision': 'pending',
+        'p_reason': null,
+      }),
+    );
+  }
+
+  /// Reported products with who reported them and why. [dismissed] true
+  /// lists the ones whose reports an admin already dismissed.
+  Future<List<ReportDetail>> fetchReportDetails(
+    String adminId, {
+    bool dismissed = false,
+  }) async {
+    final rows = await _guard(
+      () => _api.rpc('marketplace_report_details', {
+        'p_admin': adminId,
+        'p_view': dismissed ? 'dismissed' : 'open',
+      }),
+    );
+    return (rows as List)
+        .map((r) => ReportDetail.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Dismisses (or, with false, reopens) every report on a product.
+  Future<void> setReportsDismissed({
+    required String adminId,
+    required String listingId,
+    required bool dismissed,
+  }) async {
+    await _guard(
+      () => _api.rpc('marketplace_reports_set_dismissed', {
+        'p_admin': adminId,
+        'p_listing': listingId,
+        'p_dismissed': dismissed,
+      }),
+    );
+  }
+
+  /// Takes a product down (the owner is told [reason]) or puts it back.
+  Future<void> setListingHidden({
+    required String adminId,
+    required String listingId,
+    required bool hidden,
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_reports_decide', {
+        'p_admin': adminId,
+        'p_type': 'product',
+        'p_target': listingId,
+        'p_action': hidden ? 'hide' : 'restore',
+        'p_reason': reason?.trim(),
+      }),
+    );
+  }
+
   Future<List<ReportCount>> fetchReportCounts(String adminId) async {
     final rows = await _guard(
       () => _api.rpc('marketplace_report_counts', {'p_admin': adminId}),
@@ -331,8 +396,9 @@ class MarketplaceRepository {
     'p_title': i.title,
     'p_description': i.description,
     'p_price_idr': i.priceIdr,
+    'p_price_negotiable': i.priceNegotiable,
     'p_category': i.category,
-    'p_city': i.city,
+    'p_city': i.city.trim().isEmpty ? null : i.city.trim(),
     'p_image_url': i.imageUrl,
     'p_shop_url': i.shopUrl,
     'p_contact_info': i.contactInfo,

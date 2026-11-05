@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb, setEquals;
+
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -175,7 +178,7 @@ class _HomeShellState extends State<HomeShell> {
       context: context,
       builder: (ctx) => AlertDialog(
         key: const Key('exit-dialog'),
-        title: const Text('Exit the app?'),
+        title: Text(tr('Exit the app?')),
         actions: [
           TextButton(
             key: const Key('exit-cancel'),

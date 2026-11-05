@@ -26,7 +26,7 @@ enum BusinessBand {
 }
 
 enum BusinessStatus {
-  pending('Waiting for review'),
+  pending('Menunggu persetujuan'),
   approved('Approved'),
   rejected('Not approved'),
   suspended('Suspended');

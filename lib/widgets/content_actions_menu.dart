@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/block_list.dart';
 import '../data/report_repository.dart';
 import 'report_sheet.dart';
@@ -87,7 +89,7 @@ class ContentActionsMenu extends StatelessWidget {
       showErrorSnackBarOn(
         messenger,
         navigator: navigator,
-        message: 'Tidak bisa memblokir. Coba lagi.',
+        message: tr('Tidak bisa memblokir. Coba lagi.'),
         screen: 'Block person',
         error: e,
       );
@@ -100,7 +102,7 @@ class ContentActionsMenu extends StatelessWidget {
     final canReport = reportType != null && targetId != null;
     return PopupMenuButton<String>(
       key: const Key('content-menu'),
-      tooltip: 'Menu lainnya',
+      tooltip: tr('Menu lainnya'),
       icon: const Icon(Icons.more_vert),
       onSelected: (v) {
         if (v == 'report') _report(context);
@@ -117,12 +119,12 @@ class ContentActionsMenu extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           key: Key('menu-block'),
           value: 'block',
           child: ListTile(
             leading: Icon(Icons.block),
-            title: Text('Blokir alumni ini'),
+            title: Text(tr('Blokir alumni ini')),
             contentPadding: EdgeInsets.zero,
           ),
         ),

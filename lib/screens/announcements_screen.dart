@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/announcement_card.dart';
@@ -39,7 +42,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Announcements'),
+        title: Text(tr('Announcements')),
         automaticallyImplyLeading: widget.showBack,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -61,10 +64,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
           final announcements = snapshot.data ?? [];
           if (announcements.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('No announcements yet.'),
+                child: Text(tr('No announcements yet.')),
               ),
             );
           }

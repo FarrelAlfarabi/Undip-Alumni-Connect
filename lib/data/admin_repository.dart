@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business.dart';
@@ -31,25 +33,27 @@ String adminErrorMessage(Object error) {
   if (error is AdminException) {
     switch (error.code) {
       case AdminErrorCode.notAdmin:
-        return 'You are not an admin.';
+        return tr('You are not an admin.');
       case AdminErrorCode.invalidBand:
-        return 'Choose one of the four bands.';
+        return tr('Choose one of the four bands.');
       case AdminErrorCode.reasonRequired:
-        return 'A reason is required.';
+        return tr('A reason is required.');
       case AdminErrorCode.invalidState:
-        return 'That is not possible right now. You cannot suspend an admin or '
-            'yourself. Otherwise reload the list.';
+        return tr(
+          'That is not possible right now. You cannot suspend an admin or '
+          'yourself. Otherwise reload the list.',
+        );
       case AdminErrorCode.notFound:
-        return 'This item no longer exists.';
+        return tr('This item no longer exists.');
       case AdminErrorCode.invalidInput:
-        return 'Title and message are required, and must not be too long.';
+        return tr('Title and message are required, and must not be too long.');
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
         break;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return tr('Something went wrong. Please try again.');
 }
 
 /// Thin seam over the Supabase client (every call is a database function).
@@ -101,11 +105,130 @@ class AdminRepository {
     );
   }
 
+  /// Approves a business. With no [band] the database uses the band the
+  /// owner chose.
   Future<Business> approve(
     String adminId,
-    String businessId,
-    BusinessBand band,
-  ) => _decide(adminId, businessId, 'approve', band: band.name);
+    String businessId, [
+    BusinessBand? band,
+  ]) => _decide(adminId, businessId, 'approve', band: band?.name);
+
+  /// Puts a business back to an exact earlier state (the undo of any
+  /// decision).
+  Future<Business> setBusinessState(String adminId, Business before) async {
+    final row = await _guard(
+      () => _api.rpc('admin_business_set_state', {
+        'p_admin': adminId,
+        'p_business': before.id,
+        'p_status': before.status.name,
+        'p_band': before.approvedBand?.name,
+        'p_reason': before.rejectionReason,
+      }),
+    );
+    final map = row is List ? row.first : row;
+    return Business.fromMap(Map<String, dynamic>.from(map as Map));
+  }
+
+  /// The numbers for the red tags on the admin buttons.
+  Future<AdminCounts> pendingCounts(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_pending_counts', {'p_admin': adminId}),
+    );
+    final m = rows is List
+        ? (rows.isEmpty
+              ? <String, dynamic>{}
+              : Map<String, dynamic>.from(rows.first as Map))
+        : Map<String, dynamic>.from(rows as Map);
+    int n(String k) => (m[k] as num?)?.toInt() ?? 0;
+    return AdminCounts(
+      businesses: n('businesses'),
+      listings: n('listings'),
+      reports: n('reports'),
+      feedback: n('feedback'),
+    );
+  }
+
+  /// Job posts for the admin Jobs list (hidden ones last). [search] matches
+  /// title, company and poster name.
+  Future<List<AdminJob>> jobs(String adminId, {String? search}) async {
+    final rows = await _guard(
+      () =>
+          _api.rpc('admin_jobs_list', {'p_admin': adminId, 'p_search': search}),
+    );
+    return (rows as List)
+        .map((r) => AdminJob.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Takes a job post down. The poster gets a notice with [reason].
+  Future<void> hideJob(String adminId, String jobId, String reason) =>
+      _jobVisibility(adminId, jobId, 'hide', reason: reason);
+
+  /// Puts a hidden job post back.
+  Future<void> restoreJob(String adminId, String jobId) =>
+      _jobVisibility(adminId, jobId, 'restore');
+
+  Future<void> _jobVisibility(
+    String adminId,
+    String jobId,
+    String action, {
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_reports_decide', {
+        'p_admin': adminId,
+        'p_type': 'job',
+        'p_target': jobId,
+        'p_action': action,
+        'p_reason': reason?.trim(),
+      }),
+    );
+    await _log(adminId, 'job_$action', 'job', jobId, reason);
+  }
+
+  /// Opens a closed report again (the undo of dismiss and mark handled).
+  Future<void> reopenReports(String adminId, AdminReport r) =>
+      _reportAction(adminId, r, 'reopen');
+
+  /// Puts a deleted announcement back, with its old id and date.
+  Future<void> restoreAnnouncement(String adminId, AdminAnnouncement a) async {
+    await _guard(
+      () => _api.rpc('admin_announcement_restore', {
+        'p_admin': adminId,
+        'p_id': a.id,
+        'p_title': a.title,
+        'p_body': a.body,
+        'p_created_at': a.createdAt.toUtc().toIso8601String(),
+        'p_posted_by': adminId,
+      }),
+    );
+  }
+
+  /// Puts a cleared bio back.
+  Future<void> restoreBio(String adminId, String profileId, String bio) async {
+    await _guard(
+      () => _api.rpc('admin_restore_bio', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_bio': bio,
+      }),
+    );
+  }
+
+  /// Puts a deleted Kontak Ikafe row back with its old id.
+  Future<void> restoreIkafeContact(String adminId, IkafeContact c) async {
+    await _guard(
+      () => _api.rpc('admin_ikafe_contact_restore', {
+        'p_admin': adminId,
+        'p_id': c.id,
+        'p_kind': c.kind.name,
+        'p_label': c.label,
+        'p_value': c.value,
+        'p_sort': c.sortOrder,
+        'p_active': c.active,
+      }),
+    );
+  }
 
   Future<Business> reject(String adminId, String businessId, String reason) =>
       _decide(adminId, businessId, 'reject', reason: reason);
@@ -136,7 +259,38 @@ class AdminRepository {
       }),
     );
     final map = row is List ? row.first : row;
+    await _log(adminId, 'business_$action', 'business', businessId, reason);
     return Business.fromMap(Map<String, dynamic>.from(map as Map));
+  }
+
+  /// Writes one line in the admin action log. A failure never blocks the
+  /// action itself.
+  Future<void> _log(
+    String adminId,
+    String action,
+    String? type,
+    String? target, [
+    String? detail,
+  ]) async {
+    try {
+      await _api.rpc('admin_log_action', {
+        'p_admin': adminId,
+        'p_action': action,
+        'p_target_type': type,
+        'p_target_id': target,
+        'p_detail': detail,
+      });
+    } catch (_) {}
+  }
+
+  /// The last 200 admin actions, newest first.
+  Future<List<AdminLogEntry>> actionLog(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_actions_list', {'p_admin': adminId}),
+    );
+    return (rows as List)
+        .map((r) => AdminLogEntry.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
   }
 
   /// Open reports (one row per reported thing, with counts and reasons), or
@@ -193,13 +347,21 @@ class AdminRepository {
 
   /// Removes only the bio of a reported person (admin_clear_bio). The account
   /// and everything else stay.
-  Future<void> clearBio(String adminId, String profileId) async {
+  /// Returns the bio that was removed (for the undo), or null if it had none.
+  Future<String?> clearBio(String adminId, String profileId) async {
+    final old = await _guard(
+      () => _api.rpc('admin_profile_bio', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+      }),
+    );
     await _guard(
       () => _api.rpc('admin_clear_bio', {
         'p_admin': adminId,
         'p_profile': profileId,
       }),
     );
+    return old is String && old.isNotEmpty ? old : null;
   }
 
   Future<void> _reportAction(
@@ -216,6 +378,13 @@ class AdminRepository {
         'p_action': action,
         'p_reason': reason?.trim(),
       }),
+    );
+    await _log(
+      adminId,
+      'report_$action',
+      r.targetType.value,
+      r.targetId,
+      reason,
     );
   }
 
@@ -267,18 +436,38 @@ class AdminRepository {
 
   /// Posts one announcement. Only the database decides who may: the call is
   /// refused with `not_admin` for anyone not in app_admins.
-  Future<void> createAnnouncement(
+  /// Returns the new announcement's id (empty if the database sent none).
+  Future<String> createAnnouncement(
     String adminId, {
     required String title,
     required String body,
   }) async {
-    await _guard(
+    final id = await _guard(
       () => _api.rpc('admin_announcement_create', {
         'p_admin': adminId,
         'p_title': title.trim(),
         'p_body': body.trim(),
       }),
     );
+    await _log(
+      adminId,
+      'announcement_create',
+      'announcement',
+      id is String ? id : null,
+      title.trim(),
+    );
+    return id is String ? id : '';
+  }
+
+  /// Removes one announcement for good. Admins only (the database checks).
+  Future<void> deleteAnnouncement(String adminId, String id) async {
+    await _guard(
+      () => _api.rpc('admin_announcement_delete', {
+        'p_admin': adminId,
+        'p_id': id,
+      }),
+    );
+    await _log(adminId, 'announcement_delete', 'announcement', id);
   }
 
   /// Every Kontak Ikafe row, hidden ones too.
@@ -293,7 +482,8 @@ class AdminRepository {
   }
 
   /// Adds a Kontak Ikafe row, or changes it when [id] is given.
-  Future<void> saveIkafeContact(
+  /// Returns the row's id (needed to undo an add).
+  Future<String> saveIkafeContact(
     String adminId, {
     String? id,
     required IkafeContactKind kind,
@@ -302,7 +492,7 @@ class AdminRepository {
     required int sortOrder,
     required bool active,
   }) async {
-    await _guard(
+    final saved = await _guard(
       () => _api.rpc('admin_ikafe_contact_save', {
         'p_admin': adminId,
         'p_id': id,
@@ -313,6 +503,7 @@ class AdminRepository {
         'p_active': active,
       }),
     );
+    return saved is String ? saved : (id ?? '');
   }
 
   Future<void> deleteIkafeContact(String adminId, String id) async {
@@ -355,6 +546,7 @@ class AdminRepository {
         'p_ids': ids,
       }),
     );
+    await _log(adminId, 'home_order', kind, null, '${ids.length} dipin');
   }
 
   Future<T> _guard<T>(Future<T> Function() run) async {
@@ -485,6 +677,83 @@ class FeedbackItem {
     buildNumber: m['build_number'] as String?,
     platform: m['platform'] as String?,
   );
+}
+
+/// How much waits for an admin (the red tags).
+class AdminCounts {
+  const AdminCounts({
+    this.businesses = 0,
+    this.listings = 0,
+    this.reports = 0,
+    this.feedback = 0,
+  });
+
+  final int businesses;
+  final int listings;
+  final int reports;
+  final int feedback;
+
+  int get total => businesses + listings + reports + feedback;
+}
+
+/// One job post in the admin Jobs list.
+class AdminJob {
+  const AdminJob({
+    required this.id,
+    required this.title,
+    required this.company,
+    required this.posterName,
+    required this.createdAt,
+    this.hiddenAt,
+    this.hiddenReason,
+  });
+
+  factory AdminJob.fromMap(Map<String, dynamic> m) => AdminJob(
+    id: m['id'] as String,
+    title: m['title'] as String? ?? '',
+    company: m['company'] as String? ?? '',
+    posterName: m['poster_name'] as String?,
+    createdAt: DateTime.parse(m['created_at'] as String),
+    hiddenAt: m['hidden_at'] == null
+        ? null
+        : DateTime.parse(m['hidden_at'] as String),
+    hiddenReason: m['hidden_reason'] as String?,
+  );
+
+  final String id;
+  final String title;
+  final String company;
+  final String? posterName;
+  final DateTime createdAt;
+  final DateTime? hiddenAt;
+  final String? hiddenReason;
+
+  bool get isHidden => hiddenAt != null;
+}
+
+/// One line of the admin action log.
+class AdminLogEntry {
+  const AdminLogEntry({
+    required this.adminName,
+    required this.action,
+    required this.createdAt,
+    this.targetType,
+    this.detail,
+  });
+
+  factory AdminLogEntry.fromMap(Map<String, dynamic> m) => AdminLogEntry(
+    adminName: m['admin_name'] as String? ?? 'Admin',
+    action: m['action'] as String? ?? '',
+    targetType: m['target_type'] as String?,
+    detail: m['detail'] as String?,
+    createdAt: DateTime.parse(m['created_at'] as String),
+  );
+
+  final String adminName;
+  final String action;
+  final String? targetType;
+  final String? detail;
+  final DateTime createdAt;
 }
 
 /// One announcement in the admin list.

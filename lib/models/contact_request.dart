@@ -1,7 +1,8 @@
 enum ContactRequestStatus {
   pending,
   accepted,
-  rejected;
+  rejected,
+  cancelled;
 
   static ContactRequestStatus parse(String? v) => values.firstWhere(
     (s) => s.name == v,

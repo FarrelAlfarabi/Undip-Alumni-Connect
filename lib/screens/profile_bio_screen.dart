@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/services.dart';
 
 import '../data/profile_fields.dart';
@@ -58,7 +61,7 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Bio')),
+      appBar: AppBar(title: Text(tr('Bio'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -90,14 +93,13 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
                   required currentLength,
                   required isFocused,
                   maxLength,
-                }) =>
-                    Text('${_text.text.runes.length}/$kBioMax'),
+                }) => Text('${_text.text.runes.length}/$kBioMax'),
                 maxLines: 5,
                 minLines: 4,
                 keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  labelText: 'Bio',
-                  hintText: 'Ceritakan singkat tentang dirimu',
+                decoration: InputDecoration(
+                  labelText: tr('Bio'),
+                  hintText: tr('Ceritakan singkat tentang dirimu'),
                   border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
@@ -122,7 +124,7 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
                           color: AppTheme.black,
                         ),
                       )
-                    : const Text('Simpan'),
+                    : Text(tr('Simpan')),
               ),
             ],
           ),

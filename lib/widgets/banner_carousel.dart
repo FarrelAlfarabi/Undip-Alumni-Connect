@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 
 import '../data/marketplace_format.dart';
@@ -295,7 +297,7 @@ class _BannerCard extends StatelessWidget {
             onPressed: onTap,
             iconAlignment: IconAlignment.end,
             icon: const Icon(Icons.arrow_forward, size: 16),
-            label: const Text('Lihat detail'),
+            label: Text(tr('Lihat detail')),
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.yellow,
               foregroundColor: AppTheme.black,

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/industries.dart';
@@ -145,7 +148,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Employment Info')),
+      appBar: AppBar(title: Text(tr('Edit Employment Info'))),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -158,8 +161,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   TextField(
                     controller: _roleController,
                     enabled: !_saving,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Role',
+                    decoration: InputDecoration(
+                      labelText: tr('Current Role'),
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -195,7 +198,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: _signOut,
-                        child: const Text('Sign Out & Verify Again'),
+                        child: Text(tr('Sign Out & Verify Again')),
                       ),
                     ],
                   ],
@@ -211,7 +214,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2.5),
                           )
-                        : const Text('Save'),
+                        : Text(tr('Save')),
                   ),
                 ],
               ),

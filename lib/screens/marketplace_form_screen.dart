@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/services.dart';
 
 import '../data/category_repository.dart';
 import '../data/cities.dart';
 import '../data/marketplace_image_picker.dart';
+import 'photo_adjust_screen.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
 import '../data/marketplace_validation.dart';
@@ -55,6 +59,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
   late final TextEditingController _categoryText;
   String? _category;
   String? _city;
+  bool _negotiable = false;
   PickedImage? _picked;
   bool _saving = false;
   String? _error;
@@ -69,8 +74,10 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
     final e = widget.existing;
     _title = TextEditingController(text: e?.title);
     _description = TextEditingController(text: e?.description);
-    _price = TextEditingController(text: e?.priceIdr.toString());
-    final startCity = (e?.city ?? widget.defaultCity ?? '').trim();
+    _price = TextEditingController(text: e?.priceIdr?.toString() ?? '');
+    _negotiable = e?.priceNegotiable ?? false;
+    // City is optional, so it starts empty for a new product.
+    final startCity = (e?.city ?? '').trim();
     _city = startCity.isEmpty ? null : startCity;
     _cityText = TextEditingController(text: _city ?? '');
     _shop = TextEditingController(text: e?.shopUrl);
@@ -102,9 +109,12 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
 
   Future<void> _choosePhoto() async {
     try {
-      final img = await widget.pickImage();
-      if (img == null) return;
-      checkListingImage(img.name, img.bytes.length);
+      final picked = await widget.pickImage();
+      if (picked == null) return;
+      checkListingImage(picked.name, picked.bytes.length);
+      if (!mounted) return;
+      final img = await PhotoAdjust.run(context, picked);
+      if (img == null || !mounted) return;
       setState(() {
         _picked = img;
         _photoError = null;
@@ -149,9 +159,12 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
       final input = MarketplaceListingInput(
         title: _title.text.trim(),
         description: _description.text.trim(),
-        priceIdr: int.parse(_price.text.trim()),
+        priceIdr: _price.text.trim().isEmpty
+            ? null
+            : int.parse(_price.text.trim()),
+        priceNegotiable: _negotiable,
         category: _category!,
-        city: _city!,
+        city: _city ?? '',
         imageUrl: imageUrl,
         shopUrl: _shop.text.trim().isEmpty ? null : _shop.text.trim(),
         contactInfo: _contact.text.trim().isEmpty ? null : _contact.text.trim(),
@@ -262,12 +275,27 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            decoration: const InputDecoration(
-                              labelText: 'Price (whole rupiah)',
+                            decoration: InputDecoration(
+                              labelText: tr('Price (whole rupiah)'),
                               prefixText: 'Rp ',
                               border: OutlineInputBorder(),
                             ),
-                            validator: MarketplaceValidation.price,
+                            validator: (v) => MarketplaceValidation.priceFor(
+                              v,
+                              negotiable: _negotiable,
+                            ),
+                          ),
+                          SwitchListTile(
+                            key: const Key('price-negotiable'),
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Harga bisa nego'),
+                            subtitle: const Text(
+                              'Harga boleh dikosongkan kalau bisa nego.',
+                            ),
+                            value: _negotiable,
+                            onChanged: _saving
+                                ? null
+                                : (v) => setState(() => _negotiable = v),
                           ),
                           const SizedBox(height: 16),
                           FormField<String>(
@@ -305,7 +333,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             validator: MarketplaceValidation.city,
                             builder: (field) => SearchableChoice(
                               fieldKey: const Key('city-choice'),
-                              label: 'City',
+                              label: 'Kota (opsional)',
                               controller: _cityText,
                               options: citiesWith(_city),
                               selected: _city,
@@ -317,6 +345,20 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                               },
                             ),
                           ),
+                          if (_city != null)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton(
+                                key: const Key('city-clear'),
+                                onPressed: _saving
+                                    ? null
+                                    : () => setState(() {
+                                        _city = null;
+                                        _cityText.clear();
+                                      }),
+                                child: const Text('Hapus kota'),
+                              ),
+                            ),
                           const SizedBox(height: 24),
                           Text(
                             'How buyers reach you',
@@ -335,8 +377,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             controller: _shop,
                             enabled: !_saving,
                             keyboardType: TextInputType.url,
-                            decoration: const InputDecoration(
-                              labelText: 'Online shop link (optional)',
+                            decoration: InputDecoration(
+                              labelText: tr('Online shop link (optional)'),
                               hintText: 'https://...',
                               border: OutlineInputBorder(),
                             ),
@@ -347,10 +389,11 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             controller: _contact,
                             enabled: !_saving,
                             maxLength: 300,
-                            decoration: const InputDecoration(
-                              labelText: 'Contact info (optional)',
-                              hintText:
-                                  'WhatsApp, phone, email, social media...',
+                            decoration: InputDecoration(
+                              labelText: tr('Contact info (optional)'),
+                              hintText: tr(
+                                'WhatsApp, phone, email, social media...',
+                              ),
                               border: OutlineInputBorder(),
                             ),
                           ),

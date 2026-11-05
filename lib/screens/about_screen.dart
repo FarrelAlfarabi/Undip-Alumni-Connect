@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../config/policy_config.dart';
 import '../util/app_info.dart';
 
@@ -34,7 +36,10 @@ class AboutScreen extends StatelessWidget {
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
-                Text('Who runs this app', style: theme.textTheme.titleSmall),
+                Text(
+                  tr('Who runs this app'),
+                  style: theme.textTheme.titleSmall,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '$kOperatorName\n$kOperatorAddress\nEmail: $kContactEmail',

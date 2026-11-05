@@ -62,6 +62,7 @@ class SupabaseHomeApi implements HomeApi {
     final rows = await _client
         .from('announcements')
         .select()
+        .order('home_rank', ascending: true, nullsFirst: false)
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(rows as List);
@@ -74,7 +75,8 @@ class SupabaseHomeApi implements HomeApi {
   }) async {
     final query = _client
         .from('job_posts')
-        .select('*, poster:alumni_profiles(name)');
+        .select('*, poster:alumni_profiles(name)')
+        .isFilter('closed_at', null);
     final rows = await (pinnedOnly
         ? query.not('home_rank', 'is', null).order('home_rank').limit(limit)
         : query.order('created_at', ascending: false).limit(limit));

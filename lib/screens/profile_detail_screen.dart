@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/feature_flags.dart';
@@ -52,6 +55,7 @@ class ProfileDetailScreen extends StatefulWidget {
     this.chat = chatEnabled,
     this.contactRepository,
     this.adminCheck,
+    this.adminCounts,
     this.nimLoader,
     this.lock,
     this.saveFields,
@@ -67,6 +71,10 @@ class ProfileDetailScreen extends StatefulWidget {
   /// tests. Asked once per session (when the Profile tab is built) and
   /// never cached on the device.
   final Future<bool> Function(String profileId)? adminCheck;
+
+  /// How many things wait for an admin (the red tag on Admin). Injectable for
+  /// tests. A failure shows no tag.
+  final Future<int> Function(String profileId)? adminCounts;
 
   /// Asks the database for this profile's NIM on behalf of the viewer. It
   /// answers only for the profile's owner and for admins; everyone else gets
@@ -95,6 +103,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
   bool _messaging = false;
   Future<bool>? _isAdmin;
+  int _adminBadge = 0;
   Future<String?>? _nim;
 
   @override
@@ -114,10 +123,22 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     try {
       final id = widget.currentUser.value['id'] as String;
       final check = widget.adminCheck ?? AdminRepository().isAdmin;
-      return await check(id);
+      final admin = await check(id);
+      if (admin) _loadAdminBadge(id);
+      return admin;
     } catch (_) {
       return false;
     }
+  }
+
+  Future<void> _loadAdminBadge(String id) async {
+    try {
+      final ask =
+          widget.adminCounts ??
+          (String i) async => (await AdminRepository().pendingCounts(i)).total;
+      final n = await ask(id);
+      if (mounted) setState(() => _adminBadge = n);
+    } catch (_) {}
   }
 
   // NIM is private: the database returns it to the owner and admins only. A
@@ -440,7 +461,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         bottom: 0,
                                         child: IconButton.filled(
                                           key: const Key('avatar-edit'),
-                                          tooltip: 'Ubah foto profil',
+                                          tooltip: tr('Ubah foto profil'),
                                           onPressed: _editPhoto,
                                           icon: const Icon(
                                             Icons.photo_camera_outlined,
@@ -561,7 +582,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         Icons.edit_outlined,
                                         size: 18,
                                       ),
-                                      label: const Text('Edit'),
+                                      label: Text(tr('Edit')),
                                     )
                                   : null,
                               children: [
@@ -599,7 +620,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         Icons.edit_outlined,
                                         size: 18,
                                       ),
-                                      label: const Text('Edit'),
+                                      label: Text(tr('Edit')),
                                     )
                                   : null,
                               children: [
@@ -655,6 +676,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     const SizedBox(height: 16),
                     _ProfileMenu(
                       adminFuture: _isAdmin,
+                      adminBadge: _adminBadge,
                       onBusiness: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => MyBusinessesScreen(
@@ -685,13 +707,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onHelp: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const HelpScreen()),
                       ),
-                      onAdmin: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => AdminScreen(
-                            adminId: widget.currentUser.value['id'] as String,
+                      onAdmin: () async {
+                        final id = widget.currentUser.value['id'] as String;
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AdminScreen(adminId: id),
                           ),
-                        ),
-                      ),
+                        );
+                        _loadAdminBadge(id);
+                      },
                       // Back to verification with the whole shell torn down,
                       // so a second account starts from a clean state. Also
                       // forgets this device's remembered person and PIN
@@ -715,7 +739,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         key: const Key('request-sent'),
         onPressed: null,
         icon: const Icon(Icons.hourglass_top),
-        label: const Text('Permintaan terkirim'),
+        label: Text(tr('Permintaan terkirim')),
       ),
       const SizedBox(height: 6),
       Text(
@@ -731,7 +755,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         key: const Key('request-contact'),
         onPressed: _requestContact,
         icon: const Icon(Icons.person_add_alt_outlined),
-        label: const Text('Minta kontak'),
+        label: Text(tr('Minta kontak')),
       ),
     if (widget.chat) ...[
       const SizedBox(height: 12),
@@ -836,6 +860,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu({
     required this.adminFuture,
+    required this.adminBadge,
     required this.onBusiness,
     required this.onJobs,
     required this.onSettings,
@@ -846,6 +871,7 @@ class _ProfileMenu extends StatelessWidget {
   });
 
   final Future<bool>? adminFuture;
+  final int adminBadge;
   final VoidCallback onBusiness;
   final VoidCallback onJobs;
   final VoidCallback onSettings;
@@ -870,7 +896,8 @@ class _ProfileMenu extends StatelessWidget {
                   MenuItem(
                     key: const Key('profile-admin'),
                     icon: Icons.admin_panel_settings_outlined,
-                    title: 'Admin',
+                    title: tr('Admin'),
+                    badge: adminBadge,
                     onTap: onAdmin,
                   ),
                 ],
@@ -883,13 +910,13 @@ class _ProfileMenu extends StatelessWidget {
             MenuItem(
               key: const Key('profile-business'),
               icon: Icons.storefront_outlined,
-              title: 'My business',
+              title: tr('My business'),
               onTap: onBusiness,
             ),
             MenuItem(
               key: const Key('profile-jobs'),
               icon: Icons.work_outline,
-              title: 'My job postings',
+              title: tr('My job postings'),
               onTap: onJobs,
             ),
           ],
@@ -912,20 +939,20 @@ class _ProfileMenu extends StatelessWidget {
                   key: const Key('profile-settings'),
                   icon: Icons.settings_outlined,
                   title: 'Pengaturan',
-                  subtitle: 'Kontak, PIN, pengguna terblokir, hapus akun',
+                  subtitle: tr('Kontak, PIN, pengguna terblokir, hapus akun'),
                   onTap: onSettings,
                 ),
                 MenuItem(
                   key: const Key('profile-help'),
                   icon: Icons.help_outline,
                   title: 'Bantuan',
-                  subtitle: 'Kontak admin, beri masukan, tentang aplikasi',
+                  subtitle: tr('Kontak admin, beri masukan, tentang aplikasi'),
                   onTap: onHelp,
                 ),
                 MenuItem(
                   key: const Key('profile-policy'),
                   icon: Icons.privacy_tip_outlined,
-                  title: 'Kebijakan Privasi dan Ketentuan',
+                  title: tr('Kebijakan Privasi dan Ketentuan'),
                   onTap: onPolicy,
                 ),
               ],
@@ -938,7 +965,7 @@ class _ProfileMenu extends StatelessWidget {
             MenuItem(
               key: const Key('profile-signout'),
               icon: Icons.logout,
-              title: 'Sign out',
+              title: tr('Sign out'),
               onTap: onSignOut,
             ),
           ],

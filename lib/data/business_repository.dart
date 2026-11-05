@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -38,36 +40,46 @@ String businessErrorMessage(Object error) {
   if (error is BusinessException) {
     switch (error.code) {
       case BusinessErrorCode.notVerified:
-        return 'Only verified alumni can use the business directory.';
+        return tr('Only verified alumni can use the business directory.');
       case BusinessErrorCode.linkRequired:
-        return 'Add the business Instagram (@username or a link). The website is optional.';
+        return tr(
+          'Add the business Instagram (@username or a link). The website is optional.',
+        );
       case BusinessErrorCode.invalidLink:
-        return 'One of the links is not valid. Use a full link that starts '
-            'with http:// or https://.';
+        return tr(
+          'One of the links is not valid. Use a full link that starts '
+          'with http:// or https://.',
+        );
       case BusinessErrorCode.linkInUse:
-        return 'Another business already uses one of these links.';
+        return tr('Another business already uses one of these links.');
       case BusinessErrorCode.invalidInput:
-        return 'Check the name (2 to 100 characters) and the description '
-            '(up to 500 characters).';
+        return tr(
+          'Check the name (2 to 100 characters) and the description '
+          '(up to 500 characters).',
+        );
       case BusinessErrorCode.invalidCategory:
-        return 'Choose a category.';
+        return tr('Choose a category.');
       case BusinessErrorCode.invalidBand:
-        return 'Choose the yearly sales band.';
+        return tr('Choose the yearly sales band.');
       case BusinessErrorCode.businessLimit:
-        return 'You already have $kMaxBusinesses businesses. To add more, '
-            'email $kContactEmail.';
+        return tr(
+          'You already have $kMaxBusinesses businesses. To add more, '
+          'email $kContactEmail.',
+        );
       case BusinessErrorCode.notFound:
-        return 'This business no longer exists.';
+        return tr('This business no longer exists.');
       case BusinessErrorCode.notOwner:
-        return 'You can only change your own business.';
+        return tr('You can only change your own business.');
       case BusinessErrorCode.locked:
-        return 'This business can no longer be edited here. Please contact '
-            'an admin.';
+        return tr(
+          'This business can no longer be edited here. Please contact '
+          'an admin.',
+        );
       case BusinessErrorCode.unknown:
         break;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return tr('Something went wrong. Please try again.');
 }
 
 /// Thin seam over the Supabase client, so the repository can be tested with a
@@ -179,6 +191,16 @@ class BusinessRepository {
       }),
     );
     return Business.fromMap(_single(row));
+  }
+
+  /// Removes my own business (any status) and its products for good.
+  Future<void> delete(String ownerId, String businessId) async {
+    await _guard(
+      () => _api.rpc('business_delete', {
+        'p_owner': ownerId,
+        'p_business': businessId,
+      }),
+    );
   }
 
   /// The owner's own businesses, in every status.

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/avatar.dart';
@@ -144,7 +147,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: ClearableSearchField(
                   controller: _searchController,
-                  hintText: 'Search by name...',
+                  hintText: tr('Search by name...'),
                 ),
               ),
               Padding(
@@ -165,8 +168,10 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
               ),
               Expanded(
                 child: conversations.isEmpty
-                    ? const Center(
-                        child: Text('No conversations match these filters.'),
+                    ? Center(
+                        child: Text(
+                          tr('No conversations match these filters.'),
+                        ),
                       )
                     : ListView.separated(
                         itemCount: conversations.length,

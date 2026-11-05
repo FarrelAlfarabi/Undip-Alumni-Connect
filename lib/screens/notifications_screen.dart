@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/marketplace_repository.dart';
 import '../data/notification_repository.dart';
 import '../models/app_notification.dart';
 import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import 'admin_reports_screen.dart';
 import 'admin_screen.dart';
 import 'job_applicants_screen.dart';
@@ -35,7 +38,8 @@ NotificationDestination destinationOf(AppNotification n) {
       return NotificationDestination.requestsReceived;
     case 'contact_request_accepted':
       return NotificationDestination.requestsSent;
-    case 'business_approved' ||
+    case 'business_received' ||
+        'business_approved' ||
         'business_rejected' ||
         'business_suspended' ||
         'business_restored':
@@ -151,6 +155,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _future = _load();
   });
 
+  Future<void> _clearAll() async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus semua notifikasi?',
+      body: 'Semua notifikasimu akan dihapus permanen.',
+      action: 'Hapus semua',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await _repo.clearAll(_myId);
+      if (mounted) _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Notifications',
+          error: e,
+        );
+      }
+    }
+  }
+
   void _gone() =>
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text(kNotificationGone)));
@@ -206,15 +233,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   String _timeAgo(DateTime time) {
     final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return tr('Just now');
+    if (diff.inMinutes < 60) return '${diff.inMinutes}${tr('m ago')}';
+    if (diff.inHours < 24) return '${diff.inHours}${tr('h ago')}';
+    return '${diff.inDays}${tr('d ago')}';
   }
 
   IconData _icon(AppNotification n) => switch (n.type) {
     'contact_request_received' ||
     'contact_request_accepted' => Icons.handshake_outlined,
+    'business_received' ||
     'business_approved' ||
     'business_rejected' ||
     'business_suspended' ||
@@ -229,7 +257,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: Text(tr('Notifications')),
+        actions: [
+          IconButton(
+            key: const Key('clear-notifications'),
+            tooltip: 'Hapus semua',
+            icon: const Icon(Icons.delete_sweep_outlined),
+            onPressed: _clearAll,
+          ),
+        ],
+      ),
       body: FutureBuilder<List<AppNotification>>(
         future: _future,
         builder: (context, snap) {
@@ -257,41 +295,69 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
             );
           }
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final n = items[i];
-              final fresh = n.isUnread;
-              return ListTile(
-                key: Key('notification-${n.id}'),
-                tileColor: fresh
-                    ? theme.colorScheme.secondaryContainer.withValues(
-                        alpha: 0.35,
-                      )
-                    : null,
-                leading: Icon(
-                  _icon(n),
-                  color: fresh
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  n.title,
-                  style: TextStyle(
-                    fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-                subtitle: Text(n.body),
-                trailing: Text(
-                  _timeAgo(n.createdAt),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () => _open(n),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              _reload();
+              try {
+                await _future;
+              } catch (_) {}
             },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, i) {
+                final n = items[i];
+                final fresh = n.isUnread;
+                return Dismissible(
+                  key: Key('dismiss-${n.id}'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: theme.colorScheme.errorContainer,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                  ),
+                  onDismissed: (_) async {
+                    try {
+                      await _repo.deleteOne(_myId, n.id);
+                    } catch (_) {}
+                    if (mounted) _reload();
+                  },
+                  child: ListTile(
+                    key: Key('notification-${n.id}'),
+                    tileColor: fresh
+                        ? theme.colorScheme.secondaryContainer.withValues(
+                            alpha: 0.35,
+                          )
+                        : null,
+                    leading: Icon(
+                      _icon(n),
+                      color: fresh
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    title: Text(
+                      n.title,
+                      style: TextStyle(
+                        fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                    subtitle: Text(n.body),
+                    trailing: Text(
+                      _timeAgo(n.createdAt),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    onTap: () => _open(n),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

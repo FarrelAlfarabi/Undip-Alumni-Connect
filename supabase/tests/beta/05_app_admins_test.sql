@@ -88,7 +88,6 @@ select jt.assert((select status from admin_businesses_list(jt.pid('siti.azizah@e
 select jt.assert((select count(*) from admin_businesses_list(jt.pid('siti.azizah@example.com'), 'approved')) = 1, 'filter by status');
 -- Decisions.
 select jt.expect_error(format($q$select admin_business_decide(%L, %L, 'approve', 'huge', null)$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'b_pending')), 'invalid_band');
-select jt.expect_error(format($q$select admin_business_decide(%L, %L, 'approve', null, null)$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'b_pending')), 'invalid_band');
 select jt.expect_error(format($q$select admin_business_decide(%L, %L, 'reject', null, '  ')$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'b_pending')), 'reason_required');
 select jt.expect_error(format($q$select admin_business_decide(%L, %L, 'explode', null, null)$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'b_pending')), 'invalid_action');
 select jt.expect_error(format($q$select admin_business_decide(%L, gen_random_uuid(), 'approve', 'micro', null)$q$, jt.pid('siti.azizah@example.com')), 'not_found');

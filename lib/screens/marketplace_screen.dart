@@ -1,4 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
@@ -47,9 +50,9 @@ List<MarketplaceListing> applyMarketplaceFilters(
     case MarketplaceSort.newest:
       result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     case MarketplaceSort.priceLow:
-      result.sort((a, b) => a.priceIdr.compareTo(b.priceIdr));
+      result.sort((a, b) => _byPrice(a, b, low: true));
     case MarketplaceSort.priceHigh:
-      result.sort((a, b) => b.priceIdr.compareTo(a.priceIdr));
+      result.sort((a, b) => _byPrice(a, b, low: false));
   }
   return result;
 }
@@ -177,9 +180,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text('Tambah produk ke usaha yang mana?'),
+              child: Text(tr('Tambah produk ke usaha yang mana?')),
             ),
             for (final b in approved)
               ListTile(
@@ -290,14 +293,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 IconButton(
                   onPressed: _openMine,
                   icon: const Icon(Icons.inventory_2_outlined),
-                  tooltip: 'Produk saya',
+                  tooltip: tr('Produk saya'),
                 ),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Tambah produk'),
+        label: Text(tr('Tambah produk')),
       ),
       body: Column(
         children: [
@@ -351,7 +354,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           Expanded(
                             child: ClearableSearchField(
                               controller: _searchController,
-                              hintText: 'Search by title...',
+                              hintText: tr('Search by title...'),
                             ),
                           ),
                           PopupMenuButton<MarketplaceSort>(
@@ -400,7 +403,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 Icons.inventory_2_outlined,
                                 size: 18,
                               ),
-                              label: const Text('Produk saya'),
+                              label: Text(tr('Produk saya')),
                             ),
                         ],
                       ),
@@ -415,27 +418,43 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       ),
                     Expanded(
                       child: listings.isEmpty
-                          ? const Center(
-                              child: Text('No listings match these filters.'),
+                          ? Center(
+                              child: Text(
+                                tr('No listings match these filters.'),
+                              ),
                             )
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                              itemCount: listings.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 16),
-                              itemBuilder: (context, i) => _ListingCard(
-                                listing: listings[i],
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => MarketplaceDetailScreen(
-                                        listing: listings[i],
-                                        repository: _repo,
-                                        currentUser: widget.currentUser,
+                          : RefreshIndicator(
+                              onRefresh: () async {
+                                _reload();
+                                try {
+                                  await _future;
+                                } catch (_) {}
+                              },
+                              child: ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  4,
+                                  16,
+                                  96,
+                                ),
+                                itemCount: listings.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 16),
+                                itemBuilder: (context, i) => _ListingCard(
+                                  listing: listings[i],
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => MarketplaceDetailScreen(
+                                          listing: listings[i],
+                                          repository: _repo,
+                                          currentUser: widget.currentUser,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                     ),
@@ -492,7 +511,7 @@ class _ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      formatRupiah(listing.priceIdr),
+                      priceLabel(listing.priceIdr, listing.priceNegotiable),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.primary,
@@ -500,7 +519,10 @@ class _ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${listing.category} · ${listing.city}',
+                      [
+                        listing.category,
+                        if (listing.city.isNotEmpty) listing.city,
+                      ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -591,4 +613,14 @@ class ListingImage extends StatelessWidget {
       radius: 0,
     );
   }
+}
+
+/// Cheapest first (or dearest first). Products with no price written go last.
+int _byPrice(MarketplaceListing a, MarketplaceListing b, {required bool low}) {
+  final pa = a.priceIdr;
+  final pb = b.priceIdr;
+  if (pa == null && pb == null) return 0;
+  if (pa == null) return 1;
+  if (pb == null) return -1;
+  return low ? pa.compareTo(pb) : pb.compareTo(pa);
 }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -72,7 +75,7 @@ class ContactAdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Kontak admin')),
+      appBar: AppBar(title: Text(tr('Kontak admin'))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

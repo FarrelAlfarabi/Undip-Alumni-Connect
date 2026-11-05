@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../config/policy_config.dart';
 import '../data/business_repository.dart';
 import '../data/posting_text.dart';
@@ -7,11 +9,17 @@ import '../models/business.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
 import '../widgets/business_photo.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 
 const String _limitNote =
     'You can own up to $kMaxBusinesses businesses. To add more, email '
     '$kContactEmail.';
+
+/// Shown while an admin has not decided yet.
+const String kPendingReassurance =
+    'Permintaanmu sudah kami terima dan sedang diproses admin. Kamu akan '
+    'mendapat pemberitahuan di Notifikasi begitu ada keputusan.';
 
 /// The owner's own businesses, with status, rejection reason and band.
 /// A rejected business can be edited and sent again.
@@ -52,6 +60,31 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   // Rejected businesses do not count towards the limit (same as the database).
   int _activeCount = 0;
 
+  Future<void> _delete(Business b) async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus bisnis ini?',
+      body: '"${b.name}" dan semua produknya akan dihapus permanen.',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await _repo.delete(widget.ownerId, b.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Bisnis dihapus.')));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: businessErrorMessage(e),
+          screen: 'My businesses',
+          error: e,
+        );
+      }
+    }
+  }
+
   Future<void> _openForm([Business? existing]) async {
     if (existing == null && _activeCount >= kMaxBusinesses) {
       ScaffoldMessenger.of(context)
@@ -73,11 +106,11 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My businesses')),
+      appBar: AppBar(title: Text(tr('My businesses'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add_business_outlined),
-        label: const Text('Register a business'),
+        label: Text(tr('Register a business')),
       ),
       body: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
         future: _future,
@@ -110,27 +143,37 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: items.length + 1,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              if (i == 0) {
-                return Text(
-                  _limitNote,
-                  key: const Key('business-limit-note'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                );
-              }
-              final b = items[i - 1];
-              return BusinessOwnerCard(
-                business: b,
-                usage: usage[b.id],
-                onEdit: () => _openForm(b),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              _reload();
+              try {
+                await _future;
+              } catch (_) {}
             },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+              itemCount: items.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                if (i == 0) {
+                  return Text(
+                    _limitNote,
+                    key: const Key('business-limit-note'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                }
+                final b = items[i - 1];
+                return BusinessOwnerCard(
+                  business: b,
+                  usage: usage[b.id],
+                  onEdit: () => _openForm(b),
+                  onDelete: () => _delete(b),
+                );
+              },
+            ),
           );
         },
       ),
@@ -145,11 +188,13 @@ class BusinessOwnerCard extends StatelessWidget {
     required this.business,
     this.usage,
     this.onEdit,
+    this.onDelete,
   });
 
   final Business business;
   final BusinessUsage? usage;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   bool get _canEdit =>
       business.status == BusinessStatus.pending ||
@@ -217,6 +262,16 @@ class BusinessOwnerCard extends StatelessWidget {
                 style: theme.textTheme.bodyMedium,
               ),
             ],
+            if (b.status == BusinessStatus.pending) ...[
+              const SizedBox(height: 8),
+              Text(
+                kPendingReassurance,
+                key: Key('pending-note-${b.id}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             if (b.isHidden) ...[
               const SizedBox(height: 8),
               Text(
@@ -238,6 +293,21 @@ class BusinessOwnerCard extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 'This business is suspended. Please contact an admin.',
+              ),
+            ],
+            if (onDelete != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: Key('delete-${b.id}'),
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Hapus'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
               ),
             ],
             if (_canEdit && onEdit != null) ...[
