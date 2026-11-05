@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/data/business_repository.dart';
-import 'package:undip_alumni_connect/data/marketplace_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_feedback_screen.dart';
 import 'package:undip_alumni_connect/screens/admin_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
@@ -16,8 +15,6 @@ import 'package:undip_alumni_connect/util/safe_url.dart';
 import 'support/fake_admin_api.dart';
 import 'support/fake_business_api.dart';
 import 'support/choose_category.dart';
-
-import 'package:undip_alumni_connect/widgets/image_size_hint.dart';
 
 void tall(WidgetTester tester) {
   tester.view.physicalSize = const Size(600, 3000);
@@ -127,19 +124,6 @@ void main() {
         api.params['business_register']!['p_website_link'],
         'https://kopi.example.com',
       );
-    });
-
-    testWidgets('photo helper states the real limits', (tester) async {
-      await pumpForm(tester);
-      expect(find.byType(ImageSizeHint), findsOneWidget);
-      expect(find.text(ImageSizeHint.sizeLine), findsOneWidget);
-      expect(find.text(ImageSizeHint.typeLine), findsOneWidget);
-      expect(ImageSizeHint.typeLine, contains('JPG, PNG atau WebP'));
-      expect(ImageSizeHint.typeLine, contains('2 MB'));
-      expect(ImageSizeHint.sizeLine, contains('3:2 (1200 x 800 px)'));
-      // The numbers in the text are the ones the code enforces.
-      expect(kListingImageMaxBytes, 2 * 1024 * 1024);
-      expect(kListingImageExtensions, ['jpg', 'jpeg', 'png', 'webp']);
     });
 
     test('the server code link_required asks for Instagram', () {

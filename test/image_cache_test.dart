@@ -7,8 +7,11 @@ import 'package:undip_alumni_connect/widgets/avatar.dart';
 
 const _url = 'https://example.supabase.co/storage/v1/object/public/x.png';
 
-Future<void> _pump(WidgetTester t, Widget child) =>
-    t.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: child))));
+Future<void> _pump(WidgetTester t, Widget child) => t.pumpWidget(
+  MaterialApp(
+    home: Scaffold(body: Center(child: child)),
+  ),
+);
 
 void main() {
   testWidgets('Avatar uses the on-device image cache', (t) async {

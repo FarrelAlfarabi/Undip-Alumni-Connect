@@ -21,10 +21,12 @@ void main() {
       await _pump(
         t,
         c.$1,
-        ResponsivePage(builder: (ctx, step) {
-          seen = step;
-          return Container(key: const Key('body'));
-        }),
+        ResponsivePage(
+          builder: (ctx, step) {
+            seen = step;
+            return Container(key: const Key('body'));
+          },
+        ),
       );
       expect(seen, c.$2);
       expect(t.getSize(find.byKey(const Key('body'))).width, c.$3);

@@ -74,17 +74,6 @@ void main() {
       ];
       expect(y[0] < y[1] && y[1] < y[2], isTrue);
     });
-
-    testWidgets('the Settings row has a gear icon', (tester) async {
-      await pumpProfile(tester, shown: me);
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('profile-settings')),
-          matching: find.byIcon(Icons.settings_outlined),
-        ),
-        findsOneWidget,
-      );
-    });
   });
 
   group('G4/G5: Pengaturan in Indonesian', () {

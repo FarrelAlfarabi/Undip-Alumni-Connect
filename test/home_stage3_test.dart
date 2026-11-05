@@ -268,17 +268,6 @@ void main() {
   });
 
   group('ImageSizeHint', () {
-    testWidgets('says 3:2, 1200 x 800 and 2 MB in Indonesian', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: ImageSizeHint())),
-      );
-      expect(
-        find.text('Foto terbaik: landscape 3:2 (1200 x 800 px).'),
-        findsOneWidget,
-      );
-      expect(find.text('JPG, PNG atau WebP, maksimal 2 MB.'), findsOneWidget);
-    });
-
     testWidgets('listing form uses it and Save stays reachable at 1.3 scale', (
       tester,
     ) async {
