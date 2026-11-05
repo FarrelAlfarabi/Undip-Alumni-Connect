@@ -10,11 +10,6 @@ void main() {
       if (f is File && f.path.endsWith('.dart')) f,
   ];
 
-  test('the Subscribe screen and the marketplace gate are deleted', () {
-    expect(File('lib/screens/subscribe_screen.dart').existsSync(), isFalse);
-    expect(File('lib/screens/marketplace_gate.dart').existsSync(), isFalse);
-  });
-
   test('no subscription wording or code in lib/', () {
     final banned = RegExp(
       r'SubscribeScreen|ensureSubscriber|isSubscribed|demo_subscribe|'

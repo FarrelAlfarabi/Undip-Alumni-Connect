@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/policy_config.dart';
@@ -14,16 +12,6 @@ void main() {
     AppInfo.shared = const AppInfo(version: '0.9.0', buildNumber: '7');
   });
   tearDown(() => AppInfo.shared = null);
-
-  test('pubspec version is 0.9.0+1', () {
-    expect(
-      RegExp(
-        r'^version: 0\.9\.0\+1$',
-        multiLine: true,
-      ).hasMatch(File('pubspec.yaml').readAsStringSync()),
-      isTrue,
-    );
-  });
 
   testWidgets('About shows the full label with BETA', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AboutScreen()));

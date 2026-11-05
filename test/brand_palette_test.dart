@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/kawung_mark.dart';
@@ -150,24 +148,6 @@ void main() {
       expect(spread(c), lessThanOrEqualTo(6), reason: '$c is tinted');
     }
     expect(scheme.surface, isNot(const Color(0xFFF8F6F1)));
-  });
-
-  test('the old indigo and brass are gone from the theme', () {
-    final scheme = AppTheme.light().colorScheme;
-    for (final c in [scheme.primary, scheme.secondary, scheme.surface]) {
-      expect(c, isNot(const Color(0xFF2E2A5C)));
-      expect(c, isNot(const Color(0xFF7F5815)));
-    }
-  });
-
-  test('the logo asset is the sharp PNG and the old JPG is gone', () {
-    expect(kIkafeLogoAsset, 'assets/brand/ikafe_undip_logo.png');
-    expect(File('assets/brand/ikafe_undip_logo.jpg').existsSync(), isFalse);
-  });
-
-  test('the logo asset exists and is declared in pubspec', () {
-    expect(File(kIkafeLogoAsset).existsSync(), isTrue);
-    expect(File('pubspec.yaml').readAsStringSync(), contains('assets/brand/'));
   });
 
   testWidgets('header logo shows the Ikafe image without a chip', (

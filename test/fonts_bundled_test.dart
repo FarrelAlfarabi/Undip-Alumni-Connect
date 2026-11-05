@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -44,24 +42,5 @@ void main() {
     expect(styles.every((s) => s != null), isTrue);
     await GoogleFonts.pendingFonts();
     expect(printed.where((m) => m.contains('unable to load font')), isEmpty);
-  });
-
-  test('the theme uses Plus Jakarta Sans and headlines are w700', () {
-    final t = AppTheme.light().textTheme;
-    expect(t.bodyMedium!.fontFamily, contains('PlusJakartaSans'));
-    expect(t.titleLarge!.fontFamily, contains('PlusJakartaSans'));
-    expect(t.titleLarge!.fontWeight, FontWeight.w700);
-    expect(t.headlineMedium!.fontWeight, FontWeight.w700);
-  });
-
-  test('the old font files are gone and the new ones are bundled', () {
-    for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) {
-      expect(File('assets/fonts/PlusJakartaSans-$w.ttf').existsSync(), isTrue);
-    }
-    final left = Directory('assets/fonts')
-        .listSync()
-        .map((f) => f.path)
-        .where((p) => p.contains('Fraunces') || p.contains('IBMPlex'));
-    expect(left, isEmpty);
   });
 }

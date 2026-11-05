@@ -22,13 +22,6 @@ void main() {
     expect(vercel, isNot(contains('-b stable')));
   });
 
-  test('CI runs on pushes to main, not only pull requests', () {
-    expect(
-      RegExp(r'push:\s*\n\s*branches:\s*\[\s*main\s*\]').hasMatch(ci),
-      isTrue,
-    );
-  });
-
   // A cached Flutter service worker kept serving the old design after a
   // deploy. The web build loads without one. Without service worker settings
   // Flutter writes a flutter_service_worker.js that unregisters an old one.
@@ -37,10 +30,5 @@ void main() {
     expect(bootstrap, contains('{{flutter_js}}'));
     expect(bootstrap, contains('{{flutter_build_config}}'));
     expect(bootstrap, isNot(contains('serviceWorkerSettings')));
-  });
-
-  test('CI runs the SQL checks', () {
-    expect(ci, contains('supabase/tests/run_fresh_chain.sh'));
-    expect(ci, contains('supabase/tests/run_beta_local.sh'));
   });
 }

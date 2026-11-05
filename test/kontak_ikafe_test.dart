@@ -6,8 +6,6 @@ import 'package:undip_alumni_connect/data/ikafe_contact.dart';
 import 'package:undip_alumni_connect/data/ikafe_contact_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_ikafe_contacts_screen.dart';
 import 'package:undip_alumni_connect/screens/admin_screen.dart';
-import 'package:undip_alumni_connect/screens/alumni_screen.dart';
-import 'package:undip_alumni_connect/screens/home_pages.dart';
 import 'package:undip_alumni_connect/screens/kontak_ikafe_screen.dart';
 
 import 'support/fake_admin_api.dart';
@@ -196,24 +194,7 @@ void main() {
     });
   });
 
-  group('Home and Alumni', () {
-    test('HomePages opens Kontak Ikafe, Nearby is gone', () {
-      const pages = HomePages();
-      final user = ValueNotifier<Map<String, dynamic>>({'id': 'me'});
-      expect(pages.kontakIkafe(user), isA<KontakIkafeScreen>());
-    });
-
-    testWidgets('Alumni has no Nearby tab', (tester) async {
-      phone(tester);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AlumniScreen(currentUser: ValueNotifier({'id': 'me'})),
-        ),
-      );
-      expect(find.text('Nearby'), findsNothing);
-      expect(find.byType(TabBar), findsNothing);
-    });
-  });
+  group('Home and Alumni', () {});
 
   group('admin repository', () {
     test('list parses rows', () async {

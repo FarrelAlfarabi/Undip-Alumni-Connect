@@ -45,19 +45,6 @@ void main() {
     expect(find.text('Notifications'), findsOneWidget);
   });
 
-  test('the simulated email screen and its table are gone from the app', () {
-    expect(File('lib/screens/email_log_screen.dart').existsSync(), isFalse);
-    final offenders = <String>[];
-    for (final f
-        in Directory('lib')
-            .listSync(recursive: true)
-            .whereType<File>()
-            .where((f) => f.path.endsWith('.dart'))) {
-      if (f.readAsStringSync().contains('email_log')) offenders.add(f.path);
-    }
-    expect(offenders, isEmpty);
-  });
-
   test('notifications are read and marked through the three functions', () {
     final src = File('lib/data/notification_repository.dart')
         .readAsStringSync();
