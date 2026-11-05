@@ -242,5 +242,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Pull-to-refresh on Jobs, Alumni, Marketplace, Business, Notifications, My jobs/businesses/products and admin Jobs.
 - Daily job limit now counts a post log (`job_post_log`), so delete and repost no longer bypasses it. Edited in the unmerged migration `20261105210000`. Delete-account SQL test covers closed jobs, cancelled requests and admin log.
 ## Test cleanup (5 Nov 2026)
-- Removed 1 file and 19 tests that only checked static copy, constants, file existence, or removed features. 874 tests became 855; the suite passes, analyze is clean.
+- Removed 21 tests (one whole file) that only checked static copy, constants, file existence, or removed features. 874 became 853; the suite passes, analyze is clean.
 - Kept all security, SQL, login/PIN/OTP, contact request, approval and delete-account tests.
