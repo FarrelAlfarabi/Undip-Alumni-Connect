@@ -67,10 +67,10 @@ insert into marketplace_listings (seller_id, title, description, price_idr, pric
   values ((select v from t_ids where k = 'ahmad'), 'Nego tanpa harga', 'd', null, true, 'Other', null, 'https://x/y.png', 'wa', 'approved');
 select jt.assert((select count(*) from marketplace_listings where title = 'Nego tanpa harga' and price_idr is null and city is null) = 1, 'negotiable product without price or city');
 
-rollback;
+
 \o
 select 'ok';
-
 -- Stage 5: admin Jobs list
 select jt.expect_error(format($q$select * from admin_jobs_list(%L, null)$q$, (select v from t_ids where k = 'siti')), 'not_admin');
 select jt.assert((select count(*) from admin_jobs_list((select v from t_ids where k = 'clara'), null)) >= 0, 'admin can list jobs');
+rollback;
