@@ -243,8 +243,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     TextFormField(
                       controller: _companyController,
                       enabled: !_saving,
-                      decoration: const InputDecoration(
-                        labelText: 'Company',
+                      decoration: InputDecoration(
+                        labelText: tr('Company'),
                         border: OutlineInputBorder(),
                       ),
                       validator: (v) =>
@@ -254,8 +254,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     TextFormField(
                       controller: _industryController,
                       enabled: !_saving,
-                      decoration: const InputDecoration(
-                        labelText: 'Industry',
+                      decoration: InputDecoration(
+                        labelText: tr('Industry'),
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -264,8 +264,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       controller: _descriptionController,
                       enabled: !_saving,
                       maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
+                      decoration: InputDecoration(
+                        labelText: tr('Description'),
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
@@ -285,7 +285,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Photo (optional)',
+                      tr('Photo (optional)'),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
@@ -322,7 +322,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                             onPressed: _saving
                                 ? null
                                 : () => setState(() => _picked = null),
-                            child: const Text('Remove'),
+                            child: Text(tr('Remove')),
                           ),
                       ],
                     ),
@@ -346,14 +346,16 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           ? null
                           : (v) => setState(() => _notifyOnApply = v),
                       title: Text(tr('Notify me when someone applies')),
-                      subtitle: const Text(
-                        'Demo scope: shown as an applicant count on this '
-                        'job, not a real push/email notification.',
+                      subtitle: Text(
+                        tr(
+                          'Demo scope: shown as an applicant count on this '
+                          'job, not a real push/email notification.',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Require applicants to provide',
+                      tr('Require applicants to provide'),
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
                     CheckboxListTile(
@@ -394,7 +396,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     if (_error != null) ...[
                       const SizedBox(height: 16),
                       InlineError(
-                        message: 'Post failed. $_error',
+                        message: trf('Post failed. {0}', [_error]),
                         screen: 'Post a job',
                         error: _lastError,
                       ),

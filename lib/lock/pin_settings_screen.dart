@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../screens/welcome_screen.dart';
 import 'lock_service.dart';
 import 'pin_pad.dart';
@@ -83,20 +85,22 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus PIN?'),
-        content: const Text(
-          'Lingkaran akan terbuka di ponsel ini tanpa PIN. Kamu bisa membuat '
-          'PIN baru kapan saja.',
+        title: Text(tr('Hapus PIN?')),
+        content: Text(
+          tr(
+            'Lingkaran akan terbuka di ponsel ini tanpa PIN. Kamu bisa membuat '
+            'PIN baru kapan saja.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             key: const Key('pin-remove-confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Hapus PIN'),
+            child: Text(tr('Hapus PIN')),
           ),
         ],
       ),
@@ -157,13 +161,13 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
           FilledButton(
             key: const Key('pin-set'),
             onPressed: _openSetup,
-            child: const Text('Atur PIN'),
+            child: Text(tr('Atur PIN')),
           )
         else ...[
           ListTile(
             key: const Key('pin-change'),
             leading: const Icon(Icons.password),
-            title: const Text('Ubah PIN'),
+            title: Text(tr('Ubah PIN')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => setState(() => _mode = _Mode.verifyChange),
           ),
@@ -171,7 +175,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
             key: const Key('pin-remove'),
             leading: Icon(Icons.lock_open, color: theme.colorScheme.error),
             title: Text(
-              'Hapus PIN',
+              tr('Hapus PIN'),
               style: TextStyle(color: theme.colorScheme.error),
             ),
             trailing: const Icon(Icons.chevron_right),
@@ -185,7 +189,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
   Widget _verify(ThemeData theme) => Column(
     children: [
       Text(
-        'Masukkan PIN kamu saat ini',
+        tr('Masukkan PIN kamu saat ini'),
         key: const Key('pin-verify-title'),
         style: theme.textTheme.titleLarge,
         textAlign: TextAlign.center,

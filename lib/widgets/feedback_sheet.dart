@@ -132,16 +132,17 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Send feedback',
+              tr('Send feedback'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'This sends a short error summary, the screen name '
-              '(${widget.screen}), the app version and your device type. '
-              'Emails, keys, links and long numbers are removed first.',
+              trf(
+                'This sends a short error summary, the screen name ({0}), the app version and your device type. Emails, keys, links and long numbers are removed first.',
+                [widget.screen],
+              ),
               key: const Key('feedback-what'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

@@ -74,10 +74,12 @@ class _ProfileBioScreenState extends State<ProfileBioScreen> {
                   color: theme.colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Text(
-                  'Perhatian: Dilarang menulis kata kasar, SARA, ujaran '
-                  'kebencian, konten dewasa, atau data pribadi orang lain. '
-                  'Bio yang dilaporkan bisa dihapus admin.',
+                child: Text(
+                  tr(
+                    'Perhatian: Dilarang menulis kata kasar, SARA, ujaran '
+                    'kebencian, konten dewasa, atau data pribadi orang lain. '
+                    'Bio yang dilaporkan bisa dihapus admin.',
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

@@ -32,10 +32,10 @@ class MarketplaceAdminScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(tr('Marketplace review')),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Review queue'),
-              Tab(text: 'Reports'),
+              Tab(text: tr('Review queue')),
+              Tab(text: tr('Reports')),
             ],
           ),
         ),
@@ -216,7 +216,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                           child: ListingImage(
                             url: l.imageUrl,
                             size: 72,
-                            semanticLabel: 'Photo of ${l.title}',
+                            semanticLabel: trf('Photo of {0}', [l.title]),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -247,7 +247,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                                 style: theme.textTheme.bodySmall,
                               ),
                               Text(
-                                'By ${l.seller?.name ?? 'Alumni'}',
+                                trf('By {0}', [l.seller?.name ?? 'Alumni']),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -265,12 +265,12 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                     ),
                     if ((l.shopUrl ?? '').isNotEmpty)
                       Text(
-                        'Shop: ${l.shopUrl}',
+                        trf('Shop: {0}', [l.shopUrl]),
                         style: theme.textTheme.bodySmall,
                       ),
                     if ((l.contactInfo ?? '').isNotEmpty)
                       Text(
-                        'Contact: ${l.contactInfo}',
+                        trf('Contact: {0}', [l.contactInfo]),
                         style: theme.textTheme.bodySmall,
                       ),
                     const SizedBox(height: 8),
@@ -367,7 +367,7 @@ class _ReportsTabState extends State<_ReportsTab> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Batal'),
+                child: Text(tr('Batal')),
               ),
               FilledButton(
                 key: const Key('product-hide-confirm'),
@@ -379,7 +379,7 @@ class _ReportsTabState extends State<_ReportsTab> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Sembunyikan'),
+                child: Text(tr('Sembunyikan')),
               ),
             ],
           ),
@@ -564,13 +564,13 @@ class _ReportsTabState extends State<_ReportsTab> {
                                 ),
                               ),
                               Text(
-                                '${d.count} ${d.count == 1 ? 'report' : 'reports'}',
+                                '${d.count} ${d.count == 1 ? tr('report') : tr('reports')}',
                                 style: theme.textTheme.labelLarge,
                               ),
                             ],
                           ),
                           Text(
-                            'Penjual: ${d.sellerName ?? 'Alumni'}',
+                            trf('Penjual: {0}', [d.sellerName ?? 'Alumni']),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -588,7 +588,9 @@ class _ReportsTabState extends State<_ReportsTab> {
                             ),
                           if (d.isHidden)
                             Text(
-                              'Disembunyikan: ${d.hiddenReason ?? '-'}',
+                              trf('Disembunyikan: {0}', [
+                                d.hiddenReason ?? '-',
+                              ]),
                               key: Key('report-hidden-${d.listingId}'),
                               style: TextStyle(color: theme.colorScheme.error),
                             ),

@@ -103,7 +103,9 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   Future<void> _markSold(MarketplaceListing l) async {
     final ok = await _confirm(
       title: tr('Mark as sold?'),
-      body: 'It will disappear from the marketplace. This cannot be undone.',
+      body: tr(
+        'It will disappear from the marketplace. This cannot be undone.',
+      ),
       action: 'Mark as sold',
     );
     if (!ok) return;
@@ -120,7 +122,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   Future<void> _delete(MarketplaceListing l) async {
     final ok = await _confirm(
       title: tr('Delete this listing?'),
-      body: '"${l.title}" will be removed for good.',
+      body: trf('"{0}" will be removed for good.', [l.title]),
       action: 'Delete',
     );
     if (!ok) return;
@@ -159,12 +161,14 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                 }
                 final items = snapshot.data ?? [];
                 if (items.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                        'Kamu belum punya produk. Gunakan "Tambah produk" di '
-                        'Marketplace untuk memasangnya.',
+                        tr(
+                          'Kamu belum punya produk. Gunakan "Tambah produk" di '
+                          'Marketplace untuk memasangnya.',
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -236,7 +240,7 @@ class _MyListingCard extends StatelessWidget {
                   child: ListingImage(
                     url: l.imageUrl,
                     size: 72,
-                    semanticLabel: 'Photo of ${l.title}',
+                    semanticLabel: trf('Photo of {0}', [l.title]),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -270,8 +274,10 @@ class _MyListingCard extends StatelessWidget {
             if (l.isHidden) ...[
               const SizedBox(height: 8),
               Text(
-                'Hidden by an admin${l.hiddenReason != null ? ': ${l.hiddenReason}' : ''}. '
-                'Other people cannot see this product.',
+                trf(
+                  'Hidden by an admin{0}. Other people cannot see this product.',
+                  [l.hiddenReason != null ? ': ${l.hiddenReason}' : ''],
+                ),
                 key: Key('hidden-${l.id}'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
@@ -281,8 +287,10 @@ class _MyListingCard extends StatelessWidget {
             if (l.status == ListingStatus.pending) ...[
               const SizedBox(height: 8),
               Text(
-                'Permintaanmu sudah kami terima dan sedang diproses admin. '
-                'Kamu akan mendapat pemberitahuan begitu ada keputusan.',
+                tr(
+                  'Permintaanmu sudah kami terima dan sedang diproses admin. '
+                  'Kamu akan mendapat pemberitahuan begitu ada keputusan.',
+                ),
                 key: Key('pending-note-${l.id}'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -292,13 +300,15 @@ class _MyListingCard extends StatelessWidget {
             if (l.status == ListingStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(
-                'Rejected: ${l.rejectedReason ?? 'No reason given'}',
+                trf('Rejected: {0}', [
+                  l.rejectedReason ?? tr('No reason given'),
+                ]),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                 ),
               ),
               Text(
-                'Edit and save to send it for review again.',
+                tr('Edit and save to send it for review again.'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

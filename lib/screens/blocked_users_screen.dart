@@ -48,7 +48,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
         p.id,
       );
       messenger.showSnackBar(
-        SnackBar(content: Text('Blokir ${p.name} dibuka.')),
+        SnackBar(content: Text(trf('Blokir {0} dibuka.', [p.name]))),
       );
       _busy.remove(p.id);
       if (mounted) _reload();
@@ -84,11 +84,11 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
           }
           final items = snap.data ?? const [];
           if (items.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'Kamu belum memblokir siapa pun.',
+                  tr('Kamu belum memblokir siapa pun.'),
                   textAlign: TextAlign.center,
                 ),
               ),

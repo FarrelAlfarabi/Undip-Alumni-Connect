@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import 'filter_dropdown.dart';
 
 /// A dropdown you can also type into to narrow the list. Only a value from
@@ -56,11 +58,11 @@ class SearchableChoice extends StatelessWidget {
             : null,
         trailingIcon: Icon(
           Icons.arrow_drop_down,
-          semanticLabel: 'Show $label options',
+          semanticLabel: trf('Show {0} options', [label]),
         ),
         selectedTrailingIcon: Icon(
           Icons.arrow_drop_up,
-          semanticLabel: 'Hide $label options',
+          semanticLabel: trf('Hide {0} options', [label]),
         ),
         requestFocusOnTap: true,
         menuHeight: 280,

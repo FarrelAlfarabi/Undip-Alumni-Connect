@@ -108,7 +108,7 @@ class _ReportSheetState extends State<_ReportSheet> {
             Text(tr('Report listing'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Why are you reporting this listing?',
+              tr('Why are you reporting this listing?'),
               style: theme.textTheme.bodyMedium,
             ),
             RadioGroup<ReportReason>(

@@ -13,7 +13,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(title: Text(tr('About'))),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: FutureBuilder<AppInfo>(
@@ -30,9 +30,11 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'This is a closed beta for a small group of FEB UNDIP '
-                  'alumni. Things can change or break. Use "Send feedback" '
-                  'when something looks wrong.',
+                  tr(
+                    'This is a closed beta for a small group of FEB UNDIP '
+                    'alumni. Things can change or break. Use "Send feedback" '
+                    'when something looks wrong.',
+                  ),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
@@ -42,7 +44,11 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$kOperatorName\n$kOperatorAddress\nEmail: $kContactEmail',
+                  trf('{0}\n{1}\nEmail: {2}', [
+                    kOperatorName,
+                    kOperatorAddress,
+                    kContactEmail,
+                  ]),
                   key: const Key('about-operator'),
                   style: theme.textTheme.bodyMedium,
                 ),

@@ -1,4 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 
 import '../lock/masking.dart' show initialsOf;
@@ -40,7 +43,7 @@ class Avatar extends StatelessWidget {
       height: radius * 2,
       child: ClipOval(
         child: Semantics(
-          label: 'Foto $name',
+          label: trf('Foto {0}', [name]),
           image: true,
           excludeSemantics: true,
           // Cached on the device, so photos are not downloaded again.

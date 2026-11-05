@@ -552,8 +552,10 @@ class _VerificationForm extends StatelessWidget {
           const SizedBox(height: 24),
           if (codeController != null) ...[
             Text(
-              'Belum masuk? Cek folder spam atau junk. Kode berlaku '
-              'untuk waktu terbatas.',
+              tr(
+                'Belum masuk? Cek folder spam atau junk. Kode berlaku '
+                'untuk waktu terbatas.',
+              ),
               key: const Key('code-sent-note'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -675,7 +677,7 @@ class _VerificationForm extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Kode tidak masuk atau email berubah?',
+                      tr('Kode tidak masuk atau email berubah?'),
                       style: theme.textTheme.titleSmall,
                     ),
                     const SizedBox(height: 12),
@@ -729,7 +731,7 @@ class _SuspendedResult extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Akun ditangguhkan',
+          tr('Akun ditangguhkan'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -742,7 +744,7 @@ class _SuspendedResult extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton(onPressed: onTryAgain, child: const Text('Kembali')),
+        FilledButton(onPressed: onTryAgain, child: Text(tr('Kembali'))),
         const SizedBox(height: 8),
         OutlinedButton(
           key: const Key('login-contact-admin'),
@@ -783,7 +785,7 @@ class _ErrorResult extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Terjadi Kesalahan',
+          tr('Terjadi Kesalahan'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),

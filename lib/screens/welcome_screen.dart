@@ -66,7 +66,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'by Ikafe Undip',
+                    tr('by Ikafe Undip'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -75,7 +75,9 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',
+                    tr(
+                      'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',
+                    ),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       height: 1.15,
@@ -83,8 +85,10 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, '
-                    'dukung usaha alumni, dan rekomendasikan lowongan kerja.',
+                    tr(
+                      'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, '
+                      'dukung usaha alumni, dan rekomendasikan lowongan kerja.',
+                    ),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -111,7 +115,7 @@ class WelcomeScreen extends StatelessWidget {
                   const ClosedTestNotice(),
                   const SizedBox(height: 12),
                   Text(
-                    'Beta tertutup · data awal dari anggota Ikafe',
+                    tr('Beta tertutup · data awal dari anggota Ikafe'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -132,8 +136,10 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
                   Text(
-                    'Beta tertutup. Tampilan sementara, bukan identitas resmi '
-                    'UNDIP atau Ikafe.',
+                    tr(
+                      'Beta tertutup. Tampilan sementara, bukan identitas resmi '
+                      'UNDIP atau Ikafe.',
+                    ),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant.withValues(

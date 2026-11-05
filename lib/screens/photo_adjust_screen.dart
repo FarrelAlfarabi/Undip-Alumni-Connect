@@ -105,7 +105,7 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
         _saving = false;
         _error = e is ImagePickException
             ? e.message
-            : 'Foto tidak bisa disimpan. Coba lagi.';
+            : tr('Foto tidak bisa disimpan. Coba lagi.');
       });
     }
   }
@@ -172,8 +172,10 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Geser dan cubit (atau scroll) untuk mengatur posisi foto. '
-                    'Bagian di dalam bingkai yang akan tersimpan.',
+                    tr(
+                      'Geser dan cubit (atau scroll) untuk mengatur posisi foto. '
+                      'Bagian di dalam bingkai yang akan tersimpan.',
+                    ),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,

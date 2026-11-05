@@ -30,7 +30,7 @@ Future<bool> showRequestContactSheet(
   );
   if (sent == true && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Permintaan terkirim ke $targetName.')),
+      SnackBar(content: Text(trf('Permintaan terkirim ke {0}.', [targetName]))),
     );
   }
   return sent == true;
@@ -103,16 +103,18 @@ class _RequestSheetState extends State<_RequestSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Minta kontak ke ${widget.targetName}',
+              trf('Minta kontak ke {0}', [widget.targetName]),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Dia akan melihat namamu dan pesanmu. Kalau dia setuju, dia '
-              'sendiri yang memilih kontak apa yang dibagikan ke kamu. '
-              'Jawabannya muncul di Permintaan dan di Notifikasi.',
+              tr(
+                'Dia akan melihat namamu dan pesanmu. Kalau dia setuju, dia '
+                'sendiri yang memilih kontak apa yang dibagikan ke kamu. '
+                'Jawabannya muncul di Permintaan dan di Notifikasi.',
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

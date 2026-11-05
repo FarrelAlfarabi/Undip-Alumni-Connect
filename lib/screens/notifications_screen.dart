@@ -158,8 +158,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _clearAll() async {
     final ok = await confirmDelete(
       context,
-      title: 'Hapus semua notifikasi?',
-      body: 'Semua notifikasimu akan dihapus permanen.',
+      title: tr('Hapus semua notifikasi?'),
+      body: tr('Semua notifikasimu akan dihapus permanen.'),
       action: 'Hapus semua',
     );
     if (!ok || !mounted) return;
@@ -262,7 +262,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           IconButton(
             key: const Key('clear-notifications'),
-            tooltip: 'Hapus semua',
+            tooltip: tr('Hapus semua'),
             icon: const Icon(Icons.delete_sweep_outlined),
             onPressed: _clearAll,
           ),
@@ -284,12 +284,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           }
           final items = snap.data ?? const [];
           if (items.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'No notifications yet. Things like new requests and '
-                  'decisions on your business show up here.',
+                  tr(
+                    'No notifications yet. Things like new requests and '
+                    'decisions on your business show up here.',
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),

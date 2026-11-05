@@ -459,6 +459,24 @@ class AdminRepository {
     return id is String ? id : '';
   }
 
+  /// Changes the title and message of a posted announcement. Admins only.
+  Future<void> updateAnnouncement(
+    String adminId,
+    String id, {
+    required String title,
+    required String body,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_announcement_update', {
+        'p_admin': adminId,
+        'p_id': id,
+        'p_title': title.trim(),
+        'p_body': body.trim(),
+      }),
+    );
+    await _log(adminId, 'announcement_edit', 'announcement', id, title.trim());
+  }
+
   /// Removes one announcement for good. Admins only (the database checks).
   Future<void> deleteAnnouncement(String adminId, String id) async {
     await _guard(

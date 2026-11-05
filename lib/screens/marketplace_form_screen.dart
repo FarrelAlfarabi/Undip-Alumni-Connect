@@ -229,10 +229,11 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           if (editingApproved) ...[
                             _Callout(
                               icon: Icons.rate_review_outlined,
-                              text:
-                                  'Saving changes sends this listing back to '
-                                  'review. It stays hidden until an admin '
-                                  'approves it again.',
+                              text: tr(
+                                'Saving changes sends this listing back to '
+                                'review. It stays hidden until an admin '
+                                'approves it again.',
+                              ),
                             ),
                             const SizedBox(height: 16),
                           ],
@@ -248,8 +249,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             controller: _title,
                             enabled: !_saving,
                             maxLength: 100,
-                            decoration: const InputDecoration(
-                              labelText: 'Title',
+                            decoration: InputDecoration(
+                              labelText: tr('Title'),
                               border: OutlineInputBorder(),
                             ),
                             validator: MarketplaceValidation.title,
@@ -260,8 +261,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             enabled: !_saving,
                             maxLines: 4,
                             maxLength: 2000,
-                            decoration: const InputDecoration(
-                              labelText: 'Description',
+                            decoration: InputDecoration(
+                              labelText: tr('Description'),
                               border: OutlineInputBorder(),
                               alignLabelWithHint: true,
                             ),
@@ -288,9 +289,9 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           SwitchListTile(
                             key: const Key('price-negotiable'),
                             contentPadding: EdgeInsets.zero,
-                            title: const Text('Harga bisa nego'),
-                            subtitle: const Text(
-                              'Harga boleh dikosongkan kalau bisa nego.',
+                            title: Text(tr('Harga bisa nego')),
+                            subtitle: Text(
+                              tr('Harga boleh dikosongkan kalau bisa nego.'),
                             ),
                             value: _negotiable,
                             onChanged: _saving
@@ -313,7 +314,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                                   builder: (context, names, _) =>
                                       SearchableChoice(
                                         fieldKey: const Key('category-choice'),
-                                        label: 'Category',
+                                        label: tr('Category'),
                                         controller: _categoryText,
                                         options: names,
                                         selected: _category,
@@ -333,7 +334,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             validator: MarketplaceValidation.city,
                             builder: (field) => SearchableChoice(
                               fieldKey: const Key('city-choice'),
-                              label: 'Kota (opsional)',
+                              label: tr('Kota (opsional)'),
                               controller: _cityText,
                               options: citiesWith(_city),
                               selected: _city,
@@ -356,18 +357,20 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                                         _city = null;
                                         _cityText.clear();
                                       }),
-                                child: const Text('Hapus kota'),
+                                child: Text(tr('Hapus kota')),
                               ),
                             ),
                           const SizedBox(height: 24),
                           Text(
-                            'How buyers reach you',
+                            tr('How buyers reach you'),
                             style: theme.textTheme.titleSmall,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Add a shop link, contact info, or both. There is '
-                            'no checkout in the app.',
+                            tr(
+                              'Add a shop link, contact info, or both. There is '
+                              'no checkout in the app.',
+                            ),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -401,9 +404,10 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             const SizedBox(height: 8),
                             _Callout(
                               icon: Icons.visibility_outlined,
-                              text:
-                                  'Your contact info will be visible to other '
-                                  'members.',
+                              text: tr(
+                                'Your contact info will be visible to other '
+                                'members.',
+                              ),
                             ),
                           ],
                           if (_error != null) ...[
@@ -513,13 +517,13 @@ class _PhotoPicker extends StatelessWidget {
         child: Image.memory(
           picked!.bytes,
           fit: BoxFit.cover,
-          semanticLabel: 'Photo you picked',
+          semanticLabel: tr('Photo you picked'),
         ),
       );
     } else if (hasExisting) {
       preview = ListingImage(
         url: existingUrl!,
-        semanticLabel: 'Current photo of this listing',
+        semanticLabel: tr('Current photo of this listing'),
       );
     } else {
       preview = AspectRatio(

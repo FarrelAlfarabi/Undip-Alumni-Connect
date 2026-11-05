@@ -124,6 +124,16 @@ select jt.assert((select body from notifications where type = 'business_pending'
 -- Review fixes: a closed job takes no applications
 reset role;
 select jt.expect_error(format($q$insert into job_applications (job_post_id, applicant_id, full_name, email) values (%L, %L, 'Siti', 's@example.com')$q$, (select v from t_ids where k = 'job2'), (select v from t_ids where k = 'siti')), 'job_closed');
+-- Admin edits an announcement; others cannot
+reset role;
+insert into announcements (title, body, posted_by) values ('Lama', 'x', (select v from t_ids where k = 'clara'));
+set role anon;
+select jt.expect_error(format($q$select admin_announcement_update(%L, %L, 'Baru', 'y')$q$, (select v from t_ids where k = 'siti'), (select id from announcements where title = 'Lama')), 'not_admin');
+select jt.expect_error(format($q$select admin_announcement_update(%L, %L, '', 'y')$q$, (select v from t_ids where k = 'clara'), (select id from announcements where title = 'Lama')), 'invalid_input');
+select jt.expect_error(format($q$select admin_announcement_update(%L, gen_random_uuid(), 'Baru', 'y')$q$, (select v from t_ids where k = 'clara')), 'not_found');
+select admin_announcement_update((select v from t_ids where k = 'clara'), (select id from announcements where title = 'Lama'), 'Baru', 'y');
+select jt.assert((select count(*) from announcements where title = 'Baru' and body = 'y') = 1, 'announcement edited');
+reset role;
 -- Delete account still works with the new tables and states
 set role anon;
 select account_delete((select v from t_ids where k = 'ahmad'));

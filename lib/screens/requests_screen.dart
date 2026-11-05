@@ -184,12 +184,14 @@ class _ContactsTabState extends State<_ContactsTab>
         }
         final items = snap.data ?? const [];
         if (items.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'Belum ada kontak. Kontak yang dibagikan alumni lain setelah '
-                'menerima permintaanmu akan tersimpan di sini.',
+                tr(
+                  'Belum ada kontak. Kontak yang dibagikan alumni lain setelah '
+                  'menerima permintaanmu akan tersimpan di sini.',
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -222,7 +224,7 @@ class _ContactsTabState extends State<_ContactsTab>
                     const SizedBox(height: 4),
                     if (text == null)
                       Text(
-                        'Kontak belum bisa dimuat. Coba lagi nanti.',
+                        tr('Kontak belum bisa dimuat. Coba lagi nanti.'),
                         style: TextStyle(color: theme.colorScheme.error),
                       )
                     else
@@ -236,7 +238,7 @@ class _ContactsTabState extends State<_ContactsTab>
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Salin',
+                            tooltip: tr('Salin'),
                             icon: const Icon(Icons.copy_outlined),
                             onPressed: () =>
                                 Clipboard.setData(ClipboardData(text: text)),
@@ -345,7 +347,10 @@ class _IncomingCard extends StatelessWidget {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            'Diterima. ${request.requesterName} sekarang bisa melihat kontak yang kamu bagikan.',
+            trf(
+              'Diterima. {0} sekarang bisa melihat kontak yang kamu bagikan.',
+              [request.requesterName],
+            ),
           ),
         ),
       );
@@ -496,11 +501,13 @@ class _ShareDialogState extends State<_ShareDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Kontak bawaanmu sudah terisi (atau emailmu bila belum diatur). '
-            'Ubah sesukamu: WhatsApp, Instagram, telepon, email, atau nama '
-            'online shop. Hanya orang ini yang bisa melihatnya. Atur kontak '
-            'bawaan di Profile > Pengaturan.',
+          Text(
+            tr(
+              'Kontak bawaanmu sudah terisi (atau emailmu bila belum diatur). '
+              'Ubah sesukamu: WhatsApp, Instagram, telepon, email, atau nama '
+              'online shop. Hanya orang ini yang bisa melihatnya. Atur kontak '
+              'bawaan di Profile > Pengaturan.',
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -520,7 +527,7 @@ class _ShareDialogState extends State<_ShareDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
+          child: Text(tr('Batal')),
         ),
         FilledButton(onPressed: _ok, child: Text(tr('Terima dan bagikan'))),
       ],
@@ -554,7 +561,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
     final ok = await confirmDelete(
       context,
       title: tr('Batalkan permintaan?'),
-      body: 'Permintaan ke ${widget.request.targetName} akan ditarik.',
+      body: trf('Permintaan ke {0} akan ditarik.', [widget.request.targetName]),
       action: 'Batalkan',
     );
     if (!ok || !mounted) return;
@@ -656,7 +663,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Salin',
+                      tooltip: tr('Salin'),
                       icon: const Icon(Icons.copy_outlined),
                       onPressed: () =>
                           Clipboard.setData(ClipboardData(text: _shared!)),

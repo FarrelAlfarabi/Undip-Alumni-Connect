@@ -276,7 +276,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
               TextButton(
                 key: const Key('business-photo-remove'),
                 onPressed: _saving ? null : _clearPhoto,
-                child: const Text('Remove'),
+                child: Text(tr('Remove')),
               ),
           ],
         ),
@@ -320,9 +320,10 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'Not approved: '
-                          '${widget.existing!.rejectionReason ?? 'no reason given'}. '
-                          'Fix it and send it again.',
+                          trf('Not approved: {0}. Fix it and send it again.', [
+                            widget.existing!.rejectionReason ??
+                                tr('no reason given'),
+                          ]),
                           style: TextStyle(
                             color: theme.colorScheme.onErrorContainer,
                           ),
@@ -384,9 +385,11 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       key: const Key('personal-business'),
                       contentPadding: EdgeInsets.zero,
                       title: Text(tr('Personal business')),
-                      subtitle: const Text(
-                        'Run only by you, the owner. It is still listed '
-                        'publicly like any other business.',
+                      subtitle: Text(
+                        tr(
+                          'Run only by you, the owner. It is still listed '
+                          'publicly like any other business.',
+                        ),
                       ),
                       value: _personal,
                       onChanged: _saving
@@ -397,13 +400,15 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     _photoSection(theme),
                     const SizedBox(height: 16),
                     Text(
-                      'Where people can see it',
+                      tr('Where people can see it'),
                       style: theme.textTheme.titleSmall,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Instagram is required, the website is optional. Each '
-                      'link can be used by one business only.',
+                      tr(
+                        'Instagram is required, the website is optional. Each '
+                        'link can be used by one business only.',
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -416,7 +421,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: tr('Instagram *'),
-                        hintText: '@username or https://instagram.com/...',
+                        hintText: tr('@username or https://instagram.com/...'),
                         border: OutlineInputBorder(),
                       ),
                       validator: _instagramField,

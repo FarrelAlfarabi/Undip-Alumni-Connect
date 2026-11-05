@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 // Marketplace demo models. Plain Dart, no Supabase imports, so they are
 // easy to unit test.
 
@@ -208,8 +210,9 @@ enum ReportReason {
   misleading('Misleading'),
   other('Other');
 
-  const ReportReason(this.label);
-  final String label;
+  const ReportReason(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Admin view: everything reported about one product.

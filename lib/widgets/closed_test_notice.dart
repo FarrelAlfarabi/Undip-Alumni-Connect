@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 /// Shown on Welcome and on the consent screen. This is a closed test: the
 /// database cannot yet keep other people with the app key away from what
 /// testers type in, so testers are asked to use test details only.
@@ -27,10 +29,12 @@ class ClosedTestNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'This is a closed test. Please use test contact details. Do not '
-              'upload a real CV or enter a real phone number yet. '
-              '(Ini uji coba tertutup. Gunakan data kontak percobaan, jangan '
-              'unggah CV asli atau isi nomor telepon asli.)',
+              tr(
+                'This is a closed test. Please use test contact details. Do not '
+                'upload a real CV or enter a real phone number yet. '
+                '(Ini uji coba tertutup. Gunakan data kontak percobaan, jangan '
+                'unggah CV asli atau isi nomor telepon asli.)',
+              ),
               key: const Key('closed-test-text'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSecondaryContainer,

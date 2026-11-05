@@ -150,7 +150,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                           borderRadius: BorderRadius.circular(16),
                           child: ListingImage(
                             url: _l.imageUrl,
-                            semanticLabel: 'Photo of ${_l.title}',
+                            semanticLabel: trf('Photo of {0}', [_l.title]),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -189,7 +189,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Posted ${formatPostedDate(_l.createdAt)}',
+                          trf('Posted {0}', [formatPostedDate(_l.createdAt)]),
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),

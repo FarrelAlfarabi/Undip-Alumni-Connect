@@ -26,11 +26,12 @@ enum ContentReportReason {
   wrongInfo('wrong_info', 'Wrong information', 'Informasi salah'),
   other('other', 'Other', 'Lainnya');
 
-  const ContentReportReason(this.value, this.label, this.labelId);
+  const ContentReportReason(this.value, this._label, this.labelId);
   final String value;
 
-  /// English, for admins.
-  final String label;
+  /// English, for admins (Indonesian when that language is chosen).
+  final String _label;
+  String get label => tr(_label);
 
   /// Indonesian, for the person reporting.
   final String labelId;

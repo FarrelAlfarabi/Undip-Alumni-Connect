@@ -211,9 +211,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'They cannot sign in and disappear from the Directory until '
-                  'you lift the suspension. Their posts and businesses stay as '
-                  'they are: hide those separately if needed.',
+                  tr(
+                    'They cannot sign in and disappear from the Directory until '
+                    'you lift the suspension. Their posts and businesses stay as '
+                    'they are: hide those separately if needed.',
+                  ),
                   style: Theme.of(ctx).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
@@ -269,14 +271,16 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('Hapus bio ini?')),
-        content: const Text(
-          'Hanya bio yang dihapus. Akun tidak ikut dihapus dan orangnya '
-          'masih bisa menulis bio baru.',
+        content: Text(
+          tr(
+            'Hanya bio yang dihapus. Akun tidak ikut dihapus dan orangnya '
+            'masih bisa menulis bio baru.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             key: const Key('clear-bio-confirm'),
@@ -353,7 +357,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       child: KeyedSubtree(
                         key: const Key('admin-report-type'),
                         child: FilterDropdown(
-                          label: 'Type',
+                          label: tr('Type'),
                           value: _type,
                           options: [
                             kAllFilter,
@@ -369,7 +373,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                       child: KeyedSubtree(
                         key: const Key('admin-report-period'),
                         child: FilterDropdown(
-                          label: 'Period',
+                          label: tr('Period'),
                           value: _period,
                           options: kPeriodOptions,
                           onChanged: (v) => setState(() => _period = v),
@@ -382,7 +386,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         child: KeyedSubtree(
                           key: const Key('admin-report-reason'),
                           child: FilterDropdown(
-                            label: 'Reason',
+                            label: tr('Reason'),
                             value: _reason,
                             options: [
                               kAllFilter,
@@ -537,7 +541,7 @@ class _ReportCard extends StatelessWidget {
             ),
             if (r.ownerName != null)
               Text(
-                'By ${r.ownerName}',
+                trf('By {0}', [r.ownerName]),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -545,7 +549,7 @@ class _ReportCard extends StatelessWidget {
             const SizedBox(height: 6),
             if (!hiddenView) ...[
               Text(
-                '${r.reportCount} ${r.reportCount == 1 ? 'report' : 'reports'}: '
+                '${r.reportCount} ${r.reportCount == 1 ? tr('report') : tr('reports')}: '
                 '${r.reasons.map((e) => e.label).join(', ')}',
               ),
               for (final n in r.notes.take(3))
@@ -553,7 +557,7 @@ class _ReportCard extends StatelessWidget {
             ],
             if (r.isHidden)
               Text(
-                '${r.targetType == ReportTarget.profile ? 'Suspended' : 'Hidden'}'
+                '${r.targetType == ReportTarget.profile ? tr('Suspended') : tr('Hidden')}'
                 '${r.hiddenReason != null ? ': ${r.hiddenReason}' : ''}',
                 style: TextStyle(color: theme.colorScheme.error),
               ),
