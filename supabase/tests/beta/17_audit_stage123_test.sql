@@ -112,4 +112,10 @@ set role anon;
 select admin_log_action((select v from t_ids where k = 'clara'), 'test_action', 'job', 'x', 'detail');
 select jt.assert((select count(*) from admin_actions_list((select v from t_ids where k = 'clara')) where action = 'test_action') = 1, 'admin action logged');
 select jt.expect_error(format($q$select admin_log_action(%L, 'x')$q$, (select v from t_ids where k = 'siti')), 'not_admin');
+-- Stage 8: notification texts are Indonesian; owner is told a business was received
+set role anon;
+insert into t_ids select 'b2', id from business_register((select v from t_ids where k = 'ahmad'), 'Toko Dua', 'Toko', 'Food & Drink', 'https://www.instagram.com/toko_dua/', null, 'small');
+reset role;
+select jt.assert((select count(*) from notifications where type = 'business_received' and target_id = (select v from t_ids where k = 'b2')) = 1, 'owner gets a received notification');
+select jt.assert((select body from notifications where type = 'business_pending' and target_id = (select v from t_ids where k = 'b2') and recipient_id = (select v from t_ids where k = 'clara')) like '%menunggu peninjauan.', 'admin text is Indonesian');
 rollback;

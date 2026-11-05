@@ -38,7 +38,8 @@ NotificationDestination destinationOf(AppNotification n) {
       return NotificationDestination.requestsReceived;
     case 'contact_request_accepted':
       return NotificationDestination.requestsSent;
-    case 'business_approved' ||
+    case 'business_received' ||
+        'business_approved' ||
         'business_rejected' ||
         'business_suspended' ||
         'business_restored':
@@ -232,15 +233,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   String _timeAgo(DateTime time) {
     final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 1) return tr('Just now');
+    if (diff.inMinutes < 60) return '${diff.inMinutes}${tr('m ago')}';
+    if (diff.inHours < 24) return '${diff.inHours}${tr('h ago')}';
+    return '${diff.inDays}${tr('d ago')}';
   }
 
   IconData _icon(AppNotification n) => switch (n.type) {
     'contact_request_received' ||
     'contact_request_accepted' => Icons.handshake_outlined,
+    'business_received' ||
     'business_approved' ||
     'business_rejected' ||
     'business_suspended' ||

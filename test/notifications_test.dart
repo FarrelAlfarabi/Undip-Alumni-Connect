@@ -168,6 +168,7 @@ void main() {
         NotificationDestination.requestsSent,
       );
       for (final t in [
+        'business_received',
         'business_approved',
         'business_rejected',
         'business_suspended',

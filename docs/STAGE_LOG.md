@@ -232,3 +232,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Deleting a business, product, job or application queues its photo/CV in `storage_cleanup_queue` (trigger, any delete path). Files are still removed by hand from the dashboard. Migration `20261105200000_storage_cleanup_triggers`.
 - Jobs: max 5 posts per day and 20 open ones per person (`20261105210000_job_posting_limit`). Feedback already had a 10 per day limit; product posting is limited per business.
 - Admin "Riwayat" screen lists the last 200 admin actions (`20261105220000_admin_action_log`). Rollback files for all three.
+## Translation batch 1 and database notification texts (5 Nov 2026)
+- Admin, Marketplace, business, jobs and profile screens now go through `tr()`. Notification times ("Baru saja", "menit lalu") follow the language.
+- Database notification texts are Indonesian (`20261105230000_notifications_indonesian`, rollback file restores English). Owners now get "Permintaan diterima" when a business is sent for review (type `business_received`). Old notifications keep their old text.

@@ -4,6 +4,11 @@ import '../models/business.dart' show kMaxBusinesses;
 /// Indonesian text for the English text used in the code (see [tr]). Add a
 /// line here when an English text in the code needs an Indonesian version.
 final Map<String, String> kIndonesian = {
+  // Notification times
+  'Just now': 'Baru saja',
+  'm ago': ' menit lalu',
+  'h ago': ' jam lalu',
+  'd ago': ' hari lalu',
   // Generic errors
   'Something went wrong. Please try again.': 'Terjadi kesalahan. Coba lagi.',
   "Couldn't reach the server. Check your connection and try again.":

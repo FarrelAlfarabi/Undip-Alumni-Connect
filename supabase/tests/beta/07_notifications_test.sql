@@ -61,7 +61,7 @@ set role anon;
 select admin_business_decide(jt.pid('clara.putri@example.com'), (select v from t_ids where k = 'biz'), 'reject', null, 'Link rusak');
 reset role;
 select jt.assert(jt.n('ahmad.ramadhan@example.com', 'business_rejected') = 1, 'owner told about rejection');
-select jt.assert((select body from notifications where type = 'business_rejected') like '%Reason: Link rusak%', 'rejection carries the reason');
+select jt.assert((select body from notifications where type = 'business_rejected') like '%Alasan: Link rusak%', 'rejection carries the reason');
 
 set role anon;
 select business_update(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'biz'), 'Kopi Ahmad', 'Kopi', 'Food & Drink', 'https://instagram.com/kopi_ahmad', 'https://kopiahmad.example.com');
@@ -78,7 +78,7 @@ select admin_business_decide(jt.pid('clara.putri@example.com'), (select v from t
 reset role;
 select jt.assert(jt.n('ahmad.ramadhan@example.com', 'business_suspended') = 1, 'owner told about suspension');
 select jt.assert(jt.n('ahmad.ramadhan@example.com', 'business_restored') = 1, 'owner told about restore');
-select jt.assert((select body from notifications where type = 'business_suspended') like '%Reason: Laporan%', 'suspension carries the reason');
+select jt.assert((select body from notifications where type = 'business_suspended') like '%Alasan: Laporan%', 'suspension carries the reason');
 -- Dashboard edit that does not change the status: nothing new.
 update businesses set description = 'Kopi baru' where id = (select v from t_ids where k = 'biz');
 select jt.assert(jt.n('ahmad.ramadhan@example.com', 'business_approved') = 1, 'no duplicate on an unrelated edit');
@@ -106,9 +106,9 @@ select admin_reports_decide(jt.pid('clara.putri@example.com'), 'product', (selec
 select admin_reports_decide(jt.pid('clara.putri@example.com'), 'business', (select v from t_ids where k = 'biz'), 'hide', 'Penipuan');
 reset role;
 select jt.assert(jt.n('ahmad.ramadhan@example.com', 'content_hidden') = 3, 'owner told about each hidden thing');
-select jt.assert((select count(*) from notifications where type = 'content_hidden' and body like '%Reason: Palsu%') = 1, 'job reason');
-select jt.assert((select count(*) from notifications where type = 'content_hidden' and body like '%Reason: Foto curian%') = 1, 'product reason');
-select jt.assert((select count(*) from notifications where type = 'content_hidden' and body like '%Reason: Penipuan%') = 1, 'business reason');
+select jt.assert((select count(*) from notifications where type = 'content_hidden' and body like '%Alasan: Palsu%') = 1, 'job reason');
+select jt.assert((select count(*) from notifications where type = 'content_hidden' and body like '%Alasan: Foto curian%') = 1, 'product reason');
+select jt.assert((select count(*) from notifications where type = 'content_hidden' and body like '%Alasan: Penipuan%') = 1, 'business reason');
 -- Restore and hide again is a new event; hiding twice in a row is not.
 set role anon;
 select admin_reports_decide(jt.pid('clara.putri@example.com'), 'job', (select v from t_ids where k = 'job'), 'hide', 'Palsu lagi');
