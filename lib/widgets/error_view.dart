@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import 'feedback_sheet.dart';
 
 /// The one error widget for "failed to load" screens: the friendly message,
@@ -43,7 +45,7 @@ class ErrorView extends StatelessWidget {
                   key: const Key('send-feedback'),
                   onPressed: () =>
                       showFeedbackSheet(context, error: error, screen: screen),
-                  child: const Text('Send feedback'),
+                  child: Text(tr('Send feedback')),
                 ),
               ],
             ),
@@ -92,7 +94,7 @@ class InlineError extends StatelessWidget {
             ),
             onPressed: () =>
                 showFeedbackSheet(context, error: error, screen: screen),
-            child: const Text('Send feedback'),
+            child: Text(tr('Send feedback')),
           ),
         ),
       ],
@@ -133,7 +135,7 @@ void showErrorSnackBarOn(
         content: Text(message),
         duration: const Duration(seconds: 7),
         action: SnackBarAction(
-          label: 'Send feedback',
+          label: tr('Send feedback'),
           onPressed: () {
             if (!navigator.mounted) return;
             showFeedbackSheet(navigator.context, error: error, screen: screen);

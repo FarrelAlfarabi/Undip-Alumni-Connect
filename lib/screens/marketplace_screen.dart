@@ -1,4 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
@@ -177,9 +180,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text('Tambah produk ke usaha yang mana?'),
+              child: Text(tr('Tambah produk ke usaha yang mana?')),
             ),
             for (final b in approved)
               ListTile(
@@ -290,14 +293,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 IconButton(
                   onPressed: _openMine,
                   icon: const Icon(Icons.inventory_2_outlined),
-                  tooltip: 'Produk saya',
+                  tooltip: tr('Produk saya'),
                 ),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Tambah produk'),
+        label: Text(tr('Tambah produk')),
       ),
       body: Column(
         children: [
@@ -351,7 +354,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           Expanded(
                             child: ClearableSearchField(
                               controller: _searchController,
-                              hintText: 'Search by title...',
+                              hintText: tr('Search by title...'),
                             ),
                           ),
                           PopupMenuButton<MarketplaceSort>(
@@ -400,7 +403,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 Icons.inventory_2_outlined,
                                 size: 18,
                               ),
-                              label: const Text('Produk saya'),
+                              label: Text(tr('Produk saya')),
                             ),
                         ],
                       ),
@@ -415,8 +418,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       ),
                     Expanded(
                       child: listings.isEmpty
-                          ? const Center(
-                              child: Text('No listings match these filters.'),
+                          ? Center(
+                              child: Text(
+                                tr('No listings match these filters.'),
+                              ),
                             )
                           : ListView.separated(
                               padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),

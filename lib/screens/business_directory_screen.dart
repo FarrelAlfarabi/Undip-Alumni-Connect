@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/block_list.dart';
 import '../data/business_repository.dart';
 import '../data/category_repository.dart';
@@ -110,14 +112,14 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
         key: const Key('my-businesses'),
         onPressed: _openMine,
         icon: const Icon(Icons.storefront_outlined),
-        tooltip: 'My businesses',
+        tooltip: tr('My businesses'),
       );
     }
     return TextButton.icon(
       key: const Key('my-businesses'),
       onPressed: _openMine,
       icon: const Icon(Icons.storefront_outlined, size: 18),
-      label: const Text('My businesses'),
+      label: Text(tr('My businesses')),
     );
   }
 
@@ -171,7 +173,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: ClearableSearchField(
                 controller: _search,
-                hintText: 'Search by name or category...',
+                hintText: tr('Search by name or category...'),
               ),
             ),
             Padding(
@@ -199,9 +201,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
             ),
             Expanded(
               child: items.isEmpty
-                  ? const Center(
-                      child: Text('No businesses match this search.'),
-                    )
+                  ? Center(child: Text(tr('No businesses match this search.')))
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                       itemCount: items.length,
@@ -230,20 +230,20 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
     final fab = FloatingActionButton.extended(
       onPressed: _register,
       icon: const Icon(Icons.add_business_outlined),
-      label: const Text('Register a business'),
+      label: Text(tr('Register a business')),
     );
     if (widget.embedded) {
       return Scaffold(floatingActionButton: fab, body: _body());
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Businesses'),
+        title: Text(tr('Businesses')),
         automaticallyImplyLeading: widget.showBack,
         actions: [
           IconButton(
             onPressed: _openMine,
             icon: const Icon(Icons.storefront_outlined),
-            tooltip: 'My businesses',
+            tooltip: tr('My businesses'),
           ),
         ],
       ),
@@ -375,7 +375,7 @@ class BusinessDetailScreen extends StatelessWidget {
                       if (b.socialLink != null)
                         SafeLinkChip(
                           icon: Icons.alternate_email,
-                          label: 'Instagram / social',
+                          label: tr('Instagram / social'),
                           url: b.socialLink!,
                         ),
                       if (b.websiteLink != null)

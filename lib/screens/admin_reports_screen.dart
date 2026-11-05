@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/report_repository.dart';
 import '../util/friendly_error.dart';
@@ -147,14 +149,14 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: const Text('Hide this content?'),
+            title: Text(tr('Hide this content?')),
             content: TextField(
               controller: controller,
               autofocus: true,
               maxLines: 3,
               maxLength: 300,
               decoration: InputDecoration(
-                labelText: 'Reason (shown to the owner)',
+                labelText: tr('Reason (shown to the owner)'),
                 errorText: error,
                 border: const OutlineInputBorder(),
               ),
@@ -162,7 +164,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -173,7 +175,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Hide'),
+                child: Text(tr('Hide')),
               ),
             ],
           ),
@@ -221,7 +223,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   maxLines: 3,
                   maxLength: 300,
                   decoration: InputDecoration(
-                    labelText: 'Reason (kept for admins)',
+                    labelText: tr('Reason (kept for admins)'),
                     errorText: error,
                     border: const OutlineInputBorder(),
                   ),
@@ -231,7 +233,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -242,7 +244,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Suspend'),
+                child: Text(tr('Suspend')),
               ),
             ],
           ),
@@ -266,7 +268,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus bio ini?'),
+        title: Text(tr('Hapus bio ini?')),
         content: const Text(
           'Hanya bio yang dihapus. Akun tidak ikut dihapus dan orangnya '
           'masih bisa menulis bio baru.',
@@ -279,7 +281,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           FilledButton(
             key: const Key('clear-bio-confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Hapus bio'),
+            child: Text(tr('Hapus bio')),
           ),
         ],
       ),
@@ -308,7 +310,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           if (!_hidden)
             IconButton(
               icon: const Icon(Icons.visibility_off_outlined),
-              tooltip: 'Hidden items',
+              tooltip: tr('Hidden items'),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => AdminReportsScreen(
@@ -331,13 +333,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   key: const Key('admin-report-search'),
                   controller: _search,
                   decoration: InputDecoration(
-                    hintText: 'Search title, owner, note or reason...',
+                    hintText: tr('Search title, owner, note or reason...'),
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _search.text.isEmpty
                         ? null
                         : IconButton(
                             icon: const Icon(Icons.clear),
-                            tooltip: 'Clear search',
+                            tooltip: tr('Clear search'),
                             onPressed: _search.clear,
                           ),
                     border: const OutlineInputBorder(),
@@ -424,7 +426,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 }
                 final items = _visible(all);
                 if (items.isEmpty) {
-                  return const Center(child: Text('Nothing matches.'));
+                  return Center(child: Text(tr('Nothing matches.')));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -611,7 +613,7 @@ class _ReportCard extends StatelessWidget {
             child: OutlinedButton(
               key: Key('clear-bio-${r.targetId}'),
               onPressed: busy ? null : onClearBio,
-              child: const Text('Hapus bio'),
+              child: Text(tr('Hapus bio')),
             ),
           ),
           const SizedBox(height: 8),

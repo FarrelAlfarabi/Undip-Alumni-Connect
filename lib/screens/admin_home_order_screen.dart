@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/home_repository.dart';
 import '../util/friendly_error.dart';
@@ -114,7 +116,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
       if (mounted) {
         showUndoSnackBar(
           context,
-          message: 'Urutan Home disimpan.',
+          message: tr('Urutan Home disimpan.'),
           screen: 'Home order',
           errorText: adminErrorMessage,
           onUndo: () async {
@@ -157,7 +159,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Home order')),
+      appBar: AppBar(title: Text(tr('Home order'))),
       body: Column(
         children: [
           if (_busy) const LinearProgressIndicator(),
@@ -168,7 +170,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
               children: [
                 ChoiceChip(
                   key: const Key('home-order-products'),
-                  label: const Text('Products'),
+                  label: Text(tr('Products')),
                   selected: _isProducts,
                   onSelected: _busy ? null : (_) => _switchKind(_products),
                 ),
@@ -180,7 +182,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
                 ),
                 ChoiceChip(
                   key: const Key('home-order-announcements'),
-                  label: const Text('Announcements'),
+                  label: Text(tr('Announcements')),
                   selected: _kind == _news,
                   onSelected: _busy ? null : (_) => _switchKind(_news),
                 ),
@@ -260,7 +262,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
         for (var i = 0; i < pinned.length; i++)
           _pinnedRow(theme, pinned[i], i, pinned.length),
         const SizedBox(height: 20),
-        Text('Belum dipin', style: theme.textTheme.titleSmall),
+        Text(tr('Belum dipin'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),
         if (_full)
           Padding(

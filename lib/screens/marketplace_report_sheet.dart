@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
@@ -103,7 +105,7 @@ class _ReportSheetState extends State<_ReportSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Report listing', style: theme.textTheme.titleLarge),
+            Text(tr('Report listing'), style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
               'Why are you reporting this listing?',
@@ -130,8 +132,8 @@ class _ReportSheetState extends State<_ReportSheet> {
               enabled: !_sending,
               maxLines: 3,
               maxLength: 500,
-              decoration: const InputDecoration(
-                labelText: 'Note (optional)',
+              decoration: InputDecoration(
+                labelText: tr('Note (optional)'),
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -149,7 +151,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
-                  : const Text('Send report'),
+                  : Text(tr('Send report')),
             ),
           ],
         ),

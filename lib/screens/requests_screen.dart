@@ -491,7 +491,7 @@ class _ShareDialogState extends State<_ShareDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Kontak apa yang ingin kamu bagikan?'),
+      title: Text(tr('Kontak apa yang ingin kamu bagikan?')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +508,9 @@ class _ShareDialogState extends State<_ShareDialog> {
             controller: _text,
             maxLength: kSharedContactMax,
             decoration: InputDecoration(
-              labelText: 'Kontak atau nama Online Shop yang akan dibagikan *',
+              labelText: tr(
+                'Kontak atau nama Online Shop yang akan dibagikan *',
+              ),
               errorText: _error,
               border: const OutlineInputBorder(),
             ),
@@ -520,7 +522,7 @@ class _ShareDialogState extends State<_ShareDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Batal'),
         ),
-        FilledButton(onPressed: _ok, child: const Text('Terima dan bagikan')),
+        FilledButton(onPressed: _ok, child: Text(tr('Terima dan bagikan'))),
       ],
     );
   }
@@ -551,7 +553,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
   Future<void> _cancel() async {
     final ok = await confirmDelete(
       context,
-      title: 'Batalkan permintaan?',
+      title: tr('Batalkan permintaan?'),
       body: 'Permintaan ke ${widget.request.targetName} akan ditarik.',
       action: 'Batalkan',
     );

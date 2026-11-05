@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/contact_repository.dart';
 import '../widgets/error_view.dart';
 
@@ -121,9 +123,9 @@ class _RequestSheetState extends State<_RequestSheet> {
               enabled: !_sending,
               maxLength: kContactMessageMax,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Pesan (disarankan)',
-                hintText: 'Contoh: kenapa kamu ingin terhubung',
+              decoration: InputDecoration(
+                labelText: tr('Pesan (disarankan)'),
+                hintText: tr('Contoh: kenapa kamu ingin terhubung'),
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -146,7 +148,7 @@ class _RequestSheetState extends State<_RequestSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
-                  : const Text('Kirim permintaan'),
+                  : Text(tr('Kirim permintaan')),
             ),
           ],
         ),

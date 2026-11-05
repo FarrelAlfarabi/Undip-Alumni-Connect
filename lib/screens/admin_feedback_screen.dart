@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
@@ -74,7 +76,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
       _busy.remove(f.id);
       showUndoSnackBar(
         context,
-        message: 'Status feedback diubah.',
+        message: tr('Status feedback diubah.'),
         screen: 'Feedback inbox',
         errorText: adminErrorMessage,
         onUndo: () async {
@@ -102,7 +104,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Feedback')),
+      appBar: AppBar(title: Text(tr('Feedback'))),
       body: FutureBuilder<List<FeedbackItem>>(
         future: _future,
         builder: (context, snap) {
@@ -121,7 +123,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
           }
           final items = snap.data ?? const [];
           if (items.isEmpty) {
-            return const Center(child: Text('No feedback yet.'));
+            return Center(child: Text(tr('No feedback yet.')));
           }
           final shown = _visible(items);
           return Column(
@@ -135,7 +137,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                       child: ClearableSearchField(
                         key: const Key('admin-feedback-search'),
                         controller: _search,
-                        hintText: 'Search message, name or screen...',
+                        hintText: tr('Search message, name or screen...'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -171,7 +173,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
               ),
               Expanded(
                 child: shown.isEmpty
-                    ? const Center(child: Text('Nothing matches.'))
+                    ? Center(child: Text(tr('Nothing matches.')))
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: shown.length,
@@ -265,13 +267,13 @@ class _FeedbackCard extends StatelessWidget {
                   OutlinedButton(
                     key: Key('seen-${f.id}'),
                     onPressed: busy ? null : onSeen,
-                    child: const Text('Mark as seen'),
+                    child: Text(tr('Mark as seen')),
                   ),
                 if (f.status != 'done')
                   FilledButton(
                     key: Key('done-${f.id}'),
                     onPressed: busy ? null : onDone,
-                    child: const Text('Mark as done'),
+                    child: Text(tr('Mark as done')),
                   ),
               ],
             ),

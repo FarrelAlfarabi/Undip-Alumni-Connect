@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/report_repository.dart';
 import 'error_view.dart';
 
@@ -151,8 +153,8 @@ class _ReportSheetState extends State<_ReportSheet> {
               enabled: !_sending,
               maxLength: kReportNoteMax,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Catatan (opsional)',
+              decoration: InputDecoration(
+                labelText: tr('Catatan (opsional)'),
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -182,7 +184,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2.5),
                     )
-                  : const Text('Kirim Laporan'),
+                  : Text(tr('Kirim Laporan')),
             ),
           ],
         ),

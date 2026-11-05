@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../widgets/app_photo.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -140,12 +142,12 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       appBar: widget.embedded
           ? null
           : AppBar(
-              title: const Text('Job Board'),
+              title: Text(tr('Job Board')),
               automaticallyImplyLeading: widget.showBack,
               actions: [
                 IconButton(
                   key: const Key('my-job-postings'),
-                  tooltip: 'My job postings',
+                  tooltip: tr('My job postings'),
                   icon: const Icon(Icons.assignment_outlined),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -159,7 +161,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _postJob,
         icon: const Icon(Icons.add),
-        label: const Text('Post a Job'),
+        label: Text(tr('Post a Job')),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,
@@ -201,7 +203,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: ClearableSearchField(
                   controller: _searchController,
-                  hintText: 'Search by title, company, or description...',
+                  hintText: tr('Search by title, company, or description...'),
                 ),
               ),
               Padding(
@@ -240,7 +242,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                 const SizedBox(height: 4),
               Expanded(
                 child: jobs.isEmpty
-                    ? const Center(child: Text('No jobs match these filters.'))
+                    ? Center(child: Text(tr('No jobs match these filters.')))
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
                         itemCount: jobs.length,

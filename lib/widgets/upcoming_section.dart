@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../theme.dart';
 
 /// Shown in every preview sheet. Kept as one constant so tests and copy
@@ -184,7 +186,7 @@ class _PreviewSheet extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close'),
+                child: Text(tr('Close')),
               ),
             ),
           ],

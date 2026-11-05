@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 /// Sentinel value meaning "no filter selected" in a [FilterDropdown] —
 /// always the first entry in its options list.
 const kAllFilter = 'All';
@@ -109,7 +111,7 @@ class ClearableSearchField extends StatelessWidget {
                 ? null
                 : IconButton(
                     icon: const Icon(Icons.clear),
-                    tooltip: 'Clear search',
+                    tooltip: tr('Clear search'),
                     onPressed: controller.clear,
                   ),
           ).applyDefaults(filterFieldTheme(context)),
@@ -141,7 +143,7 @@ class ClearFiltersButton extends StatelessWidget {
       child: TextButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-        label: const Text('Hapus filter'),
+        label: Text(tr('Hapus filter')),
       ),
     );
   }

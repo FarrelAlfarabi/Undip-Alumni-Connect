@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/feature_flags.dart';
@@ -458,7 +461,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         bottom: 0,
                                         child: IconButton.filled(
                                           key: const Key('avatar-edit'),
-                                          tooltip: 'Ubah foto profil',
+                                          tooltip: tr('Ubah foto profil'),
                                           onPressed: _editPhoto,
                                           icon: const Icon(
                                             Icons.photo_camera_outlined,
@@ -579,7 +582,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         Icons.edit_outlined,
                                         size: 18,
                                       ),
-                                      label: const Text('Edit'),
+                                      label: Text(tr('Edit')),
                                     )
                                   : null,
                               children: [
@@ -617,7 +620,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                         Icons.edit_outlined,
                                         size: 18,
                                       ),
-                                      label: const Text('Edit'),
+                                      label: Text(tr('Edit')),
                                     )
                                   : null,
                               children: [
@@ -736,7 +739,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         key: const Key('request-sent'),
         onPressed: null,
         icon: const Icon(Icons.hourglass_top),
-        label: const Text('Permintaan terkirim'),
+        label: Text(tr('Permintaan terkirim')),
       ),
       const SizedBox(height: 6),
       Text(
@@ -752,7 +755,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         key: const Key('request-contact'),
         onPressed: _requestContact,
         icon: const Icon(Icons.person_add_alt_outlined),
-        label: const Text('Minta kontak'),
+        label: Text(tr('Minta kontak')),
       ),
     if (widget.chat) ...[
       const SizedBox(height: 12),
@@ -893,7 +896,7 @@ class _ProfileMenu extends StatelessWidget {
                   MenuItem(
                     key: const Key('profile-admin'),
                     icon: Icons.admin_panel_settings_outlined,
-                    title: 'Admin',
+                    title: tr('Admin'),
                     badge: adminBadge,
                     onTap: onAdmin,
                   ),
@@ -907,13 +910,13 @@ class _ProfileMenu extends StatelessWidget {
             MenuItem(
               key: const Key('profile-business'),
               icon: Icons.storefront_outlined,
-              title: 'My business',
+              title: tr('My business'),
               onTap: onBusiness,
             ),
             MenuItem(
               key: const Key('profile-jobs'),
               icon: Icons.work_outline,
-              title: 'My job postings',
+              title: tr('My job postings'),
               onTap: onJobs,
             ),
           ],
@@ -936,20 +939,20 @@ class _ProfileMenu extends StatelessWidget {
                   key: const Key('profile-settings'),
                   icon: Icons.settings_outlined,
                   title: 'Pengaturan',
-                  subtitle: 'Kontak, PIN, pengguna terblokir, hapus akun',
+                  subtitle: tr('Kontak, PIN, pengguna terblokir, hapus akun'),
                   onTap: onSettings,
                 ),
                 MenuItem(
                   key: const Key('profile-help'),
                   icon: Icons.help_outline,
                   title: 'Bantuan',
-                  subtitle: 'Kontak admin, beri masukan, tentang aplikasi',
+                  subtitle: tr('Kontak admin, beri masukan, tentang aplikasi'),
                   onTap: onHelp,
                 ),
                 MenuItem(
                   key: const Key('profile-policy'),
                   icon: Icons.privacy_tip_outlined,
-                  title: 'Kebijakan Privasi dan Ketentuan',
+                  title: tr('Kebijakan Privasi dan Ketentuan'),
                   onTap: onPolicy,
                 ),
               ],
@@ -962,7 +965,7 @@ class _ProfileMenu extends StatelessWidget {
             MenuItem(
               key: const Key('profile-signout'),
               icon: Icons.logout,
-              title: 'Sign out',
+              title: tr('Sign out'),
               onTap: onSignOut,
             ),
           ],

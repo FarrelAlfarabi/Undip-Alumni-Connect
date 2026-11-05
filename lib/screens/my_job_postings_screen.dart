@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
@@ -242,11 +245,11 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('My job postings')),
+      appBar: AppBar(title: Text(tr('My job postings'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _post,
         icon: const Icon(Icons.add),
-        label: const Text('Post a Job'),
+        label: Text(tr('Post a Job')),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,

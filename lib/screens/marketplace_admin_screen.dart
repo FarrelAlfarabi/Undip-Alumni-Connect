@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/marketplace_format.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
@@ -29,7 +31,7 @@ class MarketplaceAdminScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Marketplace review'),
+          title: Text(tr('Marketplace review')),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Review queue'),
@@ -133,13 +135,13 @@ class _ReviewQueueState extends State<_ReviewQueue> {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: const Text('Reject listing'),
+            title: Text(tr('Reject listing')),
             content: TextField(
               controller: controller,
               autofocus: true,
               maxLines: 3,
               decoration: InputDecoration(
-                labelText: 'Reason (shown to the seller)',
+                labelText: tr('Reason (shown to the seller)'),
                 errorText: error,
                 border: const OutlineInputBorder(),
               ),
@@ -147,7 +149,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -158,7 +160,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Reject'),
+                child: Text(tr('Reject')),
               ),
             ],
           ),
@@ -185,7 +187,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
         }
         final items = snapshot.data ?? [];
         if (items.isEmpty) {
-          return const Center(child: Text('Nothing waiting for review.'));
+          return Center(child: Text(tr('Nothing waiting for review.')));
         }
         return ListView.separated(
           padding: const EdgeInsets.all(16),
@@ -279,7 +281,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                             onPressed: busy
                                 ? null
                                 : () => _decide(l, approve: false),
-                            child: const Text('Reject'),
+                            child: Text(tr('Reject')),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -288,7 +290,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                             onPressed: busy
                                 ? null
                                 : () => _decide(l, approve: true),
-                            child: const Text('Approve'),
+                            child: Text(tr('Approve')),
                           ),
                         ),
                       ],
@@ -349,7 +351,7 @@ class _ReportsTabState extends State<_ReportsTab> {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: const Text('Sembunyikan produk ini?'),
+            title: Text(tr('Sembunyikan produk ini?')),
             content: TextField(
               key: const Key('product-hide-reason'),
               controller: controller,
@@ -357,7 +359,7 @@ class _ReportsTabState extends State<_ReportsTab> {
               maxLines: 3,
               maxLength: 300,
               decoration: InputDecoration(
-                labelText: 'Alasan (dikirim ke pemilik)',
+                labelText: tr('Alasan (dikirim ke pemilik)'),
                 errorText: error,
                 border: const OutlineInputBorder(),
               ),
@@ -498,7 +500,7 @@ class _ReportsTabState extends State<_ReportsTab> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: FilterChip(
               key: const Key('reports-show-dismissed'),
-              label: const Text('Tampilkan yang diabaikan'),
+              label: Text(tr('Tampilkan yang diabaikan')),
               selected: _dismissed,
               onSelected: (v) {
                 _dismissed = v;
@@ -599,19 +601,19 @@ class _ReportsTabState extends State<_ReportsTab> {
                                 OutlinedButton(
                                   key: Key('report-reopen-${d.listingId}'),
                                   onPressed: busy ? null : () => _reopen(d),
-                                  child: const Text('Buka lagi'),
+                                  child: Text(tr('Buka lagi')),
                                 )
                               else
                                 OutlinedButton(
                                   key: Key('report-dismiss-${d.listingId}'),
                                   onPressed: busy ? null : () => _dismiss(d),
-                                  child: const Text('Abaikan laporan'),
+                                  child: Text(tr('Abaikan laporan')),
                                 ),
                               if (d.isHidden)
                                 FilledButton(
                                   key: Key('report-show-${d.listingId}'),
                                   onPressed: busy ? null : () => _show(d),
-                                  child: const Text('Tampilkan lagi'),
+                                  child: Text(tr('Tampilkan lagi')),
                                 )
                               else
                                 FilledButton(
@@ -621,7 +623,7 @@ class _ReportsTabState extends State<_ReportsTab> {
                                     backgroundColor: theme.colorScheme.error,
                                     foregroundColor: theme.colorScheme.onError,
                                   ),
-                                  child: const Text('Sembunyikan produk'),
+                                  child: Text(tr('Sembunyikan produk')),
                                 ),
                             ],
                           ),

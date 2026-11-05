@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../widgets/app_photo.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -97,7 +99,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   Future<void> _withdraw() async {
     final ok = await confirmDelete(
       context,
-      title: 'Tarik lamaran?',
+      title: tr('Tarik lamaran?'),
       body:
           'Lamaranmu untuk lowongan ini akan dihapus. Kamu bisa melamar '
           'lagi nanti.',
@@ -156,7 +158,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Job Details'),
+        title: Text(tr('Job Details')),
         actions: [
           ContentActionsMenu(
             currentUserId: widget.currentUser.value['id'] as String,
@@ -273,7 +275,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                           ),
                                         );
                                       },
-                                child: const Text('View Applicants'),
+                                child: Text(tr('View Applicants')),
                               ),
                             ],
                           ),
@@ -333,7 +335,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                             return FilledButton.icon(
                               onPressed: () => _apply(context),
                               icon: const Icon(Icons.send_outlined),
-                              label: const Text('Apply to this Job'),
+                              label: Text(tr('Apply to this Job')),
                             );
                           },
                         ),

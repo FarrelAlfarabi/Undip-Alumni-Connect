@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/business_repository.dart';
 import '../data/category_repository.dart';
 import '../data/marketplace_image_picker.dart';
@@ -240,7 +242,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Photo (optional)', style: theme.textTheme.titleSmall),
+        Text(tr('Photo (optional)'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         const SizedBox(height: 8),
         if (_picked != null)
@@ -333,8 +335,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       enabled: !_saving,
                       maxLength: 100,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Business name *',
+                      decoration: InputDecoration(
+                        labelText: tr('Business name *'),
                         border: OutlineInputBorder(),
                       ),
                       validator: _requiredName,
@@ -345,8 +347,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       enabled: !_saving,
                       maxLines: 3,
                       maxLength: 500,
-                      decoration: const InputDecoration(
-                        labelText: 'Short description *',
+                      decoration: InputDecoration(
+                        labelText: tr('Short description *'),
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
@@ -364,7 +366,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                         valueListenable: CategoryRepository.shared.names,
                         builder: (context, names, _) => SearchableChoice(
                           fieldKey: const Key('category-choice'),
-                          label: 'Category *',
+                          label: tr('Category *'),
                           controller: _categoryText,
                           options: names,
                           selected: _category,
@@ -381,7 +383,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     SwitchListTile(
                       key: const Key('personal-business'),
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Personal business'),
+                      title: Text(tr('Personal business')),
                       subtitle: const Text(
                         'Run only by you, the owner. It is still listed '
                         'publicly like any other business.',
@@ -412,8 +414,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       enabled: !_saving,
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Instagram *',
+                      decoration: InputDecoration(
+                        labelText: tr('Instagram *'),
                         hintText: '@username or https://instagram.com/...',
                         border: OutlineInputBorder(),
                       ),
@@ -424,15 +426,18 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       controller: _website,
                       enabled: !_saving,
                       keyboardType: TextInputType.url,
-                      decoration: const InputDecoration(
-                        labelText: 'Website link (optional)',
+                      decoration: InputDecoration(
+                        labelText: tr('Website link (optional)'),
                         hintText: 'https://...',
                         border: OutlineInputBorder(),
                       ),
                       validator: _websiteField,
                     ),
                     const SizedBox(height: 24),
-                    Text('Yearly sales *', style: theme.textTheme.titleSmall),
+                    Text(
+                      tr('Yearly sales *'),
+                      style: theme.textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       _isEdit

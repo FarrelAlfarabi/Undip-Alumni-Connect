@@ -1,4 +1,7 @@
 import 'package:file_picker/file_picker.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -245,8 +248,8 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Full Name',
+            decoration: InputDecoration(
+              labelText: tr('Full Name'),
               border: OutlineInputBorder(),
             ),
             validator: (v) =>
@@ -267,8 +270,8 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Phone (optional)',
+            decoration: InputDecoration(
+              labelText: tr('Phone (optional)'),
               border: OutlineInputBorder(),
             ),
           ),
@@ -333,7 +336,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text('Review Application'),
+            child: Text(tr('Review Application')),
           ),
         ],
       ),
@@ -363,32 +366,32 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ReviewRow(label: 'Full Name', value: _nameController.text),
+                _ReviewRow(label: tr('Full Name'), value: _nameController.text),
                 _ReviewRow(label: 'Email', value: _emailController.text),
                 _ReviewRow(
                   label: 'Phone',
                   value: _phoneController.text,
-                  emptyText: 'Not provided',
+                  emptyText: tr('Not provided'),
                 ),
                 _ReviewRow(
-                  label: 'LinkedIn URL',
+                  label: tr('LinkedIn URL'),
                   value: _linkedinController.text,
-                  emptyText: 'Not provided',
+                  emptyText: tr('Not provided'),
                 ),
                 _ReviewRow(
-                  label: 'Portfolio / other link',
+                  label: tr('Portfolio / other link'),
                   value: _portfolioController.text,
-                  emptyText: 'Not provided',
+                  emptyText: tr('Not provided'),
                 ),
                 _ReviewRow(
-                  label: 'Cover note',
+                  label: tr('Cover note'),
                   value: _noteController.text,
-                  emptyText: 'Not provided',
+                  emptyText: tr('Not provided'),
                 ),
                 _ReviewRow(
                   label: 'CV',
                   value: _cvFile?.name ?? '',
-                  emptyText: 'Not attached',
+                  emptyText: tr('Not attached'),
                 ),
               ],
             ),
@@ -410,14 +413,14 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
                   width: 20,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : const Text('Confirm & Submit'),
+              : Text(tr('Confirm & Submit')),
         ),
         const SizedBox(height: 8),
         OutlinedButton(
           onPressed: _submitting
               ? null
               : () => setState(() => _step = _ApplyStep.details),
-          child: const Text('Back to Edit'),
+          child: Text(tr('Back to Edit')),
         ),
       ],
     );
@@ -454,7 +457,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),
           ),
-          child: const Text('Back to Job'),
+          child: Text(tr('Back to Job')),
         ),
       ],
     );

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/services.dart';
 
 import '../data/feedback_repository.dart';
@@ -110,7 +113,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Details copied.')));
+      ..showSnackBar(SnackBar(content: Text(tr('Details copied.'))));
   }
 
   @override
@@ -150,8 +153,8 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               enabled: !_sending,
               maxLength: kFeedbackMessageMax,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'What were you doing? (optional)',
+              decoration: InputDecoration(
+                labelText: tr('What were you doing? (optional)'),
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -168,7 +171,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
                 key: const Key('feedback-copy'),
                 onPressed: _copy,
                 icon: const Icon(Icons.copy_outlined),
-                label: const Text('Copy details'),
+                label: Text(tr('Copy details')),
               ),
             ],
             const SizedBox(height: 12),

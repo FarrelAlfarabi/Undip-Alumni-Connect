@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
@@ -47,7 +49,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   Future<void> _delete(AdminAnnouncement a) async {
     final ok = await confirmDelete(
       context,
-      title: 'Hapus pengumuman ini?',
+      title: tr('Hapus pengumuman ini?'),
       body: '"${a.title}" akan dihapus permanen untuk semua orang.',
     );
     if (!ok || !mounted) return;
@@ -56,7 +58,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
       if (!mounted) return;
       showUndoSnackBar(
         context,
-        message: 'Pengumuman dihapus.',
+        message: tr('Pengumuman dihapus.'),
         screen: 'Admin announcements',
         errorText: adminErrorMessage,
         onUndo: () async {
@@ -108,7 +110,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
     if (newId.isEmpty) return;
     showUndoSnackBar(
       context,
-      message: 'Pengumuman diposting.',
+      message: tr('Pengumuman diposting.'),
       screen: 'Admin announcements',
       errorText: adminErrorMessage,
       onUndo: () async {
@@ -121,12 +123,12 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Announcements')),
+      appBar: AppBar(title: Text(tr('Announcements'))),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('announcement-new'),
         onPressed: _new,
         icon: const Icon(Icons.add),
-        label: const Text('New announcement'),
+        label: Text(tr('New announcement')),
       ),
       body: FutureBuilder<List<AdminAnnouncement>>(
         future: _future,
@@ -157,7 +159,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                       child: ClearableSearchField(
                         key: const Key('admin-announcements-search'),
                         controller: _search,
-                        hintText: 'Search title, message or poster...',
+                        hintText: tr('Search title, message or poster...'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -317,7 +319,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New announcement')),
+      appBar: AppBar(title: Text(tr('New announcement'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -369,7 +371,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Post announcement'),
+                      : Text(tr('Post announcement')),
                 ),
               ],
             ),

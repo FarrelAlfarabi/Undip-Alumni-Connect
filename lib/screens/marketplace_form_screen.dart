@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/services.dart';
 
 import '../data/category_repository.dart';
@@ -272,8 +275,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            decoration: const InputDecoration(
-                              labelText: 'Price (whole rupiah)',
+                            decoration: InputDecoration(
+                              labelText: tr('Price (whole rupiah)'),
                               prefixText: 'Rp ',
                               border: OutlineInputBorder(),
                             ),
@@ -374,8 +377,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             controller: _shop,
                             enabled: !_saving,
                             keyboardType: TextInputType.url,
-                            decoration: const InputDecoration(
-                              labelText: 'Online shop link (optional)',
+                            decoration: InputDecoration(
+                              labelText: tr('Online shop link (optional)'),
                               hintText: 'https://...',
                               border: OutlineInputBorder(),
                             ),
@@ -386,10 +389,11 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                             controller: _contact,
                             enabled: !_saving,
                             maxLength: 300,
-                            decoration: const InputDecoration(
-                              labelText: 'Contact info (optional)',
-                              hintText:
-                                  'WhatsApp, phone, email, social media...',
+                            decoration: InputDecoration(
+                              labelText: tr('Contact info (optional)'),
+                              hintText: tr(
+                                'WhatsApp, phone, email, social media...',
+                              ),
                               border: OutlineInputBorder(),
                             ),
                           ),

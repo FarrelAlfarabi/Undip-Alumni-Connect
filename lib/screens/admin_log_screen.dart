@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -37,7 +39,7 @@ class _AdminLogScreenState extends State<AdminLogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat admin')),
+      appBar: AppBar(title: Text(tr('Riwayat admin'))),
       body: FutureBuilder<List<AdminLogEntry>>(
         future: _future,
         builder: (context, snap) {
@@ -54,7 +56,7 @@ class _AdminLogScreenState extends State<AdminLogScreen> {
           }
           final items = snap.data ?? const <AdminLogEntry>[];
           if (items.isEmpty) {
-            return const Center(child: Text('Belum ada riwayat.'));
+            return Center(child: Text(tr('Belum ada riwayat.')));
           }
           return RefreshIndicator(
             onRefresh: () async => _reload(),

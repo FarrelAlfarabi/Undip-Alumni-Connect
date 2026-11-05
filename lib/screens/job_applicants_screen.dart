@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/error_view.dart';
@@ -69,10 +72,10 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
           final applicants = snapshot.data ?? [];
           if (applicants.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('No applications yet.'),
+                child: Text(tr('No applications yet.')),
               ),
             );
           }

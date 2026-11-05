@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../util/safe_url.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -145,7 +147,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        content: const Text('Buka LinkedIn member ini?'),
+        content: Text(tr('Buka LinkedIn member ini?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -245,7 +247,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: ClearableSearchField(
                 controller: _searchController,
-                hintText: 'Cari nama atau perusahaan...',
+                hintText: tr('Cari nama atau perusahaan...'),
               ),
             ),
             Padding(
@@ -330,12 +332,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Tidak ada alumni yang cocok.'),
+                          Text(tr('Tidak ada alumni yang cocok.')),
                           if (_hasActiveFilters)
                             TextButton(
                               key: const Key('directory-empty-clear'),
                               onPressed: _clearFilters,
-                              child: const Text('Hapus filter'),
+                              child: Text(tr('Hapus filter')),
                             ),
                         ],
                       ),
@@ -368,7 +370,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               ? null
                               : IconButton(
                                   key: Key('member-linkedin-${p['id']}'),
-                                  tooltip: 'Buka LinkedIn',
+                                  tooltip: tr('Buka LinkedIn'),
                                   icon: const LinkedInLogo(),
                                   onPressed: () => _confirmOpenLinkedIn(
                                     p['linkedin_url'] as String?,

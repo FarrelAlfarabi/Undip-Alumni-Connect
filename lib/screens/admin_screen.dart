@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/category_repository.dart';
 import '../data/marketplace_repository.dart';
@@ -72,8 +74,8 @@ class _AdminScreenState extends State<AdminScreen> {
         key: 'admin-reports',
         badge: _counts.reports,
         icon: Icons.flag_outlined,
-        title: 'Reports',
-        subtitle: 'Reported content: dismiss, hide, restore',
+        title: tr('Reports'),
+        subtitle: tr('Reported content: dismiss, hide, restore'),
         builder: (_) =>
             AdminReportsScreen(adminId: adminId, repository: _admin),
       ),
@@ -81,24 +83,24 @@ class _AdminScreenState extends State<AdminScreen> {
         key: 'admin-feedback',
         badge: _counts.feedback,
         icon: Icons.feedback_outlined,
-        title: 'Feedback',
-        subtitle: 'What testers sent from the Send feedback button',
+        title: tr('Feedback'),
+        subtitle: tr('What testers sent from the Send feedback button'),
         builder: (_) =>
             AdminFeedbackScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-announcements',
         icon: Icons.campaign_outlined,
-        title: 'Announcements',
-        subtitle: 'Post news for all members, search past posts',
+        title: tr('Announcements'),
+        subtitle: tr('Post news for all members, search past posts'),
         builder: (_) =>
             AdminAnnouncementsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-ikafe-contacts',
         icon: Icons.contact_phone_outlined,
-        title: 'Kontak Ikafe',
-        subtitle: 'Edit the contacts and socials members see',
+        title: tr('Kontak Ikafe'),
+        subtitle: tr('Edit the contacts and socials members see'),
         builder: (_) =>
             AdminIkafeContactsScreen(adminId: adminId, repository: _admin),
       ),
@@ -106,8 +108,10 @@ class _AdminScreenState extends State<AdminScreen> {
         key: 'admin-businesses',
         badge: _counts.businesses,
         icon: Icons.business_center_outlined,
-        title: 'Businesses',
-        subtitle: 'Setujui, tolak, tangguhkan. Produk bisnis yang disetujui langsung tayang',
+        title: tr('Businesses'),
+        subtitle: tr(
+          'Setujui, tolak, tangguhkan. Produk bisnis yang disetujui langsung tayang',
+        ),
         builder: (_) =>
             AdminBusinessesScreen(adminId: adminId, repository: _admin),
       ),
@@ -115,22 +119,23 @@ class _AdminScreenState extends State<AdminScreen> {
         key: 'admin-jobs',
         icon: Icons.work_outline,
         title: 'Jobs',
-        subtitle: 'Lihat semua lowongan, turunkan atau tampilkan lagi',
+        subtitle: tr('Lihat semua lowongan, turunkan atau tampilkan lagi'),
         builder: (_) => AdminJobsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-log',
         icon: Icons.history,
         title: 'Riwayat',
-        subtitle:
-            'Siapa menyetujui, menolak, menyembunyikan atau menghapus apa',
+        subtitle: tr(
+          'Siapa menyetujui, menolak, menyembunyikan atau menghapus apa',
+        ),
         builder: (_) => AdminLogScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-home-order',
         icon: Icons.push_pin_outlined,
-        title: 'Home order',
-        subtitle: 'Pilih produk dan lowongan yang tampil dulu di Home',
+        title: tr('Home order'),
+        subtitle: tr('Pilih produk dan lowongan yang tampil dulu di Home'),
         builder: (_) =>
             AdminHomeOrderScreen(adminId: adminId, repository: _admin),
       ),
@@ -138,14 +143,14 @@ class _AdminScreenState extends State<AdminScreen> {
         key: 'admin-marketplace',
         badge: _counts.listings,
         icon: Icons.storefront_outlined,
-        title: 'Marketplace review',
-        subtitle: 'Old listings waiting for review, report counts',
+        title: tr('Marketplace review'),
+        subtitle: tr('Old listings waiting for review, report counts'),
         builder: (_) =>
             MarketplaceAdminScreen(adminId: adminId, repository: _market),
       ),
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin')),
+      appBar: AppBar(title: Text(tr('Admin'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -363,8 +368,8 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
 
   Future<void> _reject(Business b) async {
     final reason = await _askReason(
-      title: 'Reject business',
-      label: 'Reason (shown to the owner)',
+      title: tr('Reject business'),
+      label: tr('Reason (shown to the owner)'),
       required: true,
       action: 'Reject',
     );
@@ -378,8 +383,8 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
 
   Future<void> _suspend(Business b) async {
     final reason = await _askReason(
-      title: 'Suspend business',
-      label: 'Reason (shown to the owner, optional)',
+      title: tr('Suspend business'),
+      label: tr('Reason (shown to the owner, optional)'),
       required: false,
       action: 'Suspend',
     );
@@ -425,7 +430,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(tr('Cancel')),
               ),
               FilledButton(
                 onPressed: () {
@@ -448,7 +453,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Businesses')),
+      appBar: AppBar(title: Text(tr('Businesses'))),
       body: Column(
         children: [
           Padding(
@@ -463,13 +468,13 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                         key: const Key('admin-business-search'),
                         controller: _search,
                         decoration: InputDecoration(
-                          hintText: 'Search name, owner or link...',
+                          hintText: tr('Search name, owner or link...'),
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _search.text.isEmpty
                               ? null
                               : IconButton(
                                   icon: const Icon(Icons.clear),
-                                  tooltip: 'Clear search',
+                                  tooltip: tr('Clear search'),
                                   onPressed: _search.clear,
                                 ),
                           border: const OutlineInputBorder(),
@@ -550,11 +555,11 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                 }
                 final all = snap.data ?? const <Business>[];
                 if (all.isEmpty) {
-                  return const Center(child: Text('Nothing here.'));
+                  return Center(child: Text(tr('Nothing here.')));
                 }
                 final items = _visible(all);
                 if (items.isEmpty) {
-                  return const Center(child: Text('Nothing matches.'));
+                  return Center(child: Text(tr('Nothing matches.')));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -604,31 +609,31 @@ class _AdminBusinessCard extends StatelessWidget {
         OutlinedButton(
           key: Key('reject-${b.id}'),
           onPressed: busy ? null : onReject,
-          child: const Text('Reject'),
+          child: Text(tr('Reject')),
         ),
         FilledButton(
           key: Key('approve-${b.id}'),
           onPressed: busy ? null : onApprove,
-          child: const Text('Approve'),
+          child: Text(tr('Approve')),
         ),
       ],
       if (b.status == BusinessStatus.rejected)
         FilledButton(
           key: Key('approve-${b.id}'),
           onPressed: busy ? null : onApprove,
-          child: const Text('Approve'),
+          child: Text(tr('Approve')),
         ),
       if (b.status == BusinessStatus.approved)
         OutlinedButton(
           key: Key('suspend-${b.id}'),
           onPressed: busy ? null : onSuspend,
-          child: const Text('Suspend'),
+          child: Text(tr('Suspend')),
         ),
       if (b.status == BusinessStatus.suspended)
         FilledButton(
           key: Key('restore-${b.id}'),
           onPressed: busy ? null : onRestore,
-          child: const Text('Restore'),
+          child: Text(tr('Restore')),
         ),
     ];
     return Card(

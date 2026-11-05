@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/avatar_repository.dart';
 import '../data/marketplace_image_picker.dart';
 import 'photo_adjust_screen.dart';
@@ -102,7 +104,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
     final theme = Theme.of(context);
     final picked = _picked;
     return Scaffold(
-      appBar: AppBar(title: const Text('Foto profil')),
+      appBar: AppBar(title: Text(tr('Foto profil'))),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -158,7 +160,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
                 TextButton(
                   key: const Key('photo-remove'),
                   onPressed: _busy ? null : _remove,
-                  child: const Text('Hapus foto'),
+                  child: Text(tr('Hapus foto')),
                 ),
               ],
             ],

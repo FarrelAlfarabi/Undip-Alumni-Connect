@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../config/policy_config.dart';
 import '../data/business_repository.dart';
 import '../data/posting_text.dart';
@@ -104,11 +106,11 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My businesses')),
+      appBar: AppBar(title: Text(tr('My businesses'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
         icon: const Icon(Icons.add_business_outlined),
-        label: const Text('Register a business'),
+        label: Text(tr('Register a business')),
       ),
       body: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
         future: _future,

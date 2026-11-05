@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../data/ikafe_contact.dart';
 import '../util/friendly_error.dart';
@@ -64,12 +66,12 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Kontak Ikafe')),
+      appBar: AppBar(title: Text(tr('Kontak Ikafe'))),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('ikafe-contact-new'),
         onPressed: _edit,
         icon: const Icon(Icons.add),
-        label: const Text('Tambah kontak'),
+        label: Text(tr('Tambah kontak')),
       ),
       body: FutureBuilder<List<IkafeContact>>(
         future: _future,
@@ -89,7 +91,7 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
           }
           final items = snap.data ?? const [];
           if (items.isEmpty) {
-            return const Center(child: Text('Belum ada kontak.'));
+            return Center(child: Text(tr('Belum ada kontak.')));
           }
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
@@ -239,7 +241,7 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus kontak ini?'),
+        title: Text(tr('Hapus kontak ini?')),
         content: const Text(
           'Kontak hilang dari Kontak Ikafe. Pilih Sembunyikan kalau mau '
           'menyimpannya.',
@@ -310,8 +312,8 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 controller: _label,
                 enabled: !_busy,
                 maxLength: 60,
-                decoration: const InputDecoration(
-                  labelText: 'Nama kontak',
+                decoration: InputDecoration(
+                  labelText: tr('Nama kontak'),
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
@@ -324,8 +326,8 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 enabled: !_busy,
                 autocorrect: false,
                 keyboardType: TextInputType.url,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor, email, @akun atau link',
+                decoration: InputDecoration(
+                  labelText: tr('Nomor, email, @akun atau link'),
                   border: OutlineInputBorder(),
                 ),
                 validator: _checkValue,
@@ -336,15 +338,15 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 controller: _sort,
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Urutan (angka kecil tampil lebih dulu)',
+                decoration: InputDecoration(
+                  labelText: tr('Urutan (angka kecil tampil lebih dulu)'),
                   border: OutlineInputBorder(),
                 ),
               ),
               SwitchListTile(
                 key: const Key('ikafe-active'),
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Tampil di Kontak Ikafe'),
+                title: Text(tr('Tampil di Kontak Ikafe')),
                 value: _active,
                 onChanged: _busy ? null : (v) => setState(() => _active = v),
               ),

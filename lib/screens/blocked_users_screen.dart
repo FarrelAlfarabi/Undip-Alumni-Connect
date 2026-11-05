@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/block_list.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -65,7 +67,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengguna terblokir')),
+      appBar: AppBar(title: Text(tr('Pengguna terblokir'))),
       body: FutureBuilder<List<BlockedPerson>>(
         future: _future,
         builder: (context, snap) {
@@ -102,7 +104,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                 trailing: OutlinedButton(
                   key: Key('unblock-${p.id}'),
                   onPressed: _busy.contains(p.id) ? null : () => _unblock(p),
-                  child: const Text('Buka blokir'),
+                  child: Text(tr('Buka blokir')),
                 ),
               );
             },

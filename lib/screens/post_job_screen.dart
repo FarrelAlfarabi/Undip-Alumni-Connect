@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/marketplace_image_picker.dart';
@@ -194,7 +197,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post a Job')),
+      appBar: AppBar(title: Text(tr('Post a Job'))),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -226,8 +229,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
                               controller: controller,
                               focusNode: focusNode,
                               enabled: !_saving,
-                              decoration: const InputDecoration(
-                                labelText: 'Job Title',
+                              decoration: InputDecoration(
+                                labelText: tr('Job Title'),
                                 border: OutlineInputBorder(),
                               ),
                               validator: (v) => (v == null || v.trim().isEmpty)
@@ -273,8 +276,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     TextFormField(
                       controller: _contactController,
                       enabled: !_saving,
-                      decoration: const InputDecoration(
-                        labelText: 'Contact Info (email, phone, etc.)',
+                      decoration: InputDecoration(
+                        labelText: tr('Contact Info (email, phone, etc.)'),
                         border: OutlineInputBorder(),
                       ),
                       validator: (v) =>
@@ -342,7 +345,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                       onChanged: _saving
                           ? null
                           : (v) => setState(() => _notifyOnApply = v),
-                      title: const Text('Notify me when someone applies'),
+                      title: Text(tr('Notify me when someone applies')),
                       subtitle: const Text(
                         'Demo scope: shown as an applicant count on this '
                         'job, not a real push/email notification.',
@@ -368,7 +371,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           ? null
                           : (v) =>
                                 setState(() => _requireLinkedin = v ?? false),
-                      title: const Text('LinkedIn URL'),
+                      title: Text(tr('LinkedIn URL')),
                     ),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
@@ -377,7 +380,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           ? null
                           : (v) =>
                                 setState(() => _requirePortfolio = v ?? false),
-                      title: const Text('Portfolio / other link'),
+                      title: Text(tr('Portfolio / other link')),
                     ),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
@@ -386,7 +389,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           ? null
                           : (v) =>
                                 setState(() => _requireCoverNote = v ?? false),
-                      title: const Text('Cover note'),
+                      title: Text(tr('Cover note')),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 16),
@@ -410,7 +413,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Post Job'),
+                          : Text(tr('Post Job')),
                     ),
                   ],
                 ),

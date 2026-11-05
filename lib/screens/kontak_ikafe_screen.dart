@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../util/app_language.dart';
+
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -105,7 +108,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kontak Ikafe'),
+        title: Text(tr('Kontak Ikafe')),
         automaticallyImplyLeading: widget.showBack,
       ),
       body: FutureBuilder<IkafeContactList>(
@@ -116,7 +119,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
           }
           if (snap.hasError) {
             return ErrorView(
-              message: 'Kontak belum bisa dimuat.',
+              message: tr('Kontak belum bisa dimuat.'),
               screen: 'Kontak Ikafe',
               error: snap.error,
               onRetry: _reload,
@@ -132,7 +135,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
               if (c.kind.isSocial) c,
           ];
           if (data.contacts.isEmpty) {
-            return const Center(child: Text('Belum ada kontak.'));
+            return Center(child: Text(tr('Belum ada kontak.')));
           }
           return ListView(
             padding: const EdgeInsets.all(16),

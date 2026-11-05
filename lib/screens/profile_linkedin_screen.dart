@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/profile_fields.dart';
 import '../theme.dart';
 
@@ -82,8 +84,8 @@ class _ProfileLinkedInScreenState extends State<ProfileLinkedInScreen> {
                 keyboardType: TextInputType.url,
                 autocorrect: false,
                 enableSuggestions: false,
-                decoration: const InputDecoration(
-                  labelText: 'LinkedIn (opsional)',
+                decoration: InputDecoration(
+                  labelText: tr('LinkedIn (opsional)'),
                   hintText: 'linkedin.com/in/namamu',
                   helperText:
                       'Boleh dikosongkan. Tautan ini tampil di profilmu untuk '

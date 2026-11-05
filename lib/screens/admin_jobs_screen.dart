@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -56,7 +58,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: const Text('Turunkan lowongan ini?'),
+            title: Text(tr('Turunkan lowongan ini?')),
             content: TextField(
               key: const Key('job-hide-reason'),
               controller: controller,
@@ -64,7 +66,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
               maxLines: 3,
               maxLength: 300,
               decoration: InputDecoration(
-                labelText: 'Alasan (dikirim ke pemasang)',
+                labelText: tr('Alasan (dikirim ke pemasang)'),
                 errorText: error,
                 border: const OutlineInputBorder(),
               ),
@@ -164,9 +166,9 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
               controller: _search,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _reload(),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Cari judul, perusahaan atau pemasang',
+                hintText: tr('Cari judul, perusahaan atau pemasang'),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -188,7 +190,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                 }
                 final items = snap.data ?? const <AdminJob>[];
                 if (items.isEmpty) {
-                  return const Center(child: Text('Belum ada lowongan.'));
+                  return Center(child: Text(tr('Belum ada lowongan.')));
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -240,7 +242,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                       onPressed: _busy.contains(j.id)
                                           ? null
                                           : () => _restore(j),
-                                      child: const Text('Tampilkan lagi'),
+                                      child: Text(tr('Tampilkan lagi')),
                                     )
                                   : TextButton.icon(
                                       key: Key('job-hide-${j.id}'),

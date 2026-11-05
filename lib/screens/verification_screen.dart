@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -148,9 +150,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
         _wrongCodes = 0;
       });
       _startCooldown();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Kode baru sudah dikirim')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Kode baru sudah dikirim'))));
     } catch (e) {
       if (!mounted) return;
       final limited = isRateLimitError(e);
@@ -411,7 +412,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Verifikasi Status Alumni'),
+        title: Text(tr('Verifikasi Status Alumni')),
         // On the code step the back arrow returns to the email box.
         leading: _codeSent && _state == _VerificationState.idle
             ? BackButton(onPressed: _reset)
@@ -576,7 +577,7 @@ class _VerificationForm extends StatelessWidget {
               },
               onFieldSubmitted: (_) => onSubmit(),
               decoration: InputDecoration(
-                labelText: 'Kode 6 digit',
+                labelText: tr('Kode 6 digit'),
                 counterText: '',
                 errorText: codeError,
                 errorMaxLines: 3,
@@ -642,12 +643,12 @@ class _VerificationForm extends StatelessWidget {
               TextButton(
                 key: const Key('login-change-email'),
                 onPressed: loading ? null : onChangeEmail,
-                child: const Text('Pakai email lain'),
+                child: Text(tr('Pakai email lain')),
               ),
             TextButton(
               key: const Key('login-contact-admin'),
               onPressed: loading ? null : onContact,
-              child: const Text('Belum terdaftar? Hubungi tim admin'),
+              child: Text(tr('Belum terdaftar? Hubungi tim admin')),
             ),
           ],
           if (codeController != null) ...[
@@ -686,7 +687,7 @@ class _VerificationForm extends StatelessWidget {
                         foregroundColor: theme.colorScheme.onSurface,
                         side: BorderSide(color: theme.colorScheme.onSurface),
                       ),
-                      child: const Text('Hubungi tim admin'),
+                      child: Text(tr('Hubungi tim admin')),
                     ),
                   ],
                 ),
@@ -695,7 +696,7 @@ class _VerificationForm extends StatelessWidget {
             TextButton(
               key: const Key('login-change-email'),
               onPressed: loading ? null : onChangeEmail,
-              child: const Text('Pakai email lain'),
+              child: Text(tr('Pakai email lain')),
             ),
           ],
         ],
@@ -746,7 +747,7 @@ class _SuspendedResult extends StatelessWidget {
         OutlinedButton(
           key: const Key('login-contact-admin'),
           onPressed: onContact,
-          child: const Text('Hubungi tim admin'),
+          child: Text(tr('Hubungi tim admin')),
         ),
       ],
     );
@@ -795,12 +796,12 @@ class _ErrorResult extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton(onPressed: onTryAgain, child: const Text('Coba lagi')),
+        FilledButton(onPressed: onTryAgain, child: Text(tr('Coba lagi'))),
         TextButton(
           key: const Key('send-feedback'),
           onPressed: () =>
               showFeedbackSheet(context, error: error, screen: 'Verification'),
-          child: const Text('Kirim masukan'),
+          child: Text(tr('Kirim masukan')),
         ),
       ],
     );
