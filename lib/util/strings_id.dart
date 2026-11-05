@@ -4,6 +4,9 @@ import '../models/business.dart' show kMaxBusinesses;
 /// Indonesian text for the English text used in the code (see [tr]). Add a
 /// line here when an English text in the code needs an Indonesian version.
 final Map<String, String> kIndonesian = {
+  "This link isn't valid or can't be opened.":
+      'Tautan ini tidak valid atau tidak bisa dibuka.',
+  'Announcement': 'Pengumuman',
   // Notification times
   'Just now': 'Baru saja',
   'm ago': ' menit lalu',

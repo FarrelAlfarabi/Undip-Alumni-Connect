@@ -1,4 +1,7 @@
 import 'dart:typed_data';
+
+import '../util/app_language.dart';
+
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -112,10 +115,10 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Atur foto'),
+        title: Text(tr('Atur foto')),
         leading: TextButton(
           onPressed: _saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
+          child: Text(tr('Batal')),
         ),
         leadingWidth: 80,
         actions: [
@@ -128,7 +131,7 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
                     width: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Simpan'),
+                : Text(tr('Simpan')),
           ),
         ],
       ),

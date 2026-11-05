@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/contact_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -95,7 +97,7 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Default kontak untuk dibagikan')),
+      appBar: AppBar(title: Text(tr('Default kontak untuk dibagikan'))),
       body: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -123,11 +125,11 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                       controller: _text,
                       enabled: !_saving,
                       maxLength: kSharedContactMax,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText:
                             'Kontak atau nama Online Shop yang akan '
                             'dibagikan',
-                        hintText: 'WA: 08xxx',
+                        hintText: tr('WA: 08xxx'),
                         helperText:
                             'Contoh: WA: 08xxx, Shopee: Toko Natasya, '
                             'Ig: Toko Natasya. Kosongkan untuk memakai '
@@ -157,7 +159,7 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Simpan'),
+                          : Text(tr('Simpan')),
                     ),
                   ],
                 ),

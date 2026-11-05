@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/account_repository.dart';
 import '../lock/lock_service.dart';
 
@@ -94,7 +96,7 @@ class _FeatureIntroScreenState extends State<FeatureIntroScreen> {
                 child: TextButton(
                   key: const Key('intro-skip'),
                   onPressed: _finish,
-                  child: const Text('Lewati'),
+                  child: Text(tr('Lewati')),
                 ),
               ),
               Expanded(

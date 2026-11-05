@@ -1,4 +1,5 @@
 import '../widgets/closed_test_notice.dart';
+import '../util/app_language.dart';
 
 import 'package:flutter/material.dart';
 
@@ -103,7 +104,7 @@ class WelcomeScreen extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Mulai'),
+                      child: Text(tr('Mulai')),
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../util/safe_url.dart';
 
 /// A chip that opens a user-supplied link, but only if it is a plain
@@ -30,8 +32,8 @@ class SafeLinkChip extends StatelessWidget {
         final ok = await openHttpUrl(url, launcher: launcher);
         if (!ok) {
           messenger.showSnackBar(
-            const SnackBar(
-              content: Text("This link isn't valid or can't be opened."),
+            SnackBar(
+              content: Text(tr("This link isn't valid or can't be opened.")),
             ),
           );
         }

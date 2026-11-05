@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 /// Asks "are you sure" before something is removed for good. True when the
 /// person confirms.
 Future<bool> confirmDelete(
@@ -16,7 +18,7 @@ Future<bool> confirmDelete(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('Batal'),
+          child: Text(tr('Batal')),
         ),
         FilledButton(
           key: const Key('confirm-delete'),

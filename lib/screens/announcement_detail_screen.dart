@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/marketplace_format.dart';
 import '../widgets/announcement_card.dart';
 
@@ -16,7 +18,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
       announcement['created_at'] as String? ?? '',
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Announcement')),
+      appBar: AppBar(title: Text(tr('Announcement'))),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../lock/lock_store.dart';
 
 /// Unobtrusive banner shown on every marketplace screen.
@@ -81,7 +83,7 @@ class _MarketplaceDemoNoticeState extends State<MarketplaceDemoNotice> {
                 MarketplaceDemoNotice._dismiss();
                 Navigator.of(dialogContext).pop();
               },
-              child: const Text('Tutup'),
+              child: Text(tr('Tutup')),
             ),
           ],
         ),

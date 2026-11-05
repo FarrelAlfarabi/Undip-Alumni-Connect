@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import 'error_view.dart';
 
 /// How long an admin has to undo an action. The button lives inside the
@@ -27,13 +29,11 @@ void showUndoSnackBar(
       persist: false,
       action: SnackBarAction(
         key: const Key('undo-action'),
-        label: 'Urungkan',
+        label: tr('Urungkan'),
         onPressed: () async {
           try {
             await onUndo();
-            messenger.showSnackBar(
-              const SnackBar(content: Text('Dibatalkan.')),
-            );
+            messenger.showSnackBar(SnackBar(content: Text(tr('Dibatalkan.'))));
           } catch (e) {
             showErrorSnackBarOn(
               messenger,
