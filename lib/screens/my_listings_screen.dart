@@ -243,7 +243,7 @@ class _MyListingCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        formatRupiah(l.priceIdr),
+                        priceLabel(l.priceIdr, l.priceNegotiable),
                         style: theme.textTheme.titleSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,

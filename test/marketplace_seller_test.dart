@@ -153,7 +153,7 @@ void main() {
       final api = FakeApi();
       await pumpFormLauncher(tester, api);
       await openForm(tester);
-      // City is prefilled, so it is the only field without an error.
+      // City is optional, so it never shows an error.
       await tester.ensureVisible(find.text('Post product'));
       await tester.tap(find.text('Post product'));
       await tester.pumpAndSettle();
@@ -230,7 +230,7 @@ void main() {
       expect(p['p_title'], 'Kopi Arabika');
       expect(p['p_price_idr'], 85000);
       expect(p['p_category'], 'Food & Drink');
-      expect(p['p_city'], 'Jakarta');
+      expect(p['p_city'], isNull);
       expect(p['p_shop_url'], isNull);
       expect(p['p_contact_info'], 'WA 0800-0000-0000');
       expect(

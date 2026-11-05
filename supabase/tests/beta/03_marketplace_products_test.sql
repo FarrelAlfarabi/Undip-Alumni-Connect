@@ -38,21 +38,21 @@ select jt.expect_error($q$select * from posting_plans$q$, 'permission denied');
 select jt.expect_error($q$update posting_plans set free_post_limit = 999$q$, 'permission denied');
 
 -- The old 9-argument create function is gone.
-select jt.expect_error(format($q$select marketplace_create_listing(%L, 'Title ok', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com')), 'does not exist');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, 'Title ok', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com')), 'does not exist');
 
 -- Create rules.
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk satu', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'pending')), 'business_not_approved');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk satu', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'micro')), 'not_owner');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, gen_random_uuid(), 'Produk satu', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com')), 'business_not_found');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk satu', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('bagas.prasetyo@example.com'), (select v from t_ids where k = 'noband')), 'business_not_approved');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk satu', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'pending')), 'business_not_approved');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk satu', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'micro')), 'not_owner');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, gen_random_uuid(), 'Produk satu', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com')), 'business_not_found');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk satu', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('bagas.prasetyo@example.com'), (select v from t_ids where k = 'noband')), 'business_not_approved');
 
 -- Micro business: 3 free products, approved at creation.
-insert into t_ids select 'p1', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk satu', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
-insert into t_ids select 'p2', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk dua', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
-insert into t_ids select 'p3', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk tiga', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
+insert into t_ids select 'p1', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk satu', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
+insert into t_ids select 'p2', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk dua', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
+insert into t_ids select 'p3', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk tiga', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
 select jt.assert((select status from marketplace_my_listings(jt.pid('ahmad.ramadhan@example.com')) where id = (select v from t_ids where k = 'p1')) = 'approved', 'product from an approved business is approved at creation');
 select jt.assert((select count(*) from marketplace_listings where business_id = (select v from t_ids where k = 'micro')) = 3, 'the three products are publicly visible');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk empat', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'post_limit_reached');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk empat', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'post_limit_reached');
 
 -- The owner sees used, limit and can_post.
 select jt.assert((select products_used from business_my_usage(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) = 3, 'used = 3');
@@ -61,27 +61,27 @@ select jt.assert((select can_post from business_my_usage(jt.pid('ahmad.ramadhan@
 select jt.assert((select unlimited_active from business_my_usage(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) = false, 'not unlimited');
 
 -- Edit and delete always work at the limit. Editing an approved product keeps it approved.
-select marketplace_update_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'p1'), 'Produk satu baru', 'desc', 2000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
+select marketplace_update_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'p1'), 'Produk satu baru', 'desc', 2000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'WA 0800');
 select jt.assert((select status from marketplace_my_listings(jt.pid('ahmad.ramadhan@example.com')) where id = (select v from t_ids where k = 'p1')) = 'approved', 'edit keeps an approved business product approved');
 
 -- Sold does not count.
 select marketplace_set_sold(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'p3'));
 select jt.assert((select products_used from business_my_usage(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) = 2, 'sold product does not count');
-insert into t_ids select 'p4', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk empat', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk lima', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'post_limit_reached');
+insert into t_ids select 'p4', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk empat', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk lima', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'post_limit_reached');
 -- Deleted does not count.
 select marketplace_delete_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'p4'));
-insert into t_ids select 'p5', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk lima', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
+insert into t_ids select 'p5', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk lima', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
 
 -- Large band: only 1 free product.
-insert into t_ids select 'L1', id from marketplace_create_listing(jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'large'), 'Layanan besar', 'desc', 1000, 'Services', 'Semarang', 'https://x.example/a.png', null, 'wa');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Layanan dua', 'desc', 1000, 'Services', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'large')), 'post_limit_reached');
+insert into t_ids select 'L1', id from marketplace_create_listing(jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'large'), 'Layanan besar', 'desc', 1000, false, 'Services', 'Semarang', 'https://x.example/a.png', null, 'wa');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Layanan dua', 'desc', 1000, false, 'Services', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'large')), 'post_limit_reached');
 reset role;
 
 -- The limit is data, not code: the dashboard raises it and posting works.
 update posting_plans set free_post_limit = 2 where band = 'large';
 set role anon;
-insert into t_ids select 'L2', id from marketplace_create_listing(jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'large'), 'Layanan dua', 'desc', 1000, 'Services', 'Semarang', 'https://x.example/a.png', null, 'wa');
+insert into t_ids select 'L2', id from marketplace_create_listing(jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'large'), 'Layanan dua', 'desc', 1000, false, 'Services', 'Semarang', 'https://x.example/a.png', null, 'wa');
 reset role;
 update posting_plans set free_post_limit = 1 where band = 'large';
 
@@ -89,8 +89,8 @@ update posting_plans set free_post_limit = 1 where band = 'large';
 update businesses set unlimited_until = (now() at time zone 'Asia/Jakarta')::date where id = (select v from t_ids where k = 'micro');
 set role anon;
 select jt.assert((select unlimited_active from business_my_usage(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) = true, 'unlimited today');
-insert into t_ids select 'u1', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk enam', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
-insert into t_ids select 'u2', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk tujuh', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
+insert into t_ids select 'u1', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk enam', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
+insert into t_ids select 'u2', id from marketplace_create_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro'), 'Produk tujuh', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
 reset role;
 
 -- It expires: yesterday is over. Everything stays visible, only new ones are blocked.
@@ -99,9 +99,9 @@ set role anon;
 select jt.assert((select unlimited_active from business_my_usage(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) = false, 'expired is not unlimited');
 select jt.assert((select products_used from business_my_usage(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) = 5, 'five products are counted (over the free limit of 3)');
 select jt.assert((select count(*) from marketplace_listings where business_id = (select v from t_ids where k = 'micro')) = 5, 'all five stay visible after expiry');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk delapan', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'post_limit_reached');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk delapan', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'post_limit_reached');
 -- Edit and delete still work while over the limit.
-select marketplace_update_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'u1'), 'Produk enam baru', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
+select marketplace_update_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'u1'), 'Produk enam baru', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa');
 select marketplace_delete_listing(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'u2'));
 reset role;
 
@@ -110,7 +110,7 @@ update businesses set status = 'suspended' where id = (select v from t_ids where
 set role anon;
 select jt.assert((select count(*) from marketplace_listings where business_id = (select v from t_ids where k = 'micro')) = 0, 'suspended business: products hidden');
 select jt.assert((select count(*) from marketplace_my_listings(jt.pid('ahmad.ramadhan@example.com')) where business_id = (select v from t_ids where k = 'micro')) >= 4, 'owner still sees and can edit their products');
-select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk sembilan', 'desc', 1000, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'business_not_approved');
+select jt.expect_error(format($q$select marketplace_create_listing(%L, %L, 'Produk sembilan', 'desc', 1000, false, 'Other', 'Semarang', 'https://x.example/a.png', null, 'wa')$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'micro')), 'business_not_approved');
 reset role;
 update businesses set status = 'approved' where id = (select v from t_ids where k = 'micro');
 set role anon;

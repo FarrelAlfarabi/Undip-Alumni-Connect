@@ -159,7 +159,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          formatRupiah(_l.priceIdr),
+                          priceLabel(_l.priceIdr, _l.priceNegotiable),
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: theme.colorScheme.primary,
@@ -174,13 +174,14 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
                               avatar: const Icon(Icons.sell_outlined, size: 16),
                               label: Text(_l.category),
                             ),
-                            Chip(
-                              avatar: const Icon(
-                                Icons.place_outlined,
-                                size: 16,
+                            if (_l.city.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(
+                                  Icons.place_outlined,
+                                  size: 16,
+                                ),
+                                label: Text(_l.city),
                               ),
-                              label: Text(_l.city),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 4),

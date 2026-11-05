@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/marketplace_image_picker.dart';
+import 'photo_adjust_screen.dart';
 import '../data/marketplace_repository.dart' show imageContentType;
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
@@ -134,7 +135,9 @@ class _PostJobScreenState extends State<PostJobScreen> {
 
   Future<void> _choosePhoto() async {
     try {
-      final picked = await widget.pickPhoto();
+      final raw = await widget.pickPhoto();
+      if (raw == null || !mounted) return;
+      final picked = await PhotoAdjust.run(context, raw);
       if (picked == null || !mounted) return;
       setState(() {
         _picked = picked;

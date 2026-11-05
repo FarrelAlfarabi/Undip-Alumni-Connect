@@ -76,6 +76,7 @@ class MarketplaceListing {
     this.hiddenAt,
     this.hiddenReason,
     this.homeRank,
+    this.priceNegotiable = false,
   });
 
   final String id;
@@ -83,9 +84,14 @@ class MarketplaceListing {
   final String title;
   final String description;
 
-  /// Whole rupiah.
-  final int priceIdr;
+  /// Whole rupiah. Null when the seller wrote no price (negotiable).
+  final int? priceIdr;
+
+  /// The seller is open to negotiating the price.
+  final bool priceNegotiable;
   final String category;
+
+  /// Empty when the seller gave no city.
   final String city;
   final String imageUrl;
   final String? shopUrl;
@@ -118,6 +124,7 @@ class MarketplaceListing {
       title: title,
       description: description,
       priceIdr: priceIdr,
+      priceNegotiable: priceNegotiable,
       category: category,
       city: city,
       imageUrl: imageUrl,
@@ -143,7 +150,8 @@ class MarketplaceListing {
       sellerId: map['seller_id'] as String,
       title: map['title'] as String,
       description: map['description'] as String? ?? '',
-      priceIdr: (map['price_idr'] as num).toInt(),
+      priceIdr: (map['price_idr'] as num?)?.toInt(),
+      priceNegotiable: map['price_negotiable'] == true,
       category: map['category'] as String,
       city: map['city'] as String? ?? '',
       imageUrl: map['image_url'] as String? ?? '',
@@ -178,13 +186,15 @@ class MarketplaceListingInput {
     required this.category,
     required this.city,
     required this.imageUrl,
+    this.priceNegotiable = false,
     this.shopUrl,
     this.contactInfo,
   });
 
   final String title;
   final String description;
-  final int priceIdr;
+  final int? priceIdr;
+  final bool priceNegotiable;
   final String category;
   final String city;
   final String imageUrl;

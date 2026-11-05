@@ -212,3 +212,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Admin: no band, red tags, undo (5 Nov 2026)
 - Approve business is one tap (owner's band is used). Red tags on Admin and on Businesses, Reports, Feedback, Marketplace review (`admin_pending_counts`).
 - Every admin action shows "Urungkan" inside the bottom notification for 8 seconds. Migration `20261105120000_admin_undo_and_counts`, rollback file included. Beta runner now also applies 202611* migrations.
+## Product price/city and photo adjuster (5 Nov 2026)
+- Product price can be empty with "Harga bisa nego"; city is optional ("Kota (opsional)"). Migration `20261105130000_product_optional_price_city` (new 11-arg create/update), rollback file included.
+- Photo adjuster (move and zoom, saved as square-ready PNG) after picking a photo for products, businesses, jobs and profile. Tests: `product_price_city_test.dart`, `photo_adjust_test.dart`.

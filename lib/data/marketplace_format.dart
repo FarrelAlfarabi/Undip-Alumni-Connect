@@ -9,6 +9,14 @@ String formatRupiah(int amount) {
   return '${amount < 0 ? '-' : ''}Rp $buf';
 }
 
+/// What a product shows as its price. [price] null means none was written.
+String priceLabel(int? price, bool negotiable) {
+  if (price != null) {
+    return negotiable ? '${formatRupiah(price)} (nego)' : formatRupiah(price);
+  }
+  return negotiable ? 'Harga nego' : 'Hubungi penjual';
+}
+
 const _months = [
   'Jan',
   'Feb',

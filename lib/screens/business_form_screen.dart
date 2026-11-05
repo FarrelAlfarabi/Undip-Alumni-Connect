@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/business_repository.dart';
 import '../data/category_repository.dart';
 import '../data/marketplace_image_picker.dart';
+import 'photo_adjust_screen.dart';
 import '../models/business.dart';
 import '../util/safe_url.dart';
 import '../widgets/business_photo.dart';
@@ -88,7 +89,9 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
 
   Future<void> _choosePhoto() async {
     try {
-      final picked = await widget.pickPhoto();
+      final raw = await widget.pickPhoto();
+      if (raw == null || !mounted) return;
+      final picked = await PhotoAdjust.run(context, raw);
       if (picked == null || !mounted) return;
       setState(() {
         _picked = picked;

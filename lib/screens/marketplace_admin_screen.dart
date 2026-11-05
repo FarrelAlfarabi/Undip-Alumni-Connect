@@ -229,14 +229,14 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                                 ),
                               ),
                               Text(
-                                formatRupiah(l.priceIdr),
+                                priceLabel(l.priceIdr, l.priceNegotiable),
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                               Text(
-                                '${l.category} · ${l.city}',
+                                [l.category, if (l.city.isNotEmpty) l.city].join(' · '),
                                 style: theme.textTheme.bodySmall,
                               ),
                               Text(

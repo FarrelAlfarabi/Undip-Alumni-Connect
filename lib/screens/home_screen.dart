@@ -875,7 +875,7 @@ class _ProductCard extends StatelessWidget {
       width: _ProductRow._cardWidth,
       child: Semantics(
         button: true,
-        label: '${l.title}, ${formatRupiah(l.priceIdr)}',
+        label: '${l.title}, ${priceLabel(l.priceIdr, l.priceNegotiable)}',
         excludeSemantics: true,
         child: Material(
           key: const ValueKey('home-product-card'),
@@ -916,14 +916,15 @@ class _ProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: muted,
                       ),
+                      if (l.city.isNotEmpty)
+                        Text(
+                          l.city,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: muted,
+                        ),
                       Text(
-                        l.city,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: muted,
-                      ),
-                      Text(
-                        formatRupiah(l.priceIdr),
+                        priceLabel(l.priceIdr, l.priceNegotiable),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(

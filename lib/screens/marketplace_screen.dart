@@ -47,9 +47,9 @@ List<MarketplaceListing> applyMarketplaceFilters(
     case MarketplaceSort.newest:
       result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     case MarketplaceSort.priceLow:
-      result.sort((a, b) => a.priceIdr.compareTo(b.priceIdr));
+      result.sort((a, b) => _byPrice(a, b, low: true));
     case MarketplaceSort.priceHigh:
-      result.sort((a, b) => b.priceIdr.compareTo(a.priceIdr));
+      result.sort((a, b) => _byPrice(a, b, low: false));
   }
   return result;
 }
@@ -492,7 +492,7 @@ class _ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      formatRupiah(listing.priceIdr),
+                      priceLabel(listing.priceIdr, listing.priceNegotiable),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.primary,
@@ -500,7 +500,10 @@ class _ListingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${listing.category} · ${listing.city}',
+                      [
+                        listing.category,
+                        if (listing.city.isNotEmpty) listing.city,
+                      ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -591,4 +594,14 @@ class ListingImage extends StatelessWidget {
       radius: 0,
     );
   }
+}
+
+/// Cheapest first (or dearest first). Products with no price written go last.
+int _byPrice(MarketplaceListing a, MarketplaceListing b, {required bool low}) {
+  final pa = a.priceIdr;
+  final pb = b.priceIdr;
+  if (pa == null && pb == null) return 0;
+  if (pa == null) return 1;
+  if (pb == null) return -1;
+  return low ? pa.compareTo(pb) : pb.compareTo(pa);
 }

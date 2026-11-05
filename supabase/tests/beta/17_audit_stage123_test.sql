@@ -59,6 +59,14 @@ select jt.assert((select count(*) from contact_requests_incoming((select v from 
 select jt.expect_error(format($q$select contact_request_cancel(%L, %L)$q$, (select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'req')), 'invalid_state');
 select contact_request_send((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'siti'), 'Halo lagi');
 
+-- ---- products: price may be empty only when negotiable; city may be empty
+reset role;
+select jt.expect_error(format($q$insert into marketplace_listings (seller_id, title, description, price_idr, category, image_url, contact_info, status)
+  values (%L, 'Tanpa harga', 'd', null, 'Other', 'https://x/y.png', 'wa', 'approved')$q$, (select v from t_ids where k = 'ahmad')), 'price_needed');
+insert into marketplace_listings (seller_id, title, description, price_idr, price_negotiable, category, city, image_url, contact_info, status)
+  values ((select v from t_ids where k = 'ahmad'), 'Nego tanpa harga', 'd', null, true, 'Other', null, 'https://x/y.png', 'wa', 'approved');
+select jt.assert((select count(*) from marketplace_listings where title = 'Nego tanpa harga' and price_idr is null and city is null) = 1, 'negotiable product without price or city');
+
 rollback;
 \o
 select 'ok';

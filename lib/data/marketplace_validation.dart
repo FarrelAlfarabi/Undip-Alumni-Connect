@@ -31,9 +31,17 @@ class MarketplaceValidation {
     return null;
   }
 
+  /// The price is needed, unless the seller marks it as negotiable (then it
+  /// may be left empty).
+  static String? priceFor(String? v, {required bool negotiable}) {
+    if (negotiable && (v ?? '').trim().isEmpty) return null;
+    return price(v);
+  }
+
+  /// Optional.
   static String? city(String? v) {
     final t = (v ?? '').trim();
-    if (t.isEmpty) return 'Required';
+    if (t.isEmpty) return null;
     if (t.length > 60) return 'City must be 60 characters or fewer';
     return null;
   }

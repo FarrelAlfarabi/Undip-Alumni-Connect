@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/avatar_repository.dart';
 import '../data/marketplace_image_picker.dart';
+import 'photo_adjust_screen.dart';
 import '../widgets/avatar.dart';
 import '../widgets/image_size_hint.dart';
 
@@ -39,7 +40,14 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
   Future<void> _choose() async {
     setState(() => _error = null);
     try {
-      final img = await widget.pickPhoto();
+      final raw = await widget.pickPhoto();
+      if (raw == null || !mounted) return;
+      final img = await PhotoAdjust.run(
+        context,
+        raw,
+        aspectRatio: 1,
+        circle: true,
+      );
       if (img != null && mounted) setState(() => _picked = img);
     } on ImagePickException catch (e) {
       if (mounted) setState(() => _error = e.message);
