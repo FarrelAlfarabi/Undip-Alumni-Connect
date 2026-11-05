@@ -24,7 +24,10 @@ class AlumniScreen extends StatelessWidget {
         title: const Text('Alumni'),
         automaticallyImplyLeading: showBack,
       ),
-      body: DirectoryScreen(currentUser: currentUser),
+      body: SafeArea(
+        top: false,
+        child: DirectoryScreen(currentUser: currentUser),
+      ),
     );
   }
 }

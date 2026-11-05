@@ -39,18 +39,21 @@ class MarketplaceAdminScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: Column(
-          children: [
-            const MarketplaceDemoNotice(),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _ReviewQueue(adminId: adminId, repository: repository),
-                  _ReportsTab(adminId: adminId, repository: repository),
-                ],
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              const MarketplaceDemoNotice(),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _ReviewQueue(adminId: adminId, repository: repository),
+                    _ReportsTab(adminId: adminId, repository: repository),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

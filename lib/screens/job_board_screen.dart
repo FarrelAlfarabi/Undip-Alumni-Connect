@@ -163,118 +163,121 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
         icon: const Icon(Icons.add),
         label: Text(tr('Post a Job')),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return ErrorView(
-              message: friendlyLoadError('the job board', snapshot.error),
-              screen: 'Job board',
-              error: snapshot.error,
-              onRetry: () => setState(() {
-                _future = _fetchJobs();
-              }),
-            );
-          }
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return ErrorView(
+                message: friendlyLoadError('the job board', snapshot.error),
+                screen: 'Job board',
+                error: snapshot.error,
+                onRetry: () => setState(() {
+                  _future = _fetchJobs();
+                }),
+              );
+            }
 
-          final all = snapshot.data ?? [];
-          if (all.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  tr('No jobs posted yet. Be the first alumnus to post one.'),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          final jobs = _applyFilters(all);
-          final industries = distinctSortedValues(all, 'industry');
-          final companies = distinctSortedValues(all, 'company');
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: ClearableSearchField(
-                  controller: _searchController,
-                  hintText: tr('Search by title, company, or description...'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: FilterDropdown(
-                        label: tr('Industry'),
-                        value: _industry,
-                        options: industries,
-                        onChanged: (v) => setState(() => _industry = v),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilterDropdown(
-                        label: tr('Company'),
-                        value: _company,
-                        options: companies,
-                        onChanged: (v) => setState(() => _company = v),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (_hasActiveFilters)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                  child: ClearFiltersButton(
-                    active: true,
-                    onPressed: _clearFilters,
+            final all = snapshot.data ?? [];
+            if (all.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    tr('No jobs posted yet. Be the first alumnus to post one.'),
+                    textAlign: TextAlign.center,
                   ),
-                )
-              else
-                const SizedBox(height: 4),
-              Expanded(
-                child: jobs.isEmpty
-                    ? Center(child: Text(tr('No jobs match these filters.')))
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          setState(() => _future = _fetchJobs());
-                          try {
-                            await _future;
-                          } catch (_) {}
-                        },
-                        child: ListView.separated(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                          itemCount: jobs.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, i) => _JobCard(
-                            job: jobs[i],
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => JobDetailScreen(
-                                    job: jobs[i],
-                                    currentUser: widget.currentUser,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                ),
+              );
+            }
+
+            final jobs = _applyFilters(all);
+            final industries = distinctSortedValues(all, 'industry');
+            final companies = distinctSortedValues(all, 'company');
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: ClearableSearchField(
+                    controller: _searchController,
+                    hintText: tr('Search by title, company, or description...'),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FilterDropdown(
+                          label: tr('Industry'),
+                          value: _industry,
+                          options: industries,
+                          onChanged: (v) => setState(() => _industry = v),
                         ),
                       ),
-              ),
-            ],
-          );
-        },
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilterDropdown(
+                          label: tr('Company'),
+                          value: _company,
+                          options: companies,
+                          onChanged: (v) => setState(() => _company = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_hasActiveFilters)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                    child: ClearFiltersButton(
+                      active: true,
+                      onPressed: _clearFilters,
+                    ),
+                  )
+                else
+                  const SizedBox(height: 4),
+                Expanded(
+                  child: jobs.isEmpty
+                      ? Center(child: Text(tr('No jobs match these filters.')))
+                      : RefreshIndicator(
+                          onRefresh: () async {
+                            setState(() => _future = _fetchJobs());
+                            try {
+                              await _future;
+                            } catch (_) {}
+                          },
+                          child: ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                            itemCount: jobs.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, i) => _JobCard(
+                              job: jobs[i],
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => JobDetailScreen(
+                                      job: jobs[i],
+                                      currentUser: widget.currentUser,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

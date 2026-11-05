@@ -112,72 +112,75 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
         icon: const Icon(Icons.add_business_outlined),
         label: Text(tr('Register a business')),
       ),
-      body: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
-            return ErrorView(
-              message: friendlyLoadError('your businesses', snap.error),
-              screen: 'My businesses',
-              error: snap.error,
-              onRetry: _reload,
-            );
-          }
-          final items = snap.data?.$1 ?? const <Business>[];
-          final usage = {
-            for (final u in snap.data?.$2 ?? const <BusinessUsage>[])
-              u.businessId: u,
-          };
-          if (items.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  trf(
-                    'You have not registered a business yet. Register one so other alumni can find it.\n\n{0}',
-                    [_limitNote],
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return ErrorView(
+                message: friendlyLoadError('your businesses', snap.error),
+                screen: 'My businesses',
+                error: snap.error,
+                onRetry: _reload,
+              );
+            }
+            final items = snap.data?.$1 ?? const <Business>[];
+            final usage = {
+              for (final u in snap.data?.$2 ?? const <BusinessUsage>[])
+                u.businessId: u,
+            };
+            if (items.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    trf(
+                      'You have not registered a business yet. Register one so other alumni can find it.\n\n{0}',
+                      [_limitNote],
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
+              );
+            }
+            return RefreshIndicator(
+              onRefresh: () async {
+                _reload();
+                try {
+                  await _future;
+                } catch (_) {}
+              },
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                itemCount: items.length + 1,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  if (i == 0) {
+                    return Text(
+                      _limitNote,
+                      key: const Key('business-limit-note'),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  }
+                  final b = items[i - 1];
+                  return BusinessOwnerCard(
+                    business: b,
+                    usage: usage[b.id],
+                    onEdit: () => _openForm(b),
+                    onDelete: () => _delete(b),
+                  );
+                },
               ),
             );
-          }
-          return RefreshIndicator(
-            onRefresh: () async {
-              _reload();
-              try {
-                await _future;
-              } catch (_) {}
-            },
-            child: ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              itemCount: items.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                if (i == 0) {
-                  return Text(
-                    _limitNote,
-                    key: const Key('business-limit-note'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  );
-                }
-                final b = items[i - 1];
-                return BusinessOwnerCard(
-                  business: b,
-                  usage: usage[b.id],
-                  onEdit: () => _openForm(b),
-                  onDelete: () => _delete(b),
-                );
-              },
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

@@ -154,11 +154,16 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
                         key: _boundary,
                         child: ColoredBox(
                           key: const Key('photo-adjust-frame'),
-                          color: theme.colorScheme.surfaceContainerHighest,
+                          // White: it is also what shows (and is saved) around
+                          // the photo when the person zooms out.
+                          color: Colors.white,
                           child: InteractiveViewer(
                             transformationController: _controller,
-                            minScale: 1,
+                            minScale: 0.2,
                             maxScale: 5,
+                            boundaryMargin: const EdgeInsets.all(
+                              double.infinity,
+                            ),
                             child: SizedBox.expand(
                               child: Image.memory(
                                 widget.image.bytes,
@@ -174,6 +179,7 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
                   Text(
                     tr(
                       'Geser dan cubit (atau scroll) untuk mengatur posisi foto. '
+                      'Perkecil agar foto tampak utuh dengan latar putih. '
                       'Bagian di dalam bingkai yang akan tersimpan.',
                     ),
                     textAlign: TextAlign.center,

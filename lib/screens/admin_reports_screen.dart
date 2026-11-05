@@ -334,166 +334,176 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Column(
-              children: [
-                TextField(
-                  key: const Key('admin-report-search'),
-                  controller: _search,
-                  decoration: InputDecoration(
-                    hintText: tr('Search title, owner, note or reason...'),
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _search.text.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.clear),
-                            tooltip: tr('Clear search'),
-                            onPressed: _search.clear,
-                          ),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Column(
+                children: [
+                  TextField(
+                    key: const Key('admin-report-search'),
+                    controller: _search,
+                    decoration: InputDecoration(
+                      hintText: tr('Search title, owner, note or reason...'),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _search.text.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.clear),
+                              tooltip: tr('Clear search'),
+                              onPressed: _search.clear,
+                            ),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: KeyedSubtree(
-                        key: const Key('admin-report-type'),
-                        child: FilterDropdown(
-                          label: tr('Type'),
-                          value: _type,
-                          options: [
-                            kAllFilter,
-                            for (final t in ReportTarget.values)
-                              reportTargetLabel(t),
-                          ],
-                          onChanged: (v) => setState(() => _type = v),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: const Key('admin-report-type'),
+                          child: FilterDropdown(
+                            label: tr('Type'),
+                            value: _type,
+                            options: [
+                              kAllFilter,
+                              for (final t in ReportTarget.values)
+                                reportTargetLabel(t),
+                            ],
+                            onChanged: (v) => setState(() => _type = v),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: KeyedSubtree(
-                        key: const Key('admin-report-period'),
-                        child: FilterDropdown(
-                          label: tr('Period'),
-                          value: _period,
-                          options: kPeriodOptions,
-                          onChanged: (v) => setState(() => _period = v),
-                        ),
-                      ),
-                    ),
-                    if (!_hidden) ...[
                       const SizedBox(width: 8),
                       Expanded(
                         child: KeyedSubtree(
-                          key: const Key('admin-report-reason'),
+                          key: const Key('admin-report-period'),
                           child: FilterDropdown(
-                            label: tr('Reason'),
-                            value: _reasonNow,
-                            options: [
-                              kAllFilter,
-                              for (final e in ContentReportReason.values)
-                                e.label,
-                            ],
-                            onChanged: (v) => setState(() => _reason = v),
+                            label: tr('Period'),
+                            value: _period,
+                            options: kPeriodOptions,
+                            onChanged: (v) => setState(() => _period = v),
                           ),
                         ),
                       ),
+                      if (!_hidden) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: KeyedSubtree(
+                            key: const Key('admin-report-reason'),
+                            child: FilterDropdown(
+                              label: tr('Reason'),
+                              value: _reasonNow,
+                              options: [
+                                kAllFilter,
+                                for (final e in ContentReportReason.values)
+                                  e.label,
+                              ],
+                              onChanged: (v) => setState(() => _reason = v),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<AdminReport>>(
-              future: _future,
-              builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) {
-                  return ErrorView(
-                    message: snap.error is AdminException
-                        ? adminErrorMessage(snap.error!)
-                        : friendlyLoadError('reports', snap.error),
-                    screen: 'Admin reports',
-                    error: snap.error,
-                    onRetry: _reload,
-                  );
-                }
-                final all = snap.data ?? const <AdminReport>[];
-                if (all.isEmpty) {
-                  return Center(
-                    child: Text(
-                      _hidden ? 'Nothing is hidden.' : 'No open reports.',
-                    ),
-                  );
-                }
-                final items = _visible(all);
-                if (items.isEmpty) {
-                  return Center(child: Text(tr('Nothing matches.')));
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 16),
-                  itemBuilder: (context, i) {
-                    final r = items[i];
-                    return _ReportCard(
-                      report: r,
-                      hiddenView: _hidden,
-                      busy: _busy.contains(r.targetId),
-                      onDismiss: () => _run(
-                        r,
-                        () =>
-                            widget.repository.dismissReports(widget.adminId, r),
-                        'Laporan diabaikan.',
-                        undo: () => _repo.reopenReports(_admin, r),
-                      ),
-                      onActioned: () => _run(
-                        r,
-                        () => widget.repository.markActioned(widget.adminId, r),
-                        'Ditandai selesai.',
-                        undo: () => _repo.reopenReports(_admin, r),
-                      ),
-                      onHide: () => _hide(r),
-                      onSuspend: () => _suspend(r),
-                      onClearBio: () => _clearBio(r),
-                      onUnsuspend: () => _run(
-                        r,
-                        () =>
-                            widget.repository.unsuspendUser(widget.adminId, r),
-                        'Penangguhan dicabut. Orangnya bisa masuk lagi.',
-                        undo: () => _repo.suspendUser(
-                          _admin,
-                          r,
-                          r.hiddenReason ?? 'Diurungkan',
-                        ),
-                      ),
-                      onRestore: () => _run(
-                        r,
-                        () =>
-                            widget.repository.restoreContent(widget.adminId, r),
-                        'Dipulihkan. Tampil lagi.',
-                        undo: () => _repo.hideContent(
-                          _admin,
-                          r,
-                          r.hiddenReason ?? 'Diurungkan',
-                        ),
+            Expanded(
+              child: FutureBuilder<List<AdminReport>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snap.hasError) {
+                    return ErrorView(
+                      message: snap.error is AdminException
+                          ? adminErrorMessage(snap.error!)
+                          : friendlyLoadError('reports', snap.error),
+                      screen: 'Admin reports',
+                      error: snap.error,
+                      onRetry: _reload,
+                    );
+                  }
+                  final all = snap.data ?? const <AdminReport>[];
+                  if (all.isEmpty) {
+                    return Center(
+                      child: Text(
+                        _hidden ? 'Nothing is hidden.' : 'No open reports.',
                       ),
                     );
-                  },
-                );
-              },
+                  }
+                  final items = _visible(all);
+                  if (items.isEmpty) {
+                    return Center(child: Text(tr('Nothing matches.')));
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    itemBuilder: (context, i) {
+                      final r = items[i];
+                      return _ReportCard(
+                        report: r,
+                        hiddenView: _hidden,
+                        busy: _busy.contains(r.targetId),
+                        onDismiss: () => _run(
+                          r,
+                          () => widget.repository.dismissReports(
+                            widget.adminId,
+                            r,
+                          ),
+                          'Laporan diabaikan.',
+                          undo: () => _repo.reopenReports(_admin, r),
+                        ),
+                        onActioned: () => _run(
+                          r,
+                          () =>
+                              widget.repository.markActioned(widget.adminId, r),
+                          'Ditandai selesai.',
+                          undo: () => _repo.reopenReports(_admin, r),
+                        ),
+                        onHide: () => _hide(r),
+                        onSuspend: () => _suspend(r),
+                        onClearBio: () => _clearBio(r),
+                        onUnsuspend: () => _run(
+                          r,
+                          () => widget.repository.unsuspendUser(
+                            widget.adminId,
+                            r,
+                          ),
+                          'Penangguhan dicabut. Orangnya bisa masuk lagi.',
+                          undo: () => _repo.suspendUser(
+                            _admin,
+                            r,
+                            r.hiddenReason ?? 'Diurungkan',
+                          ),
+                        ),
+                        onRestore: () => _run(
+                          r,
+                          () => widget.repository.restoreContent(
+                            widget.adminId,
+                            r,
+                          ),
+                          'Dipulihkan. Tampil lagi.',
+                          undo: () => _repo.hideContent(
+                            _admin,
+                            r,
+                            r.hiddenReason ?? 'Diurungkan',
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

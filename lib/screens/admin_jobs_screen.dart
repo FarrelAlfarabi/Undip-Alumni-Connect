@@ -58,7 +58,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
         String? error;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
-            title: Text(tr('Turunkan lowongan ini?')),
+            title: Text(tr('Tangguhkan lowongan ini?')),
             content: TextField(
               key: const Key('job-hide-reason'),
               controller: controller,
@@ -86,7 +86,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: Text(tr('Turunkan')),
+                child: Text(tr('Tangguhkan')),
               ),
             ],
           ),
@@ -101,7 +101,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     await _run(
       j,
       () => widget.repository.hideJob(widget.adminId, j.id, reason),
-      'Lowongan diturunkan. Pemasang diberi tahu.',
+      'Lowongan ditangguhkan. Pemasang diberi tahu.',
       undo: () => widget.repository.restoreJob(widget.adminId, j.id),
     );
   }
@@ -113,7 +113,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     undo: () => widget.repository.hideJob(
       widget.adminId,
       j.id,
-      j.hiddenReason ?? 'Diturunkan oleh admin',
+      j.hiddenReason ?? 'Ditangguhkan oleh admin',
     ),
   );
 
@@ -129,7 +129,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
       if (!mounted) return;
       showUndoSnackBar(
         context,
-        message: done,
+        message: tr(done),
         screen: 'Admin jobs',
         errorText: adminErrorMessage,
         onUndo: () async {
@@ -157,127 +157,132 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Jobs')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              key: const Key('admin-jobs-search'),
-              controller: _search,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _reload(),
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: tr('Cari judul, perusahaan atau pemasang'),
-                border: OutlineInputBorder(),
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: TextField(
+                key: const Key('admin-jobs-search'),
+                controller: _search,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _reload(),
+                decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: tr('Cari judul, perusahaan atau pemasang'),
+                  border: OutlineInputBorder(),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<AdminJob>>(
-              future: _future,
-              builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) {
-                  return ErrorView(
-                    message: friendlyLoadError('lowongan', snap.error),
-                    screen: 'Admin jobs',
-                    error: snap.error,
-                    onRetry: _reload,
-                  );
-                }
-                final items = snap.data ?? const <AdminJob>[];
-                if (items.isEmpty) {
-                  return Center(child: Text(tr('Belum ada lowongan.')));
-                }
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    _reload();
-                    try {
-                      await _future;
-                    } catch (_) {}
-                  },
-                  child: ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      final j = items[i];
-                      return Card(
-                        key: Key('admin-job-${j.id}'),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: theme.colorScheme.outlineVariant,
+            Expanded(
+              child: FutureBuilder<List<AdminJob>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snap.hasError) {
+                    return ErrorView(
+                      message: friendlyLoadError('lowongan', snap.error),
+                      screen: 'Admin jobs',
+                      error: snap.error,
+                      onRetry: _reload,
+                    );
+                  }
+                  final items = snap.data ?? const <AdminJob>[];
+                  if (items.isEmpty) {
+                    return Center(child: Text(tr('Belum ada lowongan.')));
+                  }
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      _reload();
+                      try {
+                        await _future;
+                      } catch (_) {}
+                    },
+                    child: ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) {
+                        final j = items[i];
+                        return Card(
+                          key: Key('admin-job-${j.id}'),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
                           ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                j.title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                '${j.company} · ${j.posterName ?? 'Alumni'}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              if (j.isHidden) ...[
-                                const SizedBox(height: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  trf('Diturunkan: {0}', [
-                                    j.hiddenReason ?? '-',
-                                  ]),
-                                  key: Key('job-hidden-${j.id}'),
-                                  style: TextStyle(
-                                    color: theme.colorScheme.error,
+                                  j.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ],
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: j.isHidden
-                                    ? OutlinedButton(
-                                        key: Key('job-restore-${j.id}'),
-                                        onPressed: _busy.contains(j.id)
-                                            ? null
-                                            : () => _restore(j),
-                                        child: Text(tr('Tampilkan lagi')),
-                                      )
-                                    : TextButton.icon(
-                                        key: Key('job-hide-${j.id}'),
-                                        onPressed: _busy.contains(j.id)
-                                            ? null
-                                            : () => _hide(j),
-                                        icon: const Icon(Icons.visibility_off),
-                                        label: Text(tr('Turunkan')),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor:
-                                              theme.colorScheme.error,
+                                Text(
+                                  '${j.company} · ${j.posterName ?? 'Alumni'}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                if (j.isHidden) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    trf('Ditangguhkan: {0}', [
+                                      j.hiddenReason ?? '-',
+                                    ]),
+                                    key: Key('job-hidden-${j.id}'),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ],
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: j.isHidden
+                                      ? OutlinedButton(
+                                          key: Key('job-restore-${j.id}'),
+                                          onPressed: _busy.contains(j.id)
+                                              ? null
+                                              : () => _restore(j),
+                                          child: Text(tr('Tampilkan lagi')),
+                                        )
+                                      : TextButton.icon(
+                                          key: Key('job-hide-${j.id}'),
+                                          onPressed: _busy.contains(j.id)
+                                              ? null
+                                              : () => _hide(j),
+                                          icon: const Icon(
+                                            Icons.visibility_off,
+                                          ),
+                                          label: Text(tr('Tangguhkan')),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor:
+                                                theme.colorScheme.error,
+                                          ),
                                         ),
-                                      ),
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

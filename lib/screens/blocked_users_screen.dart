@@ -68,48 +68,51 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Pengguna terblokir'))),
-      body: FutureBuilder<List<BlockedPerson>>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
-            return ErrorView(
-              message: friendlyLoadError('blocked users', snap.error),
-              screen: 'Blocked users',
-              error: snap.error,
-              onRetry: _reload,
-            );
-          }
-          final items = snap.data ?? const [];
-          if (items.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  tr('Kamu belum memblokir siapa pun.'),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final p = items[i];
-              return ListTile(
-                title: Text(p.name),
-                trailing: OutlinedButton(
-                  key: Key('unblock-${p.id}'),
-                  onPressed: _busy.contains(p.id) ? null : () => _unblock(p),
-                  child: Text(tr('Buka blokir')),
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<BlockedPerson>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return ErrorView(
+                message: friendlyLoadError('blocked users', snap.error),
+                screen: 'Blocked users',
+                error: snap.error,
+                onRetry: _reload,
+              );
+            }
+            final items = snap.data ?? const [];
+            if (items.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    tr('Kamu belum memblokir siapa pun.'),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               );
-            },
-          );
-        },
+            }
+            return ListView.separated(
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, i) {
+                final p = items[i];
+                return ListTile(
+                  title: Text(p.name),
+                  trailing: OutlinedButton(
+                    key: Key('unblock-${p.id}'),
+                    onPressed: _busy.contains(p.id) ? null : () => _unblock(p),
+                    child: Text(tr('Buka blokir')),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

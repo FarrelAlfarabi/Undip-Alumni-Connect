@@ -105,90 +105,94 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Feedback'))),
-      body: FutureBuilder<List<FeedbackItem>>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
-            return ErrorView(
-              message: snap.error is AdminException
-                  ? adminErrorMessage(snap.error!)
-                  : friendlyLoadError('feedback', snap.error),
-              screen: 'Feedback inbox',
-              error: snap.error,
-              onRetry: _reload,
-            );
-          }
-          final items = snap.data ?? const [];
-          if (items.isEmpty) {
-            return Center(child: Text(tr('No feedback yet.')));
-          }
-          final shown = _visible(items);
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: ClearableSearchField(
-                        key: const Key('admin-feedback-search'),
-                        controller: _search,
-                        hintText: tr('Search message, name or screen...'),
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<FeedbackItem>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return ErrorView(
+                message: snap.error is AdminException
+                    ? adminErrorMessage(snap.error!)
+                    : friendlyLoadError('feedback', snap.error),
+                screen: 'Feedback inbox',
+                error: snap.error,
+                onRetry: _reload,
+              );
+            }
+            final items = snap.data ?? const [];
+            if (items.isEmpty) {
+              return Center(child: Text(tr('No feedback yet.')));
+            }
+            final shown = _visible(items);
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: ClearableSearchField(
+                          key: const Key('admin-feedback-search'),
+                          controller: _search,
+                          hintText: tr('Search message, name or screen...'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: FilterDropdown(
-                        label: 'Status',
-                        value: _status,
-                        options: _statuses,
-                        onChanged: (v) => setState(() => _status = v),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: FilterDropdown(
+                          label: 'Status',
+                          value: _status,
+                          options: _statuses,
+                          onChanged: (v) => setState(() => _status = v),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: SizedBox(
-                    width: 200,
-                    child: KeyedSubtree(
-                      key: const Key('admin-feedback-period'),
-                      child: FilterDropdown(
-                        label: tr('Period'),
-                        value: _period,
-                        options: kPeriodOptions,
-                        onChanged: (v) => setState(() => _period = v),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: 200,
+                      child: KeyedSubtree(
+                        key: const Key('admin-feedback-period'),
+                        child: FilterDropdown(
+                          label: tr('Period'),
+                          value: _period,
+                          options: kPeriodOptions,
+                          onChanged: (v) => setState(() => _period = v),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: shown.isEmpty
-                    ? Center(child: Text(tr('Nothing matches.')))
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: shown.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) => _FeedbackCard(
-                          item: shown[i],
-                          busy: _busy.contains(shown[i].id),
-                          onSeen: () => _set(shown[i], 'seen'),
-                          onDone: () => _set(shown[i], 'done'),
+                Expanded(
+                  child: shown.isEmpty
+                      ? Center(child: Text(tr('Nothing matches.')))
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: shown.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, i) => _FeedbackCard(
+                            item: shown[i],
+                            busy: _busy.contains(shown[i].id),
+                            onSeen: () => _set(shown[i], 'seen'),
+                            onDone: () => _set(shown[i], 'done'),
+                          ),
                         ),
-                      ),
-              ),
-            ],
-          );
-        },
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
