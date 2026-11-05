@@ -246,5 +246,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Admins can edit an announcement (title and message, with undo). Migration `20261105240000_announcement_edit` + rollback file. Not translated on purpose: business categories and other text that comes from the database, legal documents, feature names.
 ## Photo adjuster, admin wording, safe area (5 Nov 2026)
 - Photo adjuster zooms out to 0.2x with free move; the empty part is white and is saved white.
-- Admin Jobs action reads "Tangguhkan" / "Suspend" (dialog, notice, undo). The poster notice from the database still says "disembunyikan"; left as is, no migration.
+- Admin Jobs action reads "Tangguhkan" / "Suspend" (dialog, notice, undo). Poster notice for a suspended job says "ditangguhkan" (migration `20261105250000_job_suspended_notice` + rollback).
 - 21 list screens wrapped in `SafeArea(top: false)` so the last item and buttons clear the phone's home and back bar. Admin home cards have more spacing.
