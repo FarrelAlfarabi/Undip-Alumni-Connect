@@ -97,4 +97,19 @@ select jt.assert((select title = 'Judul Baru' from job_posts where id = (select 
 select jt.expect_error(format($q$select job_post_update(%L, %L, 'x', 'PT', 'd', null)$q$, (select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'job2')), 'invalid_input');
 select notifications_clear((select v from t_ids where k = 'siti'));
 select jt.assert((select count(*) from notifications_list((select v from t_ids where k = 'siti'))) = 0, 'notifications cleared');
+-- Stage 7b: job limit and storage queue
+reset role;
+insert into job_posts (posted_by, title, company, description, image_url)
+  select (select v from t_ids where k = 'siti'), 'Batas ' || g, 'PT', 'd',
+         case when g = 1 then 'https://x.supabase.co/storage/v1/object/public/job-photos/siti/a.png' end
+    from generate_series(1, 5) g;
+set role anon;
+select jt.expect_error(format($q$insert into job_posts (posted_by, title, company, description) values (%L, 'Batas 6', 'PT', 'd')$q$, (select v from t_ids where k = 'siti')), 'job_daily_limit');
+reset role;
+delete from job_posts where title = 'Batas 1';
+select jt.assert((select count(*) from storage_cleanup_queue where bucket = 'job-photos' and path = 'siti/a.png') = 1, 'deleted job photo is queued');
+set role anon;
+select admin_log_action((select v from t_ids where k = 'clara'), 'test_action', 'job', 'x', 'detail');
+select jt.assert((select count(*) from admin_actions_list((select v from t_ids where k = 'clara')) where action = 'test_action') = 1, 'admin action logged');
+select jt.expect_error(format($q$select admin_log_action(%L, 'x')$q$, (select v from t_ids where k = 'siti')), 'not_admin');
 rollback;

@@ -119,4 +119,16 @@ void main() {
     expect(find.text('Menunggu persetujuan'), findsOneWidget);
     expect(find.byKey(Key('pending-note-${b.id}')), findsOneWidget);
   });
+
+  test('admin actions are logged, and a log failure does not block', () async {
+    final api = FakeAdminApi();
+    await AdminRepository(api).hideJob('me', 'j1', 'Spam');
+    expect(api.params['admin_log_action'], {
+      'p_admin': 'me',
+      'p_action': 'job_hide',
+      'p_target_type': 'job',
+      'p_target_id': 'j1',
+      'p_detail': 'Spam',
+    });
+  });
 }

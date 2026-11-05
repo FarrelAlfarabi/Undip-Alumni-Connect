@@ -228,3 +228,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Language setting (5 Nov 2026)
 - Settings > Bahasa: Bahasa Indonesia (default) or English, saved on the device, applies at once. `tr(text)` swaps a text using `strings_id.dart` (English to Indonesian) and `strings_en.dart` (Indonesian to English); a text with no entry stays as written. Tests show text as written (`passthrough`).
 - Done so far: Settings, Requests, all error messages (contact, business, marketplace, report, admin, generic). Most screen labels still need `tr()` (next batches). Notification texts come from the database and are still English.
+## Storage cleanup, job limit, admin log (5 Nov 2026)
+- Deleting a business, product, job or application queues its photo/CV in `storage_cleanup_queue` (trigger, any delete path). Files are still removed by hand from the dashboard. Migration `20261105200000_storage_cleanup_triggers`.
+- Jobs: max 5 posts per day and 20 open ones per person (`20261105210000_job_posting_limit`). Feedback already had a 10 per day limit; product posting is limited per business.
+- Admin "Riwayat" screen lists the last 200 admin actions (`20261105220000_admin_action_log`). Rollback files for all three.

@@ -11,6 +11,7 @@ import 'admin_home_order_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_ikafe_contacts_screen.dart';
 import 'admin_jobs_screen.dart';
+import 'admin_log_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
@@ -116,6 +117,14 @@ class _AdminScreenState extends State<AdminScreen> {
         title: 'Jobs',
         subtitle: 'Lihat semua lowongan, turunkan atau tampilkan lagi',
         builder: (_) => AdminJobsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-log',
+        icon: Icons.history,
+        title: 'Riwayat',
+        subtitle:
+            'Siapa menyetujui, menolak, menyembunyikan atau menghapus apa',
+        builder: (_) => AdminLogScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-home-order',

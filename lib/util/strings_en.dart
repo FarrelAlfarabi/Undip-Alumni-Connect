@@ -101,4 +101,8 @@ final Map<String, String> kEnglish = {
       'Too many code requests. Wait a few minutes, then try again.',
   'Terlalu banyak kode yang salah. Minta kode baru untuk lanjut.':
       'Too many wrong codes. Request a new code to continue.',
+  'Kamu sudah memasang terlalu banyak lowongan. Maksimal 5 per hari dan '
+          '20 lowongan aktif. Tutup atau hapus yang lama dulu.':
+      'You posted too many jobs. Maximum 5 per day and 20 active jobs. Close '
+      'or delete older ones first.',
 };

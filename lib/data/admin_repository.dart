@@ -183,6 +183,7 @@ class AdminRepository {
         'p_reason': reason?.trim(),
       }),
     );
+    await _log(adminId, 'job_$action', 'job', jobId, reason);
   }
 
   /// Opens a closed report again (the undo of dismiss and mark handled).
@@ -258,7 +259,38 @@ class AdminRepository {
       }),
     );
     final map = row is List ? row.first : row;
+    await _log(adminId, 'business_$action', 'business', businessId, reason);
     return Business.fromMap(Map<String, dynamic>.from(map as Map));
+  }
+
+  /// Writes one line in the admin action log. A failure never blocks the
+  /// action itself.
+  Future<void> _log(
+    String adminId,
+    String action,
+    String? type,
+    String? target, [
+    String? detail,
+  ]) async {
+    try {
+      await _api.rpc('admin_log_action', {
+        'p_admin': adminId,
+        'p_action': action,
+        'p_target_type': type,
+        'p_target_id': target,
+        'p_detail': detail,
+      });
+    } catch (_) {}
+  }
+
+  /// The last 200 admin actions, newest first.
+  Future<List<AdminLogEntry>> actionLog(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_actions_list', {'p_admin': adminId}),
+    );
+    return (rows as List)
+        .map((r) => AdminLogEntry.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
   }
 
   /// Open reports (one row per reported thing, with counts and reasons), or
@@ -347,6 +379,13 @@ class AdminRepository {
         'p_reason': reason?.trim(),
       }),
     );
+    await _log(
+      adminId,
+      'report_$action',
+      r.targetType.value,
+      r.targetId,
+      reason,
+    );
   }
 
   /// Feedback reports, newest first. Rows are only readable through this
@@ -410,6 +449,13 @@ class AdminRepository {
         'p_body': body.trim(),
       }),
     );
+    await _log(
+      adminId,
+      'announcement_create',
+      'announcement',
+      id is String ? id : null,
+      title.trim(),
+    );
     return id is String ? id : '';
   }
 
@@ -421,6 +467,7 @@ class AdminRepository {
         'p_id': id,
       }),
     );
+    await _log(adminId, 'announcement_delete', 'announcement', id);
   }
 
   /// Every Kontak Ikafe row, hidden ones too.
@@ -499,6 +546,7 @@ class AdminRepository {
         'p_ids': ids,
       }),
     );
+    await _log(adminId, 'home_order', kind, null, '${ids.length} dipin');
   }
 
   Future<T> _guard<T>(Future<T> Function() run) async {
@@ -681,6 +729,31 @@ class AdminJob {
   final String? hiddenReason;
 
   bool get isHidden => hiddenAt != null;
+}
+
+/// One line of the admin action log.
+class AdminLogEntry {
+  const AdminLogEntry({
+    required this.adminName,
+    required this.action,
+    required this.createdAt,
+    this.targetType,
+    this.detail,
+  });
+
+  factory AdminLogEntry.fromMap(Map<String, dynamic> m) => AdminLogEntry(
+    adminName: m['admin_name'] as String? ?? 'Admin',
+    action: m['action'] as String? ?? '',
+    targetType: m['target_type'] as String?,
+    detail: m['detail'] as String?,
+    createdAt: DateTime.parse(m['created_at'] as String),
+  );
+
+  final String adminName;
+  final String action;
+  final String? targetType;
+  final String? detail;
+  final DateTime createdAt;
 }
 
 /// One announcement in the admin list.

@@ -24,6 +24,11 @@ const String kCodeRateLimited =
 const String kTooManyCodeAttempts =
     'Terlalu banyak kode yang salah. Minta kode baru untuk lanjut.';
 
+/// Shown when the database refuses a new job post (too many).
+const String kJobLimitMessage =
+    'Kamu sudah memasang terlalu banyak lowongan. Maksimal 5 per hari dan '
+    '20 lowongan aktif. Tutup atau hapus yang lama dulu.';
+
 /// Whether [error] is the email service saying "too many codes requested".
 bool isRateLimitError(Object? error) {
   final text = error.toString().toLowerCase();
@@ -43,6 +48,9 @@ String friendlyError(Object? error) {
   if (isSuspendedError(error)) return tr(kSuspendedMessage);
   // Looked at only to choose a message, never displayed.
   final text = error.toString();
+  if (text.contains('job_daily_limit') || text.contains('job_open_limit')) {
+    return tr(kJobLimitMessage);
+  }
   if (RegExp(
     r'SocketException|ClientException|XMLHttpRequest|Failed host lookup|'
     r'Connection (refused|closed|reset)|Network is unreachable',
