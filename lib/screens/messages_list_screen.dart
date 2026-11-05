@@ -123,12 +123,14 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
 
           final all = snapshot.data ?? [];
           if (all.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'No conversations yet. Message an alumnus from the '
-                  'directory to get started.',
+                  tr(
+                    'No conversations yet. Message an alumnus from the '
+                    'directory to get started.',
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -153,7 +155,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: FilterDropdown(
-                  label: 'Faculty',
+                  label: tr('Faculty'),
                   value: _faculty,
                   options: faculties,
                   onChanged: (v) => setState(() => _faculty = v),

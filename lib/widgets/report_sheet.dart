@@ -120,7 +120,9 @@ class _ReportSheetState extends State<_ReportSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Admin akan memeriksanya. Orangnya tidak diberi tahu siapa yang melapor.',
+              tr(
+                'Admin akan memeriksanya. Orangnya tidak diberi tahu siapa yang melapor.',
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -143,7 +145,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                       value: r,
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      title: Text(r.labelId),
+                      title: Text(tr(r.labelId)),
                     ),
                 ],
               ),

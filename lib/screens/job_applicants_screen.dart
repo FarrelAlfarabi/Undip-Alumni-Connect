@@ -51,7 +51,9 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Applicants — ${widget.job['title'] as String? ?? ''}'),
+        title: Text(
+          trf('Applicants — {0}', [widget.job['title'] as String? ?? '']),
+        ),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _future,

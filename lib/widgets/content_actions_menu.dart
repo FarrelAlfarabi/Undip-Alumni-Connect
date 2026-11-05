@@ -59,21 +59,23 @@ class ContentActionsMenu extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Blokir $name?'),
-        content: const Text(
-          'Kamu tidak akan melihat profil, lowongan, produk atau usahanya, dan '
-          'dia tidak bisa mengirim permintaan kontak kepadamu. Dia tidak '
-          'diberi tahu. Kamu bisa membuka blokirnya lagi di Profile > '
-          'Pengguna terblokir.',
+        title: Text(trf('Blokir {0}?', [name])),
+        content: Text(
+          tr(
+            'Kamu tidak akan melihat profil, lowongan, produk atau usahanya, dan '
+            'dia tidak bisa mengirim permintaan kontak kepadamu. Dia tidak '
+            'diberi tahu. Kamu bisa membuka blokirnya lagi di Profile > '
+            'Pengguna terblokir.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Blokir'),
+            child: Text(tr('Blokir')),
           ),
         ],
       ),
@@ -83,7 +85,9 @@ class ContentActionsMenu extends StatelessWidget {
     final navigator = Navigator.of(context);
     try {
       await (blockList ?? BlockList.shared).block(currentUserId, ownerId!);
-      messenger.showSnackBar(SnackBar(content: Text('$name diblokir.')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(trf('{0} diblokir.', [name]))),
+      );
       onBlocked?.call();
     } catch (e) {
       showErrorSnackBarOn(
@@ -110,12 +114,12 @@ class ContentActionsMenu extends StatelessWidget {
       },
       itemBuilder: (_) => [
         if (canReport)
-          const PopupMenuItem(
+          PopupMenuItem(
             key: Key('menu-report'),
             value: 'report',
             child: ListTile(
               leading: Icon(Icons.flag_outlined),
-              title: Text('Laporkan'),
+              title: Text(tr('Laporkan')),
               contentPadding: EdgeInsets.zero,
             ),
           ),

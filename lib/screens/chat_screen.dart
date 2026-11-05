@@ -111,7 +111,7 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: tr('Refresh'),
           ),
         ],
       ),
@@ -161,7 +161,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (messages.isEmpty) {
       return Center(
         child: Text(
-          'No messages yet. Say hello to ${widget.otherName}.',
+          trf('No messages yet. Say hello to {0}.', [widget.otherName]),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

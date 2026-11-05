@@ -152,6 +152,38 @@ void main() {
       expect(find.byKey(const Key('announcement-title')), findsNothing);
     });
 
+    testWidgets('admin edits an announcement, then undoes it', (tester) async {
+      final api = await pump(tester, [
+        {
+          'id': 'a1',
+          'title': 'Reuni',
+          'body': 'Sabtu depan',
+          'posted_by_name': 'Clara',
+          'created_at': '2026-11-01T00:00:00Z',
+        },
+      ]);
+      await tester.tap(find.byKey(const Key('edit-announcement-a1')));
+      await tester.pumpAndSettle();
+      // The form starts with the posted text.
+      expect(find.text('Reuni'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('announcement-title')),
+        'Reuni akbar',
+      );
+      await tester.tap(find.byKey(const Key('announcement-submit')));
+      await tester.pumpAndSettle();
+      expect(api.params['admin_announcement_update'], {
+        'p_admin': 'me',
+        'p_id': 'a1',
+        'p_title': 'Reuni akbar',
+        'p_body': 'Sabtu depan',
+      });
+      expect(find.byKey(const Key('undo-action')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('undo-action')));
+      await tester.pumpAndSettle();
+      expect(api.params['admin_announcement_update']!['p_title'], 'Reuni');
+    });
+
     testWidgets('a refused post keeps the form and says why', (tester) async {
       final api = await pump(tester, []);
       await tester.tap(find.byKey(const Key('announcement-new')));

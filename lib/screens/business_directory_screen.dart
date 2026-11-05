@@ -143,12 +143,14 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
           (b) => b.ownerId,
         );
         if (all.isEmpty) {
-          const empty = Center(
+          final empty = Center(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                'No businesses yet. Approved businesses run by alumni will '
-                'show up here.',
+                tr(
+                  'No businesses yet. Approved businesses run by alumni will '
+                  'show up here.',
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -158,7 +160,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
           return Column(
             children: [
               Align(alignment: Alignment.centerRight, child: _mineButton()),
-              const Expanded(child: empty),
+              Expanded(child: empty),
             ],
           );
         }
@@ -185,7 +187,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
                       valueListenable: CategoryRepository.shared.names,
                       builder: (context, names, _) => SearchableChoice(
                         fieldKey: const Key('business-category'),
-                        label: 'Kategori',
+                        label: tr('Kategori'),
                         controller: _categoryText,
                         options: [kAllFilter, ...names],
                         selected: _category,

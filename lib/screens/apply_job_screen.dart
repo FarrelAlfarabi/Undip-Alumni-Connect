@@ -201,7 +201,9 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
       onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Apply — ${widget.job['title'] as String? ?? ''}'),
+          title: Text(
+            trf('Apply — {0}', [widget.job['title'] as String? ?? '']),
+          ),
           automaticallyImplyLeading: _step != _ApplyStep.done,
           leading: _step == _ApplyStep.review
               ? IconButton(
@@ -237,7 +239,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _StepHeader(step: 1, total: 3, label: 'Details'),
+          _StepHeader(step: 1, total: 3, label: tr('Details')),
           const SizedBox(height: 16),
           Text(
             widget.job['company'] as String? ?? '',
@@ -349,11 +351,12 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StepHeader(step: 2, total: 3, label: 'Review'),
+        _StepHeader(step: 2, total: 3, label: tr('Review')),
         const SizedBox(height: 16),
         Text(
-          'Review your application before submitting to '
-          '${widget.job['company'] as String? ?? 'the poster'}.',
+          trf('Review your application before submitting to {0}.', [
+            widget.job['company'] as String? ?? tr('the poster'),
+          ]),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -369,7 +372,7 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
                 _ReviewRow(label: tr('Full Name'), value: _nameController.text),
                 _ReviewRow(label: 'Email', value: _emailController.text),
                 _ReviewRow(
-                  label: 'Phone',
+                  label: tr('Phone'),
                   value: _phoneController.text,
                   emptyText: tr('Not provided'),
                 ),
@@ -432,12 +435,12 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StepHeader(step: 3, total: 3, label: 'Done'),
+        _StepHeader(step: 3, total: 3, label: tr('Done')),
         const SizedBox(height: 32),
         Icon(Icons.check_circle, size: 72, color: theme.colorScheme.primary),
         const SizedBox(height: 20),
         Text(
-          'Application submitted',
+          tr('Application submitted'),
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
@@ -481,7 +484,7 @@ class _StepHeader extends StatelessWidget {
     return Row(
       children: [
         Text(
-          'Step $step of $total',
+          trf('Step {0} of {1}', [step, total]),
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

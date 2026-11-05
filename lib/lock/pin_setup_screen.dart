@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import 'biometrics.dart';
 import 'lock_config.dart';
 import 'lock_service.dart';
@@ -120,14 +122,14 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     return Scaffold(
       key: const Key('pin-setup'),
       appBar: AppBar(
-        title: const Text('Atur PIN'),
+        title: Text(tr('Atur PIN')),
         automaticallyImplyLeading: false,
         actions: [
           if (!widget.mandatory)
             TextButton(
               key: const Key('pin-skip'),
               onPressed: _busy ? null : _finish,
-              child: const Text('Nanti saja'),
+              child: Text(tr('Nanti saja')),
             ),
         ],
       ),
@@ -171,14 +173,14 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                         key: const Key('bio-enable'),
                         onPressed: _busy ? null : _enableBiometrics,
                         icon: const Icon(Icons.fingerprint),
-                        label: const Text('Aktifkan'),
+                        label: Text(tr('Aktifkan')),
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextButton(
                       key: const Key('bio-skip'),
                       onPressed: _busy ? null : _finish,
-                      child: const Text('Nanti saja'),
+                      child: Text(tr('Nanti saja')),
                     ),
                   ] else
                     PinPad(enabled: !_busy, onCompleted: _entered),

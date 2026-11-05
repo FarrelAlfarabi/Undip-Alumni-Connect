@@ -50,7 +50,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
     final ok = await confirmDelete(
       context,
       title: tr('Hapus pengumuman ini?'),
-      body: '"${a.title}" akan dihapus permanen untuk semua orang.',
+      body: trf('"{0}" akan dihapus permanen untuk semua orang.', [a.title]),
     );
     if (!ok || !mounted) return;
     try {
@@ -120,6 +120,35 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
     );
   }
 
+  Future<void> _edit(AdminAnnouncement a) async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AnnouncementFormScreen(
+          adminId: widget.adminId,
+          repository: widget.repository,
+          existing: a,
+        ),
+      ),
+    );
+    if (saved != true || !mounted) return;
+    _reload();
+    showUndoSnackBar(
+      context,
+      message: tr('Pengumuman diubah.'),
+      screen: 'Admin announcements',
+      errorText: adminErrorMessage,
+      onUndo: () async {
+        await widget.repository.updateAnnouncement(
+          widget.adminId,
+          a.id,
+          title: a.title,
+          body: a.body,
+        );
+        if (mounted) _reload();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,7 +197,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                       child: KeyedSubtree(
                         key: const Key('admin-announcements-period'),
                         child: FilterDropdown(
-                          label: 'Period',
+                          label: tr('Period'),
                           value: _period,
                           options: kPeriodOptions,
                           onChanged: (v) => setState(() => _period = v),
@@ -194,6 +223,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                         itemBuilder: (context, i) => _AnnouncementTile(
                           a: shown[i],
                           onDelete: () => _delete(shown[i]),
+                          onEdit: () => _edit(shown[i]),
                         ),
                       ),
               ),
@@ -206,10 +236,15 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 }
 
 class _AnnouncementTile extends StatelessWidget {
-  const _AnnouncementTile({required this.a, required this.onDelete});
+  const _AnnouncementTile({
+    required this.a,
+    required this.onDelete,
+    required this.onEdit,
+  });
 
   final AdminAnnouncement a;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -242,17 +277,25 @@ class _AnnouncementTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(a.body, maxLines: 4, overflow: TextOverflow.ellipsis),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: Key('delete-announcement-${a.id}'),
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
-                label: const Text('Hapus'),
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  key: Key('edit-announcement-${a.id}'),
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(tr('Ubah')),
                 ),
-              ),
+                TextButton.icon(
+                  key: Key('delete-announcement-${a.id}'),
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text(tr('Hapus')),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -271,10 +314,14 @@ class AnnouncementFormScreen extends StatefulWidget {
     super.key,
     required this.adminId,
     required this.repository,
+    this.existing,
   });
 
   final String adminId;
   final AdminRepository repository;
+
+  /// Set when editing a posted announcement; the form then pops true.
+  final AdminAnnouncement? existing;
 
   @override
   State<AnnouncementFormScreen> createState() => _AnnouncementFormScreenState();
@@ -287,6 +334,16 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
   bool _busy = false;
 
   @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    if (e != null) {
+      _title.text = e.title;
+      _body.text = e.body;
+    }
+  }
+
+  @override
   void dispose() {
     _title.dispose();
     _body.dispose();
@@ -297,6 +354,18 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
+      final existing = widget.existing;
+      if (existing != null) {
+        await widget.repository.updateAnnouncement(
+          widget.adminId,
+          existing.id,
+          title: _title.text,
+          body: _body.text,
+        );
+        if (!mounted) return;
+        Navigator.of(context).pop(true);
+        return;
+      }
       final id = await widget.repository.createAnnouncement(
         widget.adminId,
         title: _title.text,
@@ -319,7 +388,13 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('New announcement'))),
+      appBar: AppBar(
+        title: Text(
+          tr(
+            widget.existing == null ? 'New announcement' : 'Edit announcement',
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -333,12 +408,12 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                   controller: _title,
                   maxLength: kAnnouncementTitleMax,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
+                  decoration: InputDecoration(
+                    labelText: tr('Title'),
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) =>
-                      (v ?? '').trim().isEmpty ? 'Enter a title.' : null,
+                      (v ?? '').trim().isEmpty ? tr('Enter a title.') : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -347,18 +422,22 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                   maxLength: kAnnouncementBodyMax,
                   minLines: 6,
                   maxLines: 12,
-                  decoration: const InputDecoration(
-                    labelText: 'Message',
+                  decoration: InputDecoration(
+                    labelText: tr('Message'),
                     alignLabelWithHint: true,
                     border: OutlineInputBorder(),
                   ),
-                  validator: (v) =>
-                      (v ?? '').trim().isEmpty ? 'Enter the message.' : null,
+                  validator: (v) => (v ?? '').trim().isEmpty
+                      ? tr('Enter the message.')
+                      : null,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Every member sees this in Announcements right away. '
-                  'It cannot be edited or removed from the app.',
+                  tr(
+                    widget.existing == null
+                        ? 'Every member sees this in Announcements right away.'
+                        : 'Changes show to every member right away.',
+                  ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 16),
@@ -371,7 +450,13 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(tr('Post announcement')),
+                      : Text(
+                          tr(
+                            widget.existing == null
+                                ? 'Post announcement'
+                                : 'Save changes',
+                          ),
+                        ),
                 ),
               ],
             ),

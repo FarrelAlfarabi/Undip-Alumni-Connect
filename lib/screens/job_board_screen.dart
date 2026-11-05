@@ -182,11 +182,11 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
 
           final all = snapshot.data ?? [];
           if (all.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'No jobs posted yet. Be the first alumnus to post one.',
+                  tr('No jobs posted yet. Be the first alumnus to post one.'),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -212,7 +212,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                   children: [
                     Expanded(
                       child: FilterDropdown(
-                        label: 'Industry',
+                        label: tr('Industry'),
                         value: _industry,
                         options: industries,
                         onChanged: (v) => setState(() => _industry = v),
@@ -221,7 +221,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: FilterDropdown(
-                        label: 'Company',
+                        label: tr('Company'),
                         value: _company,
                         options: companies,
                         onChanged: (v) => setState(() => _company = v),
@@ -341,7 +341,7 @@ class _JobCard extends StatelessWidget {
               ],
               const SizedBox(height: 10),
               Text(
-                'Posted by $posterName',
+                trf('Posted by {0}', [posterName]),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

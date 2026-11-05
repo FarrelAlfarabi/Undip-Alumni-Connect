@@ -62,6 +62,17 @@ String tr(String text) {
       : (kIndonesian[text] ?? text);
 }
 
+/// Like [tr] for a text with values in it. Write the text with {0}, {1}...
+/// where a value goes, and pass the values in order:
+/// `trf('Posted by {0}', [name])`. The map entries use the same {0} marks.
+String trf(String template, List<Object?> args) {
+  // One pass, so a value that looks like {1} is left as it is.
+  return tr(template).replaceAllMapped(RegExp(r'\{(\d+)\}'), (m) {
+    final i = int.parse(m.group(1)!);
+    return i < args.length ? '${args[i]}' : m.group(0)!;
+  });
+}
+
 /// Marks every widget to rebuild, so text written with [tr] changes at once
 /// (the usual way to switch language without restarting).
 void rebuildAll() {

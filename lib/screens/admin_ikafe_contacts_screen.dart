@@ -242,19 +242,21 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('Hapus kontak ini?')),
-        content: const Text(
-          'Kontak hilang dari Kontak Ikafe. Pilih Sembunyikan kalau mau '
-          'menyimpannya.',
+        content: Text(
+          tr(
+            'Kontak hilang dari Kontak Ikafe. Pilih Sembunyikan kalau mau '
+            'menyimpannya.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             key: const Key('ikafe-delete-confirm'),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus'),
+            child: Text(tr('Hapus')),
           ),
         ],
       ),
@@ -279,7 +281,7 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
           if (widget.contact != null)
             IconButton(
               key: const Key('ikafe-delete'),
-              tooltip: 'Hapus',
+              tooltip: tr('Hapus'),
               icon: const Icon(Icons.delete_outline),
               onPressed: _busy ? null : _delete,
             ),
@@ -294,8 +296,8 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
               DropdownButtonFormField<IkafeContactKind>(
                 key: const Key('ikafe-kind'),
                 initialValue: _kind,
-                decoration: const InputDecoration(
-                  labelText: 'Jenis',
+                decoration: InputDecoration(
+                  labelText: tr('Jenis'),
                   border: OutlineInputBorder(),
                 ),
                 items: [
@@ -354,7 +356,7 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
               FilledButton(
                 key: const Key('ikafe-save'),
                 onPressed: _busy ? null : _save,
-                child: const Text('Simpan'),
+                child: Text(tr('Simpan')),
               ),
             ],
           ),

@@ -187,13 +187,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         child: _panel(
           theme,
           icon: Icons.location_on_outlined,
-          title: 'Kota',
+          title: tr('Kota'),
           action: TextButton(
             key: const Key('edit-city'),
             onPressed: () => _editField(
               ProfileCityScreen(profile: _profile, save: widget.saveFields),
             ),
-            child: const Text('Ubah'),
+            child: Text(tr('Ubah')),
           ),
           children: [_valueLine(theme, city)],
         ),
@@ -208,7 +208,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     Widget ubah(Key key, Widget screen) => TextButton(
       key: key,
       onPressed: () => _editField(screen),
-      child: const Text('Ubah'),
+      child: Text(tr('Ubah')),
     );
     return [
       if (own || bio.isNotEmpty) ...[
@@ -218,7 +218,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           child: _panel(
             theme,
             icon: Icons.notes_outlined,
-            title: 'Bio',
+            title: tr('Bio'),
             action: own
                 ? ubah(
                     const Key('edit-bio'),
@@ -543,7 +543,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             _panel(
                               theme,
                               icon: Icons.school_outlined,
-                              title: 'Academic',
+                              title: tr('Academic'),
                               children: [
                                 FutureBuilder<String?>(
                                   future: _nim,
@@ -568,7 +568,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             _panel(
                               theme,
                               icon: Icons.work_outline,
-                              title: 'Employment',
+                              title: tr('Employment'),
                               action: widget.showEditButton
                                   ? TextButton.icon(
                                       key: const Key('profile-edit'),
@@ -606,7 +606,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             _panel(
                               theme,
                               icon: Icons.work_outline,
-                              title: 'Employment',
+                              title: tr('Employment'),
                               action: widget.showEditButton
                                   ? TextButton.icon(
                                       key: const Key('profile-edit'),
@@ -644,7 +644,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             _panel(
                               theme,
                               icon: Icons.school_outlined,
-                              title: 'Academic',
+                              title: tr('Academic'),
                               children: [
                                 FutureBuilder<String?>(
                                   future: _nim,
@@ -743,8 +743,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       ),
       const SizedBox(height: 6),
       Text(
-        'Sedang menunggu jawaban. Kamu akan dapat notifikasi saat ada '
-        'jawaban.',
+        tr(
+          'Sedang menunggu jawaban. Kamu akan dapat notifikasi saat ada '
+          'jawaban.',
+        ),
         textAlign: TextAlign.center,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
@@ -768,7 +770,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2.5),
               )
             : const Icon(Icons.chat_bubble_outline),
-        label: const Text('Message'),
+        label: Text(tr('Message')),
       ),
     ],
   ];
@@ -929,7 +931,7 @@ class _ProfileMenu extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
               child: Text(
-                'Akun',
+                tr('Akun'),
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
@@ -938,14 +940,14 @@ class _ProfileMenu extends StatelessWidget {
                 MenuItem(
                   key: const Key('profile-settings'),
                   icon: Icons.settings_outlined,
-                  title: 'Pengaturan',
+                  title: tr('Pengaturan'),
                   subtitle: tr('Kontak, PIN, pengguna terblokir, hapus akun'),
                   onTap: onSettings,
                 ),
                 MenuItem(
                   key: const Key('profile-help'),
                   icon: Icons.help_outline,
-                  title: 'Bantuan',
+                  title: tr('Bantuan'),
                   subtitle: tr('Kontak admin, beri masukan, tentang aplikasi'),
                   onTap: onHelp,
                 ),

@@ -244,3 +244,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Test cleanup (5 Nov 2026)
 - Removed 21 tests (one whole file) that only checked static copy, constants, file existence, or removed features. 874 became 853; the suite passes, analyze is clean.
 - Kept all security, SQL, login/PIN/OTP, contact request, approval and delete-account tests.
+## Language sweep and announcement edit (5 Nov 2026)
+- Settings, Help and about 300 more texts (about 250 plain, 50 with values via `trf`) now follow the language. Enum labels (bands, statuses, report reasons) and filter options translate too. Guard test `language_sweep_test` fails when a screen text skips `tr()` or has no map entry.
+- Admins can edit an announcement (title and message, with undo). Migration `20261105240000_announcement_edit` + rollback file. Not translated on purpose: business categories and other text that comes from the database, legal documents, feature names.

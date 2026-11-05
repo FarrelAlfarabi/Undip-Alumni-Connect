@@ -14,7 +14,7 @@ class HelpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Bantuan')),
+      appBar: AppBar(title: Text(tr('Bantuan'))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -43,7 +43,7 @@ class HelpScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('profile-about'),
                   icon: Icons.info_outline,
-                  title: 'About',
+                  title: tr('About'),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const AboutScreen()),
                   ),

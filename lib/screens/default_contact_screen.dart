@@ -114,9 +114,11 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Terisi otomatis saat kamu menerima permintaan kontak. '
-                      'Kamu tetap bisa mengubahnya setiap kali, dan tidak '
-                      'ada yang dibagikan sebelum kamu menekan Terima.',
+                      tr(
+                        'Terisi otomatis saat kamu menerima permintaan kontak. '
+                        'Kamu tetap bisa mengubahnya setiap kali, dan tidak '
+                        'ada yang dibagikan sebelum kamu menekan Terima.',
+                      ),
                       style: theme.textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
@@ -126,14 +128,16 @@ class _DefaultContactScreenState extends State<DefaultContactScreen> {
                       enabled: !_saving,
                       maxLength: kSharedContactMax,
                       decoration: InputDecoration(
-                        labelText:
-                            'Kontak atau nama Online Shop yang akan '
-                            'dibagikan',
+                        labelText: tr(
+                          'Kontak atau nama Online Shop yang akan '
+                          'dibagikan',
+                        ),
                         hintText: tr('WA: 08xxx'),
-                        helperText:
-                            'Contoh: WA: 08xxx, Shopee: Toko Natasya, '
-                            'Ig: Toko Natasya. Kosongkan untuk memakai '
-                            'emailmu.',
+                        helperText: tr(
+                          'Contoh: WA: 08xxx, Shopee: Toko Natasya, '
+                          'Ig: Toko Natasya. Kosongkan untuk memakai '
+                          'emailmu.',
+                        ),
                         helperMaxLines: 3,
                         border: OutlineInputBorder(),
                       ),

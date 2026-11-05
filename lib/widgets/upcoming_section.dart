@@ -46,7 +46,7 @@ class UpcomingSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Upcoming',
+          tr('Upcoming'),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -137,7 +137,7 @@ class PreviewBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        'Preview',
+        tr('Preview'),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: scheme.onSecondaryContainer,
           fontWeight: FontWeight.w600,

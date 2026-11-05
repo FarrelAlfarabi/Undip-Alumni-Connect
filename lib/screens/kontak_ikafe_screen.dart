@@ -37,9 +37,9 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
     if (!ok) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Tidak bisa dibuka. Salin ${c.value} saja.'),
+          content: Text(trf('Tidak bisa dibuka. Salin {0} saja.', [c.value])),
           action: SnackBarAction(
-            label: 'Salin',
+            label: tr('Salin'),
             onPressed: () => Clipboard.setData(ClipboardData(text: c.value)),
           ),
         ),
@@ -50,7 +50,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
   void _copy(IkafeContact c) {
     Clipboard.setData(ClipboardData(text: c.value));
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Tersalin: ${c.value}')));
+        .showSnackBar(SnackBar(content: Text(trf('Tersalin: {0}', [c.value]))));
   }
 
   IconData _icon(IkafeContactKind k) => switch (k) {
@@ -92,7 +92,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
                 subtitle: Text(c.value),
                 onTap: () => _open(c),
                 trailing: IconButton(
-                  tooltip: 'Salin',
+                  tooltip: tr('Salin'),
                   icon: const Icon(Icons.copy_outlined),
                   onPressed: () => _copy(c),
                 ),
@@ -144,7 +144,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    'Contoh data. Kontak resmi Ikafe menyusul.',
+                    tr('Contoh data. Kontak resmi Ikafe menyusul.'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

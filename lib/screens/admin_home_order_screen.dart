@@ -194,9 +194,10 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Tampil di Home: $kHomeListingLimit produk, '
-                '$kHomeJobLimit lowongan. Yang dipin tampil dulu, urutan 1 '
-                'paling depan.',
+                trf(
+                  'Tampil di Home: {0} produk, {1} lowongan. Yang dipin tampil dulu, urutan 1 paling depan.',
+                  [kHomeListingLimit, kHomeJobLimit],
+                ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -252,11 +253,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
               style: TextStyle(color: theme.colorScheme.error),
             ),
           ),
-        Text('Dipin', style: theme.textTheme.titleSmall),
+        Text(tr('Dipin'), style: theme.textTheme.titleSmall),
         const SizedBox(height: 8),
         if (pinned.isEmpty)
           Text(
-            'Belum ada yang dipin. Home menampilkan yang terbaru.',
+            tr('Belum ada yang dipin. Home menampilkan yang terbaru.'),
             style: theme.textTheme.bodySmall,
           ),
         for (var i = 0; i < pinned.length; i++)
@@ -268,7 +269,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'Home sudah penuh. Lepas satu pin dulu.',
+              tr('Home sudah penuh. Lepas satu pin dulu.'),
               key: const Key('home-order-full'),
               style: theme.textTheme.bodySmall,
             ),
@@ -311,13 +312,13 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
             Expanded(child: _titleBlock(theme, item, notShown: !item.isShown)),
             IconButton(
               key: Key('home-order-up-${item.id}'),
-              tooltip: 'Naikkan',
+              tooltip: tr('Naikkan'),
               icon: const Icon(Icons.arrow_upward),
               onPressed: _busy || index == 0 ? null : () => _move(item, -1),
             ),
             IconButton(
               key: Key('home-order-down-${item.id}'),
-              tooltip: 'Turunkan',
+              tooltip: tr('Turunkan'),
               icon: const Icon(Icons.arrow_downward),
               onPressed: _busy || index == count - 1
                   ? null
@@ -326,7 +327,7 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
             TextButton(
               key: Key('home-order-unpin-${item.id}'),
               onPressed: _busy ? null : () => _unpin(item),
-              child: const Text('Lepas'),
+              child: Text(tr('Lepas')),
             ),
           ],
         ),

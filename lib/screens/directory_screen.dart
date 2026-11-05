@@ -151,11 +151,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Buka'),
+            child: Text(tr('Buka')),
           ),
         ],
       ),
@@ -256,7 +256,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 children: [
                   Expanded(
                     child: FilterDropdown(
-                      label: 'Major',
+                      label: tr('Major'),
                       value: _major,
                       options: majors,
                       onChanged: (v) => setState(() => _major = v),
@@ -265,7 +265,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilterDropdown(
-                      label: 'Year',
+                      label: tr('Year'),
                       value: _year,
                       options: years,
                       onChanged: (v) => setState(() => _year = v),
@@ -282,7 +282,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     // A dropdown you can also type into to narrow the list.
                     child: SearchableChoice(
                       fieldKey: const Key('directory-industry'),
-                      label: 'Industry',
+                      label: tr('Industry'),
                       controller: _industryController,
                       options: industries,
                       selected: _industry,
@@ -295,7 +295,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilterDropdown(
-                      label: 'City',
+                      label: tr('City'),
                       value: _city,
                       options: cities,
                       onChanged: (v) => setState(() => _city = v),
