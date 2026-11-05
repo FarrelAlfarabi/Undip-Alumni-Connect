@@ -5,6 +5,7 @@ import '../data/marketplace_repository.dart';
 import '../data/notification_repository.dart';
 import '../models/app_notification.dart';
 import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import 'admin_reports_screen.dart';
 import 'admin_screen.dart';
 import 'job_applicants_screen.dart';
@@ -151,6 +152,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _future = _load();
   });
 
+  Future<void> _clearAll() async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus semua notifikasi?',
+      body: 'Semua notifikasimu akan dihapus permanen.',
+      action: 'Hapus semua',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await _repo.clearAll(_myId);
+      if (mounted) _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Notifications',
+          error: e,
+        );
+      }
+    }
+  }
+
   void _gone() =>
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text(kNotificationGone)));
@@ -229,7 +253,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        actions: [
+          IconButton(
+            key: const Key('clear-notifications'),
+            tooltip: 'Hapus semua',
+            icon: const Icon(Icons.delete_sweep_outlined),
+            onPressed: _clearAll,
+          ),
+        ],
+      ),
       body: FutureBuilder<List<AppNotification>>(
         future: _future,
         builder: (context, snap) {
@@ -263,33 +297,52 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             itemBuilder: (context, i) {
               final n = items[i];
               final fresh = n.isUnread;
-              return ListTile(
-                key: Key('notification-${n.id}'),
-                tileColor: fresh
-                    ? theme.colorScheme.secondaryContainer.withValues(
-                        alpha: 0.35,
-                      )
-                    : null,
-                leading: Icon(
-                  _icon(n),
-                  color: fresh
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                title: Text(
-                  n.title,
-                  style: TextStyle(
-                    fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
+              return Dismissible(
+                key: Key('dismiss-${n.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: theme.colorScheme.errorContainer,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Icon(
+                    Icons.delete_outline,
+                    color: theme.colorScheme.onErrorContainer,
                   ),
                 ),
-                subtitle: Text(n.body),
-                trailing: Text(
-                  _timeAgo(n.createdAt),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                onDismissed: (_) async {
+                  try {
+                    await _repo.deleteOne(_myId, n.id);
+                  } catch (_) {}
+                  if (mounted) _reload();
+                },
+                child: ListTile(
+                  key: Key('notification-${n.id}'),
+                  tileColor: fresh
+                      ? theme.colorScheme.secondaryContainer.withValues(
+                          alpha: 0.35,
+                        )
+                      : null,
+                  leading: Icon(
+                    _icon(n),
+                    color: fresh
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
+                  title: Text(
+                    n.title,
+                    style: TextStyle(
+                      fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                  subtitle: Text(n.body),
+                  trailing: Text(
+                    _timeAgo(n.createdAt),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  onTap: () => _open(n),
                 ),
-                onTap: () => _open(n),
               );
             },
           );

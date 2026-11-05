@@ -75,6 +75,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     final rows = await Supabase.instance.client
         .from('job_posts')
         .select('*, poster:alumni_profiles(name)')
+        .isFilter('closed_at', null)
         .order('created_at', ascending: false);
     await BlockList.shared.ensureLoaded();
     return BlockList.shared.filter(

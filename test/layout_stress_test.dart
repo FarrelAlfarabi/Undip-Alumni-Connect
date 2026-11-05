@@ -430,6 +430,12 @@ Widget _notifications(List<Map<String, dynamic>> rows, {Object? error}) {
 }
 
 class _NoteApi implements NotificationApi {
+  @override
+  Future<void> clearAll(String recipientId) async {}
+
+  @override
+  Future<void> deleteOne(String recipientId, String id) async {}
+
   _NoteApi(this.rows);
   final List<Map<String, dynamic>> rows;
   Object? listError;

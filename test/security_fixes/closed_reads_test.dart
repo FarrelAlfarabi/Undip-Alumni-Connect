@@ -10,6 +10,12 @@ import 'package:undip_alumni_connect/screens/notifications_screen.dart';
 /// not depend on any of them.
 class _EmptyApi implements NotificationApi {
   @override
+  Future<void> clearAll(String recipientId) async {}
+
+  @override
+  Future<void> deleteOne(String recipientId, String id) async {}
+
+  @override
   Future<List<Map<String, dynamic>>> list(String recipientId) async => [];
 
   @override

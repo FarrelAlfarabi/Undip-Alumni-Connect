@@ -221,3 +221,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Reports tab, Kontak tab, announcements order (5 Nov 2026)
 - Marketplace review > Reports: per product shows seller, each reporter with reason and note; Abaikan laporan (kept, can reopen), Sembunyikan produk with reason (owner notified), all with Urungkan. Migration `20261105150000_marketplace_reports_tab`.
 - Requests has a third tab "Kontak" listing every contact I was given. Home order can pin announcements (Home shows pinned first). Migration `20261105160000_home_order_announcements`. Both with rollback files.
+## Private applications, close/edit job, clear notifications (5 Nov 2026)
+- Job applications (name, email, phone) were readable by anyone; now only the poster reads them (functions `job_applicants_list`, `job_applicant_counts`, `job_application_exists`; direct table read closed). Migration `20261105170000_job_applications_private`.
+- Own job: edit text and close/reopen (closed hidden from Jobs and Home). Migration `20261105180000_job_close_edit`. Notifications: delete one (swipe) or all. Migration `20261105190000_notifications_clear`. Rollback files for all.
+- Not done yet from the audit list: storage cleanup, posting limits for jobs/listings/feedback, admin action log, pull-to-refresh sweep, delete-account end-to-end check.

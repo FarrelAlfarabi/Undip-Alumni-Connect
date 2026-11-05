@@ -84,4 +84,17 @@ select jt.assert((select home_rank from announcements where title = 'Urut A') = 
 select jt.expect_error(format($q$select * from job_applicants_list(%L, gen_random_uuid())$q$, (select v from t_ids where k = 'siti')), 'not_owner');
 select jt.assert(not has_table_privilege('authenticated', 'job_applications', 'select'), 'members cannot read job_applications directly');
 select jt.assert(job_application_exists((select v from t_ids where k = 'siti'), gen_random_uuid()) = false, 'no application yet');
+-- Stage 7: close/edit own job, clear notifications
+reset role;
+insert into job_posts (posted_by, title, company, description) values ((select v from t_ids where k = 'ahmad'), 'Tutup Saya', 'PT A', 'Kerja');
+insert into t_ids select 'job2', id from job_posts where title = 'Tutup Saya';
+set role anon;
+select jt.expect_error(format($q$select job_post_set_closed(%L, %L, true)$q$, (select v from t_ids where k = 'siti'), (select v from t_ids where k = 'job2')), 'not_owner');
+select job_post_set_closed((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'job2'), true);
+select jt.assert((select closed_at is not null from job_posts where id = (select v from t_ids where k = 'job2')), 'job closed');
+select job_post_update((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'job2'), 'Judul Baru', 'PT B', 'Deskripsi', null);
+select jt.assert((select title = 'Judul Baru' from job_posts where id = (select v from t_ids where k = 'job2')), 'job edited');
+select jt.expect_error(format($q$select job_post_update(%L, %L, 'x', 'PT', 'd', null)$q$, (select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'job2')), 'invalid_input');
+select notifications_clear((select v from t_ids where k = 'siti'));
+select jt.assert((select count(*) from notifications_list((select v from t_ids where k = 'siti'))) = 0, 'notifications cleared');
 rollback;

@@ -58,6 +58,23 @@ class FakeNotificationApi implements NotificationApi {
     if (markError != null) throw markError!;
   }
 
+  final cleared = <String>[];
+
+  @override
+  Future<void> clearAll(String recipientId) async {
+    cleared.add('all');
+    rows = [];
+  }
+
+  @override
+  Future<void> deleteOne(String recipientId, String id) async {
+    cleared.add(id);
+    rows = [
+      for (final r in rows)
+        if (r['id'] != id) r,
+    ];
+  }
+
   @override
   Future<Map<String, dynamic>?> job(String jobId) async {
     jobCalls.add(jobId);
@@ -217,6 +234,27 @@ void main() {
       await tester.pumpAndSettle();
       return api;
     }
+
+    testWidgets('clear all deletes after confirming; swipe deletes one', (
+      tester,
+    ) async {
+      final api = await pump(tester, [
+        note(id: 'a', title: 'Satu'),
+        note(id: 'b', title: 'Dua'),
+      ]);
+      await tester.drag(
+        find.byKey(const Key('dismiss-a')),
+        const Offset(-800, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(api.cleared, ['a']);
+      await tester.tap(find.byKey(const Key('clear-notifications')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirm-delete')));
+      await tester.pumpAndSettle();
+      expect(api.cleared, ['a', 'all']);
+      expect(find.textContaining('No notifications yet'), findsOneWidget);
+    });
 
     testWidgets('empty state', (tester) async {
       await pump(tester, []);
