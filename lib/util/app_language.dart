@@ -66,11 +66,11 @@ String tr(String text) {
 /// where a value goes, and pass the values in order:
 /// `trf('Posted by {0}', [name])`. The map entries use the same {0} marks.
 String trf(String template, List<Object?> args) {
-  var out = tr(template);
-  for (var i = 0; i < args.length; i++) {
-    out = out.replaceAll('{$i}', '${args[i]}');
-  }
-  return out;
+  // One pass, so a value that looks like {1} is left as it is.
+  return tr(template).replaceAllMapped(RegExp(r'\{(\d+)\}'), (m) {
+    final i = int.parse(m.group(1)!);
+    return i < args.length ? '${args[i]}' : m.group(0)!;
+  });
 }
 
 /// Marks every widget to rebuild, so text written with [tr] changes at once

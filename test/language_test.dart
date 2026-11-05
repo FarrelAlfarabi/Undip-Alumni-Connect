@@ -40,6 +40,11 @@ void main() {
     expect(tr('Teks yang belum ada'), 'Teks yang belum ada');
   });
 
+  test('trf fills values in one pass', () {
+    expect(trf('Oleh {0} pada {1}', ['{1}', 'Senin']), 'Oleh {1} pada Senin');
+    expect(trf('Hanya {0}', []), 'Hanya {0}');
+  });
+
   test('the choice is saved and read back', () async {
     final store = MemoryLockStore();
     await app.set(AppLang.en, store);

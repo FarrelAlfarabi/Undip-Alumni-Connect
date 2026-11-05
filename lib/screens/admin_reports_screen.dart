@@ -44,6 +44,13 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   late final bool _hidden = widget.showHidden;
   String _type = kAllFilter;
   String _reason = kAllFilter;
+
+  /// The chosen reason, or all when the language changed since it was picked
+  /// (the labels are translated, so an old choice may not exist any more).
+  String get _reasonNow =>
+      ContentReportReason.values.any((e) => e.label == _reason)
+      ? _reason
+      : kAllFilter;
   String _period = kAllTime;
   final _search = TextEditingController();
   late Future<List<AdminReport>> _future;
@@ -73,8 +80,8 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         return false;
       }
       if (!_hidden &&
-          _reason != kAllFilter &&
-          !r.reasons.any((e) => e.label == _reason)) {
+          _reasonNow != kAllFilter &&
+          !r.reasons.any((e) => e.label == _reasonNow)) {
         return false;
       }
       if (q.isEmpty) return true;
@@ -387,7 +394,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                           key: const Key('admin-report-reason'),
                           child: FilterDropdown(
                             label: tr('Reason'),
-                            value: _reason,
+                            value: _reasonNow,
                             options: [
                               kAllFilter,
                               for (final e in ContentReportReason.values)
