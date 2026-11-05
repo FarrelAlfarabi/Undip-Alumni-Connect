@@ -212,6 +212,48 @@ enum ReportReason {
   final String label;
 }
 
+/// Admin view: everything reported about one product.
+class ReportDetail {
+  const ReportDetail({
+    required this.listingId,
+    required this.title,
+    required this.sellerName,
+    required this.count,
+    required this.reporters,
+    required this.reasons,
+    required this.notes,
+    this.hiddenReason,
+    this.isHidden = false,
+  });
+
+  final String listingId;
+  final String title;
+  final String? sellerName;
+  final int count;
+  final List<String> reporters;
+  final List<String> reasons;
+  final List<String> notes;
+  final bool isHidden;
+  final String? hiddenReason;
+
+  factory ReportDetail.fromMap(Map<String, dynamic> m) {
+    List<String> list(String k) => [
+      for (final v in (m[k] as List? ?? const [])) '$v',
+    ];
+    return ReportDetail(
+      listingId: m['listing_id'] as String,
+      title: m['title'] as String? ?? '',
+      sellerName: m['seller_name'] as String?,
+      count: (m['report_count'] as num).toInt(),
+      reporters: list('reporters'),
+      reasons: list('reasons'),
+      notes: list('notes'),
+      isHidden: m['hidden_at'] != null,
+      hiddenReason: m['hidden_reason'] as String?,
+    );
+  }
+}
+
 /// Admin view: how many reports a listing has received.
 class ReportCount {
   const ReportCount({required this.listingId, required this.count});

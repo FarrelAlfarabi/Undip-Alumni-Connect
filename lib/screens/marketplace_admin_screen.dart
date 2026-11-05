@@ -99,7 +99,9 @@ class _ReviewQueueState extends State<_ReviewQueue> {
       _busy.remove(l.id);
       showUndoSnackBar(
         context,
-        message: approve ? 'Disetujui: "${l.title}".' : 'Ditolak: "${l.title}".',
+        message: approve
+            ? 'Disetujui: "${l.title}".'
+            : 'Ditolak: "${l.title}".',
         screen: 'Marketplace review',
         errorText: marketplaceErrorMessage,
         onUndo: () async {
@@ -236,7 +238,10 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                                 ),
                               ),
                               Text(
-                                [l.category, if (l.city.isNotEmpty) l.city].join(' · '),
+                                [
+                                  l.category,
+                                  if (l.city.isNotEmpty) l.city,
+                                ].join(' · '),
                                 style: theme.textTheme.bodySmall,
                               ),
                               Text(
@@ -310,7 +315,11 @@ class _ReportsTab extends StatefulWidget {
 }
 
 class _ReportsTabState extends State<_ReportsTab> {
-  late Future<List<(ReportCount, String?)>> _future;
+  late Future<List<ReportDetail>> _future;
+  bool _dismissed = false;
+  final _busy = <String>{};
+
+  MarketplaceRepository get _repo => widget.repository;
 
   @override
   void initState() {
@@ -318,80 +327,314 @@ class _ReportsTabState extends State<_ReportsTab> {
     _future = _load();
   }
 
-  // Titles come from the public approved list; a reported listing that is
-  // no longer approved shows as unavailable.
-  Future<List<(ReportCount, String?)>> _load() async {
-    final counts = await widget.repository.fetchReportCounts(widget.adminId);
-    if (counts.isEmpty) return [];
-    final approved = await widget.repository.fetchApproved(applyBlocks: false);
-    final titles = {for (final l in approved) l.id: l.title};
-    return [for (final c in counts) (c, titles[c.listingId])];
-  }
+  Future<List<ReportDetail>> _load() =>
+      _repo.fetchReportDetails(widget.adminId, dismissed: _dismissed);
 
   void _reload() => setState(() {
     _future = _load();
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<(ReportCount, String?)>>(
-      future: _future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return _ErrorRetry(
-            text: marketplaceErrorMessage(snapshot.error!),
-            onRetry: _reload,
-            screen: 'Marketplace review',
-            error: snapshot.error,
-          );
-        }
-        final rows = snapshot.data ?? [];
-        if (rows.isEmpty) {
-          return const Center(child: Text('No reports yet.'));
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: rows.length,
-          separatorBuilder: (_, _) => const Divider(height: 1),
-          itemBuilder: (context, i) {
-            final (c, title) = rows[i];
-            final theme = Theme.of(context);
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title ?? 'Listing no longer available',
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        Text(
-                          c.listingId,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${c.count} ${c.count == 1 ? 'report' : 'reports'}',
-                    style: theme.textTheme.labelLarge,
-                  ),
-                ],
+  String _reasonLabel(String name) {
+    for (final r in ReportReason.values) {
+      if (r.name == name) return r.label;
+    }
+    return name;
+  }
+
+  Future<String?> _askReason() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        String? error;
+        return StatefulBuilder(
+          builder: (ctx, setLocal) => AlertDialog(
+            title: const Text('Sembunyikan produk ini?'),
+            content: TextField(
+              key: const Key('product-hide-reason'),
+              controller: controller,
+              autofocus: true,
+              maxLines: 3,
+              maxLength: 300,
+              decoration: InputDecoration(
+                labelText: 'Alasan (dikirim ke pemilik)',
+                errorText: error,
+                border: const OutlineInputBorder(),
               ),
-            );
-          },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                key: const Key('product-hide-confirm'),
+                onPressed: () {
+                  final t = controller.text.trim();
+                  if (t.isEmpty) {
+                    setLocal(() => error = 'Alasan wajib diisi');
+                    return;
+                  }
+                  Navigator.of(ctx).pop(t);
+                },
+                child: const Text('Sembunyikan'),
+              ),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Future<void> _run(
+    ReportDetail d,
+    Future<void> Function() action,
+    String done,
+    Future<void> Function() undo,
+  ) async {
+    setState(() => _busy.add(d.listingId));
+    try {
+      await action();
+      if (!mounted) return;
+      showUndoSnackBar(
+        context,
+        message: done,
+        screen: 'Marketplace reports',
+        errorText: marketplaceErrorMessage,
+        onUndo: () async {
+          await undo();
+          if (mounted) _reload();
+        },
+      );
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: marketplaceErrorMessage(e),
+          screen: 'Marketplace reports',
+          error: e,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy.remove(d.listingId));
+    }
+  }
+
+  Future<void> _dismiss(ReportDetail d) => _run(
+    d,
+    () => _repo.setReportsDismissed(
+      adminId: widget.adminId,
+      listingId: d.listingId,
+      dismissed: true,
+    ),
+    'Laporan diabaikan.',
+    () => _repo.setReportsDismissed(
+      adminId: widget.adminId,
+      listingId: d.listingId,
+      dismissed: false,
+    ),
+  );
+
+  Future<void> _reopen(ReportDetail d) => _run(
+    d,
+    () => _repo.setReportsDismissed(
+      adminId: widget.adminId,
+      listingId: d.listingId,
+      dismissed: false,
+    ),
+    'Laporan dibuka lagi.',
+    () => _repo.setReportsDismissed(
+      adminId: widget.adminId,
+      listingId: d.listingId,
+      dismissed: true,
+    ),
+  );
+
+  Future<void> _hide(ReportDetail d) async {
+    final reason = await _askReason();
+    if (reason == null || !mounted) return;
+    await _run(
+      d,
+      () => _repo.setListingHidden(
+        adminId: widget.adminId,
+        listingId: d.listingId,
+        hidden: true,
+        reason: reason,
+      ),
+      'Produk disembunyikan. Pemilik diberi tahu.',
+      () => _repo.setListingHidden(
+        adminId: widget.adminId,
+        listingId: d.listingId,
+        hidden: false,
+      ),
+    );
+  }
+
+  Future<void> _show(ReportDetail d) => _run(
+    d,
+    () => _repo.setListingHidden(
+      adminId: widget.adminId,
+      listingId: d.listingId,
+      hidden: false,
+    ),
+    'Produk ditampilkan lagi.',
+    () => _repo.setListingHidden(
+      adminId: widget.adminId,
+      listingId: d.listingId,
+      hidden: true,
+      reason: d.hiddenReason ?? 'Disembunyikan oleh admin',
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: FilterChip(
+              key: const Key('reports-show-dismissed'),
+              label: const Text('Tampilkan yang diabaikan'),
+              selected: _dismissed,
+              onSelected: (v) {
+                _dismissed = v;
+                _reload();
+              },
+            ),
+          ),
+        ),
+        Expanded(
+          child: FutureBuilder<List<ReportDetail>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return _ErrorRetry(
+                  text: marketplaceErrorMessage(snapshot.error!),
+                  onRetry: _reload,
+                  screen: 'Marketplace review',
+                  error: snapshot.error,
+                );
+              }
+              final rows = snapshot.data ?? [];
+              if (rows.isEmpty) {
+                return Center(
+                  child: Text(
+                    _dismissed
+                        ? 'Belum ada laporan yang diabaikan.'
+                        : 'Belum ada laporan.',
+                  ),
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: rows.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  final d = rows[i];
+                  final busy = _busy.contains(d.listingId);
+                  return Card(
+                    key: Key('report-${d.listingId}'),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  d.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${d.count} ${d.count == 1 ? 'report' : 'reports'}',
+                                style: theme.textTheme.labelLarge,
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'Penjual: ${d.sellerName ?? 'Alumni'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          for (var k = 0; k < d.reasons.length; k++)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                '${k < d.reporters.length ? d.reporters[k] : 'Alumni'}: '
+                                '${_reasonLabel(d.reasons[k])}'
+                                '${k < d.notes.length && d.notes[k].isNotEmpty ? ' - ${d.notes[k]}' : ''}',
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                          if (d.isHidden)
+                            Text(
+                              'Disembunyikan: ${d.hiddenReason ?? '-'}',
+                              key: Key('report-hidden-${d.listingId}'),
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 8,
+                            children: [
+                              if (_dismissed)
+                                OutlinedButton(
+                                  key: Key('report-reopen-${d.listingId}'),
+                                  onPressed: busy ? null : () => _reopen(d),
+                                  child: const Text('Buka lagi'),
+                                )
+                              else
+                                OutlinedButton(
+                                  key: Key('report-dismiss-${d.listingId}'),
+                                  onPressed: busy ? null : () => _dismiss(d),
+                                  child: const Text('Abaikan laporan'),
+                                ),
+                              if (d.isHidden)
+                                FilledButton(
+                                  key: Key('report-show-${d.listingId}'),
+                                  onPressed: busy ? null : () => _show(d),
+                                  child: const Text('Tampilkan lagi'),
+                                )
+                              else
+                                FilledButton(
+                                  key: Key('report-hide-${d.listingId}'),
+                                  onPressed: busy ? null : () => _hide(d),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.error,
+                                    foregroundColor: theme.colorScheme.onError,
+                                  ),
+                                  child: const Text('Sembunyikan produk'),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

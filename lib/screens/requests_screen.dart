@@ -51,7 +51,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       initialIndex: widget.initialTab,
       child: Scaffold(
         appBar: AppBar(
@@ -60,6 +60,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
             tabs: [
               Tab(text: 'Diterima'),
               Tab(text: 'Terkirim'),
+              Tab(text: 'Kontak'),
             ],
           ),
         ),
@@ -95,9 +96,159 @@ class _RequestsScreenState extends State<RequestsScreen> {
                 onChanged: _refresh,
               ),
             ),
+            _ContactsTab(
+              future: _outgoing,
+              repository: _repo,
+              myId: _myId,
+              onRetry: _refresh,
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// "Kontak": every contact I was given (my accepted requests), always on
+/// the page so I do not have to open each request again.
+class _ContactsTab extends StatefulWidget {
+  const _ContactsTab({
+    required this.future,
+    required this.repository,
+    required this.myId,
+    required this.onRetry,
+  });
+
+  final Future<List<OutgoingRequest>> future;
+  final ContactRepository repository;
+  final String myId;
+  final VoidCallback onRetry;
+
+  @override
+  State<_ContactsTab> createState() => _ContactsTabState();
+}
+
+class _ContactsTabState extends State<_ContactsTab>
+    with AutomaticKeepAliveClientMixin {
+  late Future<List<(OutgoingRequest, String?)>> _load = _fetch();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void didUpdateWidget(_ContactsTab old) {
+    super.didUpdateWidget(old);
+    if (old.future != widget.future) _load = _fetch();
+  }
+
+  Future<List<(OutgoingRequest, String?)>> _fetch() async {
+    final all = await widget.future;
+    final accepted = [
+      for (final r in all)
+        if (r.status == ContactRequestStatus.accepted) r,
+    ];
+    return Future.wait([
+      for (final r in accepted)
+        () async {
+          try {
+            final text = await widget.repository.sharedContact(
+              requesterId: widget.myId,
+              requestId: r.id,
+            );
+            return (r, text);
+          } catch (_) {
+            return (r, null);
+          }
+        }(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final theme = Theme.of(context);
+    return FutureBuilder<List<(OutgoingRequest, String?)>>(
+      future: _load,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return ErrorView(
+            message: friendlyLoadError('kontakmu', snap.error),
+            screen: 'Requests',
+            error: snap.error,
+            onRetry: widget.onRetry,
+          );
+        }
+        final items = snap.data ?? const [];
+        if (items.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Belum ada kontak. Kontak yang dibagikan alumni lain setelah '
+                'menerima permintaanmu akan tersimpan di sini.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, i) {
+            final (r, text) = items[i];
+            return Card(
+              key: Key('contact-${r.id}'),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      r.targetName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (text == null)
+                      Text(
+                        'Kontak belum bisa dimuat. Coba lagi nanti.',
+                        style: TextStyle(color: theme.colorScheme.error),
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SelectableText(
+                              text,
+                              key: Key('contact-text-${r.id}'),
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Salin',
+                            icon: const Icon(Icons.copy_outlined),
+                            onPressed: () =>
+                                Clipboard.setData(ClipboardData(text: text)),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

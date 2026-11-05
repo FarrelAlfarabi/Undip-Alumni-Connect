@@ -119,9 +119,18 @@ void main() {
         ..approved = [
           listingMap(id: 'l1', title: 'Kopi Arabika', seller: sellerMap),
         ]
-        ..rpcResults['marketplace_report_counts'] = [
-          {'listing_id': 'l1', 'report_count': 2},
-          {'listing_id': 'gone', 'report_count': 1},
+        ..rpcResults['marketplace_report_details'] = [
+          {
+            'listing_id': 'l1',
+            'title': 'Kopi Arabika',
+            'seller_name': 'Bunga',
+            'report_count': 2,
+            'reporters': ['Ahmad', 'Siti'],
+            'reasons': ['spam', 'misleading'],
+            'notes': ['', 'Fotonya palsu'],
+            'hidden_at': null,
+            'hidden_reason': null,
+          },
         ];
       await tester.pumpWidget(
         MaterialApp(
@@ -223,14 +232,50 @@ void main() {
       expect(find.text('Nothing waiting for review.'), findsOneWidget);
     });
 
-    testWidgets('reports tab shows counts per listing', (tester) async {
-      await pumpAdmin(tester);
+    testWidgets('reports tab shows who reported what, and can act', (
+      tester,
+    ) async {
+      final api = await pumpAdmin(tester);
       await tester.tap(find.text('Reports'));
       await tester.pumpAndSettle();
       expect(find.text('Kopi Arabika'), findsOneWidget);
       expect(find.text('2 reports'), findsOneWidget);
-      expect(find.text('Listing no longer available'), findsOneWidget);
-      expect(find.text('1 report'), findsOneWidget);
+      expect(find.text('Penjual: Bunga'), findsOneWidget);
+      expect(find.text('Ahmad: Spam'), findsOneWidget);
+      expect(find.text('Siti: Misleading - Fotonya palsu'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('report-dismiss-l1')));
+      await tester.pumpAndSettle();
+      expect(api.params['marketplace_reports_set_dismissed'], {
+        'p_admin': 'admin',
+        'p_listing': 'l1',
+        'p_dismissed': true,
+      });
+      await tester.tap(find.byKey(const Key('undo-action')));
+      await tester.pumpAndSettle();
+      expect(
+        api.params['marketplace_reports_set_dismissed']!['p_dismissed'],
+        false,
+      );
+
+      await tester.tap(find.byKey(const Key('report-hide-l1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('product-hide-confirm')));
+      await tester.pumpAndSettle();
+      expect(find.text('Alasan wajib diisi'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('product-hide-reason')),
+        'Penipuan',
+      );
+      await tester.tap(find.byKey(const Key('product-hide-confirm')));
+      await tester.pumpAndSettle();
+      expect(api.params['admin_reports_decide'], {
+        'p_admin': 'admin',
+        'p_type': 'product',
+        'p_target': 'l1',
+        'p_action': 'hide',
+        'p_reason': 'Penipuan',
+      });
     });
   });
 
