@@ -35,7 +35,7 @@ insert into t_ids select 'job', id from job_posts where title = 'Analyst';
 insert into job_applications (job_post_id, applicant_id, full_name, email) values ((select v from t_ids where k = 'job'), (select v from t_ids where k = 'siti'), 'Siti', 'siti@example.com');
 set role anon;
 select job_application_withdraw((select v from t_ids where k = 'siti'), (select v from t_ids where k = 'job'));
-select jt.assert((select count(*) from job_applications where job_post_id = (select v from t_ids where k = 'job')) = 0, 'application withdrawn');
+select jt.assert(not job_application_exists((select v from t_ids where k = 'siti'), (select v from t_ids where k = 'job')), 'application withdrawn');
 select jt.expect_error(format($q$select job_post_delete(%L, %L)$q$, (select v from t_ids where k = 'siti'), (select v from t_ids where k = 'job')), 'not_owner');
 select job_post_delete((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'job'));
 select jt.assert((select count(*) from job_posts where title = 'Analyst') = 0, 'job deleted');
@@ -80,4 +80,8 @@ select jt.expect_error(format($q$select marketplace_reports_set_dismissed(%L, ge
 insert into announcements (title, body, posted_by) values ('Urut A', 'x', (select v from t_ids where k = 'clara'));
 select admin_set_home_order((select v from t_ids where k = 'clara'), 'announcement', array[(select id from announcements where title = 'Urut A')]);
 select jt.assert((select home_rank from announcements where title = 'Urut A') = 1, 'announcement pinned first');
+-- Stage 7: applications are private
+select jt.expect_error(format($q$select * from job_applicants_list(%L, gen_random_uuid())$q$, (select v from t_ids where k = 'siti')), 'not_owner');
+select jt.assert(not has_table_privilege('authenticated', 'job_applications', 'select'), 'members cannot read job_applications directly');
+select jt.assert(job_application_exists((select v from t_ids where k = 'siti'), gen_random_uuid()) = false, 'no application yet');
 rollback;

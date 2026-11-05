@@ -29,11 +29,11 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchApplicants() async {
-    final rows = await Supabase.instance.client
-        .from('job_applications')
-        .select()
-        .eq('job_post_id', widget.job['id'])
-        .order('created_at', ascending: false);
+    // Only the poster can read applications; the database checks it.
+    final rows = await Supabase.instance.client.rpc(
+      'job_applicants_list',
+      params: {'p_poster': widget.job['posted_by'], 'p_job': widget.job['id']},
+    );
     return List<Map<String, dynamic>>.from(rows as List);
   }
 

@@ -67,11 +67,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   Future<int> _fetchApplicantCount() async {
     if (widget.loadApplicantCount != null) return widget.loadApplicantCount!();
-    final rows = await Supabase.instance.client
-        .from('job_applications')
-        .select('id')
-        .eq('job_post_id', widget.job['id']);
-    return (rows as List).length;
+    final rows = await Supabase.instance.client.rpc(
+      'job_applicant_counts',
+      params: {'p_poster': widget.currentUser.value['id']},
+    );
+    for (final r in rows as List) {
+      if ((r as Map)['job_post_id'] == widget.job['id']) {
+        return (r['applicant_count'] as num).toInt();
+      }
+    }
+    return 0;
   }
 
   // Checked so the applicant can't submit a duplicate application by
@@ -79,12 +84,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   // the job_applications migration), so this is purely a UI guard.
   Future<bool> _fetchHasApplied() async {
     if (widget.loadHasApplied != null) return widget.loadHasApplied!();
-    final rows = await Supabase.instance.client
-        .from('job_applications')
-        .select('id')
-        .eq('job_post_id', widget.job['id'])
-        .eq('applicant_id', widget.currentUser.value['id']);
-    return (rows as List).isNotEmpty;
+    final exists = await Supabase.instance.client.rpc(
+      'job_application_exists',
+      params: {
+        'p_applicant': widget.currentUser.value['id'],
+        'p_job': widget.job['id'],
+      },
+    );
+    return exists == true;
   }
 
   Future<void> _withdraw() async {

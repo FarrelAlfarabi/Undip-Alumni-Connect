@@ -60,13 +60,14 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
     // One query for all counts. A failure only hides the numbers.
     final counts = <String, int>{};
     try {
-      final apps = await client
-          .from('job_applications')
-          .select('job_post_id')
-          .inFilter('job_post_id', [for (final r in rows) r['id']]);
+      final apps = await client.rpc(
+        'job_applicant_counts',
+        params: {'p_poster': myId},
+      );
       for (final a in apps as List) {
-        final id = (a as Map)['job_post_id'] as String;
-        counts[id] = (counts[id] ?? 0) + 1;
+        final m = a as Map;
+        counts[m['job_post_id'] as String] = (m['applicant_count'] as num)
+            .toInt();
       }
     } catch (_) {
       return rows;
