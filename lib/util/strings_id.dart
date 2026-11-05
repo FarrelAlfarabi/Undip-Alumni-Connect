@@ -192,7 +192,7 @@ final Map<String, String> kIndonesian = {
   'You have reached the free product limit for this business. Your '
           'products stay visible and you can still edit or delete them. To add '
           'more, please contact an admin about unlimited posting.':
-      'Batas produk gratis untuk bisnis ini sudah tercapai. Produkmu tetap '
+      'Batas produk untuk bisnis ini sudah tercapai. Produkmu tetap '
       'tampil dan masih bisa diubah atau dihapus. Untuk menambah lagi, '
       'hubungi admin soal posting tanpa batas.',
   // Business
