@@ -1,3 +1,4 @@
+import '../util/app_language.dart';
 import 'marketplace_repository.dart';
 
 /// User-facing text for a failed marketplace action.
@@ -5,28 +6,28 @@ String marketplaceErrorMessage(Object error) {
   if (error is MarketplaceException) {
     switch (error.code) {
       case MarketplaceErrorCode.postLimitReached:
-        return kPostLimitMessage;
+        return tr(kPostLimitMessage);
       case MarketplaceErrorCode.businessRequired:
       case MarketplaceErrorCode.businessNotFound:
       case MarketplaceErrorCode.businessNotApproved:
-        return kProductsNeedBusinessMessage;
+        return tr(kProductsNeedBusinessMessage);
       case MarketplaceErrorCode.notOwner:
-        return 'You can only change your own listings.';
+        return tr('You can only change your own listings.');
       case MarketplaceErrorCode.notFound:
-        return 'This listing no longer exists.';
+        return tr('This listing no longer exists.');
       case MarketplaceErrorCode.notAdmin:
-        return 'You are not an admin.';
+        return tr('You are not an admin.');
       case MarketplaceErrorCode.reasonRequired:
-        return 'Give a reason for rejecting.';
+        return tr('Give a reason for rejecting.');
       case MarketplaceErrorCode.duplicateReport:
-        return 'You already reported this listing.';
+        return tr('You already reported this listing.');
       case MarketplaceErrorCode.invalidState:
-        return 'This listing cannot be changed in its current state.';
+        return tr('This listing cannot be changed in its current state.');
       default:
         break;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return tr('Something went wrong. Please try again.');
 }
 
 /// Products can only be added by owners of approved businesses.

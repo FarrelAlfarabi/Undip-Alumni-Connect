@@ -225,3 +225,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Job applications (name, email, phone) were readable by anyone; now only the poster reads them (functions `job_applicants_list`, `job_applicant_counts`, `job_application_exists`; direct table read closed). Migration `20261105170000_job_applications_private`.
 - Own job: edit text and close/reopen (closed hidden from Jobs and Home). Migration `20261105180000_job_close_edit`. Notifications: delete one (swipe) or all. Migration `20261105190000_notifications_clear`. Rollback files for all.
 - Not done yet from the audit list: storage cleanup, posting limits for jobs/listings/feedback, admin action log, pull-to-refresh sweep, delete-account end-to-end check.
+## Language setting (5 Nov 2026)
+- Settings > Bahasa: Bahasa Indonesia (default) or English, saved on the device, applies at once. `tr(text)` swaps a text using `strings_id.dart` (English to Indonesian) and `strings_en.dart` (Indonesian to English); a text with no entry stays as written. Tests show text as written (`passthrough`).
+- Done so far: Settings, Requests, all error messages (contact, business, marketplace, report, admin, generic). Most screen labels still need `tr()` (next batches). Notification texts come from the database and are still English.

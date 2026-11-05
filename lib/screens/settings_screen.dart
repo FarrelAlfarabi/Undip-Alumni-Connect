@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 import '../data/contact_repository.dart';
 import '../lock/lock_service.dart';
 import '../lock/pin_settings_screen.dart';
@@ -32,12 +34,36 @@ class SettingsScreen extends StatelessWidget {
   void _push(BuildContext context, Widget page) =>
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
 
+  Future<void> _pickLanguage(BuildContext context) async {
+    final picked = await showDialog<AppLang>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(tr('Pilih bahasa')),
+        children: [
+          for (final l in AppLang.values)
+            SimpleDialogOption(
+              key: Key('language-${l.name}'),
+              onPressed: () => Navigator.of(ctx).pop(l),
+              child: Row(
+                children: [
+                  Expanded(child: Text(l.label)),
+                  if (l == AppLanguage.shared.current.value)
+                    const Icon(Icons.check),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (picked != null) await AppLanguage.shared.set(picked);
+  }
+
   @override
   Widget build(BuildContext context) {
     final me = currentUser.value['id'] as String;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengaturan')),
+      appBar: AppBar(title: Text(tr('Pengaturan'))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -47,8 +73,8 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('settings-default-contact'),
                   icon: Icons.contact_phone_outlined,
-                  title: 'Default kontak untuk dibagikan',
-                  subtitle: 'Terisi ketika menerima request',
+                  title: tr('Default kontak untuk dibagikan'),
+                  subtitle: tr('Terisi ketika menerima request'),
                   onTap: () => _push(
                     context,
                     DefaultContactScreen(
@@ -58,10 +84,17 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 MenuItem(
+                  key: const Key('settings-language'),
+                  icon: Icons.language,
+                  title: tr('Bahasa'),
+                  subtitle: AppLanguage.shared.current.value.label,
+                  onTap: () => _pickLanguage(context),
+                ),
+                MenuItem(
                   key: const Key('settings-intro'),
                   icon: Icons.tour_outlined,
-                  title: 'Pengenalan fitur',
-                  subtitle: 'Apa itu Marketplace, Business, dan Jobs',
+                  title: tr('Pengenalan fitur'),
+                  subtitle: tr('Apa itu Marketplace, Business, dan Jobs'),
                   onTap: () => _push(
                     context,
                     FeatureIntroScreen(
@@ -82,8 +115,8 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('profile-blocked'),
                   icon: Icons.block,
-                  title: 'Blokir pengguna',
-                  subtitle: 'Pengguna terblokir, buka blokir',
+                  title: tr('Blokir pengguna'),
+                  subtitle: tr('Pengguna terblokir, buka blokir'),
                   onTap: () =>
                       _push(context, BlockedUsersScreen(currentUserId: me)),
                 ),
@@ -91,7 +124,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Zona bahaya',
+              tr('Zona bahaya'),
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.error,
               ),
@@ -102,7 +135,7 @@ class SettingsScreen extends StatelessWidget {
                 MenuItem(
                   key: const Key('profile-delete'),
                   icon: Icons.delete_forever_outlined,
-                  title: 'Hapus akun saya',
+                  title: tr('Hapus akun saya'),
                   color: theme.colorScheme.error,
                   onTap: () => _push(
                     context,

@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business.dart';
@@ -31,25 +33,27 @@ String adminErrorMessage(Object error) {
   if (error is AdminException) {
     switch (error.code) {
       case AdminErrorCode.notAdmin:
-        return 'You are not an admin.';
+        return tr('You are not an admin.');
       case AdminErrorCode.invalidBand:
-        return 'Choose one of the four bands.';
+        return tr('Choose one of the four bands.');
       case AdminErrorCode.reasonRequired:
-        return 'A reason is required.';
+        return tr('A reason is required.');
       case AdminErrorCode.invalidState:
-        return 'That is not possible right now. You cannot suspend an admin or '
-            'yourself. Otherwise reload the list.';
+        return tr(
+          'That is not possible right now. You cannot suspend an admin or '
+          'yourself. Otherwise reload the list.',
+        );
       case AdminErrorCode.notFound:
-        return 'This item no longer exists.';
+        return tr('This item no longer exists.');
       case AdminErrorCode.invalidInput:
-        return 'Title and message are required, and must not be too long.';
+        return tr('Title and message are required, and must not be too long.');
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
         break;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return tr('Something went wrong. Please try again.');
 }
 
 /// Thin seam over the Supabase client (every call is a database function).

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../config/policy_config.dart';
+import 'app_language.dart';
 
 /// What we show when something fails. Never include the exception text:
 /// Supabase and network errors can carry the project URL, status codes and
@@ -38,8 +39,8 @@ bool isSuspendedError(Object? error) =>
 
 /// A short, safe message for [error]. The error itself is not shown.
 String friendlyError(Object? error) {
-  if (error is TimeoutException) return kNetworkError;
-  if (isSuspendedError(error)) return kSuspendedMessage;
+  if (error is TimeoutException) return tr(kNetworkError);
+  if (isSuspendedError(error)) return tr(kSuspendedMessage);
   // Looked at only to choose a message, never displayed.
   final text = error.toString();
   if (RegExp(
@@ -47,14 +48,22 @@ String friendlyError(Object? error) {
     r'Connection (refused|closed|reset)|Network is unreachable',
     caseSensitive: false,
   ).hasMatch(text)) {
-    return kNetworkError;
+    return tr(kNetworkError);
   }
-  return kGenericError;
+  return tr(kGenericError);
 }
 
 /// Same, for "failed to load" screens: a message naming the thing that failed.
 String friendlyLoadError(String thing, Object? error) {
-  final network = friendlyError(error) == kNetworkError;
+  final network = friendlyError(error) == tr(kNetworkError);
+  final id =
+      AppLanguage.shared.current.value == AppLang.id &&
+      !AppLanguage.shared.passthrough;
+  if (id) {
+    return network
+        ? 'Gagal memuat $thing. Periksa koneksimu lalu coba lagi.'
+        : 'Gagal memuat $thing. Coba lagi.';
+  }
   return network
       ? "Couldn't load $thing. Check your connection and try again."
       : "Couldn't load $thing. Please try again.";

@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// What can be reported (the database values).
@@ -70,20 +72,20 @@ String reportErrorMessage(Object error) {
   if (error is ReportException) {
     switch (error.code) {
       case ReportErrorCode.notVerified:
-        return 'Only verified alumni can send reports.';
+        return tr('Only verified alumni can send reports.');
       case ReportErrorCode.cannotReportOwn:
-        return 'You cannot report your own content.';
+        return tr('You cannot report your own content.');
       case ReportErrorCode.alreadyReported:
-        return 'You already reported this. An admin will take a look.';
+        return tr('You already reported this. An admin will take a look.');
       case ReportErrorCode.targetNotFound:
-        return 'This content no longer exists.';
+        return tr('This content no longer exists.');
       case ReportErrorCode.noteTooLong:
-        return 'The note is too long (300 characters at most).';
+        return tr('The note is too long (300 characters at most).');
       case ReportErrorCode.unknown:
         break;
     }
   }
-  return 'Something went wrong. Please try again.';
+  return tr('Something went wrong. Please try again.');
 }
 
 /// Thin seam over the Supabase client (every call is a database function).

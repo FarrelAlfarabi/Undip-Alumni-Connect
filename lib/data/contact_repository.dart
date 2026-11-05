@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/contact_request.dart';
@@ -44,47 +46,57 @@ String contactErrorMessage(Object error) {
   if (error is ContactException) {
     switch (error.code) {
       case ContactErrorCode.notVerified:
-        return 'Hanya alumni terverifikasi yang bisa memakai fitur ini.';
+        return tr('Hanya alumni terverifikasi yang bisa memakai fitur ini.');
       case ContactErrorCode.cannotRequestSelf:
-        return 'Kamu tidak bisa mengirim permintaan ke dirimu sendiri.';
+        return tr('Kamu tidak bisa mengirim permintaan ke dirimu sendiri.');
       case ContactErrorCode.requestAlreadyOpen:
-        return 'Kamu sudah punya permintaan yang belum dijawab ke orang ini. '
-            'Tunggu jawabannya dulu.';
+        return tr(
+          'Kamu sudah punya permintaan yang belum dijawab ke orang ini. '
+          'Tunggu jawabannya dulu.',
+        );
       case ContactErrorCode.cooldownActive:
-        return 'Orang ini menolak permintaanmu dalam 30 hari terakhir. Kamu '
-            'bisa mengirim lagi setelah 30 hari.';
+        return tr(
+          'Orang ini menolak permintaanmu dalam 30 hari terakhir. Kamu '
+          'bisa mengirim lagi setelah 30 hari.',
+        );
       case ContactErrorCode.blocked:
-        return 'Kamu belum bisa mengirim permintaan ke orang ini.';
+        return tr('Kamu belum bisa mengirim permintaan ke orang ini.');
       case ContactErrorCode.dailyLimitReached:
-        return 'Kamu sudah mengirim $kDailyRequestMax permintaan hari ini. '
-            'Coba lagi besok.';
+        return tr(
+          'Kamu sudah mengirim $kDailyRequestMax permintaan hari ini. '
+          'Coba lagi besok.',
+        );
       case ContactErrorCode.tooManyOpen:
-        return 'Ada $kOpenRequestMax permintaanmu yang belum dijawab. Kamu '
-            'bisa mengirim lagi setelah ada yang dijawab, atau batalkan '
-            'salah satunya.';
+        return tr(
+          'Ada $kOpenRequestMax permintaanmu yang belum dijawab. Kamu '
+          'bisa mengirim lagi setelah ada yang dijawab, atau batalkan '
+          'salah satunya.',
+        );
       case ContactErrorCode.alreadyShared:
-        return 'Orang ini sudah membagikan kontaknya ke kamu. Lihat di '
-            'Requests.';
+        return tr(
+          'Orang ini sudah membagikan kontaknya ke kamu. Lihat di '
+          'Requests.',
+        );
       case ContactErrorCode.messageTooLong:
-        return 'Pesannya terlalu panjang (maksimal 200 karakter).';
+        return tr('Pesannya terlalu panjang (maksimal 200 karakter).');
       case ContactErrorCode.sharedRequired:
-        return 'Isi kontak yang ingin kamu bagikan.';
+        return tr('Isi kontak yang ingin kamu bagikan.');
       case ContactErrorCode.sharedTooLong:
-        return 'Terlalu panjang (maksimal 200 karakter).';
+        return tr('Terlalu panjang (maksimal 200 karakter).');
       case ContactErrorCode.notFound:
-        return 'Permintaan ini sudah tidak ada.';
+        return tr('Permintaan ini sudah tidak ada.');
       case ContactErrorCode.notTarget:
       case ContactErrorCode.notRequester:
-        return 'Permintaan ini bukan milikmu.';
+        return tr('Permintaan ini bukan milikmu.');
       case ContactErrorCode.notAccepted:
-        return 'Permintaan ini belum diterima.';
+        return tr('Permintaan ini belum diterima.');
       case ContactErrorCode.invalidState:
-        return 'Permintaan ini sudah dijawab.';
+        return tr('Permintaan ini sudah dijawab.');
       case ContactErrorCode.unknown:
         break;
     }
   }
-  return 'Terjadi kesalahan. Coba lagi.';
+  return tr('Terjadi kesalahan. Coba lagi.');
 }
 
 /// Thin seam over the Supabase client (every call is a database function).

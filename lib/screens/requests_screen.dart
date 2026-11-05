@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/contact_repository.dart';
+import '../util/app_language.dart';
 import '../data/report_repository.dart';
 import '../models/contact_request.dart';
 import '../util/friendly_error.dart';
@@ -56,11 +57,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Requests'),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Diterima'),
-              Tab(text: 'Terkirim'),
-              Tab(text: 'Kontak'),
+              Tab(text: tr('Diterima')),
+              Tab(text: tr('Terkirim')),
+              Tab(text: tr('Kontak')),
             ],
           ),
         ),
@@ -366,7 +367,7 @@ class _IncomingCard extends StatelessWidget {
     try {
       await repository.reject(targetId: myId, requestId: request.id);
       messenger.showSnackBar(
-        const SnackBar(content: Text('Permintaan ditolak.')),
+        SnackBar(content: Text(tr('Permintaan ditolak.'))),
       );
     } catch (e) {
       showErrorSnackBarOn(
@@ -420,7 +421,7 @@ class _IncomingCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               (r.message == null || r.message!.isEmpty)
-                  ? 'Tanpa pesan.'
+                  ? tr('Tanpa pesan.')
                   : r.message!,
             ),
             const SizedBox(height: 8),
@@ -431,21 +432,21 @@ class _IncomingCard extends StatelessWidget {
                   TextButton(
                     key: Key('reject-${r.id}'),
                     onPressed: () => _reject(context),
-                    child: const Text('Tolak'),
+                    child: Text(tr('Tolak')),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     key: Key('accept-${r.id}'),
                     onPressed: () => _accept(context),
-                    child: const Text('Terima'),
+                    child: Text(tr('Terima')),
                   ),
                 ],
               )
             else
               Text(
                 r.status == ContactRequestStatus.accepted
-                    ? 'Kamu sudah menerima permintaan ini.'
-                    : 'Kamu sudah menolak permintaan ini.',
+                    ? tr('Kamu sudah menerima permintaan ini.')
+                    : tr('Kamu sudah menolak permintaan ini.'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -589,11 +590,11 @@ class _OutgoingCardState extends State<_OutgoingCard> {
     final theme = Theme.of(context);
     final r = widget.request;
     final status = switch (r.status) {
-      ContactRequestStatus.pending => 'Menunggu jawaban',
-      ContactRequestStatus.accepted => 'Diterima',
+      ContactRequestStatus.pending => tr('Menunggu jawaban'),
+      ContactRequestStatus.accepted => tr('Diterima'),
       // The requester only ever sees "not accepted".
-      ContactRequestStatus.rejected => 'Belum diterima',
-      ContactRequestStatus.cancelled => 'Dibatalkan',
+      ContactRequestStatus.rejected => tr('Belum diterima'),
+      ContactRequestStatus.cancelled => tr('Dibatalkan'),
     };
     return Card(
       key: Key('outgoing-${r.id}'),
@@ -622,7 +623,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
                 child: TextButton(
                   key: Key('cancel-${r.id}'),
                   onPressed: _cancel,
-                  child: const Text('Batalkan'),
+                  child: Text(tr('Batalkan')),
                 ),
               ),
               if (_error != null)
@@ -640,7 +641,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Lihat daftar kontak'),
+                      : Text(tr('Lihat daftar kontak')),
                 )
               else
                 Row(
