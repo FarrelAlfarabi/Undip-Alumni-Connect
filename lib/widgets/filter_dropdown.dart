@@ -57,7 +57,7 @@ class FilterDropdown extends StatelessWidget {
           .map(
             (o) => DropdownMenuItem(
               value: o,
-              child: Text(o, overflow: TextOverflow.ellipsis),
+              child: Text(tr(o), overflow: TextOverflow.ellipsis),
             ),
           )
           .toList(),

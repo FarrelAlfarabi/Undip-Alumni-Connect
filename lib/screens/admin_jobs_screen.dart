@@ -74,7 +74,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Batal'),
+                child: Text(tr('Batal')),
               ),
               FilledButton(
                 key: const Key('job-hide-confirm'),
@@ -86,7 +86,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                   }
                   Navigator.of(ctx).pop(t);
                 },
-                child: const Text('Turunkan'),
+                child: Text(tr('Turunkan')),
               ),
             ],
           ),
@@ -235,7 +235,9 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                               if (j.isHidden) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Diturunkan: ${j.hiddenReason ?? '-'}',
+                                  trf('Diturunkan: {0}', [
+                                    j.hiddenReason ?? '-',
+                                  ]),
                                   key: Key('job-hidden-${j.id}'),
                                   style: TextStyle(
                                     color: theme.colorScheme.error,
@@ -258,7 +260,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                             ? null
                                             : () => _hide(j),
                                         icon: const Icon(Icons.visibility_off),
-                                        label: const Text('Turunkan'),
+                                        label: Text(tr('Turunkan')),
                                         style: TextButton.styleFrom(
                                           foregroundColor:
                                               theme.colorScheme.error,

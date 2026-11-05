@@ -87,9 +87,10 @@ class _ProfileLinkedInScreenState extends State<ProfileLinkedInScreen> {
                 decoration: InputDecoration(
                   labelText: tr('LinkedIn (opsional)'),
                   hintText: 'linkedin.com/in/namamu',
-                  helperText:
-                      'Boleh dikosongkan. Tautan ini tampil di profilmu untuk '
-                      'alumni lain.',
+                  helperText: tr(
+                    'Boleh dikosongkan. Tautan ini tampil di profilmu untuk '
+                    'alumni lain.',
+                  ),
                   helperMaxLines: 2,
                   border: OutlineInputBorder(),
                 ),
@@ -114,7 +115,7 @@ class _ProfileLinkedInScreenState extends State<ProfileLinkedInScreen> {
                           color: AppTheme.black,
                         ),
                       )
-                    : const Text('Simpan'),
+                    : Text(tr('Simpan')),
               ),
             ],
           ),

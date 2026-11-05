@@ -119,7 +119,7 @@ class _ProfilePhotoScreenState extends State<ProfilePhotoScreen> {
                           width: 160,
                           height: 160,
                           fit: BoxFit.cover,
-                          semanticLabel: 'Pratinjau foto profil',
+                          semanticLabel: tr('Pratinjau foto profil'),
                           errorBuilder: (_, _, _) =>
                               Avatar(url: null, name: widget.name, radius: 80),
                         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/data/business_repository.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
+import 'package:undip_alumni_connect/screens/help_screen.dart';
 import 'package:undip_alumni_connect/screens/settings_screen.dart';
 import 'package:undip_alumni_connect/util/app_language.dart';
 import 'package:undip_alumni_connect/util/friendly_error.dart';
@@ -39,6 +40,11 @@ void main() {
     expect(tr('Teks yang belum ada'), 'Teks yang belum ada');
   });
 
+  test('trf fills values in one pass', () {
+    expect(trf('Oleh {0} pada {1}', ['{1}', 'Senin']), 'Oleh {1} pada Senin');
+    expect(trf('Hanya {0}', []), 'Hanya {0}');
+  });
+
   test('the choice is saved and read back', () async {
     final store = MemoryLockStore();
     await app.set(AppLang.en, store);
@@ -46,6 +52,18 @@ void main() {
     app.current.value = AppLang.id;
     await app.load(store);
     expect(app.current.value, AppLang.en);
+  });
+
+  testWidgets('Help and the Profile menu follow the language', (tester) async {
+    app.current.value = AppLang.en;
+    await tester.pumpWidget(const MaterialApp(home: HelpScreen()));
+    expect(find.text('Help'), findsOneWidget);
+    expect(find.text('Bantuan'), findsNothing);
+    expect(find.text('About'), findsOneWidget);
+    app.current.value = AppLang.id;
+    await tester.pumpWidget(const MaterialApp(home: HelpScreen()));
+    expect(find.text('Bantuan'), findsOneWidget);
+    expect(find.text('Tentang'), findsOneWidget);
   });
 
   testWidgets('Settings has a language choice that switches the screen', (

@@ -327,7 +327,7 @@ class WelcomeBannerCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welcome to Lingkaran',
+                  tr('Welcome to Lingkaran'),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -335,7 +335,7 @@ class WelcomeBannerCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'News from Ikafe will show up here.',
+                  tr('News from Ikafe will show up here.'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.85),
                   ),

@@ -92,7 +92,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
   Future<void> _delete(Map<String, dynamic> j) async {
     final ok = await confirmDelete(
       context,
-      title: 'Hapus lowongan ini?',
+      title: tr('Hapus lowongan ini?'),
       body: '"${j['title']}" dan semua lamarannya akan dihapus permanen.',
     );
     if (!ok || !mounted) return;
@@ -108,7 +108,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Lowongan dihapus.')));
+          .showSnackBar(SnackBar(content: Text(tr('Lowongan dihapus.'))));
       _reload();
     } catch (e) {
       if (mounted) {
@@ -169,7 +169,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
     final save = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ubah lowongan'),
+        title: Text(tr('Ubah lowongan')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -198,12 +198,12 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             key: const Key('edit-save'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Simpan'),
+            child: Text(tr('Simpan')),
           ),
         ],
       ),
@@ -220,7 +220,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Lowongan diperbarui.')));
+          .showSnackBar(SnackBar(content: Text(tr('Lowongan diperbarui.'))));
       _reload();
     } catch (e) {
       if (mounted) {
@@ -267,12 +267,14 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
           }
           final jobs = snap.data ?? const [];
           if (jobs.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'You have not posted a job yet. Jobs you post show up here '
-                  'with the people who applied.',
+                  tr(
+                    'You have not posted a job yet. Jobs you post show up here '
+                    'with the people who applied.',
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -317,7 +319,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
                       children: [
                         IconButton(
                           key: Key('edit-job-${j['id']}'),
-                          tooltip: 'Ubah lowongan',
+                          tooltip: tr('Ubah lowongan'),
                           icon: const Icon(Icons.edit_outlined),
                           onPressed: () => _edit(j),
                         ),
@@ -335,7 +337,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
                         ),
                         IconButton(
                           key: Key('delete-job-${j['id']}'),
-                          tooltip: 'Hapus lowongan',
+                          tooltip: tr('Hapus lowongan'),
                           icon: Icon(
                             Icons.delete_outline,
                             color: theme.colorScheme.error,

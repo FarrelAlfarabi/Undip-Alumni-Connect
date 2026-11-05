@@ -162,7 +162,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                     child: KeyedSubtree(
                       key: const Key('admin-feedback-period'),
                       child: FilterDropdown(
-                        label: 'Period',
+                        label: tr('Period'),
                         value: _period,
                         options: kPeriodOptions,
                         onChanged: (v) => setState(() => _period = v),
@@ -251,7 +251,7 @@ class _FeedbackCard extends StatelessWidget {
             ),
             if ((f.errorText ?? '').isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('Error: ${f.errorText}'),
+              Text(trf('Error: {0}', [f.errorText])),
             ],
             if ((f.message ?? '').isNotEmpty) ...[
               const SizedBox(height: 4),

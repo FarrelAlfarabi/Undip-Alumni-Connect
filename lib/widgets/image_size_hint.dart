@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../util/app_language.dart';
+
 enum ImageSizeKind { landscape, profile }
 
 /// Short lines under a "Choose photo" button: the best size and the
@@ -23,8 +25,10 @@ class ImageSizeHint extends StatelessWidget {
     );
     if (kind == ImageSizeKind.profile) {
       return Text(
-        'Foto terbaik: persegi 1:1 (800 x 800 px), wajah di tengah. '
-        'JPG, PNG atau WebP, maksimal 2 MB. Foto dipotong bulat di layar.',
+        tr(
+          'Foto terbaik: persegi 1:1 (800 x 800 px), wajah di tengah. '
+          'JPG, PNG atau WebP, maksimal 2 MB. Foto dipotong bulat di layar.',
+        ),
         style: style,
       );
     }
@@ -33,8 +37,8 @@ class ImageSizeHint extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(sizeLine, style: style),
-          Text(typeLine, style: style),
+          Text(tr(sizeLine), style: style),
+          Text(tr(typeLine), style: style),
         ],
       ),
     );

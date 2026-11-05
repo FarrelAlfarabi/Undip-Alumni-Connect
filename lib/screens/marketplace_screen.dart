@@ -314,9 +314,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 }
                 if (snapshot.hasError) {
                   return ErrorView(
-                    message:
-                        'Could not load the marketplace. Check your '
-                        'connection and try again.',
+                    message: tr(
+                      'Could not load the marketplace. Check your '
+                      'connection and try again.',
+                    ),
                     screen: 'Marketplace',
                     error: snapshot.error,
                     onRetry: _reload,
@@ -326,12 +327,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
                 final all = snapshot.data ?? [];
                 if (all.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                        'No listings yet. Approved listings from other '
-                        'alumni will show up here.',
+                        tr(
+                          'No listings yet. Approved listings from other '
+                          'alumni will show up here.',
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -359,7 +362,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           ),
                           PopupMenuButton<MarketplaceSort>(
                             key: const Key('sort-menu'),
-                            tooltip: 'Sort: ${_sort.label}',
+                            tooltip: trf('Sort: {0}', [_sort.label]),
                             icon: Icon(
                               Icons.swap_vert,
                               color: _sort == MarketplaceSort.newest
@@ -385,7 +388,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               valueListenable: CategoryRepository.shared.names,
                               builder: (context, names, _) => SearchableChoice(
                                 fieldKey: const Key('market-category'),
-                                label: 'Kategori',
+                                label: tr('Kategori'),
                                 controller: _categoryText,
                                 options: [kAllFilter, ...names],
                                 selected: _category,
@@ -493,7 +496,7 @@ class _ListingCard extends StatelessWidget {
             ListingImage(
               url: listing.imageUrl,
               size: 104,
-              semanticLabel: 'Photo of ${listing.title}',
+              semanticLabel: trf('Photo of {0}', [listing.title]),
             ),
             Expanded(
               child: Padding(

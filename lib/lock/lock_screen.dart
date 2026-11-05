@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../util/app_language.dart';
+
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
@@ -203,7 +205,9 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Selamat datang kembali, ${_first(widget.user.displayName)}',
+                    trf('Selamat datang kembali, {0}', [
+                      _first(widget.user.displayName),
+                    ]),
                     key: const Key('lock-welcome'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge?.copyWith(color: fg),
@@ -239,7 +243,7 @@ class _LockScreenState extends State<LockScreen> {
                     key: const Key('lock-forgot'),
                     onPressed: _busy ? null : () => _run(widget.onForgotPin),
                     style: TextButton.styleFrom(foregroundColor: fg),
-                    child: const Text('Lupa PIN? Verifikasi ulang'),
+                    child: Text(tr('Lupa PIN? Verifikasi ulang')),
                   ),
                   TextButton(
                     key: const Key('lock-switch'),
@@ -247,7 +251,7 @@ class _LockScreenState extends State<LockScreen> {
                         ? null
                         : () => _run(widget.onSwitchAccount),
                     style: TextButton.styleFrom(foregroundColor: fg),
-                    child: const Text('Bukan kamu? Ganti akun'),
+                    child: Text(tr('Bukan kamu? Ganti akun')),
                   ),
                 ],
               ),
@@ -260,7 +264,7 @@ class _LockScreenState extends State<LockScreen> {
 
   List<Widget> _noPin(ThemeData theme) => [
     Text(
-      'Verifikasi emailmu untuk melanjutkan.',
+      tr('Verifikasi emailmu untuk melanjutkan.'),
       textAlign: TextAlign.center,
       style: theme.textTheme.bodyMedium?.copyWith(
         color: AppTheme.paper.withValues(alpha: 0.85),
@@ -276,7 +280,7 @@ class _LockScreenState extends State<LockScreen> {
           backgroundColor: AppTheme.yellow,
           foregroundColor: AppTheme.black,
         ),
-        child: const Text('Lanjut'),
+        child: Text(tr('Lanjut')),
       ),
     ),
   ];

@@ -46,7 +46,7 @@ class ContactAdminScreen extends StatelessWidget {
   void _copy(BuildContext context, SupportContact c) {
     Clipboard.setData(ClipboardData(text: c.value));
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Tersalin: ${c.value}')));
+        .showSnackBar(SnackBar(content: Text(trf('Tersalin: {0}', [c.value]))));
   }
 
   Future<void> _open(BuildContext context, SupportContact c) async {
@@ -61,9 +61,9 @@ class ContactAdminScreen extends StatelessWidget {
     if (!ok) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Tidak bisa dibuka. Salin ${c.value} saja.'),
+          content: Text(trf('Tidak bisa dibuka. Salin {0} saja.', [c.value])),
           action: SnackBarAction(
-            label: 'Salin',
+            label: tr('Salin'),
             onPressed: () => Clipboard.setData(ClipboardData(text: c.value)),
           ),
         ),
@@ -104,7 +104,7 @@ class ContactAdminScreen extends StatelessWidget {
                   subtitle: Text(c.value),
                   onTap: () => _open(context, c),
                   trailing: IconButton(
-                    tooltip: 'Salin',
+                    tooltip: tr('Salin'),
                     icon: const Icon(Icons.copy_outlined),
                     onPressed: () => _copy(context, c),
                   ),

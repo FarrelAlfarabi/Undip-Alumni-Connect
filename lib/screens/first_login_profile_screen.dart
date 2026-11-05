@@ -111,9 +111,11 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Lengkapi profilmu agar sesama alumni lebih mudah '
-                    'mengenalimu. Langkah ini opsional dan bisa kamu lewati. '
-                    'Semuanya bisa diubah kapan saja di Profile.',
+                    tr(
+                      'Lengkapi profilmu agar sesama alumni lebih mudah '
+                      'mengenalimu. Langkah ini opsional dan bisa kamu lewati. '
+                      'Semuanya bisa diubah kapan saja di Profile.',
+                    ),
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 24),
@@ -159,8 +161,10 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Kontak hanya dibagikan saat kamu menerima permintaan '
-                    'kontak, dan kamu tetap mengonfirmasinya setiap kali.',
+                    tr(
+                      'Kontak hanya dibagikan saat kamu menerima permintaan '
+                      'kontak, dan kamu tetap mengonfirmasinya setiap kali.',
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 24),
@@ -168,13 +172,13 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
                     FilledButton(
                       key: const Key('first-login-continue'),
                       onPressed: () => widget.onDone(context, _profile),
-                      child: const Text('Lanjut'),
+                      child: Text(tr('Lanjut')),
                     )
                   else
                     TextButton(
                       key: const Key('first-login-skip'),
                       onPressed: () => widget.onDone(context, _profile),
-                      child: const Text('Lewati'),
+                      child: Text(tr('Lewati')),
                     ),
                 ],
               ),

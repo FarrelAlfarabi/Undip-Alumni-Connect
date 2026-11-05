@@ -125,7 +125,7 @@ class _AdminScreenState extends State<AdminScreen> {
       AdminSection(
         key: 'admin-log',
         icon: Icons.history,
-        title: 'Riwayat',
+        title: tr('Riwayat'),
         subtitle: tr(
           'Siapa menyetujui, menolak, menyembunyikan atau menghapus apa',
         ),
@@ -220,7 +220,7 @@ class _PendingBanner extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Menunggu kamu: ${parts.join(', ')}.',
+                trf('Menunggu kamu: {0}.', [parts.join(', ')]),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onErrorContainer,
                 ),
@@ -506,7 +506,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                     Expanded(
                       child: SearchableChoice(
                         fieldKey: const Key('admin-business-category'),
-                        label: 'Category',
+                        label: tr('Category'),
                         controller: _categoryText,
                         options: [
                           kAllFilter,
@@ -524,7 +524,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                       child: KeyedSubtree(
                         key: const Key('admin-business-period'),
                         child: FilterDropdown(
-                          label: 'Posted',
+                          label: tr('Posted'),
                           value: _period,
                           options: kPeriodOptions,
                           onChanged: (v) => setState(() => _period = v),
@@ -656,7 +656,7 @@ class _AdminBusinessCard extends StatelessWidget {
               ),
             ),
             Text(
-              '${b.category} · by ${b.ownerName ?? 'Alumni'} · ${b.status.label}',
+              '${b.category} · ${tr('by')} ${b.ownerName ?? 'Alumni'} · ${b.status.label}',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -665,25 +665,34 @@ class _AdminBusinessCard extends StatelessWidget {
             Text(b.description),
             const SizedBox(height: 8),
             if (b.socialLink != null)
-              Text('Social: ${b.socialLink}', style: theme.textTheme.bodySmall),
+              Text(
+                trf('Social: {0}', [b.socialLink]),
+                style: theme.textTheme.bodySmall,
+              ),
             if (b.websiteLink != null)
               Text(
-                'Website: ${b.websiteLink}',
+                trf('Website: {0}', [b.websiteLink]),
                 style: theme.textTheme.bodySmall,
               ),
             Text(
-              'Band chosen by owner: ${b.requestedBand?.label ?? '-'}'
-              '${b.approvedBand != null ? ' · approved: ${b.approvedBand!.label}' : ''}',
+              trf('Band chosen by owner: {0}{1}', [
+                b.requestedBand?.label ?? '-',
+                b.approvedBand != null
+                    ? ' · ${tr('approved')}: ${b.approvedBand!.label}'
+                    : '',
+              ]),
               style: theme.textTheme.bodySmall,
             ),
             if (b.rejectionReason != null && b.rejectionReason!.isNotEmpty)
               Text(
-                'Reason: ${b.rejectionReason}',
+                trf('Reason: {0}', [b.rejectionReason]),
                 style: theme.textTheme.bodySmall,
               ),
             if (b.unlimitedUntil != null)
               Text(
-                'Unlimited posting until ${b.unlimitedUntil!.toIso8601String().substring(0, 10)} (set in the dashboard)',
+                trf('Unlimited posting until {0} (set in the dashboard)', [
+                  b.unlimitedUntil!.toIso8601String().substring(0, 10),
+                ]),
                 style: theme.textTheme.bodySmall,
               ),
             if (actions.isNotEmpty) ...[

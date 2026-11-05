@@ -171,15 +171,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     key: const Key('profile-company'),
                     controller: _companyController,
                     enabled: !_saving,
-                    decoration: const InputDecoration(
-                      labelText: 'Company',
+                    decoration: InputDecoration(
+                      labelText: tr('Company'),
                       border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
                   SearchableChoice(
                     fieldKey: const Key('profile-industry'),
-                    label: 'Industry',
+                    label: tr('Industry'),
                     controller: _industryController,
                     options: kIndustries,
                     selected: _industry,

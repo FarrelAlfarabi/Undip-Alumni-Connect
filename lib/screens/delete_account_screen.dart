@@ -86,7 +86,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Hapus akun saya'),
+            child: Text(tr('Hapus akun saya')),
           ),
         ],
       ),
@@ -148,7 +148,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       ],
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Hapus akun saya')),
+      appBar: AppBar(title: Text(tr('Hapus akun saya'))),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -159,7 +159,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'This removes your account from Lingkaran.',
+                    tr('This removes your account from Lingkaran.'),
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
@@ -188,9 +188,11 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   ]),
                   const SizedBox(height: 12),
                   Text(
-                    'After this you cannot verify again with the same email. '
-                    'If you change your mind, the Ikafe team can restore you '
-                    'from the alumni list.',
+                    tr(
+                      'After this you cannot verify again with the same email. '
+                      'If you change your mind, the Ikafe team can restore you '
+                      'from the alumni list.',
+                    ),
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 20),
@@ -200,7 +202,9 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     enabled: !_deleting,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      labelText: 'Type $kDeleteWord or your first name',
+                      labelText: trf('Type {0} or your first name', [
+                        kDeleteWord,
+                      ]),
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -228,7 +232,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2.5),
                           )
-                        : const Text('Hapus akun saya'),
+                        : Text(tr('Hapus akun saya')),
                   ),
                 ],
               ),

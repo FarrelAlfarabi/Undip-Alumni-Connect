@@ -63,15 +63,15 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   Future<void> _delete(Business b) async {
     final ok = await confirmDelete(
       context,
-      title: 'Hapus bisnis ini?',
-      body: '"${b.name}" dan semua produknya akan dihapus permanen.',
+      title: tr('Hapus bisnis ini?'),
+      body: trf('"{0}" dan semua produknya akan dihapus permanen.', [b.name]),
     );
     if (!ok || !mounted) return;
     try {
       await _repo.delete(widget.ownerId, b.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Bisnis dihapus.')));
+          .showSnackBar(SnackBar(content: Text(tr('Bisnis dihapus.'))));
       _reload();
     } catch (e) {
       if (mounted) {
@@ -132,12 +132,14 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
               u.businessId: u,
           };
           if (items.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'You have not registered a business yet. Register one so '
-                  'other alumni can find it.\n\n$_limitNote',
+                  trf(
+                    'You have not registered a business yet. Register one so other alumni can find it.\n\n{0}',
+                    [_limitNote],
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -275,8 +277,10 @@ class BusinessOwnerCard extends StatelessWidget {
             if (b.isHidden) ...[
               const SizedBox(height: 8),
               Text(
-                'Hidden by an admin${b.hiddenReason != null ? ': ${b.hiddenReason}' : ''}. '
-                'Other people cannot see this business or its products.',
+                trf(
+                  'Hidden by an admin{0}. Other people cannot see this business or its products.',
+                  [b.hiddenReason != null ? ': ${b.hiddenReason}' : ''],
+                ),
                 key: Key('hidden-${b.id}'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
@@ -284,16 +288,14 @@ class BusinessOwnerCard extends StatelessWidget {
             if (b.status == BusinessStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(
-                'Reason: ${b.rejectionReason ?? 'not given'}',
+                trf('Reason: {0}', [b.rejectionReason ?? tr('not given')]),
                 key: Key('reason-${b.id}'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
             if (b.status == BusinessStatus.suspended) ...[
               const SizedBox(height: 8),
-              const Text(
-                'This business is suspended. Please contact an admin.',
-              ),
+              Text(tr('This business is suspended. Please contact an admin.')),
             ],
             if (onDelete != null) ...[
               const SizedBox(height: 8),
@@ -303,7 +305,7 @@ class BusinessOwnerCard extends StatelessWidget {
                   key: Key('delete-${b.id}'),
                   onPressed: onDelete,
                   icon: const Icon(Icons.delete_outline),
-                  label: const Text('Hapus'),
+                  label: Text(tr('Hapus')),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                   ),

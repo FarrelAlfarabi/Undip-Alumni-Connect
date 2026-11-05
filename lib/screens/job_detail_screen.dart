@@ -100,9 +100,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final ok = await confirmDelete(
       context,
       title: tr('Tarik lamaran?'),
-      body:
-          'Lamaranmu untuk lowongan ini akan dihapus. Kamu bisa melamar '
-          'lagi nanti.',
+      body: tr(
+        'Lamaranmu untuk lowongan ini akan dihapus. Kamu bisa melamar '
+        'lagi nanti.',
+      ),
       action: 'Tarik lamaran',
     );
     if (!ok || !mounted) return;
@@ -213,7 +214,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Posted by $posterName',
+                    trf('Posted by {0}', [posterName]),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -322,12 +323,12 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                     icon: const Icon(
                                       Icons.check_circle_outline,
                                     ),
-                                    label: const Text('Applied'),
+                                    label: Text(tr('Applied')),
                                   ),
                                   TextButton(
                                     key: const Key('withdraw-application'),
                                     onPressed: _withdraw,
-                                    child: const Text('Tarik lamaran'),
+                                    child: Text(tr('Tarik lamaran')),
                                   ),
                                 ],
                               );

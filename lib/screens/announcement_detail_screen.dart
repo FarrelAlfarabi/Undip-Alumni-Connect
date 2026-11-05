@@ -32,7 +32,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
                   if (created != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Posted ${formatPostedDate(created)}',
+                      trf('Posted {0}', [formatPostedDate(created)]),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

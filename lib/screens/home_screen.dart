@@ -330,8 +330,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Lengkapi profilmu: tambahkan kota dan '
-                                        'pekerjaan agar alumni lain bisa menemukanmu.',
+                                        tr(
+                                          'Lengkapi profilmu: tambahkan kota dan '
+                                          'pekerjaan agar alumni lain bisa menemukanmu.',
+                                        ),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
                                               color: theme
@@ -384,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 20),
                       _LatestBlock<Map<String, dynamic>>(
                         key: const Key('latest-jobs'),
-                        heading: 'Lowongan baru',
+                        heading: tr('Lowongan baru'),
                         seeAllKey: const Key('latest-jobs-see-all'),
                         onSeeAll: _openJobs,
                         future: _jobs,
@@ -427,8 +429,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final seeAll = TextButton(
       key: const Key('see-all-announcements'),
       onPressed: () => _push(widget.pages.announcements()),
-      child: const Text(
-        'Lihat semua pengumuman',
+      child: Text(
+        tr('Lihat semua pengumuman'),
         maxLines: 1,
         softWrap: false,
         overflow: TextOverflow.ellipsis,
@@ -463,8 +465,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _MessageCard(
               key: const Key('banner-error'),
               icon: Icons.cloud_off_outlined,
-              text: "Couldn't load announcements.",
-              actionLabel: 'Coba lagi',
+              text: tr("Couldn't load announcements."),
+              actionLabel: tr('Coba lagi'),
               feedbackScreen: 'Home',
               error: snap.error,
               onAction: () => setState(() {
@@ -598,7 +600,9 @@ class _RequestsCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '$count alumni ingin terhubung denganmu. Lihat permintaan',
+                  trf('{0} alumni ingin terhubung denganmu. Lihat permintaan', [
+                    count,
+                  ]),
                   style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(color: scheme.onSurface),
                 ),
@@ -780,8 +784,8 @@ class _LatestBlock<T> extends StatelessWidget {
             if (snap.hasError) {
               return _MessageCard(
                 icon: Icons.cloud_off_outlined,
-                text: "Couldn't load this right now.",
-                actionLabel: 'Coba lagi',
+                text: tr("Couldn't load this right now."),
+                actionLabel: tr('Coba lagi'),
                 feedbackScreen: 'Home',
                 error: snap.error,
                 onAction: onRetry,
@@ -817,7 +821,7 @@ class _ProductsBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return _LatestBlock<MarketplaceListing>(
       key: const Key('latest-listings'),
-      heading: 'Dukung Usaha Alumni',
+      heading: tr('Dukung Usaha Alumni'),
       seeAllKey: const Key('latest-listings-see-all'),
       onSeeAll: onSeeAll,
       future: future,
@@ -1199,7 +1203,9 @@ class _BusinessEntry extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Memiliki usaha? Biar sesama alumni bisa menemukannya.',
+                      tr(
+                        'Memiliki usaha? Biar sesama alumni bisa menemukannya.',
+                      ),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppTheme.black,
                         fontWeight: FontWeight.w600,
@@ -1216,7 +1222,7 @@ class _BusinessEntry extends StatelessWidget {
                       shape: const StadiumBorder(),
                     ),
                     onPressed: onRegister,
-                    child: const Text('Daftarkan'),
+                    child: Text(tr('Daftarkan')),
                   ),
                 ],
               ),

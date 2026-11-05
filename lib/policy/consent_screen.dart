@@ -1,4 +1,5 @@
 import '../widgets/closed_test_notice.dart';
+import '../util/app_language.dart';
 
 import 'package:flutter/material.dart';
 
@@ -87,7 +88,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
     return Scaffold(
       key: const Key('consent-screen'),
       appBar: AppBar(
-        title: const Text('Syarat dan Ketentuan Aplikasi'),
+        title: Text(tr('Syarat dan Ketentuan Aplikasi')),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -118,7 +119,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          'Gulir sampai bawah untuk melanjutkan.',
+                          tr('Gulir sampai bawah untuk melanjutkan.'),
                           key: const Key('consent-scroll-hint'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
@@ -133,8 +134,10 @@ class _ConsentScreenState extends State<ConsentScreen> {
                       onChanged: (_saving || !_readToEnd)
                           ? null
                           : (v) => setState(() => _checked = v ?? false),
-                      title: const Text(
-                        'Saya sudah membaca dan menyetujui Syarat dan Ketentuan Aplikasi',
+                      title: Text(
+                        tr(
+                          'Saya sudah membaca dan menyetujui Syarat dan Ketentuan Aplikasi',
+                        ),
                       ),
                     ),
                     if (_error != null)
@@ -156,7 +159,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text('Saya Setuju'),
+                          : Text(tr('Saya Setuju')),
                     ),
                     TextButton(
                       key: const Key('consent-back'),
@@ -168,7 +171,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                               lock: widget.lock,
                             ),
                       child: Text(
-                        'Kembali dan keluar',
+                        tr('Kembali dan keluar'),
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

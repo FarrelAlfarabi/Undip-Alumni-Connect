@@ -1,3 +1,5 @@
+import '../util/app_language.dart';
+
 /// Yearly sales bands, from the official Indonesian UMKM definition
 /// (PP 7/2021, Art. 35). The names match the database values.
 enum BusinessBand {
@@ -6,13 +8,16 @@ enum BusinessBand {
   medium('Medium', 'Over Rp 15 miliar, up to Rp 50 miliar a year'),
   large('Large (not UMKM)', 'Over Rp 50 miliar a year');
 
-  const BusinessBand(this.label, this.range);
+  const BusinessBand(this._label, this._range);
+
+  final String _label;
+  final String _range;
 
   /// Short name, for example "Micro".
-  final String label;
+  String get label => tr(_label);
 
   /// Plain words with the Rp amounts.
-  final String range;
+  String get range => tr(_range);
 
   /// "Micro: Up to Rp 2 miliar a year".
   String get described => '$label: $range';
@@ -31,8 +36,9 @@ enum BusinessStatus {
   rejected('Not approved'),
   suspended('Suspended');
 
-  const BusinessStatus(this.label);
-  final String label;
+  const BusinessStatus(this._label);
+  final String _label;
+  String get label => tr(_label);
 
   static BusinessStatus fromName(String? name) {
     for (final s in values) {

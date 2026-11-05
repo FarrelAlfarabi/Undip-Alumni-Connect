@@ -183,12 +183,12 @@ class _HomeShellState extends State<HomeShell> {
           TextButton(
             key: const Key('exit-cancel'),
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Stay'),
+            child: Text(tr('Stay')),
           ),
           FilledButton(
             key: const Key('exit-confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Exit'),
+            child: Text(tr('Exit')),
           ),
         ],
       ),
