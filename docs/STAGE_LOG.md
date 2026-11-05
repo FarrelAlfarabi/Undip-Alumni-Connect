@@ -202,3 +202,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Image cache (3 Nov 2026)
 - Avatars, AppPhoto and ListingImage use `cached_network_image`: photos stay on the device, so less mobile data and Supabase egress. Same sizes, initials/placeholder on error, labels kept. No data caching, no service worker, no migration.
 - Tests: `image_cache_test.dart`; label checks in stage6_test and profile_photo_test updated.
+## Delete own content (5 Nov 2026)
+- Owner can delete own business (with its products), own job post (with applications), admin can delete announcements. Confirm dialog first (`confirmDelete`).
+- Migration `20261105100000_delete_own_content` adds `business_delete`, `job_post_delete`, `admin_announcement_delete` (assert_caller + owner/admin check). Rollback: `supabase/rollback_delete_own_content.sql`.
+- Tests: `delete_own_content_test.dart`. Fresh chain OK. Photos in storage are not removed yet (later stage).

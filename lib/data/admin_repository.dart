@@ -281,6 +281,16 @@ class AdminRepository {
     );
   }
 
+  /// Removes one announcement for good. Admins only (the database checks).
+  Future<void> deleteAnnouncement(String adminId, String id) async {
+    await _guard(
+      () => _api.rpc('admin_announcement_delete', {
+        'p_admin': adminId,
+        'p_id': id,
+      }),
+    );
+  }
+
   /// Every Kontak Ikafe row, hidden ones too.
   Future<List<IkafeContact>> ikafeContacts(String adminId) async {
     final rows = await _guard(

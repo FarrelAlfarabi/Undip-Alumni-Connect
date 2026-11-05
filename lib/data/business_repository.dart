@@ -181,6 +181,16 @@ class BusinessRepository {
     return Business.fromMap(_single(row));
   }
 
+  /// Removes my own business (any status) and its products for good.
+  Future<void> delete(String ownerId, String businessId) async {
+    await _guard(
+      () => _api.rpc('business_delete', {
+        'p_owner': ownerId,
+        'p_business': businessId,
+      }),
+    );
+  }
+
   /// The owner's own businesses, in every status.
   Future<List<Business>> mine(String ownerId) async {
     final rows = await _guard(

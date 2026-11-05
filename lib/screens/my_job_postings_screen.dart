@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import 'job_applicants_screen.dart';
 import 'post_job_screen.dart';
@@ -9,12 +10,20 @@ import 'post_job_screen.dart';
 /// The jobs I posted, newest first, with how many people applied. Tap one to
 /// see its applicants.
 class MyJobPostingsScreen extends StatefulWidget {
-  const MyJobPostingsScreen({super.key, required this.currentUser, this.fetch});
+  const MyJobPostingsScreen({
+    super.key,
+    required this.currentUser,
+    this.fetch,
+    this.deleteJob,
+  });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
 
   /// Injectable for tests: returns my jobs, each with an `applicant_count`.
   final Future<List<Map<String, dynamic>>> Function(String myId)? fetch;
+
+  /// Injectable for tests: deletes one of my jobs.
+  final Future<void> Function(String myId, String jobId)? deleteJob;
 
   @override
   State<MyJobPostingsScreen> createState() => _MyJobPostingsScreenState();
@@ -70,6 +79,39 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
   void _reload() => setState(() {
     _future = _load();
   });
+
+  Future<void> _delete(Map<String, dynamic> j) async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus lowongan ini?',
+      body: '"${j['title']}" dan semua lamarannya akan dihapus permanen.',
+    );
+    if (!ok || !mounted) return;
+    try {
+      final custom = widget.deleteJob;
+      if (custom != null) {
+        await custom(_myId, j['id'] as String);
+      } else {
+        await Supabase.instance.client.rpc(
+          'job_post_delete',
+          params: {'p_owner': _myId, 'p_job': j['id']},
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Lowongan dihapus.')));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'My job postings',
+          error: e,
+        );
+      }
+    }
+  }
 
   Future<void> _post() async {
     final posted = await Navigator.of(context).push<bool>(
@@ -140,7 +182,15 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
                       if (hidden) 'Hidden by an admin',
                     ].where((s) => s.isNotEmpty).join(' · '),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: IconButton(
+                    key: Key('delete-job-${j['id']}'),
+                    tooltip: 'Hapus lowongan',
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.error,
+                    ),
+                    onPressed: () => _delete(j),
+                  ),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => JobApplicantsScreen(job: j),

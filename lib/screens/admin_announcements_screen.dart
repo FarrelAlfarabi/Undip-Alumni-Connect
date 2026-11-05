@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
 
@@ -40,6 +41,31 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  Future<void> _delete(AdminAnnouncement a) async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus pengumuman ini?',
+      body: '"${a.title}" akan dihapus permanen untuk semua orang.',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await widget.repository.deleteAnnouncement(widget.adminId, a.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Pengumuman dihapus.')));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: adminErrorMessage(e),
+          screen: 'Admin announcements',
+          error: e,
+        );
+      }
+    }
   }
 
   void _reload() => setState(() {
@@ -143,7 +169,10 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                         itemCount: shown.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, i) =>
-                            _AnnouncementTile(a: shown[i]),
+                            _AnnouncementTile(
+                              a: shown[i],
+                              onDelete: () => _delete(shown[i]),
+                            ),
                       ),
               ),
             ],
@@ -155,9 +184,10 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 }
 
 class _AnnouncementTile extends StatelessWidget {
-  const _AnnouncementTile({required this.a});
+  const _AnnouncementTile({required this.a, required this.onDelete});
 
   final AdminAnnouncement a;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -190,6 +220,18 @@ class _AnnouncementTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(a.body, maxLines: 4, overflow: TextOverflow.ellipsis),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: Key('delete-announcement-${a.id}'),
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Hapus'),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+              ),
+            ),
           ],
         ),
       ),

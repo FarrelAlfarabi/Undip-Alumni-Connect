@@ -7,6 +7,7 @@ import '../models/business.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
 import '../widgets/business_photo.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 
 const String _limitNote =
@@ -51,6 +52,31 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
 
   // Rejected businesses do not count towards the limit (same as the database).
   int _activeCount = 0;
+
+  Future<void> _delete(Business b) async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Hapus bisnis ini?',
+      body: '"${b.name}" dan semua produknya akan dihapus permanen.',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await _repo.delete(widget.ownerId, b.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Bisnis dihapus.')));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: businessErrorMessage(e),
+          screen: 'My businesses',
+          error: e,
+        );
+      }
+    }
+  }
 
   Future<void> _openForm([Business? existing]) async {
     if (existing == null && _activeCount >= kMaxBusinesses) {
@@ -129,6 +155,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
                 business: b,
                 usage: usage[b.id],
                 onEdit: () => _openForm(b),
+                onDelete: () => _delete(b),
               );
             },
           );
@@ -145,11 +172,13 @@ class BusinessOwnerCard extends StatelessWidget {
     required this.business,
     this.usage,
     this.onEdit,
+    this.onDelete,
   });
 
   final Business business;
   final BusinessUsage? usage;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   bool get _canEdit =>
       business.status == BusinessStatus.pending ||
@@ -238,6 +267,21 @@ class BusinessOwnerCard extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 'This business is suspended. Please contact an admin.',
+              ),
+            ],
+            if (onDelete != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  key: Key('delete-${b.id}'),
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Hapus'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
               ),
             ],
             if (_canEdit && onEdit != null) ...[
