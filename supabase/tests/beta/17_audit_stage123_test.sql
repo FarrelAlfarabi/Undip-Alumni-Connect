@@ -73,4 +73,11 @@ select 'ok';
 -- Stage 5: admin Jobs list
 select jt.expect_error(format($q$select * from admin_jobs_list(%L, null)$q$, (select v from t_ids where k = 'siti')), 'not_admin');
 select jt.assert((select count(*) from admin_jobs_list((select v from t_ids where k = 'clara'), null)) >= 0, 'admin can list jobs');
+-- Stage 6: marketplace reports tab and announcement home order
+select jt.expect_error(format($q$select * from marketplace_report_details(%L, 'open')$q$, (select v from t_ids where k = 'siti')), 'not_admin');
+select jt.assert((select count(*) from marketplace_report_details((select v from t_ids where k = 'clara'), 'open')) >= 0, 'admin can list report details');
+select jt.expect_error(format($q$select marketplace_reports_set_dismissed(%L, gen_random_uuid(), true)$q$, (select v from t_ids where k = 'clara')), 'not_found');
+insert into announcements (title, body, posted_by) values ('Urut A', 'x', (select v from t_ids where k = 'clara'));
+select admin_set_home_order((select v from t_ids where k = 'clara'), 'announcement', array[(select id from announcements where title = 'Urut A')]);
+select jt.assert((select home_rank from announcements where title = 'Urut A') = 1, 'announcement pinned first');
 rollback;

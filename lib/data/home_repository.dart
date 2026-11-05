@@ -62,6 +62,7 @@ class SupabaseHomeApi implements HomeApi {
     final rows = await _client
         .from('announcements')
         .select()
+        .order('home_rank', ascending: true, nullsFirst: false)
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(rows as List);

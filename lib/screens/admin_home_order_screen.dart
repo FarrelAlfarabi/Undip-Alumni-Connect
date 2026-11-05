@@ -27,6 +27,7 @@ class AdminHomeOrderScreen extends StatefulWidget {
 class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   static const _products = 'listing';
   static const _jobs = 'job';
+  static const _news = 'announcement';
 
   final _search = TextEditingController();
   String _kind = _products;
@@ -36,7 +37,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   bool _busy = false;
 
   bool get _isProducts => _kind == _products;
-  int get _limit => _isProducts ? kHomeListingLimit : kHomeJobLimit;
+  int get _limit => switch (_kind) {
+    _products => kHomeListingLimit,
+    _news => kHomeBannerLimit,
+    _ => kHomeJobLimit,
+  };
 
   @override
   void initState() {
@@ -170,8 +175,14 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
                 ChoiceChip(
                   key: const Key('home-order-jobs'),
                   label: const Text('Jobs'),
-                  selected: !_isProducts,
+                  selected: _kind == _jobs,
                   onSelected: _busy ? null : (_) => _switchKind(_jobs),
+                ),
+                ChoiceChip(
+                  key: const Key('home-order-announcements'),
+                  label: const Text('Announcements'),
+                  selected: _kind == _news,
+                  onSelected: _busy ? null : (_) => _switchKind(_news),
                 ),
               ],
             ),
@@ -219,11 +230,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
 
     if (items.isEmpty) {
       return Center(
-        child: Text(
-          _isProducts
-              ? 'Belum ada produk yang disetujui.'
-              : 'Belum ada lowongan aktif.',
-        ),
+        child: Text(switch (_kind) {
+          _products => 'Belum ada produk yang disetujui.',
+          _news => 'Belum ada pengumuman.',
+          _ => 'Belum ada lowongan aktif.',
+        }),
       );
     }
 
@@ -263,7 +274,11 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
         ClearableSearchField(
           key: const Key('home-order-search'),
           controller: _search,
-          hintText: _isProducts ? 'Cari produk...' : 'Cari lowongan...',
+          hintText: switch (_kind) {
+            _products => 'Cari produk...',
+            _news => 'Cari pengumuman...',
+            _ => 'Cari lowongan...',
+          },
         ),
         const SizedBox(height: 8),
         if (others.isEmpty)

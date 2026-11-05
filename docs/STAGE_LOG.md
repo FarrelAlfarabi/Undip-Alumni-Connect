@@ -218,3 +218,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Admin approval summary, reassurance, job take-down (5 Nov 2026)
 - Admin home shows one red banner ("Menunggu kamu: N bisnis perlu disetujui, ...") plus the existing red counts. New Admin "Jobs" list: find any job, take it down with a reason (poster is notified by the existing trigger) or show it again, with Urungkan. Migration `20261105140000_admin_jobs_list`, rollback included.
 - Owners see "Menunggu persetujuan" and a "request received, being processed" note on pending businesses and products; the submit message says the same. Jobs stay instant. Notification texts still English (stage 8).
+## Reports tab, Kontak tab, announcements order (5 Nov 2026)
+- Marketplace review > Reports: per product shows seller, each reporter with reason and note; Abaikan laporan (kept, can reopen), Sembunyikan produk with reason (owner notified), all with Urungkan. Migration `20261105150000_marketplace_reports_tab`.
+- Requests has a third tab "Kontak" listing every contact I was given. Home order can pin announcements (Home shows pinned first). Migration `20261105160000_home_order_announcements`. Both with rollback files.
