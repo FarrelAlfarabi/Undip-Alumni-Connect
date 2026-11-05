@@ -14,6 +14,11 @@ const String _limitNote =
     'You can own up to $kMaxBusinesses businesses. To add more, email '
     '$kContactEmail.';
 
+/// Shown while an admin has not decided yet.
+const String kPendingReassurance =
+    'Permintaanmu sudah kami terima dan sedang diproses admin. Kamu akan '
+    'mendapat pemberitahuan di Notifikasi begitu ada keputusan.';
+
 /// The owner's own businesses, with status, rejection reason and band.
 /// A rejected business can be edited and sent again.
 class MyBusinessesScreen extends StatefulWidget {
@@ -244,6 +249,16 @@ class BusinessOwnerCard extends StatelessWidget {
                 postingSummary(b, usage),
                 key: Key('usage-${b.id}'),
                 style: theme.textTheme.bodyMedium,
+              ),
+            ],
+            if (b.status == BusinessStatus.pending) ...[
+              const SizedBox(height: 8),
+              Text(
+                kPendingReassurance,
+                key: Key('pending-note-${b.id}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
             if (b.isHidden) ...[

@@ -317,7 +317,7 @@ void main() {
       tester,
     ) async {
       await pumpMine(tester, mixed);
-      expect(find.text('Pending review'), findsOneWidget);
+      expect(find.text('Menunggu persetujuan'), findsOneWidget);
       expect(find.text('Approved'), findsOneWidget);
       expect(find.text('Rejected'), findsOneWidget);
       expect(find.text('Sold'), findsOneWidget);
@@ -394,7 +394,7 @@ void main() {
         expect(p['p_listing'], 'a');
         expect(p['p_title'], 'Approved item v2');
         expect(find.text(kEditedApprovedMessage), findsOneWidget);
-        expect(find.text('Pending review'), findsOneWidget);
+        expect(find.text('Menunggu persetujuan'), findsOneWidget);
         expect(find.text('Approved'), findsNothing);
       },
     );

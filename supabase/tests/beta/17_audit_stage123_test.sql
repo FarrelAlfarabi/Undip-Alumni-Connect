@@ -70,3 +70,7 @@ select jt.assert((select count(*) from marketplace_listings where title = 'Nego 
 rollback;
 \o
 select 'ok';
+
+-- Stage 5: admin Jobs list
+select jt.expect_error(format($q$select * from admin_jobs_list(%L, null)$q$, (select v from t_ids where k = 'siti')), 'not_admin');
+select jt.assert((select count(*) from admin_jobs_list((select v from t_ids where k = 'clara'), null)) >= 0, 'admin can list jobs');

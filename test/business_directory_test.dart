@@ -315,7 +315,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Waiting for review'), findsOneWidget);
+      expect(find.text('Menunggu persetujuan'), findsOneWidget);
       expect(find.text('Not approved'), findsOneWidget);
       expect(find.text('Approved'), findsOneWidget);
       expect(find.text('Reason: Link tidak bisa dibuka'), findsOneWidget);

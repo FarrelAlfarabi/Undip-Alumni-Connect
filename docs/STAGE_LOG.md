@@ -215,3 +215,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Product price/city and photo adjuster (5 Nov 2026)
 - Product price can be empty with "Harga bisa nego"; city is optional ("Kota (opsional)"). Migration `20261105130000_product_optional_price_city` (new 11-arg create/update), rollback file included.
 - Photo adjuster (move and zoom, saved as square-ready PNG) after picking a photo for products, businesses, jobs and profile. Tests: `product_price_city_test.dart`, `photo_adjust_test.dart`.
+## Admin approval summary, reassurance, job take-down (5 Nov 2026)
+- Admin home shows one red banner ("Menunggu kamu: N bisnis perlu disetujui, ...") plus the existing red counts. New Admin "Jobs" list: find any job, take it down with a reason (poster is notified by the existing trigger) or show it again, with Urungkan. Migration `20261105140000_admin_jobs_list`, rollback included.
+- Owners see "Menunggu persetujuan" and a "request received, being processed" note on pending businesses and products; the submit message says the same. Jobs stay instant. Notification texts still English (stage 8).

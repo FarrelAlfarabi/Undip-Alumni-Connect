@@ -10,6 +10,7 @@ import 'admin_announcements_screen.dart';
 import 'admin_home_order_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_ikafe_contacts_screen.dart';
+import 'admin_jobs_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
@@ -105,9 +106,16 @@ class _AdminScreenState extends State<AdminScreen> {
         badge: _counts.businesses,
         icon: Icons.business_center_outlined,
         title: 'Businesses',
-        subtitle: 'Approve, reject, suspend or restore',
+        subtitle: 'Setujui, tolak, tangguhkan. Produk bisnis yang disetujui langsung tayang',
         builder: (_) =>
             AdminBusinessesScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-jobs',
+        icon: Icons.work_outline,
+        title: 'Jobs',
+        subtitle: 'Lihat semua lowongan, turunkan atau tampilkan lagi',
+        builder: (_) => AdminJobsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-home-order',
@@ -132,6 +140,7 @@ class _AdminScreenState extends State<AdminScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_counts.total > 0) _PendingBanner(counts: _counts),
           for (final s in sections)
             Card(
               key: Key(s.key),
@@ -161,6 +170,50 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Top of the Admin home: one sentence saying what waits, split by type.
+class _PendingBanner extends StatelessWidget {
+  const _PendingBanner({required this.counts});
+
+  final AdminCounts counts;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final parts = [
+      if (counts.businesses > 0) '${counts.businesses} bisnis perlu disetujui',
+      if (counts.listings > 0) '${counts.listings} produk lama perlu ditinjau',
+      if (counts.reports > 0) '${counts.reports} laporan baru',
+      if (counts.feedback > 0) '${counts.feedback} masukan baru',
+    ];
+    return Card(
+      key: const Key('admin-pending-banner'),
+      color: theme.colorScheme.errorContainer,
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.notifications_active_outlined,
+              color: theme.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Menunggu kamu: ${parts.join(', ')}.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

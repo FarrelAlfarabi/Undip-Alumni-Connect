@@ -267,6 +267,17 @@ class _MyListingCard extends StatelessWidget {
                 ),
               ),
             ],
+            if (l.status == ListingStatus.pending) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Permintaanmu sudah kami terima dan sedang diproses admin. '
+                'Kamu akan mendapat pemberitahuan begitu ada keputusan.',
+                key: Key('pending-note-${l.id}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             if (l.status == ListingStatus.rejected) ...[
               const SizedBox(height: 8),
               Text(
@@ -322,7 +333,7 @@ class StatusBadge extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final (label, bg, fg) = switch (status) {
       ListingStatus.pending => (
-        'Pending review',
+        'Menunggu persetujuan',
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
       ),

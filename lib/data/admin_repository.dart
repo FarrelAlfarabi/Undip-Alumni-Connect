@@ -144,6 +144,43 @@ class AdminRepository {
     );
   }
 
+  /// Job posts for the admin Jobs list (hidden ones last). [search] matches
+  /// title, company and poster name.
+  Future<List<AdminJob>> jobs(String adminId, {String? search}) async {
+    final rows = await _guard(
+      () =>
+          _api.rpc('admin_jobs_list', {'p_admin': adminId, 'p_search': search}),
+    );
+    return (rows as List)
+        .map((r) => AdminJob.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
+  /// Takes a job post down. The poster gets a notice with [reason].
+  Future<void> hideJob(String adminId, String jobId, String reason) =>
+      _jobVisibility(adminId, jobId, 'hide', reason: reason);
+
+  /// Puts a hidden job post back.
+  Future<void> restoreJob(String adminId, String jobId) =>
+      _jobVisibility(adminId, jobId, 'restore');
+
+  Future<void> _jobVisibility(
+    String adminId,
+    String jobId,
+    String action, {
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_reports_decide', {
+        'p_admin': adminId,
+        'p_type': 'job',
+        'p_target': jobId,
+        'p_action': action,
+        'p_reason': reason?.trim(),
+      }),
+    );
+  }
+
   /// Opens a closed report again (the undo of dismiss and mark handled).
   Future<void> reopenReports(String adminId, AdminReport r) =>
       _reportAction(adminId, r, 'reopen');
@@ -605,6 +642,41 @@ class AdminCounts {
   final int feedback;
 
   int get total => businesses + listings + reports + feedback;
+}
+
+/// One job post in the admin Jobs list.
+class AdminJob {
+  const AdminJob({
+    required this.id,
+    required this.title,
+    required this.company,
+    required this.posterName,
+    required this.createdAt,
+    this.hiddenAt,
+    this.hiddenReason,
+  });
+
+  factory AdminJob.fromMap(Map<String, dynamic> m) => AdminJob(
+    id: m['id'] as String,
+    title: m['title'] as String? ?? '',
+    company: m['company'] as String? ?? '',
+    posterName: m['poster_name'] as String?,
+    createdAt: DateTime.parse(m['created_at'] as String),
+    hiddenAt: m['hidden_at'] == null
+        ? null
+        : DateTime.parse(m['hidden_at'] as String),
+    hiddenReason: m['hidden_reason'] as String?,
+  );
+
+  final String id;
+  final String title;
+  final String company;
+  final String? posterName;
+  final DateTime createdAt;
+  final DateTime? hiddenAt;
+  final String? hiddenReason;
+
+  bool get isHidden => hiddenAt != null;
 }
 
 /// One announcement in the admin list.

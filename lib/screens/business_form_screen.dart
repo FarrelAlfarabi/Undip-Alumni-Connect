@@ -13,14 +13,15 @@ import '../widgets/searchable_choice.dart';
 
 /// What the owner is told after submitting.
 const String kBusinessSubmittedMessage =
-    'Submitted. An admin will review your business. You can see the status '
-    'in "My businesses".';
+    'Permintaanmu sudah kami terima. Admin akan meninjau bisnismu dan kamu '
+    'akan mendapat pemberitahuan saat ada keputusan. Status bisa dilihat di '
+    '"My businesses".';
 
 /// Added to [kBusinessSubmittedMessage] when the business was saved but its
 /// photo could not be.
 const String kBusinessPhotoFailedMessage =
-    ' The photo did not upload. Open the business from "My businesses" and '
-    'add it again.';
+    ' Fotonya belum terunggah. Buka bisnisnya dari "My businesses" lalu '
+    'tambahkan lagi.';
 
 /// Register a business, or (when [existing] is set) fix a pending or rejected
 /// one. The yearly sales band is chosen once and cannot be changed after.
