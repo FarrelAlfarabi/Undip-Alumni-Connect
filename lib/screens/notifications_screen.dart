@@ -295,60 +295,69 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
             );
           }
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final n = items[i];
-              final fresh = n.isUnread;
-              return Dismissible(
-                key: Key('dismiss-${n.id}'),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: theme.colorScheme.errorContainer,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Icon(
-                    Icons.delete_outline,
-                    color: theme.colorScheme.onErrorContainer,
-                  ),
-                ),
-                onDismissed: (_) async {
-                  try {
-                    await _repo.deleteOne(_myId, n.id);
-                  } catch (_) {}
-                  if (mounted) _reload();
-                },
-                child: ListTile(
-                  key: Key('notification-${n.id}'),
-                  tileColor: fresh
-                      ? theme.colorScheme.secondaryContainer.withValues(
-                          alpha: 0.35,
-                        )
-                      : null,
-                  leading: Icon(
-                    _icon(n),
-                    color: fresh
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  title: Text(
-                    n.title,
-                    style: TextStyle(
-                      fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                  subtitle: Text(n.body),
-                  trailing: Text(
-                    _timeAgo(n.createdAt),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  onTap: () => _open(n),
-                ),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              _reload();
+              try {
+                await _future;
+              } catch (_) {}
             },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, i) {
+                final n = items[i];
+                final fresh = n.isUnread;
+                return Dismissible(
+                  key: Key('dismiss-${n.id}'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: theme.colorScheme.errorContainer,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                  ),
+                  onDismissed: (_) async {
+                    try {
+                      await _repo.deleteOne(_myId, n.id);
+                    } catch (_) {}
+                    if (mounted) _reload();
+                  },
+                  child: ListTile(
+                    key: Key('notification-${n.id}'),
+                    tileColor: fresh
+                        ? theme.colorScheme.secondaryContainer.withValues(
+                            alpha: 0.35,
+                          )
+                        : null,
+                    leading: Icon(
+                      _icon(n),
+                      color: fresh
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    title: Text(
+                      n.title,
+                      style: TextStyle(
+                        fontWeight: fresh ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                    subtitle: Text(n.body),
+                    trailing: Text(
+                      _timeAgo(n.createdAt),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    onTap: () => _open(n),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

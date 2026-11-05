@@ -202,17 +202,26 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
             Expanded(
               child: items.isEmpty
                   ? Center(child: Text(tr('No businesses match this search.')))
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _BusinessCard(
-                        business: items[i],
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => BusinessDetailScreen(
-                              business: items[i],
-                              currentUser: widget.currentUser,
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        _reload();
+                        try {
+                          await _future;
+                        } catch (_) {}
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _BusinessCard(
+                          business: items[i],
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => BusinessDetailScreen(
+                                business: items[i],
+                                currentUser: widget.currentUser,
+                              ),
                             ),
                           ),
                         ),

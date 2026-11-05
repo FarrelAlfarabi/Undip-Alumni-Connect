@@ -109,6 +109,9 @@ reset role;
 delete from job_posts where title = 'Batas 1';
 select jt.assert((select count(*) from storage_cleanup_queue where bucket = 'job-photos' and path = 'siti/a.png') = 1, 'deleted job photo is queued');
 set role anon;
+select jt.expect_error(format($q$insert into job_posts (posted_by, title, company, description) values (%L, 'Batas 7', 'PT', 'd')$q$, (select v from t_ids where k = 'siti')), 'job_daily_limit');
+reset role;
+set role anon;
 select admin_log_action((select v from t_ids where k = 'clara'), 'test_action', 'job', 'x', 'detail');
 select jt.assert((select count(*) from admin_actions_list((select v from t_ids where k = 'clara')) where action = 'test_action') = 1, 'admin action logged');
 select jt.expect_error(format($q$select admin_log_action(%L, 'x')$q$, (select v from t_ids where k = 'siti')), 'not_admin');
@@ -121,4 +124,13 @@ select jt.assert((select body from notifications where type = 'business_pending'
 -- Review fixes: a closed job takes no applications
 reset role;
 select jt.expect_error(format($q$insert into job_applications (job_post_id, applicant_id, full_name, email) values (%L, %L, 'Siti', 's@example.com')$q$, (select v from t_ids where k = 'job2'), (select v from t_ids where k = 'siti')), 'job_closed');
+-- Delete account still works with the new tables and states
+set role anon;
+select account_delete((select v from t_ids where k = 'ahmad'));
+select account_delete((select v from t_ids where k = 'clara'));
+reset role;
+select jt.assert((select count(*) from job_posts where posted_by = (select v from t_ids where k = 'ahmad')) = 0, 'deleted account: closed jobs gone');
+select jt.assert((select count(*) from businesses where owner_id = (select v from t_ids where k = 'ahmad')) = 0, 'deleted account: businesses gone');
+select jt.assert((select count(*) from contact_requests where requester_id = (select v from t_ids where k = 'ahmad')) = 0, 'deleted account: contact requests gone');
+select jt.assert((select count(*) from admin_actions where action = 'test_action') = 1 and (select count(*) from app_admins where profile_id = (select v from t_ids where k = 'clara')) = 0, 'deleted admin: log kept, no longer an admin');
 rollback;

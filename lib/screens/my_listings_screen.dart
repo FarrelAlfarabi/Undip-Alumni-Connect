@@ -170,15 +170,24 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     ),
                   );
                 }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _MyListingCard(
-                    listing: items[i],
-                    onEdit: () => _edit(items[i]),
-                    onSold: () => _markSold(items[i]),
-                    onDelete: () => _delete(items[i]),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _reload();
+                    try {
+                      await _future;
+                    } catch (_) {}
+                  },
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) => _MyListingCard(
+                      listing: items[i],
+                      onEdit: () => _edit(items[i]),
+                      onSold: () => _markSold(items[i]),
+                      onDelete: () => _delete(items[i]),
+                    ),
                   ),
                 );
               },

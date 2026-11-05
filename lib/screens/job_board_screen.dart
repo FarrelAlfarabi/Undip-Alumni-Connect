@@ -243,22 +243,32 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
               Expanded(
                 child: jobs.isEmpty
                     ? Center(child: Text(tr('No jobs match these filters.')))
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                        itemCount: jobs.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) => _JobCard(
-                          job: jobs[i],
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => JobDetailScreen(
-                                  job: jobs[i],
-                                  currentUser: widget.currentUser,
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          setState(() => _future = _fetchJobs());
+                          try {
+                            await _future;
+                          } catch (_) {}
+                        },
+                        child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                          itemCount: jobs.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, i) => _JobCard(
+                            job: jobs[i],
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => JobDetailScreen(
+                                    job: jobs[i],
+                                    currentUser: widget.currentUser,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ),
               ),

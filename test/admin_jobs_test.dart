@@ -44,6 +44,18 @@ Future<FakeAdminApi> pumpJobs(
 }
 
 void main() {
+  testWidgets('pulling down reloads the list', (tester) async {
+    final api = await pumpJobs(tester, job());
+    final before = api.calls.where((c) => c == 'admin_jobs_list').length;
+    await tester.drag(find.byType(ListView), const Offset(0, 500));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(
+      api.calls.where((c) => c == 'admin_jobs_list').length,
+      greaterThan(before),
+    );
+  });
+
   testWidgets('admin takes a job down with a reason, then undoes it', (
     tester,
   ) async {

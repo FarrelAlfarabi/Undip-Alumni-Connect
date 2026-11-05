@@ -143,28 +143,37 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
               ),
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-            itemCount: items.length + 1,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              if (i == 0) {
-                return Text(
-                  _limitNote,
-                  key: const Key('business-limit-note'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                );
-              }
-              final b = items[i - 1];
-              return BusinessOwnerCard(
-                business: b,
-                usage: usage[b.id],
-                onEdit: () => _openForm(b),
-                onDelete: () => _delete(b),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              _reload();
+              try {
+                await _future;
+              } catch (_) {}
             },
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+              itemCount: items.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                if (i == 0) {
+                  return Text(
+                    _limitNote,
+                    key: const Key('business-limit-note'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                }
+                final b = items[i - 1];
+                return BusinessOwnerCard(
+                  business: b,
+                  usage: usage[b.id],
+                  onEdit: () => _openForm(b),
+                  onDelete: () => _delete(b),
+                );
+              },
+            ),
           );
         },
       ),

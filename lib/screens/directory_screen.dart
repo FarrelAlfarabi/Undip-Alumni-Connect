@@ -342,53 +342,63 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         ],
                       ),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, i) {
-                        final p = filtered[i];
-                        return ListTile(
-                          leading: Avatar(
-                            url: p['avatar_url'] as String?,
-                            name: p['name'] as String? ?? '',
-                          ),
-                          title: Text(p['name'] as String? ?? ''),
-                          subtitle: Text(
-                            [
-                              if ((p['current_role'] as String?)?.isNotEmpty ==
-                                  true)
-                                '${p['current_role']}'
-                                    '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
-                              '${p['major']} · Angkatan ${p['graduation_year']}',
-                            ].join('\n'),
-                          ),
-                          isThreeLine: true,
-                          trailing:
-                              ((p['linkedin_url'] as String?)?.trim() ?? '')
-                                  .isEmpty
-                              ? null
-                              : IconButton(
-                                  key: Key('member-linkedin-${p['id']}'),
-                                  tooltip: tr('Buka LinkedIn'),
-                                  icon: const LinkedInLogo(),
-                                  onPressed: () => _confirmOpenLinkedIn(
-                                    p['linkedin_url'] as String?,
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        setState(() => _future = _fetchAlumni());
+                        try {
+                          await _future;
+                        } catch (_) {}
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, i) {
+                          final p = filtered[i];
+                          return ListTile(
+                            leading: Avatar(
+                              url: p['avatar_url'] as String?,
+                              name: p['name'] as String? ?? '',
+                            ),
+                            title: Text(p['name'] as String? ?? ''),
+                            subtitle: Text(
+                              [
+                                if ((p['current_role'] as String?)
+                                        ?.isNotEmpty ==
+                                    true)
+                                  '${p['current_role']}'
+                                      '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
+                                '${p['major']} · Angkatan ${p['graduation_year']}',
+                              ].join('\n'),
+                            ),
+                            isThreeLine: true,
+                            trailing:
+                                ((p['linkedin_url'] as String?)?.trim() ?? '')
+                                    .isEmpty
+                                ? null
+                                : IconButton(
+                                    key: Key('member-linkedin-${p['id']}'),
+                                    tooltip: tr('Buka LinkedIn'),
+                                    icon: const LinkedInLogo(),
+                                    onPressed: () => _confirmOpenLinkedIn(
+                                      p['linkedin_url'] as String?,
+                                    ),
+                                  ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProfileDetailScreen(
+                                    profile: p,
+                                    showEditButton: false,
+                                    currentUser: widget.currentUser,
                                   ),
                                 ),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ProfileDetailScreen(
-                                  profile: p,
-                                  showEditButton: false,
-                                  currentUser: widget.currentUser,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],

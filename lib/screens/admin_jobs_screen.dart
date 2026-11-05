@@ -192,76 +192,85 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                 if (items.isEmpty) {
                   return Center(child: Text(tr('Belum ada lowongan.')));
                 }
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final j = items[i];
-                    return Card(
-                      key: Key('admin-job-${j.id}'),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: theme.colorScheme.outlineVariant,
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _reload();
+                    try {
+                      await _future;
+                    } catch (_) {}
+                  },
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) {
+                      final j = items[i];
+                      return Card(
+                        key: Key('admin-job-${j.id}'),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: theme.colorScheme.outlineVariant,
+                          ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              j.title,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              '${j.company} · ${j.posterName ?? 'Alumni'}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            if (j.isHidden) ...[
-                              const SizedBox(height: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                'Diturunkan: ${j.hiddenReason ?? '-'}',
-                                key: Key('job-hidden-${j.id}'),
-                                style: TextStyle(
-                                  color: theme.colorScheme.error,
+                                j.title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: j.isHidden
-                                  ? OutlinedButton(
-                                      key: Key('job-restore-${j.id}'),
-                                      onPressed: _busy.contains(j.id)
-                                          ? null
-                                          : () => _restore(j),
-                                      child: Text(tr('Tampilkan lagi')),
-                                    )
-                                  : TextButton.icon(
-                                      key: Key('job-hide-${j.id}'),
-                                      onPressed: _busy.contains(j.id)
-                                          ? null
-                                          : () => _hide(j),
-                                      icon: const Icon(Icons.visibility_off),
-                                      label: const Text('Turunkan'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            theme.colorScheme.error,
+                              Text(
+                                '${j.company} · ${j.posterName ?? 'Alumni'}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              if (j.isHidden) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Diturunkan: ${j.hiddenReason ?? '-'}',
+                                  key: Key('job-hidden-${j.id}'),
+                                  style: TextStyle(
+                                    color: theme.colorScheme.error,
+                                  ),
+                                ),
+                              ],
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: j.isHidden
+                                    ? OutlinedButton(
+                                        key: Key('job-restore-${j.id}'),
+                                        onPressed: _busy.contains(j.id)
+                                            ? null
+                                            : () => _restore(j),
+                                        child: Text(tr('Tampilkan lagi')),
+                                      )
+                                    : TextButton.icon(
+                                        key: Key('job-hide-${j.id}'),
+                                        onPressed: _busy.contains(j.id)
+                                            ? null
+                                            : () => _hide(j),
+                                        icon: const Icon(Icons.visibility_off),
+                                        label: const Text('Turunkan'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor:
+                                              theme.colorScheme.error,
+                                        ),
                                       ),
-                                    ),
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 );
               },
             ),

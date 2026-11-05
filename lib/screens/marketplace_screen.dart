@@ -423,24 +423,38 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 tr('No listings match these filters.'),
                               ),
                             )
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                              itemCount: listings.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 16),
-                              itemBuilder: (context, i) => _ListingCard(
-                                listing: listings[i],
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => MarketplaceDetailScreen(
-                                        listing: listings[i],
-                                        repository: _repo,
-                                        currentUser: widget.currentUser,
+                          : RefreshIndicator(
+                              onRefresh: () async {
+                                _reload();
+                                try {
+                                  await _future;
+                                } catch (_) {}
+                              },
+                              child: ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  4,
+                                  16,
+                                  96,
+                                ),
+                                itemCount: listings.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 16),
+                                itemBuilder: (context, i) => _ListingCard(
+                                  listing: listings[i],
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => MarketplaceDetailScreen(
+                                          listing: listings[i],
+                                          repository: _repo,
+                                          currentUser: widget.currentUser,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                     ),

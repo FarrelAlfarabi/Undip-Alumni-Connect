@@ -238,3 +238,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Code review fixes on PR 77 (5 Nov 2026)
 - Real-login guard (`assert_caller`) kept in the contact lists and product create/update functions; owner checks use `is distinct from`; a closed job takes no applications (`job_closed`). Edited inside the unmerged migrations, rollback updated.
 - Left as is, on purpose: URL-encoded photo paths in the cleanup queue, undo to pending sends an admin notice, daily job limit counts only live rows, owner can delete a suspended business.
+## Leftovers: refresh, delete-account, posting limit (5 Nov 2026)
+- Pull-to-refresh on Jobs, Alumni, Marketplace, Business, Notifications, My jobs/businesses/products and admin Jobs.
+- Daily job limit now counts a post log (`job_post_log`), so delete and repost no longer bypasses it. Edited in the unmerged migration `20261105210000`. Delete-account SQL test covers closed jobs, cancelled requests and admin log.
