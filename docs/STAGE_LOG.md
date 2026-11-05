@@ -206,3 +206,9 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Owner can delete own business (with its products), own job post (with applications), admin can delete announcements. Confirm dialog first (`confirmDelete`).
 - Migration `20261105100000_delete_own_content` adds `business_delete`, `job_post_delete`, `admin_announcement_delete` (assert_caller + owner/admin check). Rollback: `supabase/rollback_delete_own_content.sql`.
 - Tests: `delete_own_content_test.dart`. Fresh chain OK. Photos in storage are not removed yet (later stage).
+## Contact request fix and cancel (5 Nov 2026)
+- "Cannot send a request right now" came from two cases, a rejection in the last 30 days or a block. Cooldown now says so in plain words; block stays vague. Contact errors are Indonesian.
+- Sender can cancel a pending request (new status `cancelled`, still counts for 5 per day). Applicant can withdraw a job application. Migration `20261105110000_contact_request_cancel`, rollback file included.
+## Admin: no band, red tags, undo (5 Nov 2026)
+- Approve business is one tap (owner's band is used). Red tags on Admin and on Businesses, Reports, Feedback, Marketplace review (`admin_pending_counts`).
+- Every admin action shows "Urungkan" inside the bottom notification for 8 seconds. Migration `20261105120000_admin_undo_and_counts`, rollback file included. Beta runner now also applies 202611* migrations.

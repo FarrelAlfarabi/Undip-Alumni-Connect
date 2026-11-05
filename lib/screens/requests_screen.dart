@@ -5,6 +5,7 @@ import '../data/contact_repository.dart';
 import '../data/report_repository.dart';
 import '../models/contact_request.dart';
 import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/content_actions_menu.dart';
 import '../widgets/error_view.dart';
 
@@ -87,8 +88,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   'Kamu belum meminta kontak siapa pun. Buka profil alumni '
                   'dan ketuk "Minta kontak".',
               onRetry: _refresh,
-              itemBuilder: (r) =>
-                  _OutgoingCard(request: r, repository: _repo, myId: _myId),
+              itemBuilder: (r) => _OutgoingCard(
+                request: r,
+                repository: _repo,
+                myId: _myId,
+                onChanged: _refresh,
+              ),
             ),
           ],
         ),
@@ -374,11 +379,13 @@ class _OutgoingCard extends StatefulWidget {
     required this.request,
     required this.repository,
     required this.myId,
+    required this.onChanged,
   });
 
   final OutgoingRequest request;
   final ContactRepository repository;
   final String myId;
+  final VoidCallback onChanged;
 
   @override
   State<_OutgoingCard> createState() => _OutgoingCardState();
@@ -388,6 +395,25 @@ class _OutgoingCardState extends State<_OutgoingCard> {
   String? _shared;
   String? _error;
   bool _loading = false;
+
+  Future<void> _cancel() async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Batalkan permintaan?',
+      body: 'Permintaan ke ${widget.request.targetName} akan ditarik.',
+      action: 'Batalkan',
+    );
+    if (!ok || !mounted) return;
+    try {
+      await widget.repository.cancel(
+        requesterId: widget.myId,
+        requestId: widget.request.id,
+      );
+      if (mounted) widget.onChanged();
+    } catch (e) {
+      if (mounted) setState(() => _error = contactErrorMessage(e));
+    }
+  }
 
   Future<void> _show() async {
     setState(() {
@@ -416,6 +442,7 @@ class _OutgoingCardState extends State<_OutgoingCard> {
       ContactRequestStatus.accepted => 'Diterima',
       // The requester only ever sees "not accepted".
       ContactRequestStatus.rejected => 'Belum diterima',
+      ContactRequestStatus.cancelled => 'Dibatalkan',
     };
     return Card(
       key: Key('outgoing-${r.id}'),
@@ -437,6 +464,19 @@ class _OutgoingCardState extends State<_OutgoingCard> {
             ),
             const SizedBox(height: 4),
             Text(status, key: Key('status-${r.id}')),
+            if (r.status == ContactRequestStatus.pending) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  key: Key('cancel-${r.id}'),
+                  onPressed: _cancel,
+                  child: const Text('Batalkan'),
+                ),
+              ),
+              if (_error != null)
+                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+            ],
             if (r.status == ContactRequestStatus.accepted) ...[
               const SizedBox(height: 8),
               if (_shared == null)

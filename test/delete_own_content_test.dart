@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/data/business_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_announcements_screen.dart';
+import 'package:undip_alumni_connect/screens/job_detail_screen.dart';
 import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
 import 'package:undip_alumni_connect/screens/my_job_postings_screen.dart';
 
@@ -19,7 +20,10 @@ void main() {
   test('business delete sends owner and business', () async {
     final api = FakeBusinessApi();
     await BusinessRepository(api).delete('me', 'b1');
-    expect(api.params['business_delete'], {'p_owner': 'me', 'p_business': 'b1'});
+    expect(api.params['business_delete'], {
+      'p_owner': 'me',
+      'p_business': 'b1',
+    });
   });
 
   test('announcement delete sends admin and id', () async {
@@ -127,5 +131,34 @@ void main() {
       'p_admin': 'me',
       'p_id': 'a1',
     });
+  });
+
+  testWidgets('applicant can withdraw an application', (tester) async {
+    phone(tester);
+    var withdrawn = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JobDetailScreen(
+          job: {
+            'id': 'j1',
+            'title': 'Analyst',
+            'company': 'Bank X',
+            'description': 'Kerja',
+            'posted_by': 'other',
+          },
+          currentUser: ValueNotifier({'id': 'me'}),
+          loadApplicantCount: () async => 0,
+          loadHasApplied: () async => true,
+          withdraw: () async => withdrawn = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('withdraw-application')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete')));
+    await tester.pumpAndSettle();
+    expect(withdrawn, isTrue);
+    expect(find.text('Apply to this Job'), findsOneWidget);
   });
 }

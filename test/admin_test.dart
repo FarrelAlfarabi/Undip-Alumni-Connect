@@ -115,6 +115,28 @@ void main() {
       expect(asked, ['me']);
     });
 
+    testWidgets('shows a red tag with how much waits', (tester) async {
+      phone(tester);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ProfileDetailScreen(
+            profile: {'id': 'me', 'name': 'Gilang', 'email': 'g@example.com'},
+            currentUser: ValueNotifier({'id': 'me', 'name': 'Gilang'}),
+            adminCheck: (id) async => true,
+            adminCounts: (id) async => 4,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('profile-admin')),
+          matching: find.text('4'),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('hidden for everyone else', (tester) async {
       await pump(tester, (_) async => false);
       expect(find.byKey(const Key('profile-admin')), findsNothing);
@@ -213,30 +235,16 @@ void main() {
       expect(find.byKey(const Key('reject-b1')), findsOneWidget);
     });
 
-    testWidgets('approve: the admin picks the band from the four', (
-      tester,
-    ) async {
+    testWidgets('approve: one tap, no band question', (tester) async {
       final api = await pump(tester, [businessMap()]);
       await tester.tap(find.byKey(const Key('approve-b1')));
       await tester.pumpAndSettle();
-      for (final b in BusinessBand.values) {
-        expect(find.byKey(Key('approve-band-${b.name}')), findsOneWidget);
-      }
-      // The band the owner asked for is preselected, the admin can change it.
-      await tester.tap(find.byKey(const Key('approve-band-micro')));
-      await tester.pump();
-      await tester.tap(
-        find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.widgetWithText(FilledButton, 'Approve'),
-        ),
-      );
-      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
       expect(api.params['admin_business_decide'], {
         'p_admin': 'me',
         'p_business': 'b1',
         'p_action': 'approve',
-        'p_band': 'micro',
+        'p_band': null,
         'p_reason': null,
       });
     });

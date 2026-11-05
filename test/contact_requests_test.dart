@@ -191,10 +191,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kirim permintaan'));
       await tester.pumpAndSettle();
-      expect(
-        find.textContaining('already have an open request'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('sudah punya permintaan'), findsOneWidget);
       expect(find.text('Kirim permintaan'), findsOneWidget);
     });
   });

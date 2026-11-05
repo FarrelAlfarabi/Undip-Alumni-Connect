@@ -4,6 +4,7 @@ import '../data/admin_repository.dart';
 import '../data/home_repository.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 import '../widgets/filter_dropdown.dart';
 
 /// Admin > Home order: choose which products and jobs Home shows first and in
@@ -97,12 +98,30 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
       _busy = true;
       _saveError = null;
     });
+    final before = _pinnedIds;
+    final kind = _kind;
     try {
       await widget.repository.setHomeOrder(
         adminId: widget.adminId,
-        kind: _kind,
+        kind: kind,
         ids: ids,
       );
+      if (mounted) {
+        showUndoSnackBar(
+          context,
+          message: 'Urutan Home disimpan.',
+          screen: 'Home order',
+          errorText: adminErrorMessage,
+          onUndo: () async {
+            await widget.repository.setHomeOrder(
+              adminId: widget.adminId,
+              kind: kind,
+              ids: before,
+            );
+            if (mounted && kind == _kind) await _load();
+          },
+        );
+      }
     } catch (e) {
       _saveError = adminErrorMessage(e);
     }

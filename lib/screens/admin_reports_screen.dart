@@ -5,6 +5,7 @@ import '../data/report_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 import '../widgets/filter_dropdown.dart';
 
 String reportTargetLabel(ReportTarget t) => switch (t) {
@@ -95,17 +96,33 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   void _toast(String m) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
+  /// Runs one action. [undo], when given, is offered next to the notification
+  /// for a few seconds.
   Future<void> _run(
     AdminReport r,
     Future<void> Function() action,
-    String done,
-  ) async {
+    String done, {
+    Future<void> Function()? undo,
+  }) async {
     setState(() => _busy.add(r.targetId));
     try {
       await action();
       if (!mounted) return;
-      _toast(done);
       _busy.remove(r.targetId);
+      if (undo == null) {
+        _toast(done);
+      } else {
+        showUndoSnackBar(
+          context,
+          message: done,
+          screen: 'Admin reports',
+          errorText: adminErrorMessage,
+          onUndo: () async {
+            await undo();
+            if (mounted) _reload();
+          },
+        );
+      }
       _reload();
     } catch (e) {
       if (!mounted) return;
@@ -118,6 +135,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       );
     }
   }
+
+  AdminRepository get _repo => widget.repository;
+  String get _admin => widget.adminId;
 
   Future<void> _hide(AdminReport r) async {
     final controller = TextEditingController();
@@ -164,7 +184,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     await _run(
       r,
       () => widget.repository.hideContent(widget.adminId, r, reason),
-      'Hidden. It no longer shows for anyone.',
+      'Disembunyikan. Tidak tampil lagi untuk siapa pun.',
+      undo: () async {
+        await _repo.restoreContent(_admin, r);
+        await _repo.reopenReports(_admin, r);
+      },
     );
   }
 
@@ -229,7 +253,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     await _run(
       r,
       () => widget.repository.suspendUser(widget.adminId, r, reason),
-      'Suspended. They cannot sign in.',
+      'Ditangguhkan. Orangnya tidak bisa masuk.',
+      undo: () async {
+        await _repo.unsuspendUser(_admin, r);
+        await _repo.reopenReports(_admin, r);
+      },
     );
   }
 
@@ -257,10 +285,17 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       ),
     );
     if (sure != true) return;
+    String? oldBio;
     await _run(
       r,
-      () => widget.repository.clearBio(widget.adminId, r.targetId),
+      () async {
+        oldBio = await _repo.clearBio(_admin, r.targetId);
+      },
       'Bio dihapus.',
+      undo: () async {
+        final bio = oldBio;
+        if (bio != null) await _repo.restoreBio(_admin, r.targetId, bio);
+      },
     );
   }
 
@@ -405,12 +440,14 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         r,
                         () =>
                             widget.repository.dismissReports(widget.adminId, r),
-                        'Dismissed.',
+                        'Laporan diabaikan.',
+                        undo: () => _repo.reopenReports(_admin, r),
                       ),
                       onActioned: () => _run(
                         r,
                         () => widget.repository.markActioned(widget.adminId, r),
-                        'Marked as handled.',
+                        'Ditandai selesai.',
+                        undo: () => _repo.reopenReports(_admin, r),
                       ),
                       onHide: () => _hide(r),
                       onSuspend: () => _suspend(r),
@@ -419,13 +456,23 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                         r,
                         () =>
                             widget.repository.unsuspendUser(widget.adminId, r),
-                        'Suspension lifted. They can sign in again.',
+                        'Penangguhan dicabut. Orangnya bisa masuk lagi.',
+                        undo: () => _repo.suspendUser(
+                          _admin,
+                          r,
+                          r.hiddenReason ?? 'Diurungkan',
+                        ),
                       ),
                       onRestore: () => _run(
                         r,
                         () =>
                             widget.repository.restoreContent(widget.adminId, r),
-                        'Restored. It shows again.',
+                        'Dipulihkan. Tampil lagi.',
+                        undo: () => _repo.hideContent(
+                          _admin,
+                          r,
+                          r.hiddenReason ?? 'Diurungkan',
+                        ),
                       ),
                     );
                   },

@@ -7,6 +7,7 @@ import '../models/marketplace_listing.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin: review queue for pending listings (the old seed listings), plus
 /// report counts per listing. Reached from Profile > Admin, which shows only
@@ -80,10 +81,6 @@ class _ReviewQueueState extends State<_ReviewQueue> {
     });
   }
 
-  void _toast(String m) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(m), duration: const Duration(seconds: 4)),
-  );
-
   Future<void> _decide(MarketplaceListing l, {required bool approve}) async {
     String? reason;
     if (!approve) {
@@ -99,8 +96,20 @@ class _ReviewQueueState extends State<_ReviewQueue> {
         reason: reason,
       );
       if (!mounted) return;
-      _toast(approve ? 'Approved "${l.title}".' : 'Rejected "${l.title}".');
       _busy.remove(l.id);
+      showUndoSnackBar(
+        context,
+        message: approve ? 'Disetujui: "${l.title}".' : 'Ditolak: "${l.title}".',
+        screen: 'Marketplace review',
+        errorText: marketplaceErrorMessage,
+        onUndo: () async {
+          await widget.repository.unreview(
+            adminId: widget.adminId,
+            listingId: l.id,
+          );
+          if (mounted) _reload();
+        },
+      );
       _reload();
     } catch (e) {
       if (!mounted) return;

@@ -4,6 +4,7 @@ import '../data/admin_repository.dart';
 import '../data/ikafe_contact.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin > Kontak Ikafe: the contacts and socials members see on Home. Shows
 /// hidden rows too. The database refuses every change for non-admins.
@@ -36,7 +37,7 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
   });
 
   Future<void> _edit([IkafeContact? contact]) async {
-    final saved = await Navigator.of(context).push<bool>(
+    final change = await Navigator.of(context).push<IkafeChange>(
       MaterialPageRoute(
         builder: (_) => IkafeContactFormScreen(
           adminId: widget.adminId,
@@ -45,7 +46,18 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
         ),
       ),
     );
-    if (saved == true && mounted) _reload();
+    if (change == null || !mounted) return;
+    _reload();
+    showUndoSnackBar(
+      context,
+      message: change.message,
+      screen: 'Kontak Ikafe',
+      errorText: adminErrorMessage,
+      onUndo: () async {
+        await change.undo();
+        if (mounted) _reload();
+      },
+    );
   }
 
   @override
@@ -114,6 +126,13 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
 }
 
 /// Add or change one contact. Pops `true` after a save or delete.
+/// What the form hands back: the notification text and how to undo it.
+class IkafeChange {
+  const IkafeChange(this.message, this.undo);
+  final String message;
+  final Future<void> Function() undo;
+}
+
 class IkafeContactFormScreen extends StatefulWidget {
   const IkafeContactFormScreen({
     super.key,
@@ -164,11 +183,11 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
     return null;
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _run(Future<IkafeChange> Function() action) async {
     setState(() => _busy = true);
     try {
-      await action();
-      if (mounted) Navigator.of(context).pop(true);
+      final change = await action();
+      if (mounted) Navigator.of(context).pop(change);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -184,17 +203,36 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    await _run(
-      () => widget.repository.saveIkafeContact(
+    final before = widget.contact;
+    await _run(() async {
+      final id = await widget.repository.saveIkafeContact(
         widget.adminId,
-        id: widget.contact?.id,
+        id: before?.id,
         kind: _kind,
         label: _label.text,
         value: _value.text,
         sortOrder: int.tryParse(_sort.text.trim()) ?? 0,
         active: _active,
-      ),
-    );
+      );
+      return IkafeChange(
+        before == null ? 'Kontak ditambahkan.' : 'Kontak disimpan.',
+        () async {
+          if (before == null) {
+            await widget.repository.deleteIkafeContact(widget.adminId, id);
+          } else {
+            await widget.repository.saveIkafeContact(
+              widget.adminId,
+              id: before.id,
+              kind: before.kind,
+              label: before.label,
+              value: before.value,
+              sortOrder: before.sortOrder,
+              active: before.active,
+            );
+          }
+        },
+      );
+    });
   }
 
   Future<void> _delete() async {
@@ -220,12 +258,14 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
       ),
     );
     if (yes != true) return;
-    await _run(
-      () => widget.repository.deleteIkafeContact(
-        widget.adminId,
-        widget.contact!.id,
-      ),
-    );
+    final before = widget.contact!;
+    await _run(() async {
+      await widget.repository.deleteIkafeContact(widget.adminId, before.id);
+      return IkafeChange(
+        'Kontak dihapus.',
+        () => widget.repository.restoreIkafeContact(widget.adminId, before),
+      );
+    });
   }
 
   @override

@@ -101,11 +101,92 @@ class AdminRepository {
     );
   }
 
+  /// Approves a business. With no [band] the database uses the band the
+  /// owner chose.
   Future<Business> approve(
     String adminId,
-    String businessId,
-    BusinessBand band,
-  ) => _decide(adminId, businessId, 'approve', band: band.name);
+    String businessId, [
+    BusinessBand? band,
+  ]) => _decide(adminId, businessId, 'approve', band: band?.name);
+
+  /// Puts a business back to an exact earlier state (the undo of any
+  /// decision).
+  Future<Business> setBusinessState(String adminId, Business before) async {
+    final row = await _guard(
+      () => _api.rpc('admin_business_set_state', {
+        'p_admin': adminId,
+        'p_business': before.id,
+        'p_status': before.status.name,
+        'p_band': before.approvedBand?.name,
+        'p_reason': before.rejectionReason,
+      }),
+    );
+    final map = row is List ? row.first : row;
+    return Business.fromMap(Map<String, dynamic>.from(map as Map));
+  }
+
+  /// The numbers for the red tags on the admin buttons.
+  Future<AdminCounts> pendingCounts(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_pending_counts', {'p_admin': adminId}),
+    );
+    final m = rows is List
+        ? (rows.isEmpty
+              ? <String, dynamic>{}
+              : Map<String, dynamic>.from(rows.first as Map))
+        : Map<String, dynamic>.from(rows as Map);
+    int n(String k) => (m[k] as num?)?.toInt() ?? 0;
+    return AdminCounts(
+      businesses: n('businesses'),
+      listings: n('listings'),
+      reports: n('reports'),
+      feedback: n('feedback'),
+    );
+  }
+
+  /// Opens a closed report again (the undo of dismiss and mark handled).
+  Future<void> reopenReports(String adminId, AdminReport r) =>
+      _reportAction(adminId, r, 'reopen');
+
+  /// Puts a deleted announcement back, with its old id and date.
+  Future<void> restoreAnnouncement(String adminId, AdminAnnouncement a) async {
+    await _guard(
+      () => _api.rpc('admin_announcement_restore', {
+        'p_admin': adminId,
+        'p_id': a.id,
+        'p_title': a.title,
+        'p_body': a.body,
+        'p_created_at': a.createdAt.toUtc().toIso8601String(),
+        'p_posted_by': adminId,
+      }),
+    );
+  }
+
+  /// Puts a cleared bio back.
+  Future<void> restoreBio(String adminId, String profileId, String bio) async {
+    await _guard(
+      () => _api.rpc('admin_restore_bio', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_bio': bio,
+      }),
+    );
+  }
+
+  /// Puts a deleted Kontak Ikafe row back with its old id.
+  Future<void> restoreIkafeContact(String adminId, IkafeContact c) async {
+    await _guard(
+      () => _api.rpc('admin_ikafe_contact_restore', {
+        'p_admin': adminId,
+        'p_id': c.id,
+        'p_kind': c.kind.name,
+        'p_label': c.label,
+        'p_value': c.value,
+        'p_sort': c.sortOrder,
+        'p_active': c.active,
+      }),
+    );
+  }
 
   Future<Business> reject(String adminId, String businessId, String reason) =>
       _decide(adminId, businessId, 'reject', reason: reason);
@@ -193,13 +274,21 @@ class AdminRepository {
 
   /// Removes only the bio of a reported person (admin_clear_bio). The account
   /// and everything else stay.
-  Future<void> clearBio(String adminId, String profileId) async {
+  /// Returns the bio that was removed (for the undo), or null if it had none.
+  Future<String?> clearBio(String adminId, String profileId) async {
+    final old = await _guard(
+      () => _api.rpc('admin_profile_bio', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+      }),
+    );
     await _guard(
       () => _api.rpc('admin_clear_bio', {
         'p_admin': adminId,
         'p_profile': profileId,
       }),
     );
+    return old is String && old.isNotEmpty ? old : null;
   }
 
   Future<void> _reportAction(
@@ -267,18 +356,20 @@ class AdminRepository {
 
   /// Posts one announcement. Only the database decides who may: the call is
   /// refused with `not_admin` for anyone not in app_admins.
-  Future<void> createAnnouncement(
+  /// Returns the new announcement's id (empty if the database sent none).
+  Future<String> createAnnouncement(
     String adminId, {
     required String title,
     required String body,
   }) async {
-    await _guard(
+    final id = await _guard(
       () => _api.rpc('admin_announcement_create', {
         'p_admin': adminId,
         'p_title': title.trim(),
         'p_body': body.trim(),
       }),
     );
+    return id is String ? id : '';
   }
 
   /// Removes one announcement for good. Admins only (the database checks).
@@ -303,7 +394,8 @@ class AdminRepository {
   }
 
   /// Adds a Kontak Ikafe row, or changes it when [id] is given.
-  Future<void> saveIkafeContact(
+  /// Returns the row's id (needed to undo an add).
+  Future<String> saveIkafeContact(
     String adminId, {
     String? id,
     required IkafeContactKind kind,
@@ -312,7 +404,7 @@ class AdminRepository {
     required int sortOrder,
     required bool active,
   }) async {
-    await _guard(
+    final saved = await _guard(
       () => _api.rpc('admin_ikafe_contact_save', {
         'p_admin': adminId,
         'p_id': id,
@@ -323,6 +415,7 @@ class AdminRepository {
         'p_active': active,
       }),
     );
+    return saved is String ? saved : (id ?? '');
   }
 
   Future<void> deleteIkafeContact(String adminId, String id) async {
@@ -495,6 +588,23 @@ class FeedbackItem {
     buildNumber: m['build_number'] as String?,
     platform: m['platform'] as String?,
   );
+}
+
+/// How much waits for an admin (the red tags).
+class AdminCounts {
+  const AdminCounts({
+    this.businesses = 0,
+    this.listings = 0,
+    this.reports = 0,
+    this.feedback = 0,
+  });
+
+  final int businesses;
+  final int listings;
+  final int reports;
+  final int feedback;
+
+  int get total => businesses + listings + reports + feedback;
 }
 
 /// One announcement in the admin list.

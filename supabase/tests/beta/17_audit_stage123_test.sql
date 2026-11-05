@@ -1,0 +1,64 @@
+-- Delete own content, cancel a contact request, admin approve without band,
+-- undo helpers and the pending counts. All app calls run as anon.
+\set ON_ERROR_STOP on
+\o /dev/null
+begin;
+
+update alumni_profiles set verification_status = 'verified'
+  where email in ('ahmad.ramadhan@example.com', 'siti.azizah@example.com', 'clara.putri@example.com');
+
+create temp table t_ids (k text primary key, v uuid);
+grant all on t_ids to anon, authenticated;
+insert into t_ids select 'ahmad', jt.pid('ahmad.ramadhan@example.com');
+insert into t_ids select 'siti', jt.pid('siti.azizah@example.com');
+insert into t_ids select 'clara', jt.pid('clara.putri@example.com');
+insert into app_admins (profile_id, note) values ((select v from t_ids where k = 'clara'), 'test');
+
+set role anon;
+
+-- ---- business: admin approves with no band, then undoes, then owner deletes
+insert into t_ids select 'b1', id from business_register((select v from t_ids where k = 'ahmad'), 'Kopi Ahmad', 'Kopi', 'Food & Drink', 'https://www.instagram.com/kopi_ahmad/', null, 'small');
+select jt.assert((select band from (select (admin_business_decide((select v from t_ids where k = 'clara'), (select v from t_ids where k = 'b1'), 'approve', null, null)).approved_band as band) q) = 'small', 'approve without band uses the owner band');
+select jt.expect_error(format($q$select admin_business_set_state(%L, %L, 'pending', null, null)$q$, (select v from t_ids where k = 'siti'), (select v from t_ids where k = 'b1')), 'not_admin');
+select admin_business_set_state((select v from t_ids where k = 'clara'), (select v from t_ids where k = 'b1'), 'pending', null, null);
+select jt.assert((select (admin_pending_counts((select v from t_ids where k = 'clara'))).businesses) = 1, 'pending business is counted');
+select jt.expect_error(format($q$select admin_pending_counts(%L)$q$, (select v from t_ids where k = 'siti')), 'not_admin');
+
+select jt.expect_error(format($q$select business_delete(%L, %L)$q$, (select v from t_ids where k = 'siti'), (select v from t_ids where k = 'b1')), 'not_owner');
+select business_delete((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'b1'));
+select jt.expect_error(format($q$select business_delete(%L, %L)$q$, (select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'b1')), 'not_found');
+
+-- ---- job post: only the poster deletes; applications go with it
+reset role;
+insert into job_posts (posted_by, title, company, description) values ((select v from t_ids where k = 'ahmad'), 'Analyst', 'Bank', 'Kerja');
+insert into t_ids select 'job', id from job_posts where title = 'Analyst';
+insert into job_applications (job_post_id, applicant_id, full_name, email) values ((select v from t_ids where k = 'job'), (select v from t_ids where k = 'siti'), 'Siti', 'siti@example.com');
+set role anon;
+select job_application_withdraw((select v from t_ids where k = 'siti'), (select v from t_ids where k = 'job'));
+select jt.assert((select count(*) from job_applications where job_post_id = (select v from t_ids where k = 'job')) = 0, 'application withdrawn');
+select jt.expect_error(format($q$select job_post_delete(%L, %L)$q$, (select v from t_ids where k = 'siti'), (select v from t_ids where k = 'job')), 'not_owner');
+select job_post_delete((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'job'));
+select jt.assert((select count(*) from job_posts where title = 'Analyst') = 0, 'job deleted');
+
+-- ---- announcement: admin deletes and restores
+select admin_announcement_create((select v from t_ids where k = 'clara'), 'Reuni', 'Sabtu depan');
+select jt.expect_error(format($q$select admin_announcement_delete(%L, gen_random_uuid())$q$, (select v from t_ids where k = 'siti')), 'not_admin');
+select jt.assert((select count(*) from announcements where title = 'Reuni') = 1, 'announcement exists');
+select admin_announcement_delete((select v from t_ids where k = 'clara'), (select id from announcements where title = 'Reuni'));
+select jt.assert((select count(*) from announcements where title = 'Reuni') = 0, 'announcement deleted');
+
+-- ---- contact request: cancel frees the pair and starts no cool-down
+select contact_request_send((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'siti'), 'Halo');
+reset role;
+insert into t_ids select 'req', id from contact_requests where requester_id = (select v from t_ids where k = 'ahmad') and target_id = (select v from t_ids where k = 'siti');
+set role anon;
+select jt.expect_error(format($q$select contact_request_cancel(%L, %L)$q$, (select v from t_ids where k = 'siti'), (select v from t_ids where k = 'req')), 'not_requester');
+select contact_request_cancel((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'req'));
+select jt.assert((select count(*) from contact_requests_outgoing((select v from t_ids where k = 'ahmad'))) = 0, 'cancelled is not listed');
+select jt.assert((select count(*) from contact_requests_incoming((select v from t_ids where k = 'siti'))) = 0, 'cancelled is not listed for the target');
+select jt.expect_error(format($q$select contact_request_cancel(%L, %L)$q$, (select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'req')), 'invalid_state');
+select contact_request_send((select v from t_ids where k = 'ahmad'), (select v from t_ids where k = 'siti'), 'Halo lagi');
+
+rollback;
+\o
+select 'ok';

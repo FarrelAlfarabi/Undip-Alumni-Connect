@@ -6,6 +6,7 @@ import '../util/period_filter.dart';
 import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin Announcements: past posts with search and a Period filter, and a
 /// button to post a new one. Reached only from the Admin home; the database
@@ -53,8 +54,16 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
     try {
       await widget.repository.deleteAnnouncement(widget.adminId, a.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Pengumuman dihapus.')));
+      showUndoSnackBar(
+        context,
+        message: 'Pengumuman dihapus.',
+        screen: 'Admin announcements',
+        errorText: adminErrorMessage,
+        onUndo: () async {
+          await widget.repository.restoreAnnouncement(widget.adminId, a);
+          if (mounted) _reload();
+        },
+      );
       _reload();
     } catch (e) {
       if (mounted) {
@@ -86,7 +95,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   }
 
   Future<void> _new() async {
-    final posted = await Navigator.of(context).push<bool>(
+    final newId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => AnnouncementFormScreen(
           adminId: widget.adminId,
@@ -94,7 +103,19 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
         ),
       ),
     );
-    if (posted == true && mounted) _reload();
+    if (newId == null || !mounted) return;
+    _reload();
+    if (newId.isEmpty) return;
+    showUndoSnackBar(
+      context,
+      message: 'Pengumuman diposting.',
+      screen: 'Admin announcements',
+      errorText: adminErrorMessage,
+      onUndo: () async {
+        await widget.repository.deleteAnnouncement(widget.adminId, newId);
+        if (mounted) _reload();
+      },
+    );
   }
 
   @override
@@ -168,11 +189,10 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
                         itemCount: shown.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) =>
-                            _AnnouncementTile(
-                              a: shown[i],
-                              onDelete: () => _delete(shown[i]),
-                            ),
+                        itemBuilder: (context, i) => _AnnouncementTile(
+                          a: shown[i],
+                          onDelete: () => _delete(shown[i]),
+                        ),
                       ),
               ),
             ],
@@ -242,7 +262,8 @@ class _AnnouncementTile extends StatelessWidget {
 const kAnnouncementTitleMax = 120;
 const kAnnouncementBodyMax = 2000;
 
-/// The post form. Pops `true` after the database accepted the post.
+/// The post form. Pops the new announcement's id after the database accepted
+/// the post.
 class AnnouncementFormScreen extends StatefulWidget {
   const AnnouncementFormScreen({
     super.key,
@@ -274,13 +295,13 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
-      await widget.repository.createAnnouncement(
+      final id = await widget.repository.createAnnouncement(
         widget.adminId,
         title: _title.text,
         body: _body.text,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(id);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);

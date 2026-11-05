@@ -163,7 +163,7 @@ void main() {
       final p = api.params['marketplace_review_listing']!;
       expect(p['p_listing'], 'p1');
       expect(p['p_decision'], 'approved');
-      expect(find.text('Approved "Sambal Roa".'), findsOneWidget);
+      expect(find.text('Disetujui: "Sambal Roa".'), findsOneWidget);
       expect(find.text('Sambal Roa'), findsNothing);
       expect(find.text('Desain Undangan'), findsOneWidget);
     });

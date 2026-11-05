@@ -16,6 +16,7 @@ import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/searchable_choice.dart';
+import '../widgets/undo_snackbar.dart';
 
 /// Admin home: one entry per area. Reached from Profile > Admin, which shows
 /// only when the database says this profile is an admin.
@@ -44,6 +45,22 @@ class _AdminScreenState extends State<AdminScreen> {
       widget.adminRepository ?? AdminRepository();
   late final MarketplaceRepository _market =
       widget.marketplaceRepository ?? MarketplaceRepository();
+  AdminCounts _counts = const AdminCounts();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCounts();
+  }
+
+  /// The red tags. A failure just shows no tags.
+  Future<void> _loadCounts() async {
+    try {
+      final c = await _admin.pendingCounts(widget.adminId);
+      if (mounted) setState(() => _counts = c);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final adminId = widget.adminId;
@@ -51,6 +68,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ...widget.extraSections,
       AdminSection(
         key: 'admin-reports',
+        badge: _counts.reports,
         icon: Icons.flag_outlined,
         title: 'Reports',
         subtitle: 'Reported content: dismiss, hide, restore',
@@ -59,6 +77,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-feedback',
+        badge: _counts.feedback,
         icon: Icons.feedback_outlined,
         title: 'Feedback',
         subtitle: 'What testers sent from the Send feedback button',
@@ -83,6 +102,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-businesses',
+        badge: _counts.businesses,
         icon: Icons.business_center_outlined,
         title: 'Businesses',
         subtitle: 'Approve, reject, suspend or restore',
@@ -99,6 +119,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-marketplace',
+        badge: _counts.listings,
         icon: Icons.storefront_outlined,
         title: 'Marketplace review',
         subtitle: 'Old listings waiting for review, report counts',
@@ -125,10 +146,18 @@ class _AdminScreenState extends State<AdminScreen> {
                 leading: Icon(s.icon),
                 title: Text(s.title),
                 subtitle: Text(s.subtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: s.builder)),
+                trailing: s.badge > 0
+                    ? Badge(
+                        key: Key('badge-${s.key}'),
+                        label: Text('${s.badge}'),
+                        child: const Icon(Icons.chevron_right),
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: () async {
+                  await Navigator.of(context)
+                      .push(MaterialPageRoute(builder: s.builder));
+                  _loadCounts();
+                },
               ),
             ),
         ],
@@ -144,9 +173,13 @@ class AdminSection {
     required this.title,
     required this.subtitle,
     required this.builder,
+    this.badge = 0,
   });
 
   final String key;
+
+  /// Red number on the button when above zero: things waiting for an admin.
+  final int badge;
 
   /// Shows the number of reports no admin has seen yet.
   final IconData icon;
@@ -225,9 +258,8 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     _future = widget.repository.businesses(widget.adminId, status: _status);
   });
 
-  void _toast(String m) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
-
+  /// Runs one decision. [done] is the notification text; the Urungkan button
+  /// next to it puts the business back to how it was.
   Future<void> _run(
     Business b,
     Future<Business> Function() action,
@@ -237,8 +269,17 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     try {
       await action();
       if (!mounted) return;
-      _toast(done);
       _busy.remove(b.id);
+      showUndoSnackBar(
+        context,
+        message: done,
+        screen: 'Admin businesses',
+        errorText: adminErrorMessage,
+        onUndo: () async {
+          await widget.repository.setBusinessState(widget.adminId, b);
+          if (mounted) _reload();
+        },
+      );
       _reload();
     } catch (e) {
       if (!mounted) return;
@@ -252,18 +293,11 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     }
   }
 
-  Future<void> _approve(Business b) async {
-    final band = await showDialog<BusinessBand>(
-      context: context,
-      builder: (ctx) => _BandDialog(initial: b.requestedBand),
-    );
-    if (band == null) return;
-    await _run(
-      b,
-      () => widget.repository.approve(widget.adminId, b.id, band),
-      'Approved ${b.name} as ${band.label}.',
-    );
-  }
+  Future<void> _approve(Business b) => _run(
+    b,
+    () => widget.repository.approve(widget.adminId, b.id),
+    'Disetujui: ${b.name}.',
+  );
 
   Future<void> _reject(Business b) async {
     final reason = await _askReason(
@@ -276,7 +310,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     await _run(
       b,
       () => widget.repository.reject(widget.adminId, b.id, reason),
-      'Rejected ${b.name}.',
+      'Ditolak: ${b.name}.',
     );
   }
 
@@ -291,14 +325,14 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     await _run(
       b,
       () => widget.repository.suspend(widget.adminId, b.id, reason: reason),
-      'Suspended ${b.name}. Its products are hidden.',
+      'Ditangguhkan: ${b.name}. Produknya disembunyikan.',
     );
   }
 
   Future<void> _restore(Business b) => _run(
     b,
     () => widget.repository.restore(widget.adminId, b.id),
-    'Restored ${b.name}.',
+    'Dipulihkan: ${b.name}.',
   );
 
   Future<String?> _askReason({
@@ -478,62 +512,6 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BandDialog extends StatefulWidget {
-  const _BandDialog({this.initial});
-  final BusinessBand? initial;
-
-  @override
-  State<_BandDialog> createState() => _BandDialogState();
-}
-
-class _BandDialogState extends State<_BandDialog> {
-  BusinessBand? _band;
-
-  @override
-  void initState() {
-    super.initState();
-    _band = widget.initial;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Approve with which band?'),
-      content: SingleChildScrollView(
-        child: RadioGroup<BusinessBand>(
-          groupValue: _band,
-          onChanged: (v) => setState(() => _band = v),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final b in BusinessBand.values)
-                RadioListTile<BusinessBand>(
-                  key: Key('approve-band-${b.name}'),
-                  value: b,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(b.label),
-                  subtitle: Text(b.range),
-                ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _band == null
-              ? null
-              : () => Navigator.of(context).pop(_band),
-          child: const Text('Approve'),
-        ),
-      ],
     );
   }
 }

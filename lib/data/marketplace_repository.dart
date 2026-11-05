@@ -218,6 +218,21 @@ class MarketplaceRepository {
     return MarketplaceListing.fromMap(_single(row));
   }
 
+  /// Puts a reviewed listing back in the queue (the undo of a review).
+  Future<void> unreview({
+    required String adminId,
+    required String listingId,
+  }) async {
+    await _guard(
+      () => _api.rpc('marketplace_review_listing', {
+        'p_admin': adminId,
+        'p_listing': listingId,
+        'p_decision': 'pending',
+        'p_reason': null,
+      }),
+    );
+  }
+
   Future<List<ReportCount>> fetchReportCounts(String adminId) async {
     final rows = await _guard(
       () => _api.rpc('marketplace_report_counts', {'p_admin': adminId}),

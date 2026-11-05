@@ -5,7 +5,10 @@ import '../widgets/app_photo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/report_repository.dart';
+import '../util/friendly_error.dart';
+import '../widgets/confirm_delete.dart';
 import '../widgets/content_actions_menu.dart';
+import '../widgets/error_view.dart';
 import 'apply_job_screen.dart';
 import 'job_applicants_screen.dart';
 
@@ -28,11 +31,15 @@ class JobDetailScreen extends StatefulWidget {
     required this.currentUser,
     this.loadApplicantCount,
     this.loadHasApplied,
+    this.withdraw,
   });
 
   /// Injectable for tests; default to the Supabase queries.
   final Future<int> Function()? loadApplicantCount;
   final Future<bool> Function()? loadHasApplied;
+
+  /// Takes back my application. Defaults to the database call.
+  final Future<void> Function()? withdraw;
 
   final Map<String, dynamic> job;
   final ValueNotifier<Map<String, dynamic>> currentUser;
@@ -78,6 +85,44 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         .eq('job_post_id', widget.job['id'])
         .eq('applicant_id', widget.currentUser.value['id']);
     return (rows as List).isNotEmpty;
+  }
+
+  Future<void> _withdraw() async {
+    final ok = await confirmDelete(
+      context,
+      title: 'Tarik lamaran?',
+      body:
+          'Lamaranmu untuk lowongan ini akan dihapus. Kamu bisa melamar '
+          'lagi nanti.',
+      action: 'Tarik lamaran',
+    );
+    if (!ok || !mounted) return;
+    try {
+      if (widget.withdraw != null) {
+        await widget.withdraw!();
+      } else {
+        await Supabase.instance.client.rpc(
+          'job_application_withdraw',
+          params: {
+            'p_applicant': widget.currentUser.value['id'],
+            'p_job': widget.job['id'],
+          },
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _hasAppliedFuture = Future.value(false);
+      });
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: friendlyError(e),
+          screen: 'Job detail',
+          error: e,
+        );
+      }
+    }
   }
 
   Future<void> _apply(BuildContext context) async {
@@ -261,10 +306,21 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           builder: (context, snapshot) {
                             final hasApplied = snapshot.data ?? false;
                             if (hasApplied) {
-                              return FilledButton.icon(
-                                onPressed: null,
-                                icon: const Icon(Icons.check_circle_outline),
-                                label: const Text('Applied'),
+                              return Column(
+                                children: [
+                                  FilledButton.icon(
+                                    onPressed: null,
+                                    icon: const Icon(
+                                      Icons.check_circle_outline,
+                                    ),
+                                    label: const Text('Applied'),
+                                  ),
+                                  TextButton(
+                                    key: const Key('withdraw-application'),
+                                    onPressed: _withdraw,
+                                    child: const Text('Tarik lamaran'),
+                                  ),
+                                ],
                               );
                             }
                             return FilledButton.icon(

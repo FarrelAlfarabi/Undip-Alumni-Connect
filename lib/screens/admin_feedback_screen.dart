@@ -4,6 +4,7 @@ import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import '../widgets/error_view.dart';
+import '../widgets/undo_snackbar.dart';
 import '../widgets/filter_dropdown.dart';
 
 /// Feedback inbox: what testers sent from the "Send feedback" button, newest
@@ -71,6 +72,20 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
       await widget.repository.setFeedbackStatus(widget.adminId, f.id, status);
       if (!mounted) return;
       _busy.remove(f.id);
+      showUndoSnackBar(
+        context,
+        message: 'Status feedback diubah.',
+        screen: 'Feedback inbox',
+        errorText: adminErrorMessage,
+        onUndo: () async {
+          await widget.repository.setFeedbackStatus(
+            widget.adminId,
+            f.id,
+            f.status,
+          );
+          if (mounted) _reload();
+        },
+      );
       _reload();
     } catch (e) {
       if (!mounted) return;

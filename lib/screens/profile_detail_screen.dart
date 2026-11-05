@@ -52,6 +52,7 @@ class ProfileDetailScreen extends StatefulWidget {
     this.chat = chatEnabled,
     this.contactRepository,
     this.adminCheck,
+    this.adminCounts,
     this.nimLoader,
     this.lock,
     this.saveFields,
@@ -67,6 +68,10 @@ class ProfileDetailScreen extends StatefulWidget {
   /// tests. Asked once per session (when the Profile tab is built) and
   /// never cached on the device.
   final Future<bool> Function(String profileId)? adminCheck;
+
+  /// How many things wait for an admin (the red tag on Admin). Injectable for
+  /// tests. A failure shows no tag.
+  final Future<int> Function(String profileId)? adminCounts;
 
   /// Asks the database for this profile's NIM on behalf of the viewer. It
   /// answers only for the profile's owner and for admins; everyone else gets
@@ -95,6 +100,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   late Map<String, dynamic> _profile;
   bool _messaging = false;
   Future<bool>? _isAdmin;
+  int _adminBadge = 0;
   Future<String?>? _nim;
 
   @override
@@ -114,10 +120,22 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     try {
       final id = widget.currentUser.value['id'] as String;
       final check = widget.adminCheck ?? AdminRepository().isAdmin;
-      return await check(id);
+      final admin = await check(id);
+      if (admin) _loadAdminBadge(id);
+      return admin;
     } catch (_) {
       return false;
     }
+  }
+
+  Future<void> _loadAdminBadge(String id) async {
+    try {
+      final ask =
+          widget.adminCounts ??
+          (String i) async => (await AdminRepository().pendingCounts(i)).total;
+      final n = await ask(id);
+      if (mounted) setState(() => _adminBadge = n);
+    } catch (_) {}
   }
 
   // NIM is private: the database returns it to the owner and admins only. A
@@ -655,6 +673,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     const SizedBox(height: 16),
                     _ProfileMenu(
                       adminFuture: _isAdmin,
+                      adminBadge: _adminBadge,
                       onBusiness: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => MyBusinessesScreen(
@@ -685,13 +704,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onHelp: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const HelpScreen()),
                       ),
-                      onAdmin: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => AdminScreen(
-                            adminId: widget.currentUser.value['id'] as String,
+                      onAdmin: () async {
+                        final id = widget.currentUser.value['id'] as String;
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AdminScreen(adminId: id),
                           ),
-                        ),
-                      ),
+                        );
+                        _loadAdminBadge(id);
+                      },
                       // Back to verification with the whole shell torn down,
                       // so a second account starts from a clean state. Also
                       // forgets this device's remembered person and PIN
@@ -836,6 +857,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu({
     required this.adminFuture,
+    required this.adminBadge,
     required this.onBusiness,
     required this.onJobs,
     required this.onSettings,
@@ -846,6 +868,7 @@ class _ProfileMenu extends StatelessWidget {
   });
 
   final Future<bool>? adminFuture;
+  final int adminBadge;
   final VoidCallback onBusiness;
   final VoidCallback onJobs;
   final VoidCallback onSettings;
@@ -871,6 +894,7 @@ class _ProfileMenu extends StatelessWidget {
                     key: const Key('profile-admin'),
                     icon: Icons.admin_panel_settings_outlined,
                     title: 'Admin',
+                    badge: adminBadge,
                     onTap: onAdmin,
                   ),
                 ],
