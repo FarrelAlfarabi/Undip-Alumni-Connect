@@ -3,6 +3,7 @@ import '../data/contact_repository.dart' show kDailyRequestMax, kOpenRequestMax;
 /// English text for the Indonesian text used in the code (see [tr]). Add a
 /// line here when a new Indonesian text should have an English version.
 final Map<String, String> kEnglish = {
+  'Lowongan ini sudah ditutup.': 'This job is closed.',
   'Mulai': 'Start',
   'Lewati': 'Skip',
   'Kota': 'City',

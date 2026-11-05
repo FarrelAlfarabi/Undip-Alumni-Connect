@@ -26,7 +26,7 @@ begin
   perform assert_caller(p_owner);
   select owner_id into v_owner from businesses where id = p_business for update;
   if not found then raise exception 'not_found'; end if;
-  if v_owner <> p_owner then raise exception 'not_owner'; end if;
+  if v_owner is distinct from p_owner then raise exception 'not_owner'; end if;
 
   delete from content_reports
    where (target_type = 'business' and target_id = p_business)

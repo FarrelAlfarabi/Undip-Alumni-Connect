@@ -235,3 +235,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Translation batch 1 and database notification texts (5 Nov 2026)
 - Admin, Marketplace, business, jobs and profile screens now go through `tr()`. Notification times ("Baru saja", "menit lalu") follow the language.
 - Database notification texts are Indonesian (`20261105230000_notifications_indonesian`, rollback file restores English). Owners now get "Permintaan diterima" when a business is sent for review (type `business_received`). Old notifications keep their old text.
+## Code review fixes on PR 77 (5 Nov 2026)
+- Real-login guard (`assert_caller`) kept in the contact lists and product create/update functions; owner checks use `is distinct from`; a closed job takes no applications (`job_closed`). Edited inside the unmerged migrations, rollback updated.
+- Left as is, on purpose: URL-encoded photo paths in the cleanup queue, undo to pending sends an admin notice, daily job limit counts only live rows, owner can delete a suspended business.

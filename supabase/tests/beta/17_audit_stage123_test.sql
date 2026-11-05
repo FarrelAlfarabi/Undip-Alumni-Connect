@@ -118,4 +118,7 @@ insert into t_ids select 'b2', id from business_register((select v from t_ids wh
 reset role;
 select jt.assert((select count(*) from notifications where type = 'business_received' and target_id = (select v from t_ids where k = 'b2')) = 1, 'owner gets a received notification');
 select jt.assert((select body from notifications where type = 'business_pending' and target_id = (select v from t_ids where k = 'b2') and recipient_id = (select v from t_ids where k = 'clara')) like '%menunggu peninjauan.', 'admin text is Indonesian');
+-- Review fixes: a closed job takes no applications
+reset role;
+select jt.expect_error(format($q$insert into job_applications (job_post_id, applicant_id, full_name, email) values (%L, %L, 'Siti', 's@example.com')$q$, (select v from t_ids where k = 'job2'), (select v from t_ids where k = 'siti')), 'job_closed');
 rollback;

@@ -17,7 +17,7 @@ begin
   perform assert_caller(p_owner);
   select posted_by into v_owner from job_posts where id = p_job for update;
   if not found then raise exception 'not_found'; end if;
-  if v_owner <> p_owner then raise exception 'not_owner'; end if;
+  if v_owner is distinct from p_owner then raise exception 'not_owner'; end if;
   update job_posts set closed_at = case when p_closed then now() end where id = p_job;
 end;
 $$;
@@ -37,7 +37,7 @@ begin
   perform assert_caller(p_owner);
   select posted_by into v_owner from job_posts where id = p_job for update;
   if not found then raise exception 'not_found'; end if;
-  if v_owner <> p_owner then raise exception 'not_owner'; end if;
+  if v_owner is distinct from p_owner then raise exception 'not_owner'; end if;
   if char_length(btrim(coalesce(p_title, ''))) not between 2 and 120
      or char_length(btrim(coalesce(p_company, ''))) not between 1 and 120
      or char_length(btrim(coalesce(p_description, ''))) not between 1 and 5000
@@ -56,3 +56,23 @@ revoke execute on function job_post_set_closed(uuid, uuid, boolean) from public;
 revoke execute on function job_post_update(uuid, uuid, text, text, text, text) from public;
 grant execute on function job_post_set_closed(uuid, uuid, boolean) to anon, authenticated;
 grant execute on function job_post_update(uuid, uuid, text, text, text, text) to anon, authenticated;
+
+-- A closed job takes no new applications (the app also hides it).
+create or replace function job_applications_block_closed()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (select 1 from job_posts where id = new.job_post_id and closed_at is not null) then
+    raise exception 'job_closed';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function job_applications_block_closed() from public, anon, authenticated;
+drop trigger if exists job_applications_block_closed_trigger on job_applications;
+create trigger job_applications_block_closed_trigger
+  before insert on job_applications
+  for each row execute function job_applications_block_closed();

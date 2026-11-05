@@ -39,16 +39,20 @@ returns table (
   created_at timestamptz,
   responded_at timestamptz
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select r.id, r.requester_id, p.name, r.message, r.status, r.created_at, r.responded_at
-  from contact_requests r
-  join alumni_profiles p on p.id = r.requester_id
-  where r.target_id = p_target and r.status <> 'cancelled'
-  order by (r.status = 'pending') desc, r.created_at desc;
+begin
+  perform assert_caller(p_target);
+  return query
+select r.id, r.requester_id, p.name, r.message, r.status, r.created_at, r.responded_at
+    from contact_requests r
+    join alumni_profiles p on p.id = r.requester_id
+    where r.target_id = p_target and r.status <> 'cancelled'
+    order by (r.status = 'pending') desc, r.created_at desc;
+end;
 $$;
 
 create or replace function contact_requests_outgoing(p_requester uuid)
@@ -60,16 +64,20 @@ returns table (
   created_at timestamptz,
   responded_at timestamptz
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select r.id, r.target_id, p.name, r.status, r.created_at, r.responded_at
-  from contact_requests r
-  join alumni_profiles p on p.id = r.target_id
-  where r.requester_id = p_requester and r.status <> 'cancelled'
-  order by r.created_at desc;
+begin
+  perform assert_caller(p_requester);
+  return query
+select r.id, r.target_id, p.name, r.status, r.created_at, r.responded_at
+    from contact_requests r
+    join alumni_profiles p on p.id = r.target_id
+    where r.requester_id = p_requester and r.status <> 'cancelled'
+    order by r.created_at desc;
+end;
 $$;
 
 create or replace function contact_request_cancel(p_requester uuid, p_request uuid)

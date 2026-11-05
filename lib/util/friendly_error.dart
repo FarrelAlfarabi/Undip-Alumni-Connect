@@ -51,6 +51,7 @@ String friendlyError(Object? error) {
   if (text.contains('job_daily_limit') || text.contains('job_open_limit')) {
     return tr(kJobLimitMessage);
   }
+  if (text.contains('job_closed')) return tr('Lowongan ini sudah ditutup.');
   if (RegExp(
     r'SocketException|ClientException|XMLHttpRequest|Failed host lookup|'
     r'Connection (refused|closed|reset)|Network is unreachable',

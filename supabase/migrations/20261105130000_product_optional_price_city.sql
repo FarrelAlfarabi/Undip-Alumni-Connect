@@ -63,6 +63,7 @@ as $$
 declare
   v marketplace_listings;
 begin
+  perform assert_caller(p_seller);
   perform business_check_can_post(p_seller, p_business);
 
   insert into marketplace_listings
@@ -101,6 +102,7 @@ declare
   v marketplace_listings;
   v_keep boolean;
 begin
+  perform assert_caller(p_seller);
   select * into v from marketplace_listings where id = p_listing for update;
   if not found then raise exception 'not_found'; end if;
   if v.seller_id <> p_seller then raise exception 'not_owner'; end if;
