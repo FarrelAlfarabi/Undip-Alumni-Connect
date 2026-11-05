@@ -42,9 +42,9 @@ String postingSummary(
         '${formatDay(business.unlimitedUntil!)} ($days)';
   }
   if (usage.overLimit) {
-    return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed for '
-        'free. You are over the free limit. Your products stay visible, but '
-        'new ones are blocked.';
+    return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed. '
+        'You are over the limit. Your products stay visible, but new ones are '
+        'blocked.';
   }
-  return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed for free';
+  return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed';
 }

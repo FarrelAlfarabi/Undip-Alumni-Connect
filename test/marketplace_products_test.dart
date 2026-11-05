@@ -77,7 +77,7 @@ void main() {
           BusinessUsage.fromMap(usageMap(used: 2)),
           today: today,
         ),
-        'Products posted: 2 of 3 allowed for free',
+        'Products posted: 2 of 3 allowed',
       );
     });
 
@@ -146,7 +146,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Approved band: Micro'), findsOneWidget);
       expect(
-        find.text('Products posted: 2 of 3 allowed for free'),
+        find.text('Products posted: 2 of 3 allowed'),
         findsOneWidget,
       );
     });
@@ -229,7 +229,7 @@ void main() {
     });
 
     testWidgets(
-      'at the free limit: shows used and limit, contact admin, no payment',
+      'at the product limit: shows used and limit, contact admin, no payment',
       (tester) async {
         await pump(
           tester,
@@ -238,9 +238,9 @@ void main() {
         );
         await tester.tap(find.text('Tambah produk'));
         await tester.pumpAndSettle();
-        expect(find.text('Free limit reached'), findsOneWidget);
+        expect(find.text('Product limit reached'), findsOneWidget);
         expect(
-          find.textContaining('used 3 of 3 free products'),
+          find.textContaining('used 3 of 3 products'),
           findsOneWidget,
         );
         expect(

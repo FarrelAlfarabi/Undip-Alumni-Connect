@@ -35,9 +35,9 @@ const kProductsNeedBusinessMessage =
     'Adding products is for owners of approved businesses. Register your '
     'business first and wait for approval.';
 
-/// At the free limit. No payment instructions on purpose.
+/// At the product limit. No payment instructions on purpose.
 const kPostLimitMessage =
-    'You have reached the free product limit for this business. Your '
+    'You have reached the product limit for this business. Your '
     'products stay visible and you can still edit or delete them. To add '
     'more, please contact an admin about unlimited posting.';
 

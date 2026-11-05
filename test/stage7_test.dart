@@ -216,7 +216,7 @@ void main() {
       expect(find.text('Approved'), findsOneWidget);
       expect(find.text('Skala: Micro'), findsOneWidget);
       expect(
-        find.text('Products posted: 2 of 3 allowed for free'),
+        find.text('Products posted: 2 of 3 allowed'),
         findsOneWidget,
       );
     });

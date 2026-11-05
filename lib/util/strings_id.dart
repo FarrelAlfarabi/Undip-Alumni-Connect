@@ -189,10 +189,10 @@ final Map<String, String> kIndonesian = {
           'business first and wait for approval.':
       'Menambah produk hanya untuk pemilik bisnis yang sudah disetujui. '
       'Daftarkan bisnismu dulu dan tunggu persetujuan.',
-  'You have reached the free product limit for this business. Your '
+  'You have reached the product limit for this business. Your '
           'products stay visible and you can still edit or delete them. To add '
           'more, please contact an admin about unlimited posting.':
-      'Batas produk gratis untuk bisnis ini sudah tercapai. Produkmu tetap '
+      'Batas produk untuk bisnis ini sudah tercapai. Produkmu tetap '
       'tampil dan masih bisa diubah atau dihapus. Untuk menambah lagi, '
       'hubungi admin soal posting tanpa batas.',
   // Business

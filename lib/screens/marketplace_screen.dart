@@ -245,8 +245,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     final u = usage[business.id];
     if (u != null && !u.canPost) {
       await _info(
-        'Free limit reached',
-        'You have used ${u.used} of ${u.freeLimit} free products for '
+        'Product limit reached',
+        'You have used ${u.used} of ${u.freeLimit} products for '
             '${business.name}.\n\n$kPostLimitMessage',
       );
       return;
