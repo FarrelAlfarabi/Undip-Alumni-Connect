@@ -17,7 +17,7 @@ final Map<String, String> kEnglish = {
   'Menunggu kamu: {0}.': 'Waiting for you: {0}.',
   'Penjual: {0}': 'Seller: {0}',
   'Disembunyikan: {0}': 'Hidden: {0}',
-  'Diturunkan: {0}': 'Taken down: {0}',
+  'Ditangguhkan: {0}': 'Suspended: {0}',
   // Texts with values (trf)
   'Selamat datang kembali, {0}': 'Welcome back, {0}',
   '"{0}" akan dihapus permanen untuk semua orang.':
@@ -59,6 +59,9 @@ final Map<String, String> kEnglish = {
   'Syarat dan Ketentuan Aplikasi': 'App Terms and Conditions',
   'Lepas': 'Unpin',
   'Turunkan': 'Move down',
+  'Tangguhkan': 'Suspend',
+  'Lowongan ditangguhkan. Pemasang diberi tahu.': 'Job suspended. The poster was notified.',
+  'Lowongan ditampilkan lagi.': 'Job shown again.',
   'Naikkan': 'Move up',
   'Home sudah penuh. Lepas satu pin dulu.': 'Home is full. Unpin one first.',
   'Belum ada yang dipin. Home menampilkan yang terbaru.':
@@ -96,7 +99,7 @@ final Map<String, String> kEnglish = {
       'You have no products yet. Use "Add product" in Marketplace to post one.',
   'Semua notifikasimu akan dihapus permanen.':
       'All your notifications will be deleted permanently.',
-  'Geser dan cubit (atau scroll) untuk mengatur posisi foto. Bagian di dalam bingkai yang akan tersimpan.': 'Drag and pinch (or scroll) to set the photo position. The part inside the frame is what gets saved.',
+  'Geser dan cubit (atau scroll) untuk mengatur posisi foto. Perkecil agar foto tampak utuh dengan latar putih. Bagian di dalam bingkai yang akan tersimpan.': 'Drag and pinch (or scroll) to set the photo position. Zoom out to show the whole photo on a white background. The part inside the frame is what gets saved.',
   'Foto tidak bisa disimpan. Coba lagi.':
       'The photo could not be saved. Try again.',
   'Perhatian: Dilarang menulis kata kasar, SARA, ujaran kebencian, konten dewasa, atau data pribadi orang lain. Bio yang dilaporkan bisa dihapus admin.': 'Note: Do not write rude words, ethnic or religious hate, hate speech, adult content, or other people\'s personal data. Reported bios can be removed by an admin.',
@@ -259,7 +262,7 @@ final Map<String, String> kEnglish = {
   'Nomor, email, @akun atau link': 'Number, email, @account or link',
   'Urutan (angka kecil tampil lebih dulu)': 'Order (small numbers show first)',
   'Tampil di Kontak Ikafe': 'Shown in Ikafe contacts',
-  'Turunkan lowongan ini?': 'Take down this job post?',
+  'Tangguhkan lowongan ini?': 'Suspend this job post?',
   'Alasan (dikirim ke pemasang)': 'Reason (sent to the poster)',
   'Cari judul, perusahaan atau pemasang': 'Search title, company or poster',
   'Belum ada lowongan.': 'No job posts yet.',
@@ -268,8 +271,8 @@ final Map<String, String> kEnglish = {
   'Hapus bio ini?': 'Delete this bio?',
   'Hapus bio': 'Delete bio',
   'Setujui, tolak, tangguhkan. Produk bisnis yang disetujui langsung tayang': 'Approve, reject, suspend. Products of approved businesses go live at once',
-  'Lihat semua lowongan, turunkan atau tampilkan lagi':
-      'See all job posts, take down or show again',
+  'Lihat semua lowongan, tangguhkan atau tampilkan lagi':
+      'See all job posts, suspend or show again',
   'Siapa menyetujui, menolak, menyembunyikan atau menghapus apa':
       'Who approved, rejected, hid or deleted what',
   'Pilih produk dan lowongan yang tampil dulu di Home':

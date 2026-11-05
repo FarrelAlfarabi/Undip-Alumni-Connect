@@ -45,40 +45,44 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         title: Text(tr('Announcements')),
         automaticallyImplyLeading: widget.showBack,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return ErrorView(
-              message: friendlyLoadError('announcements', snapshot.error),
-              screen: 'News',
-              error: snapshot.error,
-              onRetry: () => setState(() {
-                _future = _fetchAnnouncements();
-              }),
-            );
-          }
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return ErrorView(
+                message: friendlyLoadError('announcements', snapshot.error),
+                screen: 'News',
+                error: snapshot.error,
+                onRetry: () => setState(() {
+                  _future = _fetchAnnouncements();
+                }),
+              );
+            }
 
-          final announcements = snapshot.data ?? [];
-          if (announcements.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(tr('No announcements yet.')),
-              ),
-            );
-          }
+            final announcements = snapshot.data ?? [];
+            if (announcements.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(tr('No announcements yet.')),
+                ),
+              );
+            }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: announcements.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) => AnnouncementCard(a: announcements[i]),
-          );
-        },
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: announcements.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, i) =>
+                  AnnouncementCard(a: announcements[i]),
+            );
+          },
+        ),
       ),
     );
   }

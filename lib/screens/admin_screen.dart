@@ -119,7 +119,7 @@ class _AdminScreenState extends State<AdminScreen> {
         key: 'admin-jobs',
         icon: Icons.work_outline,
         title: 'Jobs',
-        subtitle: tr('Lihat semua lowongan, turunkan atau tampilkan lagi'),
+        subtitle: tr('Lihat semua lowongan, tangguhkan atau tampilkan lagi'),
         builder: (_) => AdminJobsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
@@ -151,39 +151,47 @@ class _AdminScreenState extends State<AdminScreen> {
     ];
     return Scaffold(
       appBar: AppBar(title: Text(tr('Admin'))),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (_counts.total > 0) _PendingBanner(counts: _counts),
-          for (final s in sections)
-            Card(
-              key: Key(s.key),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          children: [
+            if (_counts.total > 0) _PendingBanner(counts: _counts),
+            for (final s in sections)
+              Card(
+                key: Key(s.key),
+                elevation: 0,
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Icon(s.icon),
+                  title: Text(s.title),
+                  subtitle: Text(s.subtitle),
+                  trailing: s.badge > 0
+                      ? Badge(
+                          key: Key('badge-${s.key}'),
+                          label: Text('${s.badge}'),
+                          child: const Icon(Icons.chevron_right),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    await Navigator.of(context)
+                        .push(MaterialPageRoute(builder: s.builder));
+                    _loadCounts();
+                  },
                 ),
               ),
-              child: ListTile(
-                leading: Icon(s.icon),
-                title: Text(s.title),
-                subtitle: Text(s.subtitle),
-                trailing: s.badge > 0
-                    ? Badge(
-                        key: Key('badge-${s.key}'),
-                        label: Text('${s.badge}'),
-                        child: const Icon(Icons.chevron_right),
-                      )
-                    : const Icon(Icons.chevron_right),
-                onTap: () async {
-                  await Navigator.of(context)
-                      .push(MaterialPageRoute(builder: s.builder));
-                  _loadCounts();
-                },
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -454,130 +462,135 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Businesses'))),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        key: const Key('admin-business-search'),
-                        controller: _search,
-                        decoration: InputDecoration(
-                          hintText: tr('Search name, owner or link...'),
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _search.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  tooltip: tr('Clear search'),
-                                  onPressed: _search.clear,
-                                ),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          key: const Key('admin-business-search'),
+                          controller: _search,
+                          decoration: InputDecoration(
+                            hintText: tr('Search name, owner or link...'),
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _search.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    tooltip: tr('Clear search'),
+                                    onPressed: _search.clear,
+                                  ),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: KeyedSubtree(
-                        key: const Key('admin-business-status'),
-                        child: FilterDropdown(
-                          label: 'Status',
-                          value: _statusLabel,
-                          options: [for (final f in _filters) f.$1],
-                          onChanged: (v) {
-                            _status = _filters.firstWhere((f) => f.$1 == v).$2;
-                            _reload();
-                          },
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: KeyedSubtree(
+                          key: const Key('admin-business-status'),
+                          child: FilterDropdown(
+                            label: 'Status',
+                            value: _statusLabel,
+                            options: [for (final f in _filters) f.$1],
+                            onChanged: (v) {
+                              _status = _filters
+                                  .firstWhere((f) => f.$1 == v)
+                                  .$2;
+                              _reload();
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SearchableChoice(
-                        fieldKey: const Key('admin-business-category'),
-                        label: tr('Category'),
-                        controller: _categoryText,
-                        options: [
-                          kAllFilter,
-                          ...CategoryRepository.shared.names.value,
-                        ],
-                        selected: _category,
-                        enabled: true,
-                        dense: true,
-                        onSelected: (v) =>
-                            setState(() => _category = v ?? kAllFilter),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: KeyedSubtree(
-                        key: const Key('admin-business-period'),
-                        child: FilterDropdown(
-                          label: tr('Posted'),
-                          value: _period,
-                          options: kPeriodOptions,
-                          onChanged: (v) => setState(() => _period = v),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<Business>>(
-              future: _future,
-              builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) {
-                  return ErrorView(
-                    message: snap.error is AdminException
-                        ? adminErrorMessage(snap.error!)
-                        : friendlyLoadError('businesses', snap.error),
-                    screen: 'Admin businesses',
-                    error: snap.error,
-                    onRetry: _reload,
-                  );
-                }
-                final all = snap.data ?? const <Business>[];
-                if (all.isEmpty) {
-                  return Center(child: Text(tr('Nothing here.')));
-                }
-                final items = _visible(all);
-                if (items.isEmpty) {
-                  return Center(child: Text(tr('Nothing matches.')));
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _AdminBusinessCard(
-                    business: items[i],
-                    busy: _busy.contains(items[i].id),
-                    onApprove: () => _approve(items[i]),
-                    onReject: () => _reject(items[i]),
-                    onSuspend: () => _suspend(items[i]),
-                    onRestore: () => _restore(items[i]),
+                    ],
                   ),
-                );
-              },
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SearchableChoice(
+                          fieldKey: const Key('admin-business-category'),
+                          label: tr('Category'),
+                          controller: _categoryText,
+                          options: [
+                            kAllFilter,
+                            ...CategoryRepository.shared.names.value,
+                          ],
+                          selected: _category,
+                          enabled: true,
+                          dense: true,
+                          onSelected: (v) =>
+                              setState(() => _category = v ?? kAllFilter),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: KeyedSubtree(
+                          key: const Key('admin-business-period'),
+                          child: FilterDropdown(
+                            label: tr('Posted'),
+                            value: _period,
+                            options: kPeriodOptions,
+                            onChanged: (v) => setState(() => _period = v),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: FutureBuilder<List<Business>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snap.hasError) {
+                    return ErrorView(
+                      message: snap.error is AdminException
+                          ? adminErrorMessage(snap.error!)
+                          : friendlyLoadError('businesses', snap.error),
+                      screen: 'Admin businesses',
+                      error: snap.error,
+                      onRetry: _reload,
+                    );
+                  }
+                  final all = snap.data ?? const <Business>[];
+                  if (all.isEmpty) {
+                    return Center(child: Text(tr('Nothing here.')));
+                  }
+                  final items = _visible(all);
+                  if (items.isEmpty) {
+                    return Center(child: Text(tr('Nothing matches.')));
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) => _AdminBusinessCard(
+                      business: items[i],
+                      busy: _busy.contains(items[i].id),
+                      onApprove: () => _approve(items[i]),
+                      onReject: () => _reject(items[i]),
+                      onSuspend: () => _suspend(items[i]),
+                      onRestore: () => _restore(items[i]),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

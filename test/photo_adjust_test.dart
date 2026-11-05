@@ -36,6 +36,33 @@ void main() {
     expect(find.textContaining('Geser'), findsOneWidget);
   });
 
+  testWidgets('can zoom out below the frame and move freely, on white', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PhotoAdjustScreen(
+          image: PickedImage(name: 'a.png', bytes: png),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final viewer = tester.widget<InteractiveViewer>(
+      find.byType(InteractiveViewer),
+    );
+    expect(viewer.minScale, lessThan(1));
+    expect(viewer.boundaryMargin, const EdgeInsets.all(double.infinity));
+    final frame = tester.widget<ColoredBox>(
+      find.byKey(const Key('photo-adjust-frame')),
+    );
+    expect(frame.color, Colors.white);
+    // Zoomed out, the photo is smaller than the frame.
+    final controller = viewer.transformationController!;
+    controller.value = Matrix4.diagonal3Values(0.5, 0.5, 1);
+    await tester.pump();
+    expect(controller.value.entry(0, 0), 0.5);
+  });
+
   testWidgets('Batal closes without a photo', (tester) async {
     PhotoAdjust.enabled = true;
     PickedImage? result = PickedImage(name: 'x', bytes: png);

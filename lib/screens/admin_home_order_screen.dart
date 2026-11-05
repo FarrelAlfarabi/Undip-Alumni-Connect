@@ -160,50 +160,53 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Home order'))),
-      body: Column(
-        children: [
-          if (_busy) const LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  key: const Key('home-order-products'),
-                  label: Text(tr('Products')),
-                  selected: _isProducts,
-                  onSelected: _busy ? null : (_) => _switchKind(_products),
-                ),
-                ChoiceChip(
-                  key: const Key('home-order-jobs'),
-                  label: const Text('Jobs'),
-                  selected: _kind == _jobs,
-                  onSelected: _busy ? null : (_) => _switchKind(_jobs),
-                ),
-                ChoiceChip(
-                  key: const Key('home-order-announcements'),
-                  label: Text(tr('Announcements')),
-                  selected: _kind == _news,
-                  onSelected: _busy ? null : (_) => _switchKind(_news),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                trf(
-                  'Tampil di Home: {0} produk, {1} lowongan. Yang dipin tampil dulu, urutan 1 paling depan.',
-                  [kHomeListingLimit, kHomeJobLimit],
-                ),
-                style: Theme.of(context).textTheme.bodySmall,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            if (_busy) const LinearProgressIndicator(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    key: const Key('home-order-products'),
+                    label: Text(tr('Products')),
+                    selected: _isProducts,
+                    onSelected: _busy ? null : (_) => _switchKind(_products),
+                  ),
+                  ChoiceChip(
+                    key: const Key('home-order-jobs'),
+                    label: const Text('Jobs'),
+                    selected: _kind == _jobs,
+                    onSelected: _busy ? null : (_) => _switchKind(_jobs),
+                  ),
+                  ChoiceChip(
+                    key: const Key('home-order-announcements'),
+                    label: Text(tr('Announcements')),
+                    selected: _kind == _news,
+                    onSelected: _busy ? null : (_) => _switchKind(_news),
+                  ),
+                ],
               ),
             ),
-          ),
-          Expanded(child: _body(context)),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  trf(
+                    'Tampil di Home: {0} produk, {1} lowongan. Yang dipin tampil dulu, urutan 1 paling depan.',
+                    [kHomeListingLimit, kHomeJobLimit],
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ),
+            Expanded(child: _body(context)),
+          ],
+        ),
       ),
     );
   }

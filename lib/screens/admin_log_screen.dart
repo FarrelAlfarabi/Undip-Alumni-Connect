@@ -40,51 +40,54 @@ class _AdminLogScreenState extends State<AdminLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Riwayat admin'))),
-      body: FutureBuilder<List<AdminLogEntry>>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
-            return ErrorView(
-              message: friendlyLoadError('riwayat', snap.error),
-              screen: 'Admin log',
-              error: snap.error,
-              onRetry: _reload,
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<AdminLogEntry>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snap.hasError) {
+              return ErrorView(
+                message: friendlyLoadError('riwayat', snap.error),
+                screen: 'Admin log',
+                error: snap.error,
+                onRetry: _reload,
+              );
+            }
+            final items = snap.data ?? const <AdminLogEntry>[];
+            if (items.isEmpty) {
+              return Center(child: Text(tr('Belum ada riwayat.')));
+            }
+            return RefreshIndicator(
+              onRefresh: () async => _reload(),
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: items.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, i) {
+                  final e = items[i];
+                  return ListTile(
+                    key: Key('log-$i'),
+                    title: Text(e.action),
+                    subtitle: Text(
+                      [
+                        e.adminName,
+                        if (e.targetType != null) e.targetType!,
+                        if (e.detail != null && e.detail!.isNotEmpty) e.detail!,
+                      ].join(' · '),
+                    ),
+                    trailing: Text(
+                      _when(e.createdAt),
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  );
+                },
+              ),
             );
-          }
-          final items = snap.data ?? const <AdminLogEntry>[];
-          if (items.isEmpty) {
-            return Center(child: Text(tr('Belum ada riwayat.')));
-          }
-          return RefreshIndicator(
-            onRefresh: () async => _reload(),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, i) {
-                final e = items[i];
-                return ListTile(
-                  key: Key('log-$i'),
-                  title: Text(e.action),
-                  subtitle: Text(
-                    [
-                      e.adminName,
-                      if (e.targetType != null) e.targetType!,
-                      if (e.detail != null && e.detail!.isNotEmpty) e.detail!,
-                    ].join(' · '),
-                  ),
-                  trailing: Text(
-                    _when(e.createdAt),
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                );
-              },
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

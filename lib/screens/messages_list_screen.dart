@@ -104,115 +104,118 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         title: const Text('Messages'),
         automaticallyImplyLeading: false,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return ErrorView(
-              message: friendlyLoadError('messages', snapshot.error),
-              screen: 'Messages',
-              error: snapshot.error,
-              onRetry: () => setState(() {
-                _future = _fetchConversations();
-              }),
-            );
-          }
+      body: SafeArea(
+        top: false,
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return ErrorView(
+                message: friendlyLoadError('messages', snapshot.error),
+                screen: 'Messages',
+                error: snapshot.error,
+                onRetry: () => setState(() {
+                  _future = _fetchConversations();
+                }),
+              );
+            }
 
-          final all = snapshot.data ?? [];
-          if (all.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  tr(
-                    'No conversations yet. Message an alumnus from the '
-                    'directory to get started.',
+            final all = snapshot.data ?? [];
+            if (all.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    tr(
+                      'No conversations yet. Message an alumnus from the '
+                      'directory to get started.',
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
+              );
+            }
+
+            final conversations = _applyFilters(all);
+            final faculties = distinctSortedValues(
+              all.map(_otherParticipant).toList(),
+              'faculty',
             );
-          }
 
-          final conversations = _applyFilters(all);
-          final faculties = distinctSortedValues(
-            all.map(_otherParticipant).toList(),
-            'faculty',
-          );
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: ClearableSearchField(
-                  controller: _searchController,
-                  hintText: tr('Search by name...'),
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: ClearableSearchField(
+                    controller: _searchController,
+                    hintText: tr('Search by name...'),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: FilterDropdown(
-                  label: tr('Faculty'),
-                  value: _faculty,
-                  options: faculties,
-                  onChanged: (v) => setState(() => _faculty = v),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: FilterDropdown(
+                    label: tr('Faculty'),
+                    value: _faculty,
+                    options: faculties,
+                    onChanged: (v) => setState(() => _faculty = v),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                child: ClearFiltersButton(
-                  active: _hasActiveFilters,
-                  onPressed: _clearFilters,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  child: ClearFiltersButton(
+                    active: _hasActiveFilters,
+                    onPressed: _clearFilters,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: conversations.isEmpty
-                    ? Center(
-                        child: Text(
-                          tr('No conversations match these filters.'),
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: conversations.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) {
-                          final c = conversations[i];
-                          final other = _otherParticipant(c);
-                          return ListTile(
-                            leading: Avatar(
-                              url: other['avatar_url'] as String?,
-                              name: other['name'] as String? ?? '',
-                            ),
-                            title: Text(other['name'] as String? ?? 'Alumni'),
-                            subtitle:
-                                (other['faculty'] as String?)?.isNotEmpty ==
-                                    true
-                                ? Text(other['faculty'] as String)
-                                : null,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChatScreen(
-                                    conversationId: c['id'] as String,
-                                    currentProfileId:
-                                        widget.currentUser.value['id']
-                                            as String,
-                                    otherName:
-                                        other['name'] as String? ?? 'Alumni',
+                Expanded(
+                  child: conversations.isEmpty
+                      ? Center(
+                          child: Text(
+                            tr('No conversations match these filters.'),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: conversations.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, i) {
+                            final c = conversations[i];
+                            final other = _otherParticipant(c);
+                            return ListTile(
+                              leading: Avatar(
+                                url: other['avatar_url'] as String?,
+                                name: other['name'] as String? ?? '',
+                              ),
+                              title: Text(other['name'] as String? ?? 'Alumni'),
+                              subtitle:
+                                  (other['faculty'] as String?)?.isNotEmpty ==
+                                      true
+                                  ? Text(other['faculty'] as String)
+                                  : null,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatScreen(
+                                      conversationId: c['id'] as String,
+                                      currentProfileId:
+                                          widget.currentUser.value['id']
+                                              as String,
+                                      otherName:
+                                          other['name'] as String? ?? 'Alumni',
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

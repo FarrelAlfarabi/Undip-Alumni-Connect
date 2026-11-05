@@ -40,58 +40,64 @@ class _MarketScreenState extends State<MarketScreen> {
         title: const Text('Explore'),
         automaticallyImplyLeading: false,
       ),
-      body: ValueListenableBuilder<int>(
-        valueListenable: widget.segment,
-        builder: (context, index, _) => Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<int>(
-                  key: const Key('market-segments'),
-                  showSelectedIcon: false,
-                  style: const ButtonStyle(
-                    padding: WidgetStatePropertyAll(
-                      EdgeInsets.symmetric(horizontal: 4),
+      body: SafeArea(
+        top: false,
+        child: ValueListenableBuilder<int>(
+          valueListenable: widget.segment,
+          builder: (context, index, _) => Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<int>(
+                    key: const Key('market-segments'),
+                    showSelectedIcon: false,
+                    style: const ButtonStyle(
+                      padding: WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 4),
+                      ),
                     ),
+                    segments: const [
+                      ButtonSegment(
+                        value: 0,
+                        label: _SegmentLabel('Marketplace'),
+                      ),
+                      ButtonSegment(
+                        value: 1,
+                        label: _SegmentLabel('Businesses'),
+                      ),
+                      ButtonSegment(value: 2, label: _SegmentLabel('Jobs')),
+                    ],
+                    selected: {index},
+                    onSelectionChanged: (s) => widget.segment.value = s.first,
                   ),
-                  segments: const [
-                    ButtonSegment(
-                      value: 0,
-                      label: _SegmentLabel('Marketplace'),
-                    ),
-                    ButtonSegment(value: 1, label: _SegmentLabel('Businesses')),
-                    ButtonSegment(value: 2, label: _SegmentLabel('Jobs')),
-                  ],
-                  selected: {index},
-                  onSelectionChanged: (s) => widget.segment.value = s.first,
                 ),
               ),
-            ),
-            Expanded(
-              child: IndexedStack(
-                index: index,
-                children: [
-                  MarketplaceScreen(
-                    currentUser: widget.currentUser,
-                    repository: widget.marketplaceRepository,
-                    embedded: true,
-                  ),
-                  BusinessDirectoryScreen(
-                    currentUser: widget.currentUser,
-                    repository: widget.businessRepository,
-                    embedded: true,
-                  ),
-                  JobBoardScreen(
-                    currentUser: widget.currentUser,
-                    embedded: true,
-                    fetchJobs: widget.fetchJobs,
-                  ),
-                ],
+              Expanded(
+                child: IndexedStack(
+                  index: index,
+                  children: [
+                    MarketplaceScreen(
+                      currentUser: widget.currentUser,
+                      repository: widget.marketplaceRepository,
+                      embedded: true,
+                    ),
+                    BusinessDirectoryScreen(
+                      currentUser: widget.currentUser,
+                      repository: widget.businessRepository,
+                      embedded: true,
+                    ),
+                    JobBoardScreen(
+                      currentUser: widget.currentUser,
+                      embedded: true,
+                      fetchJobs: widget.fetchJobs,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
