@@ -251,3 +251,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Photo adjuster zooms out to 0.2x with free move; the empty part is white and is saved white.
 - Admin Jobs action reads "Tangguhkan" / "Suspend" (dialog, notice, undo). Poster notice for a suspended job says "ditangguhkan" (migration `20261105250000_job_suspended_notice` + rollback).
 - 21 list screens wrapped in `SafeArea(top: false)` so the last item and buttons clear the phone's home and back bar. Admin home cards have more spacing.
+## Photo editor rewrite (6 Nov 2026)
+- Fixed frame with the photo moving under it: drag, pinch, scroll wheel, double tap to zoom or reset. Photo always covers the frame (no white edges, no pre-crop that cut photos off). Old 0.2x zoom-out removed.
+- Output is a resized JPEG (1200 px wide, 800 px for profile pictures), shrunk until under 2 MB. Gallery photos up to 25 MB are now accepted (before, anything over 2 MB was rejected before the editor opened).
+- Batal and Simpan are buttons at the bottom, above the phone bar. New dependency `image`. No migration.

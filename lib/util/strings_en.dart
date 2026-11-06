@@ -60,7 +60,8 @@ final Map<String, String> kEnglish = {
   'Lepas': 'Unpin',
   'Turunkan': 'Move down',
   'Tangguhkan': 'Suspend',
-  'Lowongan ditangguhkan. Pemasang diberi tahu.': 'Job suspended. The poster was notified.',
+  'Lowongan ditangguhkan. Pemasang diberi tahu.':
+      'Job suspended. The poster was notified.',
   'Lowongan ditampilkan lagi.': 'Job shown again.',
   'Naikkan': 'Move up',
   'Home sudah penuh. Lepas satu pin dulu.': 'Home is full. Unpin one first.',
@@ -99,7 +100,10 @@ final Map<String, String> kEnglish = {
       'You have no products yet. Use "Add product" in Marketplace to post one.',
   'Semua notifikasimu akan dihapus permanen.':
       'All your notifications will be deleted permanently.',
-  'Geser dan cubit (atau scroll) untuk mengatur posisi foto. Perkecil agar foto tampak utuh dengan latar putih. Bagian di dalam bingkai yang akan tersimpan.': 'Drag and pinch (or scroll) to set the photo position. Zoom out to show the whole photo on a white background. The part inside the frame is what gets saved.',
+  'Geser untuk memindah, cubit atau scroll untuk zoom, ketuk dua kali untuk zoom atau reset.':
+      'Drag to move, pinch or scroll to zoom, double tap to zoom or reset.',
+  'Foto tidak bisa dibuka. Pilih foto lain.':
+      'This photo cannot be opened. Choose another one.',
   'Foto tidak bisa disimpan. Coba lagi.':
       'The photo could not be saved. Try again.',
   'Perhatian: Dilarang menulis kata kasar, SARA, ujaran kebencian, konten dewasa, atau data pribadi orang lain. Bio yang dilaporkan bisa dihapus admin.': 'Note: Do not write rude words, ethnic or religious hate, hate speech, adult content, or other people\'s personal data. Reported bios can be removed by an admin.',
