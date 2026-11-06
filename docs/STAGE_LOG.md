@@ -255,3 +255,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Fixed frame with the photo moving under it: drag, pinch, scroll wheel, double tap to zoom or reset. Photo always covers the frame (no white edges, no pre-crop that cut photos off). Old 0.2x zoom-out removed.
 - Output is a resized JPEG (1200 px wide, 800 px for profile pictures), shrunk until under 2 MB. Gallery photos up to 25 MB are now accepted (before, anything over 2 MB was rejected before the editor opened).
 - Batal and Simpan are buttons at the bottom, above the phone bar. New dependency `image`. No migration.
+## Business list like Marketplace (6 Nov 2026)
+- Business list cards copy the Marketplace card: 104 px square photo on the left, name, category and owner, description. Business detail photo is the profile size (radius 32 circle). Business form, my businesses and admin cards are unchanged. Tests: `business_directory_test`, `evaluasi_fixes_test`.
