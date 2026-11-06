@@ -251,3 +251,5 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Photo adjuster zooms out to 0.2x with free move; the empty part is white and is saved white.
 - Admin Jobs action reads "Tangguhkan" / "Suspend" (dialog, notice, undo). Poster notice for a suspended job says "ditangguhkan" (migration `20261105250000_job_suspended_notice` + rollback).
 - 21 list screens wrapped in `SafeArea(top: false)` so the last item and buttons clear the phone's home and back bar. Admin home cards have more spacing.
+## Business list like Marketplace (6 Nov 2026)
+- Business list cards copy the Marketplace card: 104 px square photo on the left, name, category and owner, description. Business detail photo is the profile size (radius 32 circle). Business form, my businesses and admin cards are unchanged. Tests: `business_directory_test`, `evaluasi_fixes_test`.
