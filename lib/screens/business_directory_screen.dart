@@ -15,8 +15,9 @@ import '../widgets/searchable_choice.dart';
 import 'business_form_screen.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import 'my_businesses_screen.dart';
-import '../widgets/avatar.dart';
+import '../widgets/app_photo.dart';
 import '../widgets/error_view.dart';
+import '../lock/masking.dart' show initialsOf;
 
 /// Client-side search by name or category, plus a category filter.
 List<Business> applyBusinessFilters(
@@ -377,14 +378,8 @@ class BusinessDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Same size as the profile photo on the member profile.
-                  Center(
-                    child: Avatar(
-                      url: b.photoUrl,
-                      name: b.name,
-                      radius: 32,
-                    ),
-                  ),
+                  _BusinessDetailPhoto(url: b.photoUrl, name: b.name),
+                  const SizedBox(height: 20),
                   Text(
                     b.name,
                     style: theme.textTheme.headlineSmall?.copyWith(
@@ -423,6 +418,44 @@ class BusinessDetailScreen extends StatelessWidget {
                     ],
                   ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Large square business photo for the detail page. Falls back to the
+/// business initials on a soft square when there is no photo.
+class _BusinessDetailPhoto extends StatelessWidget {
+  const _BusinessDetailPhoto({required this.url, required this.name});
+
+  final String? url;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final u = url;
+    if (u != null && u.isNotEmpty) {
+      return AppPhoto(url: u, aspectRatio: 1, radius: 16, semanticLabel: name);
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return AspectRatio(
+      aspectRatio: 1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: ColoredBox(
+          key: const ValueKey('business-initials'),
+          color: scheme.secondaryContainer,
+          child: Center(
+            child: Text(
+              initialsOf(name),
+              style: TextStyle(
+                color: scheme.onSecondaryContainer,
+                fontWeight: FontWeight.w600,
+                fontSize: 64,
               ),
             ),
           ),

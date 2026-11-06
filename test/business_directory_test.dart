@@ -450,7 +450,7 @@ void main() {
       expect(photo, const Size(104, 104));
     });
 
-    testWidgets('detail photo is the profile-photo size (radius 32)', (
+    testWidgets('detail photo is a large square, not a small circle', (
       tester,
     ) async {
       tall(tester);
@@ -475,8 +475,41 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kopi Ahmad'));
       await tester.pumpAndSettle();
-      expect(tester.widget<Avatar>(find.byType(Avatar)).radius, 32);
+      expect(find.byType(Avatar), findsNothing);
+      expect(tester.widget<AppPhoto>(find.byType(AppPhoto)).aspectRatio, 1);
+      final size = tester.getSize(find.byType(AppPhoto));
+      expect(size.width, greaterThan(200));
+      expect(size.height, size.width);
+    });
+
+    testWidgets('detail without a photo shows initials in a square', (
+      tester,
+    ) async {
+      tall(tester);
+      final api = FakeBusinessApi()
+        ..results['business_directory'] = [
+          businessMap(
+            id: '1',
+            name: 'Kopi Ahmad',
+            category: 'Food & Drink',
+            ownerName: 'Ahmad',
+          ),
+        ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BusinessDirectoryScreen(
+            currentUser: ValueNotifier({'id': 'me'}),
+            repository: BusinessRepository(api),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kopi Ahmad'));
+      await tester.pumpAndSettle();
       expect(find.byType(AppPhoto), findsNothing);
+      final box = tester.getSize(find.byKey(const ValueKey('business-initials')));
+      expect(box.width, box.height);
+      expect(box.width, greaterThan(200));
     });
 
     testWidgets('a failed load shows a friendly message and Try again', (
