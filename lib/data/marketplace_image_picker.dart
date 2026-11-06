@@ -30,6 +30,21 @@ void checkListingImage(String name, int sizeBytes) {
   }
 }
 
+/// Biggest photo the person may choose. Phone photos are often 3 to 8 MB; the
+/// adjuster resizes and compresses them to fit [kListingImageMaxBytes].
+const kPickedPhotoMaxBytes = 25 * 1024 * 1024;
+
+/// Checks a photo straight from the gallery, before the adjuster shrinks it.
+void checkPickedPhoto(String name, int sizeBytes) {
+  final ext = name.split('.').last.toLowerCase();
+  if (!kListingImageExtensions.contains(ext)) {
+    throw const ImagePickException('Use a JPG, PNG or WebP image.');
+  }
+  if (sizeBytes > kPickedPhotoMaxBytes) {
+    throw const ImagePickException('The image must be 25 MB or smaller.');
+  }
+}
+
 /// Default picker: same file_picker call the job application CV upload
 /// uses. Returns null if the user cancels.
 Future<PickedImage?> pickListingImage() async {
@@ -39,6 +54,6 @@ Future<PickedImage?> pickListingImage() async {
   );
   if (file == null) return null;
   final bytes = await file.xFile.readAsBytes();
-  checkListingImage(file.name, bytes.length);
+  checkPickedPhoto(file.name, bytes.length);
   return PickedImage(name: file.name, bytes: bytes);
 }

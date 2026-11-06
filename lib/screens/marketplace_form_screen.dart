@@ -111,7 +111,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
     try {
       final picked = await widget.pickImage();
       if (picked == null) return;
-      checkListingImage(picked.name, picked.bytes.length);
+      checkPickedPhoto(picked.name, picked.bytes.length);
       if (!mounted) return;
       final img = await PhotoAdjust.run(context, picked);
       if (img == null || !mounted) return;
