@@ -4,7 +4,11 @@ import 'package:undip_alumni_connect/data/business_repository.dart';
 import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/business_directory_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
+import 'package:undip_alumni_connect/screens/marketplace_screen.dart';
 import 'package:undip_alumni_connect/screens/my_businesses_screen.dart';
+import 'package:undip_alumni_connect/widgets/app_photo.dart';
+import 'package:undip_alumni_connect/widgets/avatar.dart';
+import 'package:undip_alumni_connect/widgets/business_photo.dart';
 import 'package:undip_alumni_connect/widgets/filter_dropdown.dart';
 
 import 'support/fake_business_api.dart';
@@ -415,6 +419,64 @@ void main() {
       expect(find.text('Website'), findsOneWidget);
       expect(find.text('Instagram / social'), findsNothing);
       expect(find.textContaining('@'), findsNothing);
+    });
+
+    testWidgets('list cards use the Marketplace layout, 104 px square photo', (
+      tester,
+    ) async {
+      tall(tester);
+      final api = FakeBusinessApi()
+        ..results['business_directory'] = [
+          businessMap(
+            id: '1',
+            name: 'Kopi Ahmad',
+            category: 'Food & Drink',
+            ownerName: 'Ahmad',
+            photoUrl: 'https://x.test/kopi.png',
+          ),
+        ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BusinessDirectoryScreen(
+            currentUser: ValueNotifier({'id': 'me'}),
+            repository: BusinessRepository(api),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AppPhoto), findsNothing);
+      expect(find.byType(BusinessPhoto), findsNothing);
+      final photo = tester.getSize(find.byType(ListingImage));
+      expect(photo, const Size(104, 104));
+    });
+
+    testWidgets('detail photo is the profile-photo size (radius 32)', (
+      tester,
+    ) async {
+      tall(tester);
+      final api = FakeBusinessApi()
+        ..results['business_directory'] = [
+          businessMap(
+            id: '1',
+            name: 'Kopi Ahmad',
+            category: 'Food & Drink',
+            ownerName: 'Ahmad',
+            photoUrl: 'https://x.test/kopi.png',
+          ),
+        ];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BusinessDirectoryScreen(
+            currentUser: ValueNotifier({'id': 'me'}),
+            repository: BusinessRepository(api),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kopi Ahmad'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Avatar>(find.byType(Avatar)).radius, 32);
+      expect(find.byType(AppPhoto), findsNothing);
     });
 
     testWidgets('a failed load shows a friendly message and Try again', (

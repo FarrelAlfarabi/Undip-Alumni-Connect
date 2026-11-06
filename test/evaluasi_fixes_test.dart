@@ -12,6 +12,7 @@ import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/business_directory_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
 import 'package:undip_alumni_connect/screens/directory_screen.dart';
+import 'package:undip_alumni_connect/screens/marketplace_screen.dart' show ListingImage;
 import 'package:undip_alumni_connect/screens/profile_setup_screen.dart';
 import 'package:undip_alumni_connect/widgets/business_photo.dart';
 
@@ -410,7 +411,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(BusinessPhoto), findsNWidgets(2));
+      // Cards use the Marketplace list layout (ListingImage), not BusinessPhoto.
+      expect(find.byType(ListingImage), findsNWidgets(2));
       expect(find.byType(Image), findsOneWidget);
     });
   });

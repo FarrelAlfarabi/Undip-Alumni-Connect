@@ -13,8 +13,9 @@ import '../widgets/filter_dropdown.dart';
 import '../widgets/safe_link_chip.dart';
 import '../widgets/searchable_choice.dart';
 import 'business_form_screen.dart';
+import 'marketplace_screen.dart' show ListingImage;
 import 'my_businesses_screen.dart';
-import '../widgets/business_photo.dart';
+import '../widgets/avatar.dart';
 import '../widgets/error_view.dart';
 
 /// Client-side search by name or category, plus a category filter.
@@ -273,6 +274,8 @@ class _BusinessCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Same layout as the Marketplace list card: square photo on the left,
+    // title and details on the right.
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
@@ -282,38 +285,53 @@ class _BusinessCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BusinessPhoto(
-                url: business.photoUrl,
-                semanticLabel: business.name,
-              ),
-              Text(
-                business.name,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListingImage(
+              url: business.photoUrl ?? '',
+              size: 104,
+              semanticLabel: trf('Photo of {0}', [business.name]),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      business.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      [
+                        business.category,
+                        if (business.ownerName != null)
+                          'by ${business.ownerName}',
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      business.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                [
-                  business.category,
-                  if (business.ownerName != null) 'by ${business.ownerName}',
-                ].join(' · '),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                business.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -359,7 +377,14 @@ class BusinessDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  BusinessPhoto(url: b.photoUrl, semanticLabel: b.name),
+                  // Same size as the profile photo on the member profile.
+                  Center(
+                    child: Avatar(
+                      url: b.photoUrl,
+                      name: b.name,
+                      radius: 32,
+                    ),
+                  ),
                   Text(
                     b.name,
                     style: theme.textTheme.headlineSmall?.copyWith(
