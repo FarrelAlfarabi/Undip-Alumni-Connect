@@ -11,6 +11,7 @@ import 'business_form_screen.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
+import '../widgets/verified_badge.dart';
 
 const String _limitNote =
     'You can own up to $kMaxBusinesses businesses. To add more, email '
@@ -72,6 +73,79 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(tr('Bisnis dihapus.'))));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: businessErrorMessage(e),
+          screen: 'My businesses',
+          error: e,
+        );
+      }
+    }
+  }
+
+  /// Adds, changes or clears the NIB of a business that can no longer be
+  /// edited in the form (already approved). A changed number loses its tick
+  /// until an admin checks it again.
+  Future<void> _editNib(Business b) async {
+    final text = TextEditingController(text: b.nib ?? '');
+    final formKey = GlobalKey<FormState>();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('NIB')),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tr(
+                  'Isi NIB (13 digit) usahamu. Admin akan mengeceknya, lalu '
+                  'tanda centang biru muncul di usahamu. Kosongkan untuk '
+                  'menghapus.',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('nib-dialog-field'),
+                controller: text,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: tr('NIB (opsional)'),
+                  border: const OutlineInputBorder(),
+                ),
+                validator: nibFieldError,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(ctx).pop(text.text);
+              }
+            },
+            child: Text(tr('Simpan')),
+          ),
+        ],
+      ),
+    );
+    // The controller is not disposed here: the dialog is still animating out.
+    if (value == null || !mounted) return;
+    try {
+      await _repo.setNib(widget.ownerId, b.id, value);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('NIB disimpan. Admin akan mengeceknya.'))),
+      );
       _reload();
     } catch (e) {
       if (mounted) {
@@ -174,6 +248,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
                     business: b,
                     usage: usage[b.id],
                     onEdit: () => _openForm(b),
+                    onEditNib: () => _editNib(b),
                     onDelete: () => _delete(b),
                   );
                 },
@@ -193,12 +268,14 @@ class BusinessOwnerCard extends StatelessWidget {
     required this.business,
     this.usage,
     this.onEdit,
+    this.onEditNib,
     this.onDelete,
   });
 
   final Business business;
   final BusinessUsage? usage;
   final VoidCallback? onEdit;
+  final VoidCallback? onEditNib;
   final VoidCallback? onDelete;
 
   bool get _canEdit =>
@@ -224,10 +301,14 @@ class BusinessOwnerCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    b.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: NameWithBadge(
+                      name: b.name,
+                      verified: b.nibVerified && b.isApproved,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -259,6 +340,16 @@ class BusinessOwnerCard extends StatelessWidget {
                         '(an admin sets the approved band)',
               style: theme.textTheme.bodyMedium,
             ),
+            if (b.nib != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                b.nibVerified
+                    ? trf('NIB {0}: terverifikasi', [b.nib])
+                    : trf('NIB {0}: Menunggu pengecekan NIB', [b.nib]),
+                key: Key('nib-status-${b.id}'),
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
             if (b.status == BusinessStatus.approved && usage != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -312,6 +403,17 @@ class BusinessOwnerCard extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                   ),
+                ),
+              ),
+            ],
+            if (b.status == BusinessStatus.approved && onEditNib != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton(
+                  key: Key('nib-edit-${b.id}'),
+                  onPressed: onEditNib,
+                  child: Text(tr(b.nib == null ? 'Tambah NIB' : 'Ubah NIB')),
                 ),
               ),
             ],

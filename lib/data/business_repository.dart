@@ -22,6 +22,7 @@ enum BusinessErrorCode {
   notFound,
   notOwner,
   locked,
+  invalidNib,
   unknown,
 }
 
@@ -66,6 +67,8 @@ String businessErrorMessage(Object error) {
           'You already have $kMaxBusinesses businesses. To add more, '
           'email $kContactEmail.',
         );
+      case BusinessErrorCode.invalidNib:
+        return tr('NIB harus 13 digit angka.');
       case BusinessErrorCode.notFound:
         return tr('This business no longer exists.');
       case BusinessErrorCode.notOwner:
@@ -161,6 +164,24 @@ class BusinessRepository {
     return Business.fromMap(_single(row));
   }
 
+  /// Saves or clears the NIB of a business. An empty [nib] clears it. The
+  /// app never says "verified": only an admin can set that, and changing the
+  /// number takes the tick away (the database does both).
+  Future<Business> setNib(
+    String ownerId,
+    String businessId,
+    String? nib,
+  ) async {
+    final row = await _guard(
+      () => _api.rpc('business_set_nib', {
+        'p_owner': ownerId,
+        'p_business': businessId,
+        'p_nib': cleanNib(nib),
+      }),
+    );
+    return Business.fromMap(_single(row));
+  }
+
   /// Uploads a photo for a business and returns its public URL. The file
   /// name is cleaned and prefixed with the owner id and a timestamp.
   Future<String> uploadPhoto({
@@ -230,8 +251,33 @@ class BusinessRepository {
     final photos = await photoUrls(
       () => _api.rpc('business_photo_urls', {'p_viewer': viewerId}),
     );
-    return withPhotos(_list(rows), photos);
+    final verified = await nibVerifiedIds(
+      () => _api.rpc('business_nib_verified_ids', {'p_viewer': viewerId}),
+    );
+    return withNibBadges(withPhotos(_list(rows), photos), verified);
   }
+
+  /// Ids of the businesses whose NIB an admin checked. A failure gives an
+  /// empty set: the list works, only without the blue tick.
+  static Future<Set<String>> nibVerifiedIds(
+    Future<dynamic> Function() ask,
+  ) async {
+    try {
+      final rows = await ask();
+      return {for (final r in (rows as List)) '${(r as Map)['business_id']}'};
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// The same businesses with the blue tick set where an admin verified.
+  static List<Business> withNibBadges(List<Business> list, Set<String> ids) =>
+      ids.isEmpty
+      ? list
+      : [
+          for (final b in list)
+            ids.contains(b.id) ? b.withNibVerified(true) : b,
+        ];
 
   /// Reads a photo list (business id to link). A failure gives no photos
   /// rather than an error: the lists still work without them, for example
@@ -289,6 +335,7 @@ class BusinessRepository {
       'not_found' => BusinessErrorCode.notFound,
       'not_owner' => BusinessErrorCode.notOwner,
       'locked' => BusinessErrorCode.locked,
+      'invalid_nib' => BusinessErrorCode.invalidNib,
       _ => BusinessErrorCode.unknown,
     };
     return BusinessException(code, e.message);
