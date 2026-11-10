@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Sponsor carousel (10 Nov 2026)
+- New: Home carousel under the four tiles (`SponsorBanner`, reuses `BannerCarousel`: auto slide, dots, swipe). White 16:5 card, fixed "Disponsori" label, asks before opening the link, hidden when empty, on load error, or while the profile is incomplete.
+- Admin > Sponsor: many sponsors, each with image (cropped 16:5), https link, optional dates, order, show/hide, delete. No views/taps tracking yet.
+- Migration `20261110130000_sponsors.sql` (+ `rollback_sponsors.sql`, `23_sponsors_test.sql`): table, `home_sponsors()`, admin list/save/delete, bucket `sponsor-images`. Applied on merge by the deploy workflow.
+
 ## PIN kept when the sign in expires (3 Nov 2026)
 - App start with REAL_LOGIN and no stored session wiped the PIN (`clear()`), so the next login asked to create a new PIN. Now it signs out only; the PIN stays with its owner.
 - Test: `test/real_login_test.dart` (PIN still there after session expiry). Analyze clean, full suite passes.

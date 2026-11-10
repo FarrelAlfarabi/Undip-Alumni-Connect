@@ -29,6 +29,10 @@ abstract class HomeApi {
   /// Newest announcements first (same table the News screen reads).
   Future<List<Map<String, dynamic>>> latestAnnouncements(int limit);
 
+  /// Sponsors members may see today, in carousel order: id, name, image_url,
+  /// link_url (the database function `home_sponsors()` applies the dates).
+  Future<List<Map<String, dynamic>>> currentSponsors();
+
   /// Newest job posts first, with the poster joined (same query shape as
   /// the Job Board, so the rows open in JobDetailScreen unchanged).
   ///
@@ -66,6 +70,14 @@ class SupabaseHomeApi implements HomeApi {
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> currentSponsors() async {
+    final rows = await _client.rpc('home_sponsors');
+    return List<Map<String, dynamic>>.from(
+      (rows as List).map((r) => Map<String, dynamic>.from(r as Map)),
+    );
   }
 
   @override

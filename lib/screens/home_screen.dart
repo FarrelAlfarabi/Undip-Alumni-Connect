@@ -11,7 +11,9 @@ import '../models/marketplace_listing.dart';
 import '../theme.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/brand_lockup.dart';
+import '../util/safe_url.dart';
 import '../widgets/feedback_sheet.dart';
+import '../widgets/sponsor_banner.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 import 'marketplace_screen.dart' show ListingImage;
@@ -51,6 +53,7 @@ class HomeScreen extends StatefulWidget {
     this.api,
     this.marketplaceRepository,
     this.autoAdvance = const Duration(seconds: 5),
+    this.openLink,
   });
 
   final ValueNotifier<Map<String, dynamic>> currentUser;
@@ -70,6 +73,9 @@ class HomeScreen extends StatefulWidget {
 
   final Duration autoAdvance;
 
+  /// Opens a sponsor link outside the app. Tests replace it.
+  final Future<bool> Function(String? url)? openLink;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -79,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late final MarketplaceRepository _market;
   late Future<List<Map<String, dynamic>>> _announcements;
   late Future<List<Map<String, dynamic>>> _jobs;
+  late Future<List<Map<String, dynamic>>> _sponsors;
   late Future<List<MarketplaceListing>> _listings;
   late Future<int> _pendingRequests;
   late Future<int> _unreadNotifications;
@@ -95,6 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _load() {
     _announcements = _api.latestAnnouncements(kHomeBannerLimit);
     _jobs = _latestJobs();
+    _sponsors = _api.currentSponsors().catchError(
+      (_) => <Map<String, dynamic>>[],
+    );
     _listings = _fetchListings();
     _pendingRequests = _api
         .pendingRequestCount(_user.value['id'] as String)
@@ -123,8 +133,35 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.wait([
       _announcements.catchError((_) => <Map<String, dynamic>>[]),
       _jobs.catchError((_) => <Map<String, dynamic>>[]),
+      _sponsors,
       _listings.catchError((_) => <MarketplaceListing>[]),
     ]);
+  }
+
+  /// Asks before leaving the app for a sponsor's page.
+  Future<void> _openSponsor(Map<String, dynamic> sponsor) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(tr('Buka tautan sponsor ini?')),
+        content: Text(
+          tr('Kamu akan meninggalkan Lingkaran dan membuka situs sponsor.'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(tr('Buka')),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await (widget.openLink ?? openHttpUrl)(sponsor['link_url'] as String?);
+    }
   }
 
   void _openJobs() => widget.onOpenMarket != null
@@ -363,6 +400,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         onKontakIkafe: () =>
                             _push(widget.pages.kontakIkafe(_user)),
                       ),
+                      // Hidden while the profile is incomplete (first login) and
+                      // when there is no sponsor or the load failed.
+                      if (!_profileIncomplete)
+                        FutureBuilder<List<Map<String, dynamic>>>(
+                          future: _sponsors,
+                          builder: (context, snap) {
+                            final items = snap.data ?? const [];
+                            if (items.isEmpty) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: SponsorBanner(
+                                items: items,
+                                autoAdvance: widget.autoAdvance,
+                                onOpen: _openSponsor,
+                              ),
+                            );
+                          },
+                        ),
                       const SizedBox(height: 12),
                       _BusinessEntry(
                         future: _business,

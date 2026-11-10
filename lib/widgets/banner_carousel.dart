@@ -27,7 +27,27 @@ class BannerCarousel extends StatefulWidget {
     required this.onOpen,
     this.autoAdvance = const Duration(seconds: 5),
     this.trailing,
+    this.cardBuilder,
+    this.aspectRatio,
+    this.keyPrefix = 'banner',
   });
+
+  /// Builds a card other than the announcement card (the sponsor carousel
+  /// uses this). [onTap] opens the item.
+  final Widget Function(
+    BuildContext context,
+    Map<String, dynamic> item,
+    VoidCallback onTap,
+  )?
+  cardBuilder;
+
+  /// When set, the pages have this width to height ratio instead of the hero
+  /// height.
+  final double? aspectRatio;
+
+  /// Start of the widget keys (`-pages`, `-hero-N`, `-dots`), so two
+  /// carousels on one screen can be told apart.
+  final String keyPrefix;
 
   /// Sits on the right of the dots row ("Lihat semua pengumuman").
   final Widget? trailing;
@@ -88,40 +108,43 @@ class _BannerCarouselState extends State<BannerCarousel> {
   Widget build(BuildContext context) {
     final items = widget.items;
     final scheme = Theme.of(context).colorScheme;
+    final prefix = widget.keyPrefix;
+    final pages = Listener(
+      onPointerDown: (_) => _timer?.cancel(),
+      onPointerUp: (_) => _startTimer(),
+      onPointerCancel: (_) => _startTimer(),
+      child: PageView.builder(
+        key: Key('$prefix-pages'),
+        controller: _controller,
+        itemCount: items.length,
+        onPageChanged: (i) => setState(() => _page = i),
+        itemBuilder: (context, i) {
+          void open() => widget.onOpen(items[i]);
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: KeyedSubtree(
+              key: Key('$prefix-hero-$i'),
+              child:
+                  widget.cardBuilder?.call(context, items[i], open) ??
+                  _BannerCard(item: items[i], onTap: open),
+            ),
+          );
+        },
+      ),
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: heroHeightFor(context),
-          child: Listener(
-            onPointerDown: (_) => _timer?.cancel(),
-            onPointerUp: (_) => _startTimer(),
-            onPointerCancel: (_) => _startTimer(),
-            child: PageView.builder(
-              key: const Key('banner-pages'),
-              controller: _controller,
-              itemCount: items.length,
-              onPageChanged: (i) => setState(() => _page = i),
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: KeyedSubtree(
-                  key: Key('banner-hero-$i'),
-                  child: _BannerCard(
-                    item: items[i],
-                    onTap: () => widget.onOpen(items[i]),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+        widget.aspectRatio != null
+            ? AspectRatio(aspectRatio: widget.aspectRatio!, child: pages)
+            : SizedBox(height: heroHeightFor(context), child: pages),
         const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
               child: items.length > 1
                   ? Row(
-                      key: const Key('banner-dots'),
+                      key: Key('$prefix-dots'),
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         for (var i = 0; i < items.length; i++)
