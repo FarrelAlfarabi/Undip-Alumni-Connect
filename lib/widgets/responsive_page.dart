@@ -10,15 +10,17 @@ class ResponsivePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final step = stepForWidth(constraints.maxWidth);
-      return Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxContentWidth(step)),
-          child: builder(context, step),
-        ),
-      );
-    });
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final step = stepForWidth(constraints.maxWidth);
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxContentWidth(step)),
+            child: builder(context, step),
+          ),
+        );
+      },
+    );
   }
 }

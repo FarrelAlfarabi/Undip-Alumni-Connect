@@ -46,6 +46,8 @@ class FakeHomeApi implements HomeApi {
 
   List<Map<String, dynamic>> sponsors;
   Object? sponsorsError;
+  final sponsorEvents = <String>[];
+  Object? sponsorEventError;
 
   List<Business> businesses;
   List<BusinessUsage> usage;
@@ -89,6 +91,12 @@ class FakeHomeApi implements HomeApi {
   Future<List<Map<String, dynamic>>> currentSponsors() async {
     if (sponsorsError != null) throw sponsorsError!;
     return sponsors;
+  }
+
+  @override
+  Future<void> recordSponsorEvent(String sponsorId, String kind) async {
+    sponsorEvents.add('$kind:$sponsorId');
+    if (sponsorEventError != null) throw sponsorEventError!;
   }
 
   @override

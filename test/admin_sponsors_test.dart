@@ -27,6 +27,8 @@ Map<String, dynamic> row(
   'ends_on': ends,
   'rank': rank,
   'active': active,
+  'views': 120,
+  'taps': 7,
 };
 
 void phone(WidgetTester tester) {
@@ -49,6 +51,8 @@ void main() {
       expect(list.first.endsOn, DateTime(2026, 12, 31));
       expect(list.last.endsOn, isNull);
       expect(list.last.active, isFalse);
+      expect(list.first.views, 120);
+      expect(list.first.taps, 7);
     });
 
     test('save sends trimmed text and plain dates', () async {
@@ -158,6 +162,8 @@ void main() {
       expect(find.byKey(const Key('sponsor-admin-a')), findsOneWidget);
       expect(find.byKey(const Key('sponsor-admin-b')), findsOneWidget);
       expect(find.textContaining('Disembunyikan'), findsOneWidget);
+      expect(find.textContaining('120 dilihat'), findsNWidgets(2));
+      expect(find.textContaining('7 diketuk'), findsNWidgets(2));
     });
 
     testWidgets('empty form is refused without a call', (tester) async {

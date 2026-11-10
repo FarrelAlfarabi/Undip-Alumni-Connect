@@ -15,6 +15,8 @@ class Sponsor {
     required this.endsOn,
     required this.rank,
     required this.active,
+    this.views = 0,
+    this.taps = 0,
   });
 
   final String id;
@@ -29,6 +31,10 @@ class Sponsor {
   /// Place in the carousel (1 first).
   final int rank;
   final bool active;
+
+  /// Totals over all days (numbers only; nothing about who).
+  final int views;
+  final int taps;
 
   /// True when members see this sponsor on [today] (the same rule as the
   /// database function `home_sponsors()`).
@@ -54,6 +60,8 @@ class Sponsor {
     endsOn: _date(m['ends_on']),
     rank: (m['rank'] as num?)?.toInt() ?? 0,
     active: (m['active'] as bool?) ?? true,
+    views: (m['views'] as num?)?.toInt() ?? 0,
+    taps: (m['taps'] as num?)?.toInt() ?? 0,
   );
 }
 

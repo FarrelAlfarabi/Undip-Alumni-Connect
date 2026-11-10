@@ -130,11 +130,12 @@ class _AdminSponsorsScreenState extends State<AdminSponsorsScreen> {
                       key: Key('sponsor-admin-${s.id}'),
                       title: Text(s.name),
                       subtitle: Text(
-                        '${_status(s)} · ${tr('Urutan')} ${s.rank}'
+                        '${_status(s)} · ${tr('Urutan')} ${s.rank}\n'
+                        '${s.views} ${tr('dilihat')} · ${s.taps} ${tr('diketuk')}'
                         '${s.startsOn == null ? '' : '\n${tr('Mulai')} ${_day(s.startsOn!)}'}'
                         '${s.endsOn == null ? '' : ' · ${tr('Sampai')} ${_day(s.endsOn!)}'}',
                       ),
-                      isThreeLine: s.startsOn != null,
+                      isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => _edit(s),
                     ),

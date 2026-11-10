@@ -9,6 +9,9 @@
 -- home_sponsors() gives the app the live rows in carousel order (rank, then
 -- oldest first). More than one sponsor can be live at the same time.
 --
+-- sponsor_event(sponsor, 'view' | 'tap') adds one to a per-day counter; see
+-- the sponsor_events table below.
+--
 -- Rules (invalid_input): name 1 to 80 characters; link starts with https://
 -- (500 characters at most, no spaces); image link points to the
 -- sponsor-images bucket on a supabase.co host (no outside image hosts);
@@ -49,6 +52,47 @@ create policy sponsors_read_live on sponsors
     and (ends_on is null or ends_on >= (now() at time zone 'Asia/Jakarta')::date)
   );
 
+-- View and tap counts: one row per sponsor, kind and day. Only a number. No
+-- user id, device id or any other column about the person, by design (the
+-- privacy text promises this). Nobody can read the table; admins see the
+-- totals through admin_sponsor_list. Counts go when the sponsor is deleted.
+create table if not exists sponsor_events (
+  sponsor_id uuid not null references sponsors (id) on delete cascade,
+  kind text not null check (kind in ('view', 'tap')),
+  day date not null,
+  count integer not null default 0 check (count >= 0),
+  primary key (sponsor_id, kind, day)
+);
+alter table sponsor_events enable row level security;
+revoke all on sponsor_events from public, anon, authenticated;
+
+-- The app calls this for a sponsor it has just shown or opened. It takes the
+-- sponsor and the kind only, nothing about the caller. A sponsor that is not
+-- live (or does not exist) is ignored without an error.
+create or replace function sponsor_event(p_sponsor uuid, p_kind text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'Asia/Jakarta')::date;
+begin
+  if p_kind is null or p_kind not in ('view', 'tap') then
+    raise exception 'invalid_input';
+  end if;
+  insert into sponsor_events (sponsor_id, kind, day, count)
+    select s.id, p_kind, v_today, 1
+    from sponsors s
+    where s.id = p_sponsor
+      and s.active
+      and (s.starts_on is null or s.starts_on <= v_today)
+      and (s.ends_on is null or s.ends_on >= v_today)
+  on conflict (sponsor_id, kind, day)
+    do update set count = sponsor_events.count + 1;
+end;
+$$;
+
 create or replace function home_sponsors()
 returns table (id uuid, name text, image_url text, link_url text)
 language sql
@@ -63,7 +107,8 @@ $$;
 create or replace function admin_sponsor_list(p_admin uuid)
 returns table (
   id uuid, name text, image_url text, link_url text,
-  starts_on date, ends_on date, rank integer, active boolean
+  starts_on date, ends_on date, rank integer, active boolean,
+  views bigint, taps bigint
 )
 language plpgsql
 stable
@@ -74,7 +119,11 @@ begin
   perform app_admin_assert(p_admin);
   return query
     select s.id, s.name, s.image_url, s.link_url,
-           s.starts_on, s.ends_on, s.rank, s.active
+           s.starts_on, s.ends_on, s.rank, s.active,
+           coalesce((select sum(e.count) from sponsor_events e
+                      where e.sponsor_id = s.id and e.kind = 'view'), 0)::bigint,
+           coalesce((select sum(e.count) from sponsor_events e
+                      where e.sponsor_id = s.id and e.kind = 'tap'), 0)::bigint
     from sponsors s
     order by s.rank, s.created_at, s.id;
 end;
@@ -143,10 +192,12 @@ end;
 $$;
 
 revoke execute on function home_sponsors() from public;
+revoke execute on function sponsor_event(uuid, text) from public;
 revoke execute on function admin_sponsor_list(uuid) from public;
 revoke execute on function admin_sponsor_save(uuid, uuid, text, text, text, date, date, integer, boolean) from public;
 revoke execute on function admin_sponsor_delete(uuid, uuid) from public;
 grant execute on function home_sponsors() to anon, authenticated;
+grant execute on function sponsor_event(uuid, text) to anon, authenticated;
 grant execute on function admin_sponsor_list(uuid) to anon, authenticated;
 grant execute on function admin_sponsor_save(uuid, uuid, text, text, text, date, date, integer, boolean) to anon, authenticated;
 grant execute on function admin_sponsor_delete(uuid, uuid) to anon, authenticated;

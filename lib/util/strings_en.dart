@@ -88,6 +88,8 @@ final Map<String, String> kEnglish = {
   'Dukung Usaha Alumni': 'Support Alumni Businesses',
   'Lihat semua pengumuman': 'See all announcements',
   'Disponsori': 'Sponsored',
+  'dilihat': 'views',
+  'diketuk': 'taps',
   'Sponsor': 'Sponsor',
   'Tambah sponsor': 'Add sponsor',
   'Ubah sponsor': 'Edit sponsor',

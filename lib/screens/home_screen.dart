@@ -138,6 +138,15 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
+  final _countedViews = <String>{};
+
+  /// Counts a sponsor as seen, once per Home screen. A failure is ignored.
+  void _sponsorShown(Map<String, dynamic> sponsor) {
+    final id = sponsor['id'] as String?;
+    if (id == null || !_countedViews.add(id)) return;
+    _api.recordSponsorEvent(id, 'view').catchError((_) {});
+  }
+
   /// Asks before leaving the app for a sponsor's page.
   Future<void> _openSponsor(Map<String, dynamic> sponsor) async {
     final ok = await showDialog<bool>(
@@ -160,6 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
     if (ok == true) {
+      final id = sponsor['id'] as String?;
+      if (id != null) _api.recordSponsorEvent(id, 'tap').catchError((_) {});
       await (widget.openLink ?? openHttpUrl)(sponsor['link_url'] as String?);
     }
   }
@@ -414,6 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 items: items,
                                 autoAdvance: widget.autoAdvance,
                                 onOpen: _openSponsor,
+                                onShown: _sponsorShown,
                               ),
                             );
                           },

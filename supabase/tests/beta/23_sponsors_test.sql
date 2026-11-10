@@ -56,15 +56,32 @@ select jt.assert((select string_agg(name, ',' order by rank) from sponsors) = 'T
 select jt.assert((select array_agg(name) from home_sponsors()) = array['Toko B', 'Bank A', 'Edge F'], 'carousel order follows rank');
 select jt.assert((select link_url from home_sponsors() where name = 'Bank A') = 'https://a.example.com', 'link trimmed');
 
--- Admin hides one, changes another, deletes one.
 create temp table t_new as select id, name from admin_sponsor_list((select v from t_ids where k = 'clara'));
 grant select on t_new to anon;
+-- Counting: anyone can add one to a live sponsor, nothing else.
+select sponsor_event((select id from t_new where name = 'Bank A'), 'view');
+select sponsor_event((select id from t_new where name = 'Bank A'), 'view');
+select sponsor_event((select id from t_new where name = 'Bank A'), 'tap');
+select jt.expect_error(format($q$select sponsor_event(%L, 'click')$q$, (select id from t_new where name = 'Bank A')), 'invalid_input');
+-- Not live (hidden, future) or unknown sponsors are not counted and say nothing.
+select sponsor_event((select id from t_new where name = 'Hidden C'), 'view');
+select sponsor_event((select id from t_new where name = 'Future D'), 'view');
+select sponsor_event(gen_random_uuid(), 'view');
+select jt.expect_error($q$select * from sponsor_events$q$, 'permission denied');
+select jt.assert((select views from admin_sponsor_list((select v from t_ids where k = 'clara')) where name = 'Bank A') = 2, 'two views');
+select jt.assert((select taps from admin_sponsor_list((select v from t_ids where k = 'clara')) where name = 'Bank A') = 1, 'one tap');
+select jt.assert((select coalesce(sum(views + taps), 0) from admin_sponsor_list((select v from t_ids where k = 'clara')) where name in ('Hidden C', 'Future D')) = 0, 'not live: not counted');
+
+-- Admin hides one, changes another, deletes one.
 select admin_sponsor_save((select v from t_ids where k = 'clara'), (select id from t_new where name = 'Toko B'), 'Toko B', 'https://x.supabase.co/storage/v1/object/public/sponsor-images/b.jpg', 'https://b.example.com', null, null, 1, false);
 select jt.assert((select count(*) from home_sponsors()) = 2, 'hidden sponsor leaves the carousel');
 select admin_sponsor_save((select v from t_ids where k = 'clara'), (select id from t_new where name = 'Hidden C'), 'Show C', 'https://x.supabase.co/storage/v1/object/public/sponsor-images/c.jpg', 'https://c.example.com', null, null, 0, true);
 select jt.assert((select array_agg(name) from home_sponsors()) = array['Show C', 'Bank A', 'Edge F'], 'shown again and first by rank');
 select admin_sponsor_delete((select v from t_ids where k = 'clara'), (select id from t_new where name = 'Hidden C'));
 select jt.assert((select count(*) from admin_sponsor_list((select v from t_ids where k = 'clara'))) = 5, 'deleted');
+reset role;
+select jt.assert((select count(*) from sponsor_events where sponsor_id = (select id from t_new where name = 'Hidden C')) = 0, 'counts go with the sponsor');
+set role anon;
 reset role;
 -- Same refusals as the signed-in role.
 set role authenticated;

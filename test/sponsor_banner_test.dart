@@ -130,6 +130,59 @@ void main() {
       expect(opened, ['https://sponsor1.example.com']);
     });
 
+    testWidgets('a view is counted once per sponsor, a tap after Buka', (
+      tester,
+    ) async {
+      final api = FakeHomeApi(sponsors: [sponsorMap(1), sponsorMap(2)]);
+      await pumpHome(
+        tester,
+        api: api,
+        profile: complete,
+        openLink: (_) async => true,
+        autoAdvance: const Duration(seconds: 3),
+      );
+      expect(api.sponsorEvents, ['view:sp1']);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(api.sponsorEvents, ['view:sp1', 'view:sp2']);
+      // Around to the first one again: not counted a second time.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(api.sponsorEvents, ['view:sp1', 'view:sp2']);
+      await tester.tap(find.byKey(const Key('sponsor-pages')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Batal'));
+      await tester.pumpAndSettle();
+      expect(api.sponsorEvents.where((e) => e.startsWith('tap')), isEmpty);
+      await tester.tap(find.byKey(const Key('sponsor-pages')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Buka'));
+      await tester.pumpAndSettle();
+      expect(api.sponsorEvents.where((e) => e.startsWith('tap')).length, 1);
+    });
+
+    testWidgets('a failing counter never breaks Home or the link', (
+      tester,
+    ) async {
+      final api = FakeHomeApi(sponsors: [sponsorMap(1)])
+        ..sponsorEventError = Exception('down');
+      final opened = <String?>[];
+      await pumpHome(
+        tester,
+        api: api,
+        profile: complete,
+        openLink: (u) async {
+          opened.add(u);
+          return true;
+        },
+      );
+      await tester.tap(find.byKey(const Key('sponsor-hero-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Buka'));
+      await tester.pumpAndSettle();
+      expect(opened, ['https://sponsor1.example.com']);
+    });
+
     testWidgets('hidden while the profile is still incomplete', (tester) async {
       await pumpHome(
         tester,

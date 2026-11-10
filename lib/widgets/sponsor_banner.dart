@@ -18,12 +18,14 @@ class SponsorBanner extends StatelessWidget {
     super.key,
     required this.items,
     required this.onOpen,
+    this.onShown,
     this.autoAdvance = const Duration(seconds: 5),
   });
 
   /// Rows from `home_sponsors()`: id, name, image_url, link_url.
   final List<Map<String, dynamic>> items;
   final void Function(Map<String, dynamic> sponsor) onOpen;
+  final void Function(Map<String, dynamic> sponsor)? onShown;
   final Duration autoAdvance;
 
   @override
@@ -32,6 +34,7 @@ class SponsorBanner extends StatelessWidget {
     return BannerCarousel(
       items: items,
       onOpen: onOpen,
+      onShown: onShown,
       autoAdvance: autoAdvance,
       keyPrefix: 'sponsor',
       aspectRatio: kSponsorAspectRatio,

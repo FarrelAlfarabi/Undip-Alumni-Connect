@@ -30,7 +30,12 @@ class BannerCarousel extends StatefulWidget {
     this.cardBuilder,
     this.aspectRatio,
     this.keyPrefix = 'banner',
+    this.onShown,
   });
+
+  /// Called with an item each time it comes on screen: the first one after
+  /// the first frame, then on every slide.
+  final void Function(Map<String, dynamic> item)? onShown;
 
   /// Builds a card other than the announcement card (the sponsor carousel
   /// uses this). [onTap] opens the item.
@@ -68,6 +73,11 @@ class _BannerCarouselState extends State<BannerCarousel> {
   void initState() {
     super.initState();
     _startTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.items.isNotEmpty) {
+        widget.onShown?.call(widget.items[0]);
+      }
+    });
   }
 
   @override
@@ -117,7 +127,10 @@ class _BannerCarouselState extends State<BannerCarousel> {
         key: Key('$prefix-pages'),
         controller: _controller,
         itemCount: items.length,
-        onPageChanged: (i) => setState(() => _page = i),
+        onPageChanged: (i) {
+          setState(() => _page = i);
+          widget.onShown?.call(items[i]);
+        },
         itemBuilder: (context, i) {
           void open() => widget.onOpen(items[i]);
           return Padding(

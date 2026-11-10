@@ -33,6 +33,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - The Ikafe admins (a small named group) can see reports, feedback and businesses waiting for review.
 - Service providers who store or deliver the app for us: Supabase (database and file storage, server region Singapore), Vercel (web hosting, mainly the United States), GitHub (code and test builds, no user data) and Google Fonts (fonts for the web and app). Your data is therefore processed outside Indonesia, the EU and India. We have a contract or the standard terms of each provider, and we share only what each one needs to do its job.
 - Product photos and CV files are kept in public storage. Anyone who has the exact link can open them.
+- Sponsors: the app shows paid sponsor banners on Home, always with the label "Disponsori" (Sponsored). Tapping a banner opens a website outside the app that we do not control and that has its own privacy policy. We only count how many times each banner is shown and tapped, as a number per sponsor per day, with no name, device or personal data about you.
 - Honest limit of this beta: the app does not use real sign in yet. The database still sends full profile rows, including email and NIM, to the app, so someone with technical skill and the app's public key could read them. This is a known gap. It must be fixed before the app is opened to more people.
 
 ## 5. What stays only on your device
