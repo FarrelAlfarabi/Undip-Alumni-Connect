@@ -13,6 +13,8 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - Lowongan yang Anda pasang: judul, perusahaan, industri, deskripsi, dan teks kontak.
 - Lamaran yang Anda kirim: nama, email, nomor telepon, tautan LinkedIn dan portofolio, catatan pengantar, dan file CV yang Anda lampirkan.
 - Bisnis Anda: nama, deskripsi, kategori, tautan Instagram atau situs web, dan kelompok omzet tahunan yang Anda pilih. Alasan: direktori bisnis.
+- Nomor Induk Berusaha (NIB) usaha Anda, jika Anda mengisinya. NIB tidak wajib. NIB adalah nomor izin usaha dari pemerintah, bukan NIM. Alasan: admin memeriksanya, lalu usaha Anda bisa mendapat tanda terverifikasi.
+- Statistik banner sponsor: jumlah tayangan dan ketukan per sponsor per hari, tanpa nama, email, atau ID pribadi. Alasan: melaporkan kinerja banner kepada sponsor.
 - Produk di marketplace: judul, deskripsi, harga, kota, foto, tautan toko, dan teks kontak yang Anda tulis.
 - Permintaan kontak: pesan singkat Anda, dan kontak yang dipilih orang lain untuk dibagikan saat menerima.
 - Laporan, blokir, dan notifikasi: apa yang Anda laporkan dan alasannya, siapa yang Anda blokir, dan notifikasi di dalam aplikasi tentang akun Anda.
@@ -22,7 +24,7 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 
 ## 3. Data yang tidak kami kumpulkan
 - Tidak ada GPS dan tidak ada lokasi langsung. "Nearby alumni" memakai kota di profil Anda dan tabel jarak tetap.
-- Tidak ada iklan, tidak ada pelacakan atau analitik, tidak ada token notifikasi push.
+- Tidak ada iklan yang dilacak ke Anda, tidak ada pelacakan perorangan atau analitik, tidak ada token notifikasi push.
 - Email notifikasi hanya dicatat di dalam aplikasi. Tidak ada email nyata yang dikirim.
 - Satu permintaan ke luar: aplikasi memuat font dari Google Fonts, jadi Google mungkin melihat alamat IP Anda saat font dimuat.
 
@@ -30,6 +32,7 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - Alumni terverifikasi lain bisa melihat nama, fakultas, jurusan, tahun lulus, data tempat bekerja, kota, dan NIM Anda di direktori dan di profil Anda, serta lowongan, bisnis, dan produk Anda.
 - Email, nomor telepon, dan teks kontak Anda hanya tampil di tempat yang Anda pilih: teks kontak pada lowongan, lamaran yang Anda kirim (ke pemasang lowongan), atau yang Anda bagikan saat menerima permintaan kontak (hanya untuk orang itu).
 - Bisnis dan produk terlihat oleh alumni terverifikasi. Admin bisa menyembunyikannya.
+- NIB Anda hanya dilihat oleh admin Ikafe untuk pemeriksaan. Alumni lain hanya melihat tanda terverifikasi biru di usaha Anda, bukan nomor NIB-nya.
 - Admin Ikafe (sekelompok kecil orang yang disebutkan namanya) bisa melihat laporan, masukan, dan bisnis yang menunggu ditinjau.
 - Penyedia layanan yang menyimpan atau mengantarkan aplikasi untuk kami: Supabase (database dan penyimpanan file, server di Singapura), Vercel (hosting web, terutama Amerika Serikat), GitHub (kode dan build uji, tanpa data pengguna), dan Google Fonts (huruf untuk web dan aplikasi). Karena itu data Anda diproses di luar Indonesia, Uni Eropa, dan India. Kami memakai kontrak atau ketentuan standar tiap penyedia, dan hanya membagikan yang dibutuhkan untuk tugasnya.
 - Foto produk dan file CV disimpan di penyimpanan publik. Siapa pun yang punya tautan persisnya bisa membukanya.

@@ -13,6 +13,8 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Jobs you post: title, company, industry, description and contact text.
 - Job applications you send: your name, email, phone number, LinkedIn and portfolio links, cover note, and the CV file you attach.
 - Your businesses: name, description, category, Instagram or website link, and the yearly sales band you choose. Why: the business directory.
+- Your business registration number (Nomor Induk Berusaha, NIB), if you add one. It is optional. The NIB is a business licence number issued by the government, not your NIM. Why: admins check it, and your business can then get a verified badge.
+- Sponsor banner statistics: the number of views and taps per sponsor per day, with no name, email or personal ID. Why: to report banner performance to sponsors.
 - Marketplace products: title, description, price, city, photo, shop link and contact text you write.
 - Contact requests: your short message, and the contact detail the other person chooses to share when they accept.
 - Reports, blocks and notifications: what you report and why, who you block, and the in-app notifications about your account.
@@ -22,7 +24,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 
 ## 3. What we do not collect
 - No GPS and no live location. "Nearby alumni" uses the city in your profile and a fixed distance table.
-- No advertising, no tracking or analytics, no push notification tokens.
+- No advertising that tracks you, no individual tracking or analytics, no push notification tokens.
 - Notification emails are only written to a log inside the app. No real emails are sent.
 - One outside request: the app loads its fonts from Google Fonts, so Google may see your IP address when the fonts load.
 
@@ -30,6 +32,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Other verified alumni can see your name, faculty, major, graduation year, employer details, city and NIM in the directory and on your profile, and your jobs, businesses and products.
 - Your email, phone number and contact text are shown only where you chose to give them: a job's contact text, an application you send (to the person who posted the job), or what you share when you accept a contact request (to that person only).
 - Businesses and products are visible to verified alumni. Admins can hide them.
+- Your NIB is seen only by Ikafe admins, to check it. Other alumni see only the blue verified badge on your business, not the NIB number.
 - The Ikafe admins (a small named group) can see reports, feedback and businesses waiting for review.
 - Service providers who store or deliver the app for us: Supabase (database and file storage, server region Singapore), Vercel (web hosting, mainly the United States), GitHub (code and test builds, no user data) and Google Fonts (fonts for the web and app). Your data is therefore processed outside Indonesia, the EU and India. We have a contract or the standard terms of each provider, and we share only what each one needs to do its job.
 - Product photos and CV files are kept in public storage. Anyone who has the exact link can open them.
