@@ -26,6 +26,7 @@ Future<void> pumpHome(
   Size size = const Size(390, 844),
   double textScale = 1,
   Duration autoAdvance = const Duration(seconds: 5),
+  Future<bool> Function(String? url)? openLink,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -44,6 +45,7 @@ Future<void> pumpHome(
           api: api ?? FakeHomeApi(),
           marketplaceRepository: MarketplaceRepository(market ?? FakeApi()),
           autoAdvance: autoAdvance,
+          openLink: openLink,
         ),
       ),
     ),

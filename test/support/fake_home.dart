@@ -11,6 +11,14 @@ Map<String, dynamic> announcementMap(int n) => {
   'created_at': '2026-09-${10 + n}T08:00:00+00:00',
 };
 
+Map<String, dynamic> sponsorMap(int n) => {
+  'id': 'sp$n',
+  'name': 'Sponsor $n',
+  'image_url':
+      'https://example.com/storage/v1/object/public/sponsor-images/s$n.jpg',
+  'link_url': 'https://sponsor$n.example.com',
+};
+
 Map<String, dynamic> jobMap(int n) => {
   'id': 'j$n',
   'title': 'Job $n',
@@ -32,7 +40,14 @@ class FakeHomeApi implements HomeApi {
     this.businesses = const [],
     this.usage = const [],
     this.businessesError,
+    this.sponsors = const [],
+    this.sponsorsError,
   });
+
+  List<Map<String, dynamic>> sponsors;
+  Object? sponsorsError;
+  final sponsorEvents = <String>[];
+  Object? sponsorEventError;
 
   List<Business> businesses;
   List<BusinessUsage> usage;
@@ -70,6 +85,18 @@ class FakeHomeApi implements HomeApi {
       );
     }
     return jobs.take(limit).toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> currentSponsors() async {
+    if (sponsorsError != null) throw sponsorsError!;
+    return sponsors;
+  }
+
+  @override
+  Future<void> recordSponsorEvent(String sponsorId, String kind) async {
+    sponsorEvents.add('$kind:$sponsorId');
+    if (sponsorEventError != null) throw sponsorEventError!;
   }
 
   @override

@@ -9,7 +9,7 @@ enum ImageSizeKind { landscape, profile }
 /// this text is written.
 class ImageSizeHint extends StatelessWidget {
   const ImageSizeHint([this.kind = ImageSizeKind.landscape, Key? key])
-      : super(key: key);
+    : super(key: key);
 
   final ImageSizeKind kind;
 
