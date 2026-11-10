@@ -1,11 +1,11 @@
 /// The version of the privacy policy and community rules. Change this when
 /// the text changes: everyone is then asked to accept it again. Never shown
 /// on every launch, only when the accepted version differs from this one.
-const String kPolicyVersion = '2026-10-04-draft2';
+const String kPolicyVersion = '2026-11-10b';
 
 /// "Last updated" date shown in the text, in each language.
-const String kPolicyUpdatedId = '4 Oktober 2026';
-const String kPolicyUpdatedEn = '4 October 2026';
+const String kPolicyUpdatedId = '10 November 2026';
+const String kPolicyUpdatedEn = '10 November 2026';
 
 /// Who runs the app, and how people can reach you (beta values; replace the
 /// operator name and the temporary address with the real ones before a public launch). These two
