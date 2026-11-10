@@ -259,4 +259,4 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Business list cards copy the Marketplace card: 104 px square photo on the left, name, category and owner, description. Business detail photo is the profile size (radius 32 circle). Business form, my businesses and admin cards are unchanged. Tests: `business_directory_test`, `evaluasi_fixes_test`.
 ## Optional NIB with blue tick (10 Nov 2026)
 - Business form has an optional NIB (13 digits). Owners of approved businesses can add or change it from My businesses. Admin sees the NIB on the business card and taps "Tandai NIB terverifikasi"; only then the blue tick shows in the list, detail and My businesses. Changing the number removes the tick. Other alumni never see the number.
-- Migration `20261110100000_business_nib` + rollback file + SQL test `23_business_nib_test`. Tests: `business_nib_test`.
+- Migration `20261110140000_business_nib` + rollback file + SQL test `23_business_nib_test`. Tests: `business_nib_test`.

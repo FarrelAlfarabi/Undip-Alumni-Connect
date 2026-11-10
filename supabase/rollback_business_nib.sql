@@ -1,4 +1,4 @@
--- Undo 20261110100000_business_nib.sql. Safe to run twice.
+-- Undo 20261110140000_business_nib.sql. Safe to run twice.
 -- The NIB numbers and ticks typed so far are deleted with the columns.
 -- Copy them out first if they matter:
 --   select id, name, nib, nib_verified from businesses where nib is not null;
