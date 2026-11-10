@@ -6,6 +6,7 @@ import '../models/business.dart';
 import 'business_repository.dart';
 import 'ikafe_contact.dart';
 import 'report_repository.dart';
+import 'sponsor.dart';
 
 enum AdminErrorCode {
   notAdmin,
@@ -575,6 +576,53 @@ class AdminRepository {
         'p_id': id,
       }),
     );
+  }
+
+  /// Every sponsor, hidden and out-of-date ones too, in carousel order.
+  Future<List<Sponsor>> sponsors(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_sponsor_list', {'p_admin': adminId}),
+    );
+    return [
+      for (final r in rows as List)
+        Sponsor.fromMap(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Adds a sponsor, or changes it when [id] is given. Returns the row's id.
+  Future<String> saveSponsor(
+    String adminId, {
+    String? id,
+    required String name,
+    required String imageUrl,
+    required String linkUrl,
+    required DateTime? startsOn,
+    required DateTime? endsOn,
+    required int rank,
+    required bool active,
+  }) async {
+    final saved = await _guard(
+      () => _api.rpc('admin_sponsor_save', {
+        'p_admin': adminId,
+        'p_id': id,
+        'p_name': name.trim(),
+        'p_image_url': imageUrl.trim(),
+        'p_link_url': linkUrl.trim(),
+        'p_starts_on': sponsorDate(startsOn),
+        'p_ends_on': sponsorDate(endsOn),
+        'p_rank': rank,
+        'p_active': active,
+      }),
+    );
+    await _log(adminId, 'sponsor_save', 'sponsor', id, name.trim());
+    return saved is String ? saved : (id ?? '');
+  }
+
+  Future<void> deleteSponsor(String adminId, String id) async {
+    await _guard(
+      () => _api.rpc('admin_sponsor_delete', {'p_admin': adminId, 'p_id': id}),
+    );
+    await _log(adminId, 'sponsor_delete', 'sponsor', id);
   }
 
   /// Products ('listing') or jobs ('job') for the Home order screen: every

@@ -36,6 +36,7 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - Admin Ikafe (sekelompok kecil orang yang disebutkan namanya) bisa melihat laporan, masukan, dan bisnis yang menunggu ditinjau.
 - Penyedia layanan yang menyimpan atau mengantarkan aplikasi untuk kami: Supabase (database dan penyimpanan file, server di Singapura), Vercel (hosting web, terutama Amerika Serikat), GitHub (kode dan build uji, tanpa data pengguna), dan Google Fonts (huruf untuk web dan aplikasi). Karena itu data Anda diproses di luar Indonesia, Uni Eropa, dan India. Kami memakai kontrak atau ketentuan standar tiap penyedia, dan hanya membagikan yang dibutuhkan untuk tugasnya.
 - Foto produk dan file CV disimpan di penyimpanan publik. Siapa pun yang punya tautan persisnya bisa membukanya.
+- Sponsor: aplikasi menampilkan spanduk sponsor berbayar di Beranda, selalu dengan label "Disponsori". Mengetuk spanduk membuka situs di luar aplikasi yang tidak kami kelola dan punya kebijakan privasinya sendiri. Kami hanya menghitung berapa kali tiap spanduk tampil dan diketuk, sebagai angka per sponsor per hari, tanpa nama, perangkat, atau data pribadi Anda.
 - Batasan jujur beta ini: aplikasi belum memakai login sungguhan. Basis data masih mengirim baris profil lengkap, termasuk email dan NIM, ke aplikasi, jadi orang yang paham teknis dan memiliki kunci publik aplikasi bisa membacanya. Ini kekurangan yang diketahui dan harus diperbaiki sebelum aplikasi dibuka untuk lebih banyak orang.
 
 ## 5. Data yang hanya ada di perangkat Anda

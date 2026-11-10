@@ -9,6 +9,7 @@ import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import 'admin_announcements_screen.dart';
+import 'admin_sponsors_screen.dart';
 import 'admin_home_order_screen.dart';
 import 'admin_feedback_screen.dart';
 import 'admin_ikafe_contacts_screen.dart';
@@ -96,6 +97,14 @@ class _AdminScreenState extends State<AdminScreen> {
         subtitle: tr('Post news for all members, search past posts'),
         builder: (_) =>
             AdminAnnouncementsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-sponsors',
+        icon: Icons.workspace_premium_outlined,
+        title: tr('Sponsor'),
+        subtitle: tr('Atur sponsor di carousel Home: gambar, tautan, tanggal'),
+        builder: (_) =>
+            AdminSponsorsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-ikafe-contacts',

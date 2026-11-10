@@ -29,6 +29,14 @@ abstract class HomeApi {
   /// Newest announcements first (same table the News screen reads).
   Future<List<Map<String, dynamic>>> latestAnnouncements(int limit);
 
+  /// Sponsors members may see today, in carousel order: id, name, image_url,
+  /// link_url (the database function `home_sponsors()` applies the dates).
+  Future<List<Map<String, dynamic>>> currentSponsors();
+
+  /// Adds one to a sponsor's view or tap counter. Sends the sponsor and the
+  /// kind only, nothing about the person. Callers ignore failures.
+  Future<void> recordSponsorEvent(String sponsorId, String kind);
+
   /// Newest job posts first, with the poster joined (same query shape as
   /// the Job Board, so the rows open in JobDetailScreen unchanged).
   ///
@@ -66,6 +74,22 @@ class SupabaseHomeApi implements HomeApi {
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(rows as List);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> currentSponsors() async {
+    final rows = await _client.rpc('home_sponsors');
+    return List<Map<String, dynamic>>.from(
+      (rows as List).map((r) => Map<String, dynamic>.from(r as Map)),
+    );
+  }
+
+  @override
+  Future<void> recordSponsorEvent(String sponsorId, String kind) async {
+    await _client.rpc(
+      'sponsor_event',
+      params: {'p_sponsor': sponsorId, 'p_kind': kind},
+    );
   }
 
   @override
