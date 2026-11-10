@@ -9,6 +9,10 @@ If a session ends early, continue from the last entry here.
 - Admin > Sponsor: many sponsors, each with image (cropped 16:5), https link, optional dates, order, show/hide, delete. Views (once per sponsor per Home open) and taps (after Buka) are counted per sponsor per day, numbers only, shown in the admin list (`sponsor_events`, `sponsor_event()`).
 - Migration `20261110130000_sponsors.sql` (+ `rollback_sponsors.sql`, `23_sponsors_test.sql`): table, `home_sponsors()`, admin list/save/delete, bucket `sponsor-images`. Applied on merge by the deploy workflow. Privacy text (ID and EN) has a Sponsor bullet; policy version bumped to 2026-11-10, so everyone accepts again.
 
+## Sponsor form fixes (10 Nov 2026)
+- A link typed as `mandiri.com` passed the form check but was sent without `https://`, so the database refused it and the form showed the announcement text "Judul dan isi wajib diisi". The link is now saved as `https://mandiri.com`, and a refused sponsor save says "Data sponsor belum benar...".
+- Sponsor card is 2:1 instead of 16:5 (about 175 px high on a phone), upload hint 1600 x 800. No migration.
+
 ## PIN kept when the sign in expires (3 Nov 2026)
 - App start with REAL_LOGIN and no stored session wiped the PIN (`clear()`), so the next login asked to create a new PIN. Now it signs out only; the PIN stays with its owner.
 - Test: `test/real_login_test.dart` (PIN still there after session expiry). Analyze clean, full suite passes.

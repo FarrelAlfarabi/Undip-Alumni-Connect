@@ -45,16 +45,16 @@ void main() {
     testWidgets('one sponsor: label, no dots, tap opens it', (tester) async {
       Map<String, dynamic>? opened;
       await pumpBanner(tester, [sponsorMap(1)], onOpen: (s) => opened = s);
-      expect(find.textContaining('Disponsori'), findsOneWidget);
+      expect(find.text('DISPONSORI'), findsOneWidget);
       expect(find.byKey(const Key('sponsor-dots')), findsNothing);
       await tester.tap(find.byKey(const Key('sponsor-hero-0')));
       expect(opened?['id'], 'sp1');
     });
 
-    testWidgets('card keeps the 16:5 shape', (tester) async {
+    testWidgets('card keeps its shape (bar plus 2:1 picture)', (tester) async {
       await pumpBanner(tester, [sponsorMap(1)]);
       final box = tester.getSize(find.byKey(const Key('sponsor-pages')));
-      expect(box.width / box.height, closeTo(16 / 5, 0.01));
+      expect(box.width / box.height, closeTo(1.75, 0.01));
     });
 
     testWidgets('several sponsors: dots, auto slide and swipe', (tester) async {

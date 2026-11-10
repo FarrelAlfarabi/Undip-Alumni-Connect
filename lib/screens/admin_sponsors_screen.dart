@@ -256,7 +256,14 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e is AdminException ? adminErrorMessage(e) : friendlyError(e),
+            e is AdminException
+                ? (e.code == AdminErrorCode.invalidInput
+                      ? tr(
+                          'Data sponsor belum benar. Periksa nama, tautan '
+                          '(https://...), gambar dan tanggal.',
+                        )
+                      : adminErrorMessage(e))
+                : friendlyError(e),
           ),
         ),
       );
@@ -281,7 +288,8 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
         id: before?.id,
         name: _name.text,
         imageUrl: url,
-        linkUrl: _link.text,
+        // "mandiri.com" is saved as "https://mandiri.com".
+        linkUrl: parseHttpUrl(_link.text)?.toString() ?? _link.text,
         startsOn: _starts,
         endsOn: _ends,
         rank: int.tryParse(_rank.text.trim()) ?? 1,
@@ -431,7 +439,7 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   tr(
-                    'Rasio 16:5 (misalnya 1600 x 500 px). JPG, PNG atau WebP, '
+                    'Rasio 2:1 (misalnya 1600 x 800 px). JPG, PNG atau WebP, '
                     'maksimal 2 MB.',
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(
