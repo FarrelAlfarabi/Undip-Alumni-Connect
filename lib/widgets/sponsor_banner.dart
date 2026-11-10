@@ -5,12 +5,19 @@ import '../theme.dart';
 import '../util/app_language.dart';
 import 'banner_carousel.dart';
 
-/// Wide and short, so a sponsor never takes much of the first screen.
-const kSponsorAspectRatio = 16 / 5;
+/// Wide and a little short, so the picture is easy to read without taking
+/// the whole first screen (about 175 px high on a phone).
+const kSponsorAspectRatio = 2.0;
+
+/// The whole card: the yellow "Disponsori" bar plus the 2:1 picture below it.
+const kSponsorCardAspectRatio = 1.75;
+
+const _softYellow = Color(0xFFFFF6D6);
 
 /// The sponsor carousel on Home, under the four tiles. Same behaviour as the
-/// announcement carousel (slides by itself, swipe, dots), but a white card
-/// with a hairline border so it never looks like an announcement. The label
+/// announcement carousel (slides by itself, swipe, dots), but a soft
+/// yellow card with a yellow "Disponsori" bar on top, as in the approved
+/// design, so it never looks like an announcement. The label
 /// "Disponsori" is fixed and cannot be changed by the admin. Shows nothing
 /// when there is no sponsor.
 class SponsorBanner extends StatelessWidget {
@@ -37,7 +44,7 @@ class SponsorBanner extends StatelessWidget {
       onShown: onShown,
       autoAdvance: autoAdvance,
       keyPrefix: 'sponsor',
-      aspectRatio: kSponsorAspectRatio,
+      aspectRatio: kSponsorCardAspectRatio,
       cardBuilder: (context, item, onTap) =>
           _SponsorCard(item: item, onTap: onTap),
     );
@@ -62,51 +69,60 @@ class _SponsorCard extends StatelessWidget {
       label: '${tr('Disponsori')}: $name',
       excludeSemantics: true,
       child: Material(
-        color: Colors.white,
+        color: _softYellow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppTheme.hairline),
+          side: const BorderSide(color: Color(0xFFF0DC93)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Stack(
-            fit: StackFit.expand,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (url.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.cover,
-                  memCacheWidth: (800 * dpr).round(),
-                  fadeInDuration: Duration.zero,
-                  placeholder: (_, _) => const SizedBox.shrink(),
-                  errorWidget: (_, _, _) => const SizedBox.shrink(),
-                ),
-              Positioned(
-                left: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.hairline),
-                  ),
-                  child: Text(
-                    name.isEmpty
-                        ? tr('Disponsori')
-                        : '${tr('Disponsori')} · $name',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 11,
+              Container(
+                color: AppTheme.yellow,
+                padding: const EdgeInsets.fromLTRB(12, 7, 12, 6),
+                child: Row(
+                  children: [
+                    Text(
+                      tr('Disponsori').toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                      ),
                     ),
-                  ),
+                    if (name.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppTheme.black,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+              Expanded(
+                child: url.isEmpty
+                    ? const SizedBox.shrink()
+                    : CachedNetworkImage(
+                        imageUrl: url,
+                        fit: BoxFit.cover,
+                        memCacheWidth: (800 * dpr).round(),
+                        fadeInDuration: Duration.zero,
+                        placeholder: (_, _) => const SizedBox.shrink(),
+                        errorWidget: (_, _, _) => const SizedBox.shrink(),
+                      ),
               ),
             ],
           ),

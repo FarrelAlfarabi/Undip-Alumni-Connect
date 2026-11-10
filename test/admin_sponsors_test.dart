@@ -193,6 +193,50 @@ void main() {
       expect(api.calls.contains('admin_sponsor_save'), isFalse);
     });
 
+    testWidgets('a link without https:// gets it added before saving', (
+      tester,
+    ) async {
+      final api = await pump(tester, []);
+      await tester.tap(find.byKey(const Key('sponsor-new')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('sponsor-name')), 'Mandiri');
+      await tester.enterText(
+        find.byKey(const Key('sponsor-link')),
+        'mandiri.com',
+      );
+      await tester.tap(find.byKey(const Key('sponsor-choose-image')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('sponsor-save')));
+      await tester.pumpAndSettle();
+      expect(
+        api.params['admin_sponsor_save']!['p_link_url'],
+        'https://mandiri.com',
+      );
+    });
+
+    testWidgets('a refused save never shows the announcement text', (
+      tester,
+    ) async {
+      final api = await pump(tester, []);
+      await tester.tap(find.byKey(const Key('sponsor-new')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('sponsor-name')), 'Mandiri');
+      await tester.enterText(
+        find.byKey(const Key('sponsor-link')),
+        'https://mandiri.com',
+      );
+      await tester.tap(find.byKey(const Key('sponsor-choose-image')));
+      await tester.pumpAndSettle();
+      api.throwOnCall = const AdminException(
+        AdminErrorCode.invalidInput,
+        'invalid_input',
+      );
+      await tester.tap(find.byKey(const Key('sponsor-save')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Judul'), findsNothing);
+      expect(find.textContaining('tautan'), findsWidgets);
+    });
+
     testWidgets('adding a second sponsor uploads the image and saves', (
       tester,
     ) async {
