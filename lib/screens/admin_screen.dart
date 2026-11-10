@@ -18,6 +18,7 @@ import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
+import '../widgets/verified_badge.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/searchable_choice.dart';
 import '../widgets/undo_snackbar.dart';
@@ -368,6 +369,36 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     }
   }
 
+  /// Marks the NIB as checked, or takes the mark away. Nothing else changes.
+  Future<void> _toggleNib(Business b) async {
+    final verify = !b.nibVerified;
+    setState(() => _busy.add(b.id));
+    try {
+      await widget.repository.setNibVerified(widget.adminId, b.id, verify);
+      if (!mounted) return;
+      _busy.remove(b.id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            verify
+                ? 'NIB ${b.name} ditandai terverifikasi.'
+                : 'Verifikasi NIB ${b.name} dicabut.',
+          ),
+        ),
+      );
+      _reload();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy.remove(b.id));
+      showErrorSnackBar(
+        context,
+        message: adminErrorMessage(e),
+        screen: 'Admin businesses',
+        error: e,
+      );
+    }
+  }
+
   Future<void> _approve(Business b) => _run(
     b,
     () => widget.repository.approve(widget.adminId, b.id),
@@ -584,6 +615,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                       onReject: () => _reject(items[i]),
                       onSuspend: () => _suspend(items[i]),
                       onRestore: () => _restore(items[i]),
+                      onToggleNib: () => _toggleNib(items[i]),
                     ),
                   );
                 },
@@ -604,6 +636,7 @@ class _AdminBusinessCard extends StatelessWidget {
     required this.onReject,
     required this.onSuspend,
     required this.onRestore,
+    required this.onToggleNib,
   });
 
   final Business business;
@@ -612,6 +645,7 @@ class _AdminBusinessCard extends StatelessWidget {
   final VoidCallback onReject;
   final VoidCallback onSuspend;
   final VoidCallback onRestore;
+  final VoidCallback onToggleNib;
 
   @override
   Widget build(BuildContext context) {
@@ -662,8 +696,9 @@ class _AdminBusinessCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             BusinessPhoto(url: b.photoUrl),
-            Text(
-              b.name,
+            NameWithBadge(
+              name: b.name,
+              verified: b.nibVerified,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -687,6 +722,30 @@ class _AdminBusinessCard extends StatelessWidget {
                 trf('Website: {0}', [b.websiteLink]),
                 style: theme.textTheme.bodySmall,
               ),
+            if (b.nib != null) ...[
+              Text(
+                trf('NIB: {0} ({1})', [
+                  b.nib,
+                  b.nibVerified ? tr('sudah dicek') : tr('belum dicek'),
+                ]),
+                key: Key('nib-text-${b.id}'),
+                style: theme.textTheme.bodySmall,
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  key: Key('nib-verify-${b.id}'),
+                  onPressed: busy ? null : onToggleNib,
+                  child: Text(
+                    tr(
+                      b.nibVerified
+                          ? 'Cabut verifikasi NIB'
+                          : 'Tandai NIB terverifikasi',
+                    ),
+                  ),
+                ),
+              ),
+            ],
             Text(
               trf('Band chosen by owner: {0}{1}', [
                 b.requestedBand?.label ?? '-',

@@ -3,6 +3,25 @@ import '../data/contact_repository.dart' show kDailyRequestMax, kOpenRequestMax;
 /// English text for the Indonesian text used in the code (see [tr]). Add a
 /// line here when a new Indonesian text should have an English version.
 final Map<String, String> kEnglish = {
+  'Usaha terverifikasi': 'Verified business',
+  'NIB': 'NIB',
+  'NIB (opsional)': 'NIB (optional)',
+  'NIB harus 13 digit angka': 'NIB must be 13 digits',
+  'NIB harus 13 digit angka.': 'NIB must be 13 digits.',
+  'Isi NIB (13 digit) usahamu. Admin akan mengeceknya, lalu tanda centang biru muncul di usahamu. Kosongkan untuk menghapus.': 'Enter your business NIB (13 digits). An admin checks it, then the blue tick appears on your business. Leave empty to remove it.',
+  'NIB disimpan. Admin akan mengeceknya.': 'NIB saved. An admin will check it.',
+  'NIB {0}: terverifikasi': 'NIB {0}: verified',
+  'NIB {0}: Menunggu pengecekan NIB': 'NIB {0}: waiting for an admin check',
+  'Tambah NIB': 'Add NIB',
+  'Ubah NIB': 'Change NIB',
+  ' NIB belum tersimpan, coba lagi lewat Edit.':
+      ' The NIB was not saved, try again with Edit.',
+  'Nomor Induk Berusaha, 13 digit. Akan dicek admin. Kalau lolos, usahamu dapat tanda centang biru.': 'Business registration number, 13 digits. An admin checks it. If it passes, your business gets a blue tick.',
+  'NIB: {0} ({1})': 'NIB: {0} ({1})',
+  'sudah dicek': 'checked',
+  'belum dicek': 'not checked yet',
+  'Cabut verifikasi NIB': 'Remove NIB verification',
+  'Tandai NIB terverifikasi': 'Mark NIB as verified',
   'Foto terbaik: landscape 3:2 (1200 x 800 px).':
       'Best photo: landscape 3:2 (1200 x 800 px).',
   'JPG, PNG atau WebP, maksimal 2 MB.': 'JPG, PNG or WebP, 2 MB at most.',

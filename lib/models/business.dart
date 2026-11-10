@@ -57,6 +57,23 @@ const List<String> kBusinessCategories = [
   'Other',
 ];
 
+/// NIB (Nomor Induk Berusaha) is 13 digits.
+bool isValidNib(String nib) => RegExp(r'^\d{13}$').hasMatch(nib);
+
+/// What the owner typed, without spaces, dots or dashes. Null when empty.
+String? cleanNib(String? text) {
+  final t = (text ?? '').replaceAll(RegExp(r'[\s.\-]'), '');
+  return t.isEmpty ? null : t;
+}
+
+/// Form check for the optional NIB field: empty is fine, otherwise exactly
+/// 13 digits (spaces, dots and dashes are ignored).
+String? nibFieldError(String? v) {
+  final n = cleanNib(v);
+  if (n == null) return null;
+  return isValidNib(n) ? null : tr('NIB harus 13 digit angka');
+}
+
 /// Most businesses one person can own. Also enforced in the database
 /// (`business_register`). More must be requested by email.
 const int kMaxBusinesses = 3;
@@ -83,6 +100,8 @@ class Business {
     this.reviewedAt,
     this.updatedAt,
     this.photoUrl,
+    this.nib,
+    this.nibVerified = false,
   });
 
   final String id;
@@ -117,29 +136,49 @@ class Business {
   /// Public link to the business photo, if the owner added one.
   final String? photoUrl;
 
+  /// The NIB the owner typed (13 digits). Only the owner and admins get it.
+  final String? nib;
+
+  /// True only after an admin checked the NIB. The blue tick follows this
+  /// flag, never the typed number.
+  final bool nibVerified;
+
   /// A copy with another photo link (the lists get photos in a second call).
-  Business withPhoto(String? url) => Business(
-    id: id,
-    ownerId: ownerId,
-    name: name,
-    description: description,
-    category: category,
-    status: status,
-    socialLink: socialLink,
-    websiteLink: websiteLink,
-    requestedBand: requestedBand,
-    approvedBand: approvedBand,
-    rejectionReason: rejectionReason,
-    unlimitedUntil: unlimitedUntil,
-    createdAt: createdAt,
-    ownerName: ownerName,
-    hiddenAt: hiddenAt,
-    hiddenReason: hiddenReason,
-    isPersonal: isPersonal,
-    reviewedAt: reviewedAt,
-    updatedAt: updatedAt,
-    photoUrl: url,
-  );
+  Business withPhoto(String? url) => _copy(photoUrl: url);
+
+  /// A copy with the admin-checked flag set (lists get it in a second call).
+  Business withNibVerified(bool value) => _copy(nibVerified: value);
+
+  /// A copy with the NIB and its flag (the admin list gets them in a second
+  /// call).
+  Business withNib(String? number, bool verified) =>
+      _copy(nib: number, nibVerified: verified);
+
+  Business _copy({String? photoUrl, String? nib, bool? nibVerified}) =>
+      Business(
+        id: id,
+        ownerId: ownerId,
+        name: name,
+        description: description,
+        category: category,
+        status: status,
+        socialLink: socialLink,
+        websiteLink: websiteLink,
+        requestedBand: requestedBand,
+        approvedBand: approvedBand,
+        rejectionReason: rejectionReason,
+        unlimitedUntil: unlimitedUntil,
+        createdAt: createdAt,
+        ownerName: ownerName,
+        hiddenAt: hiddenAt,
+        hiddenReason: hiddenReason,
+        isPersonal: isPersonal,
+        reviewedAt: reviewedAt,
+        updatedAt: updatedAt,
+        photoUrl: photoUrl ?? this.photoUrl,
+        nib: nib ?? this.nib,
+        nibVerified: nibVerified ?? this.nibVerified,
+      );
 
   bool get isHidden => hiddenAt != null;
 
@@ -172,6 +211,8 @@ class Business {
       reviewedAt: date(m['reviewed_at']),
       updatedAt: date(m['updated_at']),
       photoUrl: m['photo_url'] as String?,
+      nib: m['nib'] as String?,
+      nibVerified: m['nib_verified'] == true,
     );
   }
 }

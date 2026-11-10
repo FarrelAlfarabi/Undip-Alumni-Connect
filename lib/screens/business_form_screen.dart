@@ -53,6 +53,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   late final TextEditingController _description;
   late final TextEditingController _social;
   late final TextEditingController _website;
+  late final TextEditingController _nib;
   late final TextEditingController _categoryText;
   String? _category;
   BusinessBand? _band;
@@ -75,6 +76,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     _description = TextEditingController(text: e?.description);
     _social = TextEditingController(text: e?.socialLink);
     _website = TextEditingController(text: e?.websiteLink);
+    _nib = TextEditingController(text: e?.nib);
     _category = e?.category;
     _categoryText = TextEditingController(text: _category ?? '');
     CategoryRepository.shared.load();
@@ -84,7 +86,14 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _description, _social, _website, _categoryText]) {
+    for (final c in [
+      _name,
+      _description,
+      _social,
+      _website,
+      _nib,
+      _categoryText,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -193,6 +202,21 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
       // the owner typed.
       var result = saved;
       var photoFailed = false;
+      var nibFailed = false;
+      // The NIB is saved after the business too. It is optional; a number
+      // that did not change is not sent again (that would take its tick).
+      final nib = cleanNib(_nib.text);
+      if (nib != existing?.nib) {
+        try {
+          result = await widget.repository.setNib(
+            widget.ownerId,
+            saved.id,
+            nib,
+          );
+        } catch (_) {
+          nibFailed = true;
+        }
+      }
       try {
         if (_picked != null) {
           final url = await widget.repository.uploadPhoto(
@@ -218,9 +242,9 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            photoFailed
-                ? '$kBusinessSubmittedMessage$kBusinessPhotoFailedMessage'
-                : kBusinessSubmittedMessage,
+            '$kBusinessSubmittedMessage'
+            '${photoFailed ? kBusinessPhotoFailedMessage : ''}'
+            '${nibFailed ? tr(' NIB belum tersimpan, coba lagi lewat Edit.') : ''}',
           ),
         ),
       );
@@ -437,6 +461,23 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                         border: OutlineInputBorder(),
                       ),
                       validator: _websiteField,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const Key('nib-field'),
+                      controller: _nib,
+                      enabled: !_saving,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: tr('NIB (opsional)'),
+                        helperText: tr(
+                          'Nomor Induk Berusaha, 13 digit. Akan dicek admin. '
+                          'Kalau lolos, usahamu dapat tanda centang biru.',
+                        ),
+                        helperMaxLines: 3,
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: nibFieldError,
                     ),
                     const SizedBox(height: 24),
                     Text(

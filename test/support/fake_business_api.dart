@@ -21,6 +21,8 @@ Map<String, dynamic> businessMap({
   String? reviewedAt,
   bool personal = false,
   String? photoUrl,
+  String? nib,
+  bool nibVerified = false,
   String createdAt = '2026-10-01T08:00:00+00:00',
 }) => {
   'id': id,
@@ -40,6 +42,8 @@ Map<String, dynamic> businessMap({
   'reviewed_at': ?reviewedAt,
   'is_personal': personal,
   'photo_url': photoUrl,
+  'nib': nib,
+  'nib_verified': nibVerified,
 };
 
 class FakeBusinessApi implements BusinessApi {

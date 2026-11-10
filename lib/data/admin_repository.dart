@@ -97,11 +97,55 @@ class AdminRepository {
     final photos = await BusinessRepository.photoUrls(
       () => _api.rpc('admin_business_photo_urls', {'p_admin': adminId}),
     );
-    return BusinessRepository.withPhotos(
+    final nibs = await _nibs(adminId);
+    final list = BusinessRepository.withPhotos(
       (rows as List)
           .map((r) => Business.fromMap(Map<String, dynamic>.from(r as Map)))
           .toList(),
       photos,
+    );
+    return [
+      for (final b in list)
+        nibs.containsKey(b.id) ? b.withNib(nibs[b.id]!.$1, nibs[b.id]!.$2) : b,
+    ];
+  }
+
+  /// NIB and verified flag per business, for the admin list. A failure gives
+  /// no NIBs rather than an error (the list still works).
+  Future<Map<String, (String?, bool)>> _nibs(String adminId) async {
+    try {
+      final rows = await _api.rpc('admin_business_nibs', {'p_admin': adminId});
+      return {
+        for (final r in (rows as List))
+          '${(r as Map)['business_id']}': (
+            r['nib'] as String?,
+            r['nib_verified'] == true,
+          ),
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Marks the NIB of a business as checked (or takes the mark away). Only
+  /// admins; the database refuses a business without a NIB.
+  Future<void> setNibVerified(
+    String adminId,
+    String businessId,
+    bool verified,
+  ) async {
+    await _guard(
+      () => _api.rpc('admin_business_nib_verify', {
+        'p_admin': adminId,
+        'p_business': businessId,
+        'p_verified': verified,
+      }),
+    );
+    await _log(
+      adminId,
+      verified ? 'business_nib_verified' : 'business_nib_unverified',
+      'business',
+      businessId,
     );
   }
 

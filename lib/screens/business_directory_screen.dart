@@ -17,6 +17,7 @@ import 'marketplace_screen.dart' show ListingImage;
 import 'my_businesses_screen.dart';
 import '../widgets/app_photo.dart';
 import '../widgets/error_view.dart';
+import '../widgets/verified_badge.dart';
 import '../lock/masking.dart' show initialsOf;
 
 /// Client-side search by name or category, plus a category filter.
@@ -300,10 +301,11 @@ class _BusinessCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      business.name,
+                    NameWithBadge(
+                      name: business.name,
+                      verified: business.nibVerified,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      badgeSize: 16,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -380,8 +382,10 @@ class BusinessDetailScreen extends StatelessWidget {
                 children: [
                   _BusinessDetailPhoto(url: b.photoUrl, name: b.name),
                   const SizedBox(height: 20),
-                  Text(
-                    b.name,
+                  NameWithBadge(
+                    name: b.name,
+                    verified: b.nibVerified,
+                    badgeSize: 24,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
