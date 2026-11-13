@@ -43,6 +43,11 @@ $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed_marketplace.sql" >/dev/null
 shopt -s nullglob
 MIGS=("$ROOT"/supabase/migrations/2026100[3-9]*.sql "$ROOT"/supabase/migrations/202610[1-3]*.sql "$ROOT"/supabase/migrations/2026110[5-9]*.sql "$ROOT"/supabase/migrations/202611[1-3]*.sql "$ROOT"/supabase/migrations/202612*.sql)
 
+# The cutover migration turns the login switch on; the beta tests run with it off.
+FILTERED=()
+for f in "${MIGS[@]}"; do case "$f" in *_real_login_cutover.sql) ;; *) FILTERED+=("$f") ;; esac; done
+MIGS=("${FILTERED[@]}")
+
 apply_all() {
   for f in "${MIGS[@]}"; do
     $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null
@@ -56,9 +61,13 @@ run_tests() {
   $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/beta/_helpers.sql" >/dev/null
   for t in "$ROOT"/supabase/tests/beta/[0-9]*.sql; do
     echo "== $(basename "$t")"
+    case "$(basename "$t")" in
+      24_*) $PSQL -v ON_ERROR_STOP=1 -c "select jt.anon_reads_profiles(false)" >/dev/null ;;
+      *)    $PSQL -v ON_ERROR_STOP=1 -c "select jt.anon_reads_profiles(true)" >/dev/null ;;
+    esac
     $PSQL -v ON_ERROR_STOP=1 -f "$t"
   done
-  $PSQL -v ON_ERROR_STOP=1 -c "set client_min_messages = warning; drop schema if exists jt cascade" >/dev/null
+  $PSQL -v ON_ERROR_STOP=1 -c "set client_min_messages = warning; select jt.anon_reads_profiles(false); drop schema if exists jt cascade" >/dev/null
   echo "== live DB checks on the migrated database (every line must be ok)"
   checks="$($PSQL -tA -F'|' -f "$ROOT/supabase/checks/live_db_checks.sql")"
   echo "$checks"

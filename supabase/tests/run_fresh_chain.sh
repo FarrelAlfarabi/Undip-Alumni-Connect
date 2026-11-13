@@ -27,7 +27,11 @@ PSQL="$PSQL -d fresh"
 $PSQL -f "$ROOT/supabase/tests/local_stub.sql"
 
 shopt -s nullglob
-MIGS=("$ROOT"/supabase/migrations/*.sql)
+MIGS=()
+CUTOVER=""
+for f in "$ROOT"/supabase/migrations/*.sql; do
+  case "$f" in *_real_login_cutover.sql) CUTOVER="$f" ;; *) MIGS+=("$f") ;; esac
+done
 echo "== ${#MIGS[@]} migrations, in order, first error stops the run"
 for f in "${MIGS[@]}"; do
   if ! $PSQL -f "$f" >/dev/null 2>"$WORK/err.txt"; then
@@ -36,7 +40,7 @@ for f in "${MIGS[@]}"; do
 done
 echo "== second pass over the beta migrations (20261003 and later must be idempotent)"
 for f in "${MIGS[@]}"; do
-  case "$(basename "$f")" in 2026100[3-9]*|202610[1-3]*) ;; *) continue ;; esac
+  case "$(basename "$f")" in 2026100[3-9]*|202610[1-3]*|202611*) ;; *) continue ;; esac
   if ! $PSQL -f "$f" >/dev/null 2>"$WORK/err.txt"; then
     echo "FAIL (second pass): $(basename "$f")"; cat "$WORK/err.txt"; exit 1
   fi
@@ -46,4 +50,12 @@ $PSQL -f "$ROOT/supabase/seed.sql" >/dev/null
 echo "== live checks: every line must be ok"
 checks="$($PSQL -tA -F'|' -f "$ROOT/supabase/checks/live_db_checks.sql")"
 if echo "$checks" | grep -q '|f|'; then echo "$checks" | grep '|f|'; echo "FAIL: live checks flag the fresh database"; exit 1; fi
+echo "== real login cutover migration, applied twice"
+[ -n "$CUTOVER" ] || { echo "FAIL: the real login cutover migration is missing"; exit 1; }
+$PSQL -v ON_ERROR_STOP=1 -f "$CUTOVER" >/dev/null
+$PSQL -v ON_ERROR_STOP=1 -f "$CUTOVER" >/dev/null
+[ "$($PSQL -tA -c "select value from app_settings where key = 'require_login'")" = "on" ] || { echo "FAIL: require_login is not on after the cutover"; exit 1; }
+if [ "$($PSQL -tA -c "select has_function_privilege('anon', 'verify_alumni_email(text)', 'execute')")" != "f" ]; then echo "FAIL: anon can still call verify_alumni_email"; exit 1; fi
+checks="$($PSQL -tA -F'|' -f "$ROOT/supabase/checks/live_db_checks.sql")"
+if echo "$checks" | grep -q '|f|'; then echo "$checks" | grep '|f|'; echo "FAIL: live checks flag the database after the cutover"; exit 1; fi
 echo "FRESH CHAIN OK"

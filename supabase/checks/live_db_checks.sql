@@ -98,11 +98,20 @@ select check_name, ok, detail from (
          not has_column_privilege('anon', 'public.alumni_profiles', 'nim', 'select'),
          'anon can read NIM: apply 20261018120000_hide_nim.sql'
   union all
-  select 'anon can read alumni_profiles.' || c.column_name,
-         has_column_privilege('anon', 'public.alumni_profiles', c.column_name, 'select'),
-         'the app cannot read it: grant select (' || c.column_name || ') on alumni_profiles to anon, authenticated'
+  select 'signed in app can read alumni_profiles.' || c.column_name,
+         has_column_privilege('authenticated', 'public.alumni_profiles', c.column_name, 'select'),
+         'the app cannot read it: grant select (' || c.column_name || ') on alumni_profiles to authenticated'
     from information_schema.columns c
    where c.table_schema = 'public' and c.table_name = 'alumni_profiles'
      and c.column_name <> 'nim'
+  union all
+  -- 10. Strangers cannot read the alumni table (emails, auth ids).
+  select 'anon cannot read alumni_profiles.email',
+         not has_column_privilege('anon', 'public.alumni_profiles', 'email', 'select'),
+         'anyone with the app key can read every alumni email: apply 20261113100000_hack_test_fixes.sql'
+  union all
+  select 'cvs bucket is private',
+         coalesce((select not public from storage.buckets where id = 'cvs'), true),
+         'CVs are readable by link: apply 20261113100000_hack_test_fixes.sql'
 ) checks
 order by ok, check_name;
