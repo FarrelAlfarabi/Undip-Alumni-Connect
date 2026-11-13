@@ -36,7 +36,7 @@ for f in "${MIGS[@]}"; do
 done
 echo "== second pass over the beta migrations (20261003 and later must be idempotent)"
 for f in "${MIGS[@]}"; do
-  case "$(basename "$f")" in 2026100[3-9]*|202610[1-3]*) ;; *) continue ;; esac
+  case "$(basename "$f")" in 2026100[3-9]*|202610[1-3]*|202611*) ;; *) continue ;; esac
   if ! $PSQL -f "$f" >/dev/null 2>"$WORK/err.txt"; then
     echo "FAIL (second pass): $(basename "$f")"; cat "$WORK/err.txt"; exit 1
   fi
