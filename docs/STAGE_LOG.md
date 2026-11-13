@@ -6,7 +6,7 @@ If a session ends early, continue from the last entry here.
 
 ## Hack test fixes (13 Nov 2026)
 - Migration `20261113100000_hack_test_fixes.sql` (+ rollback, `24_hack_test_fixes_test.sql`): anon cannot read `alumni_profiles`; job application status cannot be edited and applying needs you to be the applicant (when login is required); `cvs` bucket private (poster reads by signed link, `job_applicants_screen.dart`); uploads need sign in; `claim_alumni_profile` needs a confirmed email.
-- Merge together with the real login cutover (`supabase/cutover_real_login.sql`) and after the production build has REAL_LOGIN=true. Still open: signed in members can read each other's email/user_id (directory needs an RPC).
+- Also `20261113120000_real_login_cutover.sql` (+ `rollback_real_login_cutover.sql`): the login switch as a migration, because the connector prompt could not be answered. Left out of the beta test chain, applied twice at the end of `run_fresh_chain.sh`. Production build has REAL_LOGIN=true (Vercel env). Still open: signed in members can read each other's email/user_id (directory needs an RPC).
 
 ## Sponsor carousel (10 Nov 2026)
 - New: Home carousel under the four tiles (`SponsorBanner`, reuses `BannerCarousel`: auto slide, dots, swipe). White 16:5 card, fixed "Disponsori" label, asks before opening the link, hidden when empty, on load error, or while the profile is incomplete.

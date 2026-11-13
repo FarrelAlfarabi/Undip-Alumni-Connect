@@ -43,6 +43,11 @@ $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed_marketplace.sql" >/dev/null
 shopt -s nullglob
 MIGS=("$ROOT"/supabase/migrations/2026100[3-9]*.sql "$ROOT"/supabase/migrations/202610[1-3]*.sql "$ROOT"/supabase/migrations/2026110[5-9]*.sql "$ROOT"/supabase/migrations/202611[1-3]*.sql "$ROOT"/supabase/migrations/202612*.sql)
 
+# The cutover migration turns the login switch on; the beta tests run with it off.
+FILTERED=()
+for f in "${MIGS[@]}"; do case "$f" in *_real_login_cutover.sql) ;; *) FILTERED+=("$f") ;; esac; done
+MIGS=("${FILTERED[@]}")
+
 apply_all() {
   for f in "${MIGS[@]}"; do
     $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null
