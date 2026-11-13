@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Hack test fixes (13 Nov 2026)
+- Migration `20261113100000_hack_test_fixes.sql` (+ rollback, `24_hack_test_fixes_test.sql`): anon cannot read `alumni_profiles`; job application status cannot be edited and applying needs you to be the applicant (when login is required); `cvs` bucket private (poster reads by signed link, `job_applicants_screen.dart`); uploads need sign in; `claim_alumni_profile` needs a confirmed email.
+- Merge together with the real login cutover (`supabase/cutover_real_login.sql`) and after the production build has REAL_LOGIN=true. Still open: signed in members can read each other's email/user_id (directory needs an RPC).
+
 ## Sponsor carousel (10 Nov 2026)
 - New: Home carousel under the four tiles (`SponsorBanner`, reuses `BannerCarousel`: auto slide, dots, swipe). White 16:5 card, fixed "Disponsori" label, asks before opening the link, hidden when empty, on load error, or while the profile is incomplete.
 - Admin > Sponsor: many sponsors, each with image (cropped 16:5), https link, optional dates, order, show/hide, delete. Views (once per sponsor per Home open) and taps (after Buka) are counted per sponsor per day, numbers only, shown in the admin list (`sponsor_events`, `sponsor_event()`).

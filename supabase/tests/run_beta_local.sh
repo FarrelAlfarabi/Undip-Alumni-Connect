@@ -56,9 +56,13 @@ run_tests() {
   $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/beta/_helpers.sql" >/dev/null
   for t in "$ROOT"/supabase/tests/beta/[0-9]*.sql; do
     echo "== $(basename "$t")"
+    case "$(basename "$t")" in
+      24_*) $PSQL -v ON_ERROR_STOP=1 -c "select jt.anon_reads_profiles(false)" >/dev/null ;;
+      *)    $PSQL -v ON_ERROR_STOP=1 -c "select jt.anon_reads_profiles(true)" >/dev/null ;;
+    esac
     $PSQL -v ON_ERROR_STOP=1 -f "$t"
   done
-  $PSQL -v ON_ERROR_STOP=1 -c "set client_min_messages = warning; drop schema if exists jt cascade" >/dev/null
+  $PSQL -v ON_ERROR_STOP=1 -c "set client_min_messages = warning; select jt.anon_reads_profiles(false); drop schema if exists jt cascade" >/dev/null
   echo "== live DB checks on the migrated database (every line must be ok)"
   checks="$($PSQL -tA -F'|' -f "$ROOT/supabase/checks/live_db_checks.sql")"
   echo "$checks"

@@ -33,16 +33,26 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
   Future<List<Map<String, dynamic>>> _fetchApplicants() async {
     // Only the poster can read applications; the database checks it.
-    final rows = await Supabase.instance.client.rpc(
+    final client = Supabase.instance.client;
+    final rows = await client.rpc(
       'job_applicants_list',
       params: {'p_poster': widget.job['posted_by'], 'p_job': widget.job['id']},
     );
-    return List<Map<String, dynamic>>.from(rows as List);
-  }
-
-  String? _cvUrl(String? cvPath) {
-    if (cvPath == null || cvPath.isEmpty) return null;
-    return Supabase.instance.client.storage.from('cvs').getPublicUrl(cvPath);
+    final applicants = List<Map<String, dynamic>>.from(rows as List);
+    // The cvs bucket is private: each CV opens through a short lived link
+    // that only the poster of the job can ask for.
+    for (final a in applicants) {
+      final path = a['cv_path'] as String?;
+      if (path == null || path.isEmpty) continue;
+      try {
+        a['cv_url'] = await client.storage
+            .from('cvs')
+            .createSignedUrl(path, 3600);
+      } catch (_) {
+        // No link for this CV: the row shows without a CV button.
+      }
+    }
+    return applicants;
   }
 
   @override
@@ -90,7 +100,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, i) {
                 final a = applicants[i];
-                final cvUrl = _cvUrl(a['cv_path'] as String?);
+                final cvUrl = a['cv_url'] as String?;
 
                 return Card(
                   elevation: 0,

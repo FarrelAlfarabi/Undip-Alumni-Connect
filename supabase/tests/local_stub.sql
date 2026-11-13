@@ -13,7 +13,7 @@ create schema if not exists extensions;
 grant usage on schema extensions to anon, authenticated, service_role;
 
 create schema auth;
-create table auth.users (id uuid primary key default gen_random_uuid());
+create table auth.users (id uuid primary key default gen_random_uuid(), email text, email_confirmed_at timestamptz default now());
 create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
 
 create schema storage;

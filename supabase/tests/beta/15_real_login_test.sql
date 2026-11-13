@@ -6,6 +6,7 @@ begin;
 
 -- Stand-ins: auth.users gets an email, auth.uid() reads a test setting.
 alter table auth.users add column if not exists email text;
+alter table auth.users add column if not exists email_confirmed_at timestamptz default now();
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('test.uid', true), '')::uuid $$;
 
