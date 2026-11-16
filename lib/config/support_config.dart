@@ -45,4 +45,4 @@ const List<SupportContact> kSupportContacts = [
 /// similar). "Belum punya akun? Hubungi IKAFE" opens it with a button. While it
 /// still has the `[FILL IN` text, no button is shown and the release gate
 /// (test/release_check_test.dart) fails.
-const String kAlumniFormUrl = '[FILL IN: link formulir database alumni]';
+const String kAlumniFormUrl = 'https://tinyurl.com/DatabaseIKAFE';

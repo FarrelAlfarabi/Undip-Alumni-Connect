@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/config/support_config.dart';
 import 'package:undip_alumni_connect/data/industries.dart';
 import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/contact_admin_screen.dart';
@@ -117,6 +118,16 @@ void main() {
       );
       expect(find.byKey(const Key('alumni-form-open')), findsNothing);
       expect(find.text(_intro), findsOneWidget);
+    });
+
+    testWidgets('the real form link is set and the button shows by default', (
+      tester,
+    ) async {
+      expect(kAlumniFormUrl, 'https://tinyurl.com/DatabaseIKAFE');
+      await tester.pumpWidget(
+        const MaterialApp(home: ContactAdminScreen(fromLogin: true)),
+      );
+      expect(find.byKey(const Key('alumni-form-open')), findsOneWidget);
     });
 
     testWidgets('the Profile contact screen has no form button', (
