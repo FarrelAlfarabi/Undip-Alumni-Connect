@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Admin remove member and their data (16 Nov 2026)
+- Admin > Anggota > member: "Hapus anggota dan datanya" (reason + type HAPUS). Hidden for admins and yourself.
+- Migration 20261116190000_admin_remove_member: account_delete body moved to account_delete_core (not callable by the app); account_delete keeps assert_caller then core; admin_member_remove (admin only, login required, Riwayat row with reason only). Tests: 28_admin_remove_member_test.sql, test/admin_member_remove_test.dart.
+
 ## Admin management in the app (16 Nov 2026)
 - Admin > Kelola admin: list admins, Tambah admin (pick an active verified member, confirm), Hapus akses (confirm). Cannot remove yourself, the last admin or an owner admin.
 - Migration 20261116140000_admin_manage_admins: app_admins.is_owner (Farrel's profile), admin_admins_list / admin_admin_add / admin_admin_remove, refused while require_login is off, Riwayat row each. Tests: 27_admin_manage_admins_test.sql, test/admin_admins_test.dart.

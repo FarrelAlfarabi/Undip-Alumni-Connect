@@ -21,6 +21,8 @@ enum AdminErrorCode {
   cannotRemoveSelf,
   lastAdmin,
   ownerProtected,
+  targetIsAdmin,
+  loginRequired,
   unknown,
 }
 
@@ -60,6 +62,10 @@ String adminErrorMessage(Object error) {
         return tr('Admin terakhir tidak bisa dihapus.');
       case AdminErrorCode.ownerProtected:
         return tr('Admin pemilik hanya bisa diubah lewat dashboard Supabase.');
+      case AdminErrorCode.targetIsAdmin:
+        return tr('Hapus dulu akses admin orang ini di Kelola admin.');
+      case AdminErrorCode.loginRequired:
+        return tr('Aksi ini butuh login dengan kode email.');
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
@@ -486,6 +492,30 @@ class AdminRepository {
     );
   }
 
+  /// Removes a member and their data for good (fake or left-behind
+  /// accounts): the same removal as the member's own delete. The database
+  /// refuses yourself, admins and non-admin callers, and logs it in Riwayat.
+  /// Returns how many items went with the account.
+  Future<Map<String, int>> removeMember(
+    String adminId,
+    String profileId,
+    String reason,
+  ) async {
+    final res = await _guard(
+      () => _api.rpc('admin_member_remove', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_reason': reason.trim(),
+      }),
+    );
+    final removed = res is Map ? res['removed'] : null;
+    if (removed is! Map) return const {};
+    return {
+      for (final e in removed.entries)
+        if (e.value is int) e.key as String: e.value as int,
+    };
+  }
+
   /// Fixes a wrong jurusan from the import. Logged in Riwayat.
   Future<void> setMemberMajor(
     String adminId,
@@ -788,6 +818,8 @@ class AdminRepository {
     'cannot_remove_self' => AdminErrorCode.cannotRemoveSelf,
     'last_admin' => AdminErrorCode.lastAdmin,
     'owner_protected' => AdminErrorCode.ownerProtected,
+    'target_is_admin' => AdminErrorCode.targetIsAdmin,
+    'login_required' => AdminErrorCode.loginRequired,
     _ => AdminErrorCode.unknown,
   };
 }
