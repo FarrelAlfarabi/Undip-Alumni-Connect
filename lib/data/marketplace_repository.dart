@@ -283,6 +283,21 @@ class MarketplaceRepository {
     );
   }
 
+  /// Admin: deletes a listing for good. Logged in Riwayat.
+  Future<void> adminDeleteListing({
+    required String adminId,
+    required String listingId,
+    required String reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_listing_delete', {
+        'p_admin': adminId,
+        'p_listing': listingId,
+        'p_reason': reason.trim(),
+      }),
+    );
+  }
+
   Future<List<ReportCount>> fetchReportCounts(String adminId) async {
     final rows = await _guard(
       () => _api.rpc('marketplace_report_counts', {'p_admin': adminId}),

@@ -6,6 +6,7 @@ import '../data/marketplace_format.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
+import '../widgets/admin_reason_dialog.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
@@ -476,6 +477,44 @@ class _ReportsTabState extends State<_ReportsTab> {
     );
   }
 
+  Future<void> _delete(ReportDetail d) async {
+    final reason = await askAdminReason(
+      context,
+      title: tr('Hapus produk ini untuk selamanya?'),
+      body: tr(
+        'Produk dan fotonya dihapus. Tidak bisa dibatalkan. Kalau hanya '
+        'ingin menyembunyikan, pakai Sembunyikan produk.',
+      ),
+      action: tr('Hapus untuk selamanya'),
+      destructive: true,
+      confirmWord: 'HAPUS',
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _busy.add(d.listingId));
+    try {
+      await _repo.adminDeleteListing(
+        adminId: widget.adminId,
+        listingId: d.listingId,
+        reason: reason,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Produk dihapus.'))));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: marketplaceErrorMessage(e),
+          screen: 'Marketplace reports',
+          error: e,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy.remove(d.listingId));
+    }
+  }
+
   Future<void> _show(ReportDetail d) => _run(
     d,
     () => _repo.setListingHidden(
@@ -630,6 +669,15 @@ class _ReportsTabState extends State<_ReportsTab> {
                                   ),
                                   child: Text(tr('Sembunyikan produk')),
                                 ),
+                              TextButton.icon(
+                                key: Key('report-delete-${d.listingId}'),
+                                onPressed: busy ? null : () => _delete(d),
+                                icon: const Icon(Icons.delete_forever_outlined),
+                                label: Text(tr('Hapus')),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: theme.colorScheme.error,
+                                ),
+                              ),
                             ],
                           ),
                         ],

@@ -487,4 +487,9 @@ final Map<String, String> kEnglish = {
   'Akun {0} dihapus bersama bisnis, produk, lowongan, lamaran, permintaan kontak dan notifikasinya. Tidak bisa dibatalkan. Pakai ini untuk akun palsu atau akun yang ditinggalkan.': 'The account of {0} is removed with its businesses, products, jobs, applications, contact requests and notifications. This cannot be undone. Use it for fake or abandoned accounts.',
   'Hapus untuk selamanya': 'Remove for good',
   '{0} dan datanya sudah dihapus.': '{0} and their data were removed.',
+  'Hapus lowongan ini untuk selamanya?': 'Delete this job for good?',
+  '"{0}" dan semua lamarannya dihapus. Tidak bisa dibatalkan. Kalau hanya ingin menyembunyikan, pakai Tangguhkan.': '"{0}" and all its applications are deleted. This cannot be undone. To only hide it, use Suspend.',
+  'Hapus produk ini untuk selamanya?': 'Delete this product for good?',
+  'Produk dan fotonya dihapus. Tidak bisa dibatalkan. Kalau hanya ingin menyembunyikan, pakai Sembunyikan produk.': 'The product and its photos are deleted. This cannot be undone. To only hide it, use Hide product.',
+  'Produk dihapus.': 'Product deleted.',
 };
