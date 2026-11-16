@@ -396,8 +396,7 @@ final Map<String, String> kEnglish = {
       'Please fill in the alumni database first before using the Lingkaran '
           'app. After you submit, please wait a few days while we verify the '
           'data you entered.',
-  'Kode QR formulir database alumni': 'QR code of the alumni database form',
-  'Buka formulir': 'Open the form',
+  'Isi formulir database alumni': 'Fill in the alumni database form',
   'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB usahamu untuk '
           'mendapatkan tanda "Verified"':
       'Does your business have an NIB? Add it to get the "Verified" tick',

@@ -5,8 +5,6 @@ import '../util/app_language.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:qr_flutter/qr_flutter.dart';
-
 import '../config/policy_config.dart' show hasPolicyPlaceholder;
 import '../config/support_config.dart';
 
@@ -32,7 +30,8 @@ class ContactAdminScreen extends StatelessWidget {
     this.alumniFormUrl = kAlumniFormUrl,
   });
 
-  /// The alumni database form, shown as a QR code when opened from login.
+  /// The alumni database form, opened by a button when coming from login.
+  /// No button while it is still the placeholder (the form is not made yet).
   final String alumniFormUrl;
 
   final List<SupportContact> contacts;
@@ -102,23 +101,10 @@ class ContactAdminScreen extends StatelessWidget {
             const SizedBox(height: 16),
             if (fromLogin && !hasPolicyPlaceholder(alumniFormUrl)) ...[
               Center(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  color: Colors.white,
-                  child: QrImageView(
-                    key: const Key('alumni-form-qr'),
-                    data: alumniFormUrl,
-                    size: 200,
-                    semanticsLabel: tr('Kode QR formulir database alumni'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: TextButton.icon(
+                child: FilledButton.icon(
                   key: const Key('alumni-form-open'),
                   icon: const Icon(Icons.open_in_new),
-                  label: Text(tr('Buka formulir')),
+                  label: Text(tr('Isi formulir database alumni')),
                   onPressed: () => launchUrl(
                     Uri.parse(alumniFormUrl),
                     mode: LaunchMode.externalApplication,

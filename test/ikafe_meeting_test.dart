@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:undip_alumni_connect/data/industries.dart';
 import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/contact_admin_screen.dart';
@@ -91,7 +90,7 @@ void main() {
       expect(find.text('Belum punya akun? Hubungi IKAFE'), findsOneWidget);
     });
 
-    testWidgets('shows the QR code and the explanation', (tester) async {
+    testWidgets('shows the explanation and a link button', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: ContactAdminScreen(
@@ -100,12 +99,12 @@ void main() {
           ),
         ),
       );
-      expect(find.byType(QrImageView), findsOneWidget);
       expect(find.text(_intro), findsOneWidget);
       expect(find.byKey(const Key('alumni-form-open')), findsOneWidget);
+      expect(find.text('Isi formulir database alumni'), findsOneWidget);
     });
 
-    testWidgets('no link filled in yet: no QR code, text still shown', (
+    testWidgets('no link filled in yet: no button, text still shown', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -116,13 +115,13 @@ void main() {
           ),
         ),
       );
-      expect(find.byType(QrImageView), findsNothing);
+      expect(find.byKey(const Key('alumni-form-open')), findsNothing);
       expect(find.text(_intro), findsOneWidget);
     });
 
-    testWidgets('the Profile contact screen has no QR code', (tester) async {
+    testWidgets('the Profile contact screen has no form button', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: ContactAdminScreen()));
-      expect(find.byType(QrImageView), findsNothing);
+      expect(find.byKey(const Key('alumni-form-open')), findsNothing);
     });
   });
 }

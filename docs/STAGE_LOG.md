@@ -275,4 +275,4 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Migration `20261110140000_business_nib` + rollback file + SQL test `23_business_nib_test`. Tests: `business_nib_test`.
 ## Ikafe meeting changes (16 Nov 2026)
 - Sponsor carousel capped at 10 slides (app + `home_sponsors()` limit, migration `20261116100000_sponsor_cap_10` + rollback). New "Creative Industry" in the industry list. Business form asks "Apakah usaha anda memiliki NIB?" (Ya/Belum), field only after Ya; blue tick also on the Home owner card.
-- "Belum punya akun? Hubungi IKAFE" shows a QR code of `kAlumniFormUrl` (placeholder, release gate fails until filled) with the new text. Web remembers the person in browser storage so email code is only asked on first use (PIN after).
+- "Belum punya akun? Hubungi IKAFE" has a button to the form in `kAlumniFormUrl` (placeholder: no button, release gate fails until filled) with the new text. Web remembers the person in browser storage so email code is only asked on first use (PIN after).
