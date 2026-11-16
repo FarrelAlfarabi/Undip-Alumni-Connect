@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Web stage 2: app shell and web addresses (16 Nov 2026)
+- From 1024 px a left side nav (logo, Home, Members, Explore, Profile) replaces the bottom bar. Tabs sit in a centred column (720 tablet, 960 desktop). Phone layout unchanged.
+- Web addresses: `/`, `/members`, `/explore`, `/explore/businesses`, `/explore/jobs`, `/profile` (`lib/platform/app_location.dart`). Refresh opens the same tab after the PIN; back from a tab goes Home. Clean paths (`usePathUrlStrategy`), `vercel.json` rewrites every path to index.html.
+- Tests: `test/web_stage2_shell_test.dart` (390, 768, 1280). Full suite passes. Pushed screens (News, Requests, Admin) still cover the whole window: later stages.
+
 ## Hack test fixes (13 Nov 2026)
 - Migration `20261113100000_hack_test_fixes.sql` (+ rollback, `24_hack_test_fixes_test.sql`): anon cannot read `alumni_profiles`; job application status cannot be edited and applying needs you to be the applicant (when login is required); `cvs` bucket private (poster reads by signed link, `job_applicants_screen.dart`); uploads need sign in; `claim_alumni_profile` needs a confirmed email.
 - Also `20261113120000_real_login_cutover.sql` (+ `rollback_real_login_cutover.sql`): the login switch as a migration, because the connector prompt could not be answered. Left out of the beta test chain, applied twice at the end of `run_fresh_chain.sh`. Production build has REAL_LOGIN=true (Vercel env). Still open: signed in members can read each other's email/user_id (directory needs an RPC).

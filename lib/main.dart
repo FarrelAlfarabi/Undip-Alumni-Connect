@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'lock/app_entry.dart';
 import 'lock/lock_overlay.dart';
 import 'lock/lock_service.dart';
+import 'platform/app_location.dart';
 import 'theme.dart';
 import 'util/app_language.dart';
 import 'widgets/marketplace_demo_notice.dart';
@@ -16,6 +18,14 @@ Future<void> main() async {
   // Flutter web draws on a canvas. Without this, screen readers see an empty
   // page until a hidden "Enable accessibility" button is activated.
   if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
+  if (kIsWeb) {
+    // Clean addresses (/members, not /#/members). Vercel sends every path to
+    // index.html (vercel.json), so a refresh on any of them loads the app.
+    usePathUrlStrategy();
+    // Remembered for the app shell, which opens that tab after the PIN.
+    AppLocation.initialPath =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+  }
   await dotenv.load(fileName: '.env');
 
   // These three do not depend on each other, so they run side by side and
@@ -56,7 +66,14 @@ class _MyAppState extends State<MyApp> {
         navigatorKey: _navigatorKey,
         child: child ?? const SizedBox.shrink(),
       ),
-      home: const AppEntry(),
+      // Always start at the entry (welcome, PIN or the app), whatever the
+      // address is. The shell reads AppLocation.initialPath itself, so a
+      // deep address never skips the PIN screen.
+      onGenerateInitialRoutes: (_) => [
+        MaterialPageRoute(builder: (_) => const AppEntry()),
+      ],
+      onGenerateRoute: (_) =>
+          MaterialPageRoute(builder: (_) => const AppEntry()),
     );
   }
 }
