@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Admin management in the app (16 Nov 2026)
+- Admin > Kelola admin: list admins, Tambah admin (pick an active verified member, confirm), Hapus akses (confirm). Cannot remove yourself, the last admin or an owner admin.
+- Migration 20261116140000_admin_manage_admins: app_admins.is_owner (Farrel's profile), admin_admins_list / admin_admin_add / admin_admin_remove, refused while require_login is off, Riwayat row each. Tests: 27_admin_manage_admins_test.sql, test/admin_admins_test.dart.
+
 ## Admin member suspend and jurusan fix (16 Nov 2026)
 - Admin > Anggota (was Ubah profil anggota): Admin and Ditangguhkan tags, Status filter, Tangguhkan / Aktifkan lagi with reason and confirm, Perbaiki jurusan. No NIM (being removed).
 - Migration 20261116131000_admin_member_status: admin_members_list, admin_member_set_suspended, admin_member_set_major (admin only, Riwayat row each). Tests: 26_admin_member_status_test.sql, test/admin_member_status_test.dart.

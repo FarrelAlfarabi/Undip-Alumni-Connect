@@ -9,6 +9,7 @@ import '../data/marketplace_repository.dart';
 import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
+import 'admin_admins_screen.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_sponsors_screen.dart';
 import 'admin_home_order_screen.dart';
@@ -117,6 +118,13 @@ class _AdminScreenState extends State<AdminScreen> {
         ),
         builder: (_) =>
             AdminMembersScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-admins',
+        icon: Icons.admin_panel_settings_outlined,
+        title: tr('Kelola admin'),
+        subtitle: tr('Lihat, tambah atau hapus admin'),
+        builder: (_) => AdminAdminsScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-ikafe-contacts',
