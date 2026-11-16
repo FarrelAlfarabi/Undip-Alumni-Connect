@@ -431,4 +431,27 @@ final Map<String, String> kEnglish = {
   'Blokir alumni ini': 'Block this alum',
   'Catatan (opsional)': 'Note (optional)',
   'Kirim Laporan': 'Send report',
+  'Anggota': 'Members',
+  'Ditangguhkan': 'Suspended',
+  'Ditangguhkan. Alasan: {0}': 'Suspended. Reason: {0}',
+  'Aktifkan lagi': 'Reactivate',
+  'Tangguhkan anggota': 'Suspend member',
+  'Admin dan akunmu sendiri tidak bisa ditangguhkan.':
+      'Admins and your own account cannot be suspended.',
+  'Aktifkan lagi anggota ini?': 'Reactivate this member?',
+  '{0} bisa masuk lagi dan tampil di Directory.':
+      '{0} can sign in again and shows in the Directory.',
+  'Tangguhkan anggota ini?': 'Suspend this member?',
+  '{0} tidak bisa masuk dan hilang dari Directory sampai kamu mengaktifkannya lagi. Bisnis dan postingannya tetap ada: sembunyikan terpisah bila perlu.': '{0} cannot sign in and is gone from the Directory until you reactivate them. Their businesses and posts stay: hide those separately if needed.',
+  'Anggota aktif lagi.': 'Member reactivated.',
+  'Anggota ditangguhkan.': 'Member suspended.',
+  'Ketik {0} untuk lanjut': 'Type {0} to continue',
+  'Alasan wajib diisi.': 'A reason is required.',
+  'Ketik {0} persis.': 'Type {0} exactly.',
+  'Alasan (dicatat di Riwayat)': 'Reason (kept in History)',
+  'Perbaiki jurusan': 'Fix major',
+  'Pilih jurusan yang benar': 'Choose the correct major',
+  'Jurusan tersimpan.': 'Major saved.',
+  'Cari anggota, ubah profil, perbaiki jurusan, tangguhkan atau aktifkan':
+      'Find members, edit profiles, fix major, suspend or reactivate',
 };

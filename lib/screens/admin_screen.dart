@@ -111,9 +111,9 @@ class _AdminScreenState extends State<AdminScreen> {
       AdminSection(
         key: 'admin-members',
         icon: Icons.manage_accounts_outlined,
-        title: tr('Ubah profil anggota'),
+        title: tr('Anggota'),
         subtitle: tr(
-          'Perbaiki jabatan, perusahaan, kota, bio dan LinkedIn anggota',
+          'Cari anggota, ubah profil, perbaiki jurusan, tangguhkan atau aktifkan',
         ),
         builder: (_) =>
             AdminMembersScreen(adminId: adminId, repository: _admin),

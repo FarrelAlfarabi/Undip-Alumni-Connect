@@ -412,7 +412,7 @@ class AdminRepository {
   /// Members an admin can edit (by name or email), 30 at most. No NIM.
   Future<List<AdminMember>> searchMembers(String adminId, String query) async {
     final rows = await _guard(
-      () => _api.rpc('admin_members_search', {
+      () => _api.rpc('admin_members_list', {
         'p_admin': adminId,
         'p_search': query.trim().isEmpty ? null : query.trim(),
       }),
@@ -421,6 +421,40 @@ class AdminRepository {
       for (final r in rows as List)
         AdminMember.fromMap(Map<String, dynamic>.from(r as Map)),
     ];
+  }
+
+  /// Suspends ([suspend] true, [reason] required) or lifts a suspension.
+  /// The database refuses admins, yourself, and non-admin callers, and logs
+  /// the action in Riwayat.
+  Future<void> setMemberSuspended(
+    String adminId,
+    String profileId, {
+    required bool suspend,
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_member_set_suspended', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_suspend': suspend,
+        'p_reason': reason?.trim(),
+      }),
+    );
+  }
+
+  /// Fixes a wrong jurusan from the import. Logged in Riwayat.
+  Future<void> setMemberMajor(
+    String adminId,
+    String profileId,
+    String major,
+  ) async {
+    await _guard(
+      () => _api.rpc('admin_member_set_major', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_major': major.trim(),
+      }),
+    );
   }
 
   /// Saves only [changes]: current_role, industry, company, city, bio,
@@ -980,6 +1014,9 @@ class AdminMember {
     this.city,
     this.bio,
     this.linkedinUrl,
+    this.suspendedAt,
+    this.suspendedReason,
+    this.isAdmin = false,
   });
 
   factory AdminMember.fromMap(Map<String, dynamic> m) => AdminMember(
@@ -994,6 +1031,11 @@ class AdminMember {
     city: m['city'] as String?,
     bio: m['bio'] as String?,
     linkedinUrl: m['linkedin_url'] as String?,
+    suspendedAt: m['suspended_at'] == null
+        ? null
+        : DateTime.tryParse(m['suspended_at'] as String),
+    suspendedReason: m['suspended_reason'] as String?,
+    isAdmin: m['is_admin'] == true,
   );
 
   final String id;
@@ -1007,4 +1049,9 @@ class AdminMember {
   final String? city;
   final String? bio;
   final String? linkedinUrl;
+  final DateTime? suspendedAt;
+  final String? suspendedReason;
+  final bool isAdmin;
+
+  bool get isSuspended => suspendedAt != null;
 }

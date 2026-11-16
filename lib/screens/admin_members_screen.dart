@@ -6,15 +6,17 @@ import '../data/admin_repository.dart';
 import '../data/city_distances.dart';
 import '../data/industries.dart';
 import '../data/profile_fields.dart';
+import '../widgets/admin_reason_dialog.dart';
 import '../widgets/error_view.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/searchable_choice.dart';
 
-/// Admin > Ubah profil anggota: find a member and fix the basic fields a
-/// member can edit themselves (jabatan, perusahaan, industri, kota, bio,
-/// LinkedIn). Same search and filters as the Directory (name or company,
-/// major, year, industry, city), plus email in the search. All members are
-/// loaded once and filtered here. NIM, email, nama and status cannot be
+/// Admin > Anggota: find a member, fix the basic fields a member can edit
+/// themselves (jabatan, perusahaan, industri, kota, bio, LinkedIn), fix a
+/// wrong jurusan, and suspend or lift a suspension. Same search and
+/// filters as the Directory (name or company, major, year, industry, city),
+/// plus email in the search and a status filter. All members, suspended ones
+/// included, are loaded once and filtered here. Email and nama cannot be
 /// edited and the database refuses them.
 class AdminMembersScreen extends StatefulWidget {
   const AdminMembersScreen({
@@ -38,6 +40,11 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
   String _year = kAllFilter;
   String _industry = kAllFilter;
   String _city = kAllFilter;
+  String _status = kAllFilter;
+
+  static const _statusActive = 'Aktif';
+  static const _statusSuspended = 'Ditangguhkan';
+  static const _statusAdmin = 'Admin';
 
   @override
   void initState() {
@@ -62,12 +69,13 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
       _major != kAllFilter ||
       _year != kAllFilter ||
       _industry != kAllFilter ||
-      _city != kAllFilter;
+      _city != kAllFilter ||
+      _status != kAllFilter;
 
   void _clear() => setState(() {
     _search.clear();
     _industryText.clear();
-    _major = _year = _industry = _city = kAllFilter;
+    _major = _year = _industry = _city = _status = kAllFilter;
   });
 
   List<AdminMember> _filter(List<AdminMember> all) {
@@ -77,6 +85,9 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
       if (_year != kAllFilter && '${m.graduationYear}' != _year) return false;
       if (_industry != kAllFilter && m.industry != _industry) return false;
       if (_city != kAllFilter && (m.city ?? '').trim() != _city) return false;
+      if (_status == _statusActive && m.isSuspended) return false;
+      if (_status == _statusSuspended && !m.isSuspended) return false;
+      if (_status == _statusAdmin && !m.isAdmin) return false;
       if (q.isNotEmpty &&
           !m.name.toLowerCase().contains(q) &&
           !(m.company ?? '').toLowerCase().contains(q) &&
@@ -103,7 +114,7 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Ubah profil anggota'))),
+      appBar: AppBar(title: Text(tr('Anggota'))),
       body: SafeArea(
         top: false,
         child: Center(
@@ -118,7 +129,7 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
                 if (snap.hasError) {
                   return ErrorView(
                     message: adminErrorMessage(snap.error!),
-                    screen: 'Ubah profil anggota',
+                    screen: 'Admin anggota',
                     error: snap.error,
                     onRetry: () => setState(_load),
                   );
@@ -209,6 +220,21 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
                       ),
                     ),
                     Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: FilterDropdown(
+                        key: const Key('members-status'),
+                        label: tr('Status'),
+                        value: _status,
+                        options: const [
+                          kAllFilter,
+                          _statusActive,
+                          _statusSuspended,
+                          _statusAdmin,
+                        ],
+                        onChanged: (v) => setState(() => _status = v),
+                      ),
+                    ),
+                    Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
@@ -253,7 +279,23 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
                                       list[i].company!,
                                   ].join(' · '),
                                 ),
-                                trailing: const Icon(Icons.chevron_right),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (list[i].isAdmin)
+                                      _StatusTag(
+                                        key: Key('tag-admin-${list[i].id}'),
+                                        text: tr('Admin'),
+                                      ),
+                                    if (list[i].isSuspended)
+                                      _StatusTag(
+                                        key: Key('tag-suspended-${list[i].id}'),
+                                        text: tr('Ditangguhkan'),
+                                        error: true,
+                                      ),
+                                    const Icon(Icons.chevron_right),
+                                  ],
+                                ),
                                 onTap: () => _open(list[i]),
                               ),
                             ),
@@ -488,6 +530,67 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                         )
                       : Text(tr('Simpan')),
                 ),
+                const SizedBox(height: 32),
+                Text(
+                  tr('Akun'),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                if (m.isSuspended)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      trf('Ditangguhkan. Alasan: {0}', [
+                        m.suspendedReason ?? '-',
+                      ]),
+                      key: const Key('member-suspended-note'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ListTile(
+                  key: const Key('member-major'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.school_outlined),
+                  title: Text(tr('Perbaiki jurusan')),
+                  subtitle: Text(m.major ?? '-'),
+                  trailing: const Icon(Icons.edit_outlined),
+                  onTap: _saving ? null : _fixMajor,
+                ),
+                if (_canSuspend)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton.icon(
+                      key: const Key('member-suspend'),
+                      style: m.isSuspended
+                          ? null
+                          : OutlinedButton.styleFrom(
+                              foregroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                            ),
+                      icon: Icon(
+                        m.isSuspended
+                            ? Icons.lock_open_outlined
+                            : Icons.block_outlined,
+                      ),
+                      label: Text(
+                        m.isSuspended
+                            ? tr('Aktifkan lagi')
+                            : tr('Tangguhkan anggota'),
+                      ),
+                      onPressed: _saving ? null : _toggleSuspend,
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      tr('Admin dan akunmu sendiri tidak bisa ditangguhkan.'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -495,4 +598,162 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
       ),
     );
   }
+
+  bool get _canSuspend =>
+      !widget.member.isAdmin && widget.member.id != widget.adminId;
+
+  Future<void> _fixMajor() async {
+    final m = widget.member;
+    final options = {...kAdminMajors, ?m.major}.toList();
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(tr('Pilih jurusan yang benar')),
+        children: [
+          for (final o in options)
+            SimpleDialogOption(
+              key: Key('major-$o'),
+              onPressed: () => Navigator.of(ctx).pop(o),
+              child: Row(
+                children: [
+                  Icon(
+                    o == m.major
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(o)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (picked == null || picked == m.major || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.setMemberMajor(widget.adminId, m.id, picked);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(tr('Jurusan tersimpan.'))));
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = adminErrorMessage(e);
+      });
+    }
+  }
+
+  Future<void> _toggleSuspend() async {
+    final m = widget.member;
+    final messenger = ScaffoldMessenger.of(context);
+    String? reason;
+    if (m.isSuspended) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('Aktifkan lagi anggota ini?')),
+          content: Text(
+            trf('{0} bisa masuk lagi dan tampil di Directory.', [m.name]),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(tr('Batal')),
+            ),
+            FilledButton(
+              key: const Key('confirm-unsuspend'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(tr('Aktifkan')),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    } else {
+      reason = await askAdminReason(
+        context,
+        title: tr('Tangguhkan anggota ini?'),
+        body: trf(
+          '{0} tidak bisa masuk dan hilang dari Directory sampai kamu '
+          'mengaktifkannya lagi. Bisnis dan postingannya tetap ada: '
+          'sembunyikan terpisah bila perlu.',
+          [m.name],
+        ),
+        action: tr('Tangguhkan'),
+        destructive: true,
+      );
+      if (reason == null) return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.setMemberSuspended(
+        widget.adminId,
+        m.id,
+        suspend: !m.isSuspended,
+        reason: reason,
+      );
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            m.isSuspended
+                ? tr('Anggota aktif lagi.')
+                : tr('Anggota ditangguhkan.'),
+          ),
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = adminErrorMessage(e);
+      });
+    }
+  }
 }
+
+/// Small coloured tag in the member list (Admin, Ditangguhkan).
+class _StatusTag extends StatelessWidget {
+  const _StatusTag({super.key, required this.text, this.error = false});
+
+  final String text;
+  final bool error;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: error ? scheme.errorContainer : scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: error ? scheme.onErrorContainer : scheme.onSecondaryContainer,
+        ),
+      ),
+    );
+  }
+}
+
+/// The FEB jurusan the alumni list uses.
+const kAdminMajors = [
+  'Akuntansi',
+  'Ilmu Ekonomi dan Studi Pembangunan',
+  'Manajemen',
+];
