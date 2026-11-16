@@ -41,7 +41,7 @@ void main() {
     ) async {
       await pumpVerify(tester, FakeLoginApi());
       expect(find.byKey(const Key('login-contact-admin')), findsOneWidget);
-      expect(find.text('Belum terdaftar? Hubungi tim admin'), findsOneWidget);
+      expect(find.text('Belum punya akun? Hubungi IKAFE'), findsOneWidget);
       expect(find.textContaining('lupa email yang dipakai?'), findsNothing);
       expect(find.text('Email tidak terdaftar'), findsNothing);
     });
@@ -53,7 +53,7 @@ void main() {
       await tester.tap(find.byKey(const Key('login-contact-admin')));
       await tester.pumpAndSettle();
       expect(find.byType(ContactAdminScreen), findsOneWidget);
-      expect(find.textContaining('Input nama lengkap'), findsOneWidget);
+      expect(find.textContaining('Yuk isi database alumni'), findsOneWidget);
     });
 
     testWidgets('unknown email: inline error, contact link, other email', (
@@ -186,7 +186,7 @@ void main() {
     testWidgets('Indonesian, with the normal intro in Profile', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: ContactAdminScreen()));
       expect(find.text('Kontak admin'), findsOneWidget);
-      expect(find.textContaining('Input nama lengkap'), findsNothing);
+      expect(find.textContaining('Yuk isi database alumni'), findsNothing);
       expect(find.byTooltip('Salin'), findsWidgets);
     });
 
@@ -194,7 +194,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(home: ContactAdminScreen(fromLogin: true)),
       );
-      expect(find.textContaining('Input nama lengkap'), findsOneWidget);
+      expect(find.textContaining('Yuk isi database alumni'), findsOneWidget);
     });
 
     testWidgets('a failed open offers a copy action', (tester) async {

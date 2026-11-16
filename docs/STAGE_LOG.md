@@ -273,3 +273,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Optional NIB with blue tick (10 Nov 2026)
 - Business form has an optional NIB (13 digits). Owners of approved businesses can add or change it from My businesses. Admin sees the NIB on the business card and taps "Tandai NIB terverifikasi"; only then the blue tick shows in the list, detail and My businesses. Changing the number removes the tick. Other alumni never see the number.
 - Migration `20261110140000_business_nib` + rollback file + SQL test `23_business_nib_test`. Tests: `business_nib_test`.
+## Ikafe meeting changes (16 Nov 2026)
+- Sponsor carousel capped at 10 slides (app + `home_sponsors()` limit, migration `20261116100000_sponsor_cap_10` + rollback). New "Creative Industry" in the industry list. Business form asks "Apakah usaha anda memiliki NIB?" (Ya/Belum), field only after Ya; blue tick also on the Home owner card.
+- "Belum punya akun? Hubungi IKAFE" shows a QR code of `kAlumniFormUrl` (placeholder, release gate fails until filled) with the new text. Web remembers the person in browser storage so email code is only asked on first use (PIN after).

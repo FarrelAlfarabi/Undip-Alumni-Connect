@@ -14,6 +14,7 @@ import '../widgets/brand_lockup.dart';
 import '../util/safe_url.dart';
 import '../widgets/feedback_sheet.dart';
 import '../widgets/sponsor_banner.dart';
+import '../widgets/verified_badge.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 import 'marketplace_screen.dart' show ListingImage;
@@ -1327,12 +1328,16 @@ class _BusinessEntry extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          b.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: NameWithBadge(
+                            name: b.name,
+                            verified: b.nibVerified,
+                            maxLines: 1,
+                            badgeSize: 16,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),

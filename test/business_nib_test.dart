@@ -170,7 +170,7 @@ void main() {
       tester,
     ) async {
       final api = await pumpForm(tester);
-      expect(find.byKey(const Key('nib-field')), findsOneWidget);
+      expect(find.byKey(const Key('nib-yes')), findsOneWidget);
       await fillBasics(tester);
       await tester.tap(find.text('Submit for review'));
       await tester.pumpAndSettle();
@@ -178,9 +178,39 @@ void main() {
       expect(api.calls, isNot(contains('business_set_nib')));
     });
 
+    testWidgets('asks first, field only after Ya', (tester) async {
+      await pumpForm(tester);
+      expect(
+        find.textContaining('Apakah usaha anda memiliki NIB?'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('nib-field')), findsNothing);
+      await tester.tap(find.byKey(const Key('nib-yes')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('nib-field')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('nib-no')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('nib-field')), findsNothing);
+    });
+
+    testWidgets('choosing Belum after a saved NIB clears it', (tester) async {
+      final api = await pumpForm(
+        tester,
+        existing: Business.fromMap(businessMap(nib: '1234567890123')),
+      );
+      await tester.tap(find.byKey(const Key('nib-no')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save and send again'));
+      await tester.pumpAndSettle();
+      expect(api.calls, contains('business_set_nib'));
+      expect(api.params['business_set_nib']!['p_nib'], isNull);
+    });
+
     testWidgets('a wrong NIB is refused before sending', (tester) async {
       final api = await pumpForm(tester);
       await fillBasics(tester);
+      await tester.tap(find.byKey(const Key('nib-yes')));
+      await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const Key('nib-field')), '12345');
       await tester.tap(find.text('Submit for review'));
       await tester.pumpAndSettle();
@@ -191,6 +221,8 @@ void main() {
     testWidgets('a good NIB is saved after the business', (tester) async {
       final api = await pumpForm(tester);
       await fillBasics(tester);
+      await tester.tap(find.byKey(const Key('nib-yes')));
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('nib-field')),
         '1234567890123',

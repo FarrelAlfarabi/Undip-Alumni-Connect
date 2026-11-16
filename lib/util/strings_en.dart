@@ -389,8 +389,21 @@ final Map<String, String> kEnglish = {
   'Kode baru sudah dikirim': 'A new code was sent',
   'Kode 6 digit': '6-digit code',
   'Pakai email lain': 'Use another email',
-  'Belum terdaftar? Hubungi tim admin':
-      'Not registered? Contact the admin team',
+  'Belum punya akun? Hubungi IKAFE': 'No account yet? Contact IKAFE',
+  'Yuk isi database alumni terlebih dahulu sebelum mengakses Aplikasi '
+          'Lingkaran. Setelah mengisi, mohon tunggu beberapa hari untuk kami '
+          'melakukan verifikasi atas data yang kamu input':
+      'Please fill in the alumni database first before using the Lingkaran '
+          'app. After you submit, please wait a few days while we verify the '
+          'data you entered.',
+  'Kode QR formulir database alumni': 'QR code of the alumni database form',
+  'Buka formulir': 'Open the form',
+  'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB usahamu untuk '
+          'mendapatkan tanda "Verified"':
+      'Does your business have an NIB? Add it to get the "Verified" tick',
+  'Ya': 'Yes',
+  'Nomor NIB': 'NIB number',
+  'Belum': 'Not yet',
   'Hubungi tim admin': 'Contact the admin team',
   'Coba lagi': 'Try again',
   'Kirim masukan': 'Send feedback',
