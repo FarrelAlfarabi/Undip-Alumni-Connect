@@ -409,6 +409,36 @@ class AdminRepository {
     return old is String && old.isNotEmpty ? old : null;
   }
 
+  /// Members an admin can edit (by name or email), 30 at most. No NIM.
+  Future<List<AdminMember>> searchMembers(String adminId, String query) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_members_search', {
+        'p_admin': adminId,
+        'p_search': query.trim().isEmpty ? null : query.trim(),
+      }),
+    );
+    return [
+      for (final r in rows as List)
+        AdminMember.fromMap(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Saves only [changes]: current_role, industry, company, city, bio,
+  /// linkedin_url. The database refuses anything else and non-admins.
+  Future<void> updateMember(
+    String adminId,
+    String profileId,
+    Map<String, String?> changes,
+  ) async {
+    await _guard(
+      () => _api.rpc('admin_update_profile', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_changes': changes,
+      }),
+    );
+  }
+
   Future<void> _reportAction(
     String adminId,
     AdminReport r,
@@ -933,4 +963,48 @@ class HomeOrderItem {
     status: m['status'] as String? ?? 'approved',
     rank: (m['home_rank'] as num?)?.toInt(),
   );
+}
+
+/// A member as the admin edit screen sees them. Only fields a member can edit
+/// in their own profile, plus name and email to tell people apart.
+class AdminMember {
+  const AdminMember({
+    required this.id,
+    required this.name,
+    this.email,
+    this.major,
+    this.graduationYear,
+    this.role,
+    this.industry,
+    this.company,
+    this.city,
+    this.bio,
+    this.linkedinUrl,
+  });
+
+  factory AdminMember.fromMap(Map<String, dynamic> m) => AdminMember(
+    id: m['id'] as String,
+    name: (m['name'] as String?) ?? '',
+    email: m['email'] as String?,
+    major: m['major'] as String?,
+    graduationYear: m['graduation_year'] as int?,
+    role: m['current_role'] as String?,
+    industry: m['industry'] as String?,
+    company: m['company'] as String?,
+    city: m['city'] as String?,
+    bio: m['bio'] as String?,
+    linkedinUrl: m['linkedin_url'] as String?,
+  );
+
+  final String id;
+  final String name;
+  final String? email;
+  final String? major;
+  final int? graduationYear;
+  final String? role;
+  final String? industry;
+  final String? company;
+  final String? city;
+  final String? bio;
+  final String? linkedinUrl;
 }

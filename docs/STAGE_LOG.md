@@ -276,3 +276,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Ikafe meeting changes (16 Nov 2026)
 - Sponsor carousel capped at 10 slides (app + `home_sponsors()` limit, migration `20261116100000_sponsor_cap_10` + rollback). New "Creative Industry" in the industry list. Business form asks "Apakah usaha anda memiliki NIB?" (Ya/Belum), field only after Ya; blue tick also on the Home owner card.
 - "Belum punya akun? Hubungi IKAFE" has a button to the form in `kAlumniFormUrl` (placeholder: no button, release gate fails until filled) with the new text. Web remembers the person in browser storage so email code is only asked on first use (PIN after).
+## Admin edit member profile (16 Nov 2026)
+- Admin > "Ubah profil anggota": search (name, company, email) and filters (major, year, industry, city) like the Directory, then edit jabatan, perusahaan, industri, kota, bio, LinkedIn. NIM, email, name, status are not shown and the database refuses them (`protected_field`).
+- Migration `20261116120000_admin_edit_profile` (`admin_update_profile`, `admin_members_search`, edits go to the admin log as field names) + rollback + SQL test `25_admin_edit_profile_test`. Tests: `admin_members_test`. Photo not covered.

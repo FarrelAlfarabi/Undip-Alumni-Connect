@@ -107,8 +107,7 @@ final Map<String, String> kEnglish = {
   'Dukung Usaha Alumni': 'Support Alumni Businesses',
   'Lihat semua pengumuman': 'See all announcements',
   'Disponsori': 'Sponsored',
-  'Data sponsor belum benar. Periksa nama, tautan (https://...), gambar dan tanggal.':
-      'The sponsor data is not right. Check the name, link (https://...), image and dates.',
+  'Data sponsor belum benar. Periksa nama, tautan (https://...), gambar dan tanggal.': 'The sponsor data is not right. Check the name, link (https://...), image and dates.',
   'dilihat': 'views',
   'diketuk': 'taps',
   'Sponsor': 'Sponsor',
@@ -323,6 +322,24 @@ final Map<String, String> kEnglish = {
   'Hapus pengumuman ini?': 'Delete this announcement?',
   'Belum dipin': 'Not pinned yet',
   'Kontak Ikafe': 'Ikafe contacts',
+  'Ubah profil anggota': 'Edit member profile',
+  'Perbaiki jabatan, perusahaan, kota, bio dan LinkedIn anggota':
+      'Fix a member\'s role, company, city, bio and LinkedIn',
+  'Cari nama, perusahaan atau email...': 'Search name, company or email...',
+  '{0} dari {1} anggota': '{0} of {1} members',
+  '{0} anggota': '{0} members',
+  'Tidak ada anggota yang cocok.': 'No matching members.',
+  'Data anggota tersimpan.': 'Member details saved.',
+  'Belum ada yang diubah.': 'Nothing has been changed.',
+  'Jabatan': 'Job title',
+  'Perusahaan': 'Company',
+  'Industri': 'Industry',
+  'Kosongkan untuk menghapus. Paling banyak 200 huruf.':
+      'Leave empty to remove. At most 200 characters.',
+  'Tautan linkedin.com. Kosongkan untuk menghapus.':
+      'A linkedin.com link. Leave empty to remove.',
+  'Isian tidak valid. Bio paling banyak 200 huruf, dan tautan harus dari linkedin.com.': 'Invalid input. Bio is at most 200 characters, and the link must be from linkedin.com.',
+  'Kamu mengubah data {0}. Hanya isian yang bisa diubah anggota sendiri yang tampil di sini.': 'You are editing {0}. Only fields the member can edit themselves are shown.',
   'Tambah kontak': 'Add contact',
   'Belum ada kontak.': 'No contacts yet.',
   'Hapus kontak ini?': 'Delete this contact?',
@@ -394,8 +411,8 @@ final Map<String, String> kEnglish = {
           'Lingkaran. Setelah mengisi, mohon tunggu beberapa hari untuk kami '
           'melakukan verifikasi atas data yang kamu input':
       'Please fill in the alumni database first before using the Lingkaran '
-          'app. After you submit, please wait a few days while we verify the '
-          'data you entered.',
+      'app. After you submit, please wait a few days while we verify the '
+      'data you entered.',
   'Isi formulir database alumni': 'Fill in the alumni database form',
   'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB usahamu untuk '
           'mendapatkan tanda "Verified"':
