@@ -12,6 +12,11 @@ const kSponsorAspectRatio = 2.0;
 /// The whole card: the yellow "Disponsori" bar plus the 2:1 picture below it.
 const kSponsorCardAspectRatio = 1.75;
 
+/// Widest the card gets. On a phone it fills the width as before; on a wide
+/// screen it stops here (about 320 px high) and sits centred, so it stays a
+/// banner and does not take the whole first screen.
+const double kSponsorMaxWidth = 560;
+
 const _softYellow = Color(0xFFFFF6D6);
 
 /// The sponsor carousel on Home, under the four tiles. Same behaviour as the
@@ -42,7 +47,7 @@ class SponsorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
-    return BannerCarousel(
+    final carousel = BannerCarousel(
       items: items.take(kMaxSponsorSlides).toList(),
       onOpen: onOpen,
       onShown: onShown,
@@ -51,6 +56,12 @@ class SponsorBanner extends StatelessWidget {
       aspectRatio: kSponsorCardAspectRatio,
       cardBuilder: (context, item, onTap) =>
           _SponsorCard(item: item, onTap: onTap),
+    );
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kSponsorMaxWidth),
+        child: carousel,
+      ),
     );
   }
 }
