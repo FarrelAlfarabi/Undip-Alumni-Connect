@@ -63,10 +63,10 @@ create function audit.rec(p_id text, p_weak boolean, p_note text) returns void l
 $$;
 
 -- ---------------------------------------------------------------- fixtures ---
-insert into alumni_profiles (id, nim, name, faculty, major, graduation_year, email, subscription_status, verification_status, current_employer) values
- ('aaaaaaaa-0000-4000-8000-000000000001','A001','Alice Example','Fakultas Ekonomika dan Bisnis','Manajemen',2020,'alice@example.com','subscribed','verified','Acme'),
- ('bbbbbbbb-0000-4000-8000-000000000002','B002','Bob Example','Fakultas Ekonomika dan Bisnis','Akuntansi',2021,'bob@example.com','free','verified','Beta'),
- ('cccccccc-0000-4000-8000-000000000003','C003','Audit Admin','Fakultas Ekonomika dan Bisnis','Manajemen',2019,'audit.admin@example.com','free','verified','Gamma');
+insert into alumni_profiles (id, name, faculty, major, graduation_year, email, subscription_status, verification_status, current_employer) values
+ ('aaaaaaaa-0000-4000-8000-000000000001','Alice Example','Fakultas Ekonomika dan Bisnis','Manajemen',2020,'alice@example.com','subscribed','verified','Acme'),
+ ('bbbbbbbb-0000-4000-8000-000000000002','Bob Example','Fakultas Ekonomika dan Bisnis','Akuntansi',2021,'bob@example.com','free','verified','Beta'),
+ ('cccccccc-0000-4000-8000-000000000003','Audit Admin','Fakultas Ekonomika dan Bisnis','Manajemen',2019,'audit.admin@example.com','free','verified','Gamma');
 insert into marketplace_admins (profile_id) values ('cccccccc-0000-4000-8000-000000000003');
 -- When the passphrase migration is present, give the admin a passphrase the
 -- way the owner would (owner-only helper). Absent before that migration.
@@ -100,7 +100,7 @@ insert into storage.objects (bucket_id, name) values ('marketplace','aaaaaaaa-00
 select audit.rec('P01', audit.n('select * from messages') > 0, 'anon reads every private message');
 select audit.rec('P02', audit.n('select * from conversations') > 0, 'anon reads every conversation (who talks to whom)');
 select audit.rec('P03', audit.n('select email, phone, cover_note from job_applications') > 0, 'anon reads applicant email, phone and cover note');
-select audit.rec('P04', audit.n('select email, nim from alumni_profiles') > 0, 'anon reads every alumnus email and NIM (email is the login)');
+select audit.rec('P04', audit.n('select email from alumni_profiles') > 0, 'anon reads every alumnus email (email is the login)');
 select audit.rec('P05', audit.n('select * from notifications') > 0, 'anon reads everyone''s notifications');
 select audit.rec('P08', audit.n('select recipient_email, body from email_log') > 0, 'anon reads the simulated email log');
 select audit.rec('P10', audit.n('select * from city_chat_messages') > 0, 'anon reads all city chats');
@@ -158,7 +158,7 @@ select audit.rec('C1', audit.try($q$delete from messages where id in (select id 
 select audit.rec('C2', audit.try($q$insert into marketplace_listings (seller_id, title, description, price_idr, category, city, image_url, contact_info) values ('aaaaaaaa-0000-4000-8000-000000000001','abc','d',1,'Other','J','https://x.example/i.jpg','c')$q$) like 'ok%', 'control: anon inserts a listing directly (must be blocked)');
 select audit.rec('C3', audit.try($q$select * from marketplace_admins$q$) like 'ok%', 'control: anon reads marketplace_admins (must be blocked)');
 select audit.rec('C4', audit.try($q$select * from marketplace_reports$q$) like 'ok%', 'control: anon reads reports (must be blocked)');
-select audit.rec('C5', audit.try($q$insert into alumni_profiles (nim, name, faculty, major, graduation_year, email) values ('Z9','Fake','F','M',2020,'fake@example.com')$q$) like 'ok%', 'control: anon inserts a fake profile (must be blocked)');
+select audit.rec('C5', audit.try($q$insert into alumni_profiles (name, faculty, major, graduation_year, email) values ('Fake','F','M',2020,'fake@example.com')$q$) like 'ok%', 'control: anon inserts a fake profile (must be blocked)');
 select audit.rec('C6', audit.n($q$select * from marketplace_listings where status = 'pending'$q$) > 0, 'control: anon reads pending listings directly (must be blocked)');
 
 -- Positive control (only when passphrase-protected admin functions exist):

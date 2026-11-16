@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## NIM removed from app and database (16 Nov 2026)
+- Farrel: erase NIM entirely, no backup. App: NIM row, profile_nim call, NIM in privacy text and delete list removed. Seed keyed on email.
+- Migration 20261116180000_remove_nim: clears passwords equal to the NIM, drops provision_alumni_accounts, profile_nim, the nim column and key; restrict_update and account_delete without nim. Rollback restores empty schema only.
+- SQL runners now apply each migration twice in a row (the chain no longer replays on top of the drop). Tests: 28_remove_nim_test.sql, test/security_fixes/remove_nim_test.dart.
+
 ## Admin management in the app (16 Nov 2026)
 - Admin > Kelola admin: list admins, Tambah admin (pick an active verified member, confirm), Hapus akses (confirm). Cannot remove yourself, the last admin or an owner admin.
 - Migration 20261116140000_admin_manage_admins: app_admins.is_owner (Farrel's profile), admin_admins_list / admin_admin_add / admin_admin_remove, refused while require_login is off, Riwayat row each. Tests: 27_admin_manage_admins_test.sql, test/admin_admins_test.dart.

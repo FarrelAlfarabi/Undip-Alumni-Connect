@@ -43,8 +43,7 @@ Map<String, dynamic>? profileFromVerifyResult(Object? result) {
   return profile['verification_status'] == 'verified' ? profile : null;
 }
 
-/// Demo email-verification screen (scope change 14 Sep: was NIM exact-match,
-/// now email exact-match — see PROJECT_NOTES.md Session 3).
+/// Demo email-verification screen (email exact-match — see PROJECT_NOTES.md Session 3).
 ///
 /// DEMO SCOPE: this is a plain exact-string-match against seeded dummy
 /// data in `alumni_profiles.email`. No real auth account is created, no

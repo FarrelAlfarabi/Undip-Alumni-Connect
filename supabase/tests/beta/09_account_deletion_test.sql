@@ -123,17 +123,15 @@ select jt.assert((select count(*) from app_admins where profile_id = jt.pid('cla
 -- The profile row: every personal field cleared, constraints still pass.
 select jt.assert((select name from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id')) = 'Deleted user', 'name replaced');
 select jt.assert((select email from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id')) = 'deleted-' || (select v from t_ids where k = 'ahmad_id')::text || '@deleted.invalid', 'unique placeholder email');
-select jt.assert((select nim from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id')) is null, 'nim cleared');
 select jt.assert((select count(*) from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id') and city is null and current_employer is null and "current_role" is null and industry is null and company is null and user_id is null and policy_version is null and policy_accepted_at is null) = 1, 'every optional personal field cleared');
 select jt.assert((select faculty || '|' || major || '|' || graduation_year::text from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id')) = '-|-|0', 'required fields hold placeholders');
 select jt.assert((select verification_status from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id')) = 'unverified', 'cannot be verified');
 select jt.assert((select deleted_at from alumni_profiles where id = (select v from t_ids where k = 'ahmad_id')) > now() - interval '1 minute', 'deleted_at set');
--- A second deletion works too: unique emails and nullable nim do not collide.
+-- A second deletion works too: unique placeholder emails do not collide.
 set role anon;
 select account_delete(jt.pid('bagas.prasetyo@example.com'));
 reset role;
 select jt.assert((select count(distinct email) from alumni_profiles where deleted_at is not null) = 2, 'two deleted profiles, two unique placeholder emails');
-select jt.assert((select count(*) from alumni_profiles where nim is null) = 2, 'two profiles with a null nim');
 
 -- Hidden from every screen: select policy and the email lookup used to verify.
 set role anon;
@@ -146,7 +144,7 @@ select jt.expect_error(format($q$select account_delete(%L)$q$, (select v from t_
 reset role;
 
 -- The dashboard can restore someone from the Ikafe list.
-update alumni_profiles set deleted_at = null, name = 'Ahmad Fauzan Ramadhan', email = 'ahmad.ramadhan@example.com', nim = '99999', faculty = 'FEB', major = 'Manajemen', graduation_year = 2023, verification_status = 'verified'
+update alumni_profiles set deleted_at = null, name = 'Ahmad Fauzan Ramadhan', email = 'ahmad.ramadhan@example.com', faculty = 'FEB', major = 'Manajemen', graduation_year = 2023, verification_status = 'verified'
   where id = (select v from t_ids where k = 'ahmad_id');
 set role anon;
 select jt.assert((select count(*) from alumni_profiles where email = 'ahmad.ramadhan@example.com') = 1, 'restored person is visible and can verify again');

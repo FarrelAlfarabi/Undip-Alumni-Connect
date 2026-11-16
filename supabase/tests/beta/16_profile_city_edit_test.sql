@@ -17,7 +17,6 @@ select jt.assert((select city from alumni_profiles where email = 'ahmad.ramadhan
 set role anon;
 
 -- Everything else stays locked.
-select jt.expect_error(format($q$update alumni_profiles set nim = 'X1' where id = %L$q$, jt.pid('ahmad.ramadhan@example.com')), 'can be updated');
 select jt.expect_error(format($q$update alumni_profiles set name = 'Other' where id = %L$q$, jt.pid('ahmad.ramadhan@example.com')), 'can be updated');
 select jt.expect_error(format($q$update alumni_profiles set email = 'x@example.com' where id = %L$q$, jt.pid('ahmad.ramadhan@example.com')), 'can be updated');
 select jt.expect_error(format($q$update alumni_profiles set verification_status = 'verified' where id = %L$q$, jt.pid('rizky.yusuf@example.com')), 'can be updated');

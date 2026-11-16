@@ -5,20 +5,18 @@
 -- demo is a plain exact-string-match against alumni_profiles.email — see
 -- the "DEMO VERIFICATION TEST EMAILS" list below for the ones to use when
 -- demoing the signup flow. (Scope change 14 Sep, post-Gilang meeting:
--- verification switched from NIM exact-match to email exact-match. nim
--- values are kept below as a real profile field, just no longer the
--- verification key.)
+-- verification switched to email exact-match. NIM was removed from the
+-- app and database on 16 Nov 2026.)
 --
--- Idempotent: safe to re-run. ON CONFLICT (nim) DO UPDATE SET email so
--- that re-running this script against the already-seeded live project
--- backfills email on the 24 existing rows instead of skipping them.
+-- Idempotent: safe to re-run. ON CONFLICT (email) DO UPDATE, email is the
+-- unique key.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
 -- DEMO VERIFICATION TEST EMAILS
 -- Use any of these at signup to exercise the exact-match "verified" path.
 -- Any email not in this table will exact-match-fail, demonstrating the
--- unverified/rejected path. Same 5 rows as the old NIM test list.
+-- unverified/rejected path.
 --
 -- All 5 seed as subscription_status = 'free' on purpose (fixed 15 Sep,
 -- Day 9 walkthrough — they were originally seeded 'subscribed', which
@@ -35,7 +33,7 @@
 -- ----------------------------------------------------------------------------
 
 insert into alumni_profiles
-  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+  (name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
   -- All 24 seeded alumni are Fakultas Ekonomika dan Bisnis (FEB) — this
   -- app is scoped to Ikafe only, not campus-wide UNDIP (see the scope
@@ -44,73 +42,73 @@ values
   -- Studi Pembangunan. Employers/roles/industries are left as originally
   -- seeded — alumni working outside their field of study is realistic,
   -- not a data error.
-  ('24010119130001', 'Ahmad Fauzan Ramadhan', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2023, 'Gojek', 'Software Engineer', 'Technology', 'Gojek', 'verified', 'free', 'ahmad.ramadhan@example.com'),
-  ('24010118130006', 'Dewi Kartika Sari', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2022, 'PT Wijaya Karya', 'Site Engineer', 'Construction', 'PT Wijaya Karya', 'verified', 'free', 'dewi.sari@example.com'),
-  ('24010117130007', 'Muhammad Iqbal Hakim', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2021, 'PLN', 'Electrical Engineer', 'Energy', 'PLN', 'verified', 'free', 'muhammad.hakim@example.com'),
+  ('Ahmad Fauzan Ramadhan', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2023, 'Gojek', 'Software Engineer', 'Technology', 'Gojek', 'verified', 'free', 'ahmad.ramadhan@example.com'),
+  ('Dewi Kartika Sari', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2022, 'PT Wijaya Karya', 'Site Engineer', 'Construction', 'PT Wijaya Karya', 'verified', 'free', 'dewi.sari@example.com'),
+  ('Muhammad Iqbal Hakim', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2021, 'PLN', 'Electrical Engineer', 'Energy', 'PLN', 'verified', 'free', 'muhammad.hakim@example.com'),
 
-  ('24020118130002', 'Siti Nur Azizah', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2022, 'Bank Mandiri', 'Relationship Manager', 'Banking & Finance', 'Bank Mandiri', 'verified', 'free', 'siti.azizah@example.com'),
-  ('24020117130008', 'Fajar Nugroho', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2021, 'Deloitte Indonesia', 'Audit Associate', 'Consulting', 'Deloitte Indonesia', 'verified', 'free', 'fajar.nugroho@example.com'),
-  ('24020116130009', 'Ratna Puspita Dewi', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2020, 'Bank Indonesia', 'Economist', 'Banking & Finance', 'Bank Indonesia', 'verified', 'free', 'ratna.dewi@example.com'),
+  ('Siti Nur Azizah', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2022, 'Bank Mandiri', 'Relationship Manager', 'Banking & Finance', 'Bank Mandiri', 'verified', 'free', 'siti.azizah@example.com'),
+  ('Fajar Nugroho', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2021, 'Deloitte Indonesia', 'Audit Associate', 'Consulting', 'Deloitte Indonesia', 'verified', 'free', 'fajar.nugroho@example.com'),
+  ('Ratna Puspita Dewi', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2020, 'Bank Indonesia', 'Economist', 'Banking & Finance', 'Bank Indonesia', 'verified', 'free', 'ratna.dewi@example.com'),
 
-  ('24030117130003', 'Bagas Dwi Prasetyo', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2021, 'Hutama & Rekan Law Firm', 'Junior Associate', 'Legal Services', 'Hutama & Rekan Law Firm', 'verified', 'free', 'bagas.prasetyo@example.com'),
-  ('24030116130010', 'Intan Permatasari', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2020, 'Kementerian Hukum dan HAM', 'Legal Analyst', 'Government', 'Kementerian Hukum dan HAM', 'verified', 'free', 'intan.permatasari@example.com'),
+  ('Bagas Dwi Prasetyo', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2021, 'Hutama & Rekan Law Firm', 'Junior Associate', 'Legal Services', 'Hutama & Rekan Law Firm', 'verified', 'free', 'bagas.prasetyo@example.com'),
+  ('Intan Permatasari', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2020, 'Kementerian Hukum dan HAM', 'Legal Analyst', 'Government', 'Kementerian Hukum dan HAM', 'verified', 'free', 'intan.permatasari@example.com'),
 
-  ('24040116130004', 'Clara Amelia Putri', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2020, 'RSUP Dr. Kariadi', 'General Practitioner', 'Healthcare', 'RSUP Dr. Kariadi', 'verified', 'free', 'clara.putri@example.com'),
-  ('24040115130011', 'Yusuf Ardiansyah', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2019, 'RS Telogorejo', 'Resident Physician', 'Healthcare', 'RS Telogorejo', 'verified', 'free', 'yusuf.ardiansyah@example.com'),
+  ('Clara Amelia Putri', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2020, 'RSUP Dr. Kariadi', 'General Practitioner', 'Healthcare', 'RSUP Dr. Kariadi', 'verified', 'free', 'clara.putri@example.com'),
+  ('Yusuf Ardiansyah', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2019, 'RS Telogorejo', 'Resident Physician', 'Healthcare', 'RS Telogorejo', 'verified', 'free', 'yusuf.ardiansyah@example.com'),
 
-  ('24050115130005', 'Rizky Maulana Yusuf', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2019, 'Kompas Gramedia', 'Content Producer', 'Media', 'Kompas Gramedia', 'verified', 'free', 'rizky.yusuf@example.com'),
-  ('24050114130012', 'Anggita Sekar Wulandari', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2018, 'British Council Indonesia', 'Program Officer', 'Education', 'British Council Indonesia', 'verified', 'free', 'anggita.wulandari@example.com'),
+  ('Rizky Maulana Yusuf', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2019, 'Kompas Gramedia', 'Content Producer', 'Media', 'Kompas Gramedia', 'verified', 'free', 'rizky.yusuf@example.com'),
+  ('Anggita Sekar Wulandari', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2018, 'British Council Indonesia', 'Program Officer', 'Education', 'British Council Indonesia', 'verified', 'free', 'anggita.wulandari@example.com'),
 
-  ('24060114130013', 'Reza Pratama Putra', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2018, 'Tokopedia', 'Data Analyst', 'Technology', 'Tokopedia', 'verified', 'free', 'reza.putra@example.com'),
-  ('24060113130014', 'Nadia Ayu Lestari', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2017, 'Badan Pusat Statistik', 'Statistician', 'Government', 'Badan Pusat Statistik', 'verified', 'free', 'nadia.lestari@example.com'),
+  ('Reza Pratama Putra', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2018, 'Tokopedia', 'Data Analyst', 'Technology', 'Tokopedia', 'verified', 'free', 'reza.putra@example.com'),
+  ('Nadia Ayu Lestari', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2017, 'Badan Pusat Statistik', 'Statistician', 'Government', 'Badan Pusat Statistik', 'verified', 'free', 'nadia.lestari@example.com'),
 
-  ('24070113130015', 'Andika Saputra', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2017, 'PT Charoen Pokphand Indonesia', 'Field Supervisor', 'Agriculture', 'PT Charoen Pokphand Indonesia', 'verified', 'free', 'andika.saputra@example.com'),
-  ('24070112130016', 'Melati Ayu Ningrum', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2016, 'PT Japfa Comfeed Indonesia', 'Production Officer', 'Agriculture', 'PT Japfa Comfeed Indonesia', 'verified', 'free', 'melati.ningrum@example.com'),
+  ('Andika Saputra', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2017, 'PT Charoen Pokphand Indonesia', 'Field Supervisor', 'Agriculture', 'PT Charoen Pokphand Indonesia', 'verified', 'free', 'andika.saputra@example.com'),
+  ('Melati Ayu Ningrum', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2016, 'PT Japfa Comfeed Indonesia', 'Production Officer', 'Agriculture', 'PT Japfa Comfeed Indonesia', 'verified', 'free', 'melati.ningrum@example.com'),
 
-  ('24080112130017', 'Bunga Citra Ayu', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2016, 'Prudential Indonesia', 'HR Business Partner', 'Human Resources', 'Prudential Indonesia', 'verified', 'subscribed', 'bunga.ayu@example.com'),
-  ('24080111130018', 'Dimas Aryo Wicaksono', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2015, 'Unilever Indonesia', 'Talent Acquisition Specialist', 'Human Resources', 'Unilever Indonesia', 'verified', 'free', 'dimas.wicaksono@example.com'),
+  ('Bunga Citra Ayu', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2016, 'Prudential Indonesia', 'HR Business Partner', 'Human Resources', 'Prudential Indonesia', 'verified', 'subscribed', 'bunga.ayu@example.com'),
+  ('Dimas Aryo Wicaksono', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2015, 'Unilever Indonesia', 'Talent Acquisition Specialist', 'Human Resources', 'Unilever Indonesia', 'verified', 'free', 'dimas.wicaksono@example.com'),
 
-  ('24090111130019', 'Kevin Alexander Halim', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2015, 'Pemerintah Kota Semarang', 'Staff Ahli', 'Government', 'Pemerintah Kota Semarang', 'verified', 'free', 'kevin.halim@example.com'),
-  ('24090110130020', 'Putri Ayu Maharani', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2014, 'Kementerian Luar Negeri', 'Diplomat Muda', 'Government', 'Kementerian Luar Negeri', 'verified', 'free', 'putri.maharani@example.com'),
+  ('Kevin Alexander Halim', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2015, 'Pemerintah Kota Semarang', 'Staff Ahli', 'Government', 'Pemerintah Kota Semarang', 'verified', 'free', 'kevin.halim@example.com'),
+  ('Putri Ayu Maharani', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2014, 'Kementerian Luar Negeri', 'Diplomat Muda', 'Government', 'Kementerian Luar Negeri', 'verified', 'free', 'putri.maharani@example.com'),
 
-  ('24100110130021', 'Aditya Kurniawan', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2014, 'WHO Indonesia', 'Public Health Officer', 'Healthcare', 'WHO Indonesia', 'verified', 'free', 'aditya.kurniawan@example.com'),
-  ('24100109130022', 'Sari Indah Permata', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2013, 'Nestle Indonesia', 'Nutrition Specialist', 'Manufacturing', 'Nestle Indonesia', 'verified', 'free', 'sari.permata@example.com'),
+  ('Aditya Kurniawan', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2014, 'WHO Indonesia', 'Public Health Officer', 'Healthcare', 'WHO Indonesia', 'verified', 'free', 'aditya.kurniawan@example.com'),
+  ('Sari Indah Permata', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2013, 'Nestle Indonesia', 'Nutrition Specialist', 'Manufacturing', 'Nestle Indonesia', 'verified', 'free', 'sari.permata@example.com'),
 
-  ('24110109130023', 'Fahmi Ridho Alamsyah', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2013, 'Kementerian Kelautan dan Perikanan', 'Marine Researcher', 'Government', 'Kementerian Kelautan dan Perikanan', 'verified', 'free', 'fahmi.alamsyah@example.com'),
+  ('Fahmi Ridho Alamsyah', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2013, 'Kementerian Kelautan dan Perikanan', 'Marine Researcher', 'Government', 'Kementerian Kelautan dan Perikanan', 'verified', 'free', 'fahmi.alamsyah@example.com'),
 
-  ('24120108130024', 'Vina Angelina Tan', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2012, 'Astra International', 'Executive Assistant', 'Manufacturing', 'Astra International', 'verified', 'free', 'vina.tan@example.com')
-on conflict (nim) do update set email = excluded.email, faculty = excluded.faculty, major = excluded.major;
+  ('Vina Angelina Tan', 'Fakultas Ekonomika dan Bisnis', 'Ilmu Ekonomi dan Studi Pembangunan', 2012, 'Astra International', 'Executive Assistant', 'Manufacturing', 'Astra International', 'verified', 'free', 'vina.tan@example.com')
+on conflict (email) do update set email = excluded.email, faculty = excluded.faculty, major = excluded.major;
 
 -- ----------------------------------------------------------------------------
--- Demo admin account. Everything here is made up (name, NIM, employer). Use
+-- Demo admin account. Everything here is made up (name, employer). Use
 -- this email to log in as the demo admin. It is the one seed_marketplace.sql
 -- makes an admin. On a real project add your own admin row instead (see the
 -- header of supabase/migrations/20261003130000_app_admins.sql).
 -- ----------------------------------------------------------------------------
 insert into alumni_profiles
-  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+  (name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('99010119130001', 'Demo Admin', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2020, 'Bank Central Asia', 'Product Manager', 'Banking & Finance', 'Bank Central Asia', 'verified', 'free', 'demo.admin@example.com')
-on conflict (nim) do update set email = excluded.email, faculty = excluded.faculty, major = excluded.major;
+  ('Demo Admin', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2020, 'Bank Central Asia', 'Product Manager', 'Banking & Finance', 'Bank Central Asia', 'verified', 'free', 'demo.admin@example.com')
+on conflict (email) do update set email = excluded.email, faculty = excluded.faculty, major = excluded.major;
 
 -- ----------------------------------------------------------------------------
 -- Demo account for the Ikafe chair role. Everything here is made up. Lets
 -- the chair try the app as a seeded alumnus during a demo.
 -- ----------------------------------------------------------------------------
 insert into alumni_profiles
-  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+  (name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('99020110130002', 'Demo Ketua Ikafe', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'ketua.demo@example.com')
-on conflict (nim) do update set email = excluded.email;
+  ('Demo Ketua Ikafe', 'Fakultas Ekonomika dan Bisnis', 'Manajemen', 2010, 'Ikafe', 'Ketua Umum', 'Nonprofit / Alumni Association', 'Ikafe', 'verified', 'free', 'ketua.demo@example.com')
+on conflict (email) do update set email = excluded.email;
 
 -- ----------------------------------------------------------------------------
 -- Demo account for a second made-up alumnus.
 -- ----------------------------------------------------------------------------
 insert into alumni_profiles
-  (nim, name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
+  (name, faculty, major, graduation_year, current_employer, "current_role", industry, company, verification_status, subscription_status, email)
 values
-  ('99050112130003', 'Maya Kusuma', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2018, 'Traveloka', 'Marketing Specialist', 'Technology', 'Traveloka', 'verified', 'free', 'maya.kusuma@example.com')
-on conflict (nim) do update set email = excluded.email, name = excluded.name, faculty = excluded.faculty, major = excluded.major;
+  ('Maya Kusuma', 'Fakultas Ekonomika dan Bisnis', 'Akuntansi', 2018, 'Traveloka', 'Marketing Specialist', 'Technology', 'Traveloka', 'verified', 'free', 'maya.kusuma@example.com')
+on conflict (email) do update set email = excluded.email, name = excluded.name, faculty = excluded.faculty, major = excluded.major;
 
 -- Note: the non-matching signup path needs no seed data — any email that
 -- isn't one of the 25 above already demonstrates "not found."

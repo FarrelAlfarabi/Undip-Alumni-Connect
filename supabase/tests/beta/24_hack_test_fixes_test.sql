@@ -73,11 +73,11 @@ set role authenticated;
 select jt.assert((select count(*) from claim_alumni_profile()) = 1, 'confirmed email can claim');
 reset role;
 
--- 6. Members still read the profile columns the app needs, never NIM.
+-- 6. Members still read the profile columns the app needs. NIM is gone.
 select set_config('request.jwt.claim.sub', 'aaaaaaaa-0000-0000-0000-00000000000a', true);
 set role authenticated;
 select jt.assert((select count(*) from alumni_profiles where name is not null) > 0, 'member reads profiles');
-select jt.expect_error($q$select nim from alumni_profiles$q$, 'permission denied');
+select jt.expect_error($q$select nim from alumni_profiles$q$, 'does not exist');
 reset role;
 
 -- 7. CVs: only the poster reads, and only into an open job's folder.

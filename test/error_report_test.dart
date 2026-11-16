@@ -33,9 +33,9 @@ void main() {
       }
     });
 
-    test('removes phone numbers and NIM style long numbers', () {
+    test('removes phone numbers and ID style long numbers', () {
       final t = cleanErrorText(
-        'Invalid phone +62 812-3456-7890 and 0812 3456 7890 for NIM 12010120130001, code 404',
+        'Invalid phone +62 812-3456-7890 and 0812 3456 7890 for ID 12010120130001, code 404',
       );
       expect(RegExp(r'\d{5,}').hasMatch(t), isFalse, reason: t);
       expect(t, isNot(contains('812-3456')));

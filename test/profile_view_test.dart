@@ -5,11 +5,10 @@ import 'package:undip_alumni_connect/screens/profile_detail_screen.dart';
 
 import 'support/fake_contact_api.dart';
 
-const me = {'id': 'me', 'name': 'Ahmad Ramadhan', 'nim': '12010120'};
+const me = {'id': 'me', 'name': 'Ahmad Ramadhan'};
 const other = {
   'id': 'u2',
   'name': 'Siti Azizah',
-  'nim': '12010199',
   'faculty': 'Ekonomika dan Bisnis',
   'major': 'Manajemen',
   'graduation_year': 2020,
