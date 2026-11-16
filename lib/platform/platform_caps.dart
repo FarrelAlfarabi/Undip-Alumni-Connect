@@ -11,17 +11,17 @@ class PlatformCaps {
 
   /// Browser: file picker only (the CSP blocks the camera).
   const PlatformCaps.web()
-    : camera = false,
-      biometrics = false,
-      push = false,
-      filePicker = true;
+      : camera = false,
+        biometrics = false,
+        push = false,
+        filePicker = true;
 
   /// Phone: push is not built yet, so it stays false.
   const PlatformCaps.phone()
-    : camera = true,
-      biometrics = true,
-      push = false,
-      filePicker = true;
+      : camera = true,
+        biometrics = true,
+        push = false,
+        filePicker = true;
 
   final bool camera;
   final bool biometrics;

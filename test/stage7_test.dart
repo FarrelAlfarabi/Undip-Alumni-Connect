@@ -215,7 +215,10 @@ void main() {
       expect(find.text('Kopi Ahmad'), findsOneWidget);
       expect(find.text('Approved'), findsOneWidget);
       expect(find.text('Skala: Micro'), findsOneWidget);
-      expect(find.text('Products posted: 2 of 3 allowed'), findsOneWidget);
+      expect(
+        find.text('Products posted: 2 of 3 allowed'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('the business card sits below the quick actions', (

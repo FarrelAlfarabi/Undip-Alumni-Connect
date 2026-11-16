@@ -12,7 +12,7 @@ ScreenStep stepForWidth(double width) {
 }
 
 double maxContentWidth(ScreenStep step) => switch (step) {
-  ScreenStep.phone => double.infinity,
-  ScreenStep.tablet => 720,
-  ScreenStep.desktop => 960,
-};
+      ScreenStep.phone => double.infinity,
+      ScreenStep.tablet => 720,
+      ScreenStep.desktop => 960,
+    };

@@ -12,8 +12,7 @@ import 'package:undip_alumni_connect/models/business.dart';
 import 'package:undip_alumni_connect/screens/business_directory_screen.dart';
 import 'package:undip_alumni_connect/screens/business_form_screen.dart';
 import 'package:undip_alumni_connect/screens/directory_screen.dart';
-import 'package:undip_alumni_connect/screens/marketplace_screen.dart'
-    show ListingImage;
+import 'package:undip_alumni_connect/screens/marketplace_screen.dart' show ListingImage;
 import 'package:undip_alumni_connect/screens/profile_setup_screen.dart';
 import 'package:undip_alumni_connect/widgets/business_photo.dart';
 

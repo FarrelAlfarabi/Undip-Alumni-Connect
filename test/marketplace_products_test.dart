@@ -145,7 +145,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Approved band: Micro'), findsOneWidget);
-      expect(find.text('Products posted: 2 of 3 allowed'), findsOneWidget);
+      expect(
+        find.text('Products posted: 2 of 3 allowed'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('unlimited shows the end date with days left', (tester) async {
@@ -236,7 +239,10 @@ void main() {
         await tester.tap(find.text('Tambah produk'));
         await tester.pumpAndSettle();
         expect(find.text('Product limit reached'), findsOneWidget);
-        expect(find.textContaining('used 3 of 3 products'), findsOneWidget);
+        expect(
+          find.textContaining('used 3 of 3 products'),
+          findsOneWidget,
+        );
         expect(
           find.textContaining('contact an admin about unlimited posting'),
           findsOneWidget,
