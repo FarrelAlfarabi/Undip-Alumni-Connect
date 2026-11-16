@@ -27,7 +27,7 @@ void size(WidgetTester tester, Size s) {
 
 Future<FakeAdminApi> open(WidgetTester tester, {Size? s}) async {
   size(tester, s ?? const Size(420, 1800));
-  final api = FakeAdminApi()..results['admin_members_search'] = [member()];
+  final api = FakeAdminApi()..results['admin_members_list'] = [member()];
   await tester.pumpWidget(
     MaterialApp(
       home: AdminMembersScreen(adminId: 'me', repository: AdminRepository(api)),
@@ -39,10 +39,10 @@ Future<FakeAdminApi> open(WidgetTester tester, {Size? s}) async {
 
 void main() {
   test('repository sends the search and only the changed fields', () async {
-    final api = FakeAdminApi()..results['admin_members_search'] = [member()];
+    final api = FakeAdminApi()..results['admin_members_list'] = [member()];
     final repo = AdminRepository(api);
     final found = await repo.searchMembers('me', ' ahmad ');
-    expect(api.params['admin_members_search'], {
+    expect(api.params['admin_members_list'], {
       'p_admin': 'me',
       'p_search': 'ahmad',
     });
@@ -59,7 +59,7 @@ void main() {
   testWidgets('search and every filter narrow the list', (tester) async {
     size(tester, const Size(420, 1800));
     final api = FakeAdminApi()
-      ..results['admin_members_search'] = [
+      ..results['admin_members_list'] = [
         member(),
         {
           ...member(),
@@ -104,7 +104,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ahmad Ramadhan'), findsOneWidget);
     expect(find.text('Siti Azizah'), findsOneWidget);
-    expect(api.calls.where((c) => c == 'admin_members_search').length, 1);
+    expect(api.calls.where((c) => c == 'admin_members_list').length, 1);
   });
 
   testWidgets('edit form shows only editable fields, never NIM or email', (
@@ -123,7 +123,8 @@ void main() {
     ]) {
       expect(find.byKey(Key(k)), findsOneWidget, reason: k);
     }
-    expect(find.textContaining('NIM'), findsNothing);
+    // NIM is never an input on this form: it has its own fix screen.
+    expect(find.byKey(const Key('identity-nim')), findsNothing);
     expect(find.byKey(const Key('member-email')), findsNothing);
     expect(find.byKey(const Key('member-name')), findsNothing);
   });

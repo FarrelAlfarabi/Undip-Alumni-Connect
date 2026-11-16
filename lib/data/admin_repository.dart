@@ -17,6 +17,7 @@ enum AdminErrorCode {
   invalidAction,
   notFound,
   invalidInput,
+  nimTaken,
   unknown,
 }
 
@@ -48,6 +49,8 @@ String adminErrorMessage(Object error) {
         return tr('This item no longer exists.');
       case AdminErrorCode.invalidInput:
         return tr('Title and message are required, and must not be too long.');
+      case AdminErrorCode.nimTaken:
+        return tr('NIM ini sudah dipakai anggota lain.');
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
@@ -412,7 +415,7 @@ class AdminRepository {
   /// Members an admin can edit (by name or email), 30 at most. No NIM.
   Future<List<AdminMember>> searchMembers(String adminId, String query) async {
     final rows = await _guard(
-      () => _api.rpc('admin_members_search', {
+      () => _api.rpc('admin_members_list', {
         'p_admin': adminId,
         'p_search': query.trim().isEmpty ? null : query.trim(),
       }),
@@ -421,6 +424,61 @@ class AdminRepository {
       for (final r in rows as List)
         AdminMember.fromMap(Map<String, dynamic>.from(r as Map)),
     ];
+  }
+
+  /// Suspends ([suspend] true, [reason] required) or lifts a suspension.
+  /// The database refuses admins, yourself, and non-admin callers, and logs
+  /// the action in Riwayat.
+  Future<void> setMemberSuspended(
+    String adminId,
+    String profileId, {
+    required bool suspend,
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_member_set_suspended', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_suspend': suspend,
+        'p_reason': reason?.trim(),
+      }),
+    );
+  }
+
+  /// NIM and jurusan of one member, for the fix form only.
+  Future<({String? nim, String? major})> memberIdentity(
+    String adminId,
+    String profileId,
+  ) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_member_identity', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+      }),
+    );
+    final list = rows is List ? rows : [rows];
+    if (list.isEmpty || list.first == null) {
+      throw const AdminException(AdminErrorCode.notFound, 'not_found');
+    }
+    final m = Map<String, dynamic>.from(list.first as Map);
+    return (nim: m['nim'] as String?, major: m['major'] as String?);
+  }
+
+  /// Fixes a wrong NIM or jurusan. Logged in Riwayat (field names only).
+  Future<void> setMemberIdentity(
+    String adminId,
+    String profileId, {
+    required String nim,
+    required String major,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_member_set_identity', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+        'p_nim': nim.trim(),
+        'p_major': major.trim(),
+      }),
+    );
   }
 
   /// Saves only [changes]: current_role, industry, company, city, bio,
@@ -706,6 +764,7 @@ class AdminRepository {
     'invalid_view' => AdminErrorCode.invalidView,
     'not_found' => AdminErrorCode.notFound,
     'invalid_input' => AdminErrorCode.invalidInput,
+    'nim_taken' => AdminErrorCode.nimTaken,
     _ => AdminErrorCode.unknown,
   };
 }
@@ -980,6 +1039,9 @@ class AdminMember {
     this.city,
     this.bio,
     this.linkedinUrl,
+    this.suspendedAt,
+    this.suspendedReason,
+    this.isAdmin = false,
   });
 
   factory AdminMember.fromMap(Map<String, dynamic> m) => AdminMember(
@@ -994,6 +1056,11 @@ class AdminMember {
     city: m['city'] as String?,
     bio: m['bio'] as String?,
     linkedinUrl: m['linkedin_url'] as String?,
+    suspendedAt: m['suspended_at'] == null
+        ? null
+        : DateTime.tryParse(m['suspended_at'] as String),
+    suspendedReason: m['suspended_reason'] as String?,
+    isAdmin: m['is_admin'] == true,
   );
 
   final String id;
@@ -1007,4 +1074,9 @@ class AdminMember {
   final String? city;
   final String? bio;
   final String? linkedinUrl;
+  final DateTime? suspendedAt;
+  final String? suspendedReason;
+  final bool isAdmin;
+
+  bool get isSuspended => suspendedAt != null;
 }
