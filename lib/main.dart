@@ -18,14 +18,17 @@ Future<void> main() async {
   if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
   await dotenv.load(fileName: '.env');
 
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-  );
-
-  // Read the saved "Tutup" answer before any marketplace screen is built.
-  await MarketplaceDemoNotice.preload();
-  await AppLanguage.shared.load();
+  // These three do not depend on each other, so they run side by side and
+  // the first screen shows sooner.
+  await Future.wait([
+    Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL'] ?? '',
+      publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    ),
+    // Read the saved "Tutup" answer before any marketplace screen is built.
+    MarketplaceDemoNotice.preload(),
+    AppLanguage.shared.load(),
+  ]);
 
   runApp(const MyApp());
 }

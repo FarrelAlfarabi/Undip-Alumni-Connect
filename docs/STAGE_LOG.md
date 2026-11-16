@@ -276,3 +276,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Ikafe meeting changes (16 Nov 2026)
 - Sponsor carousel capped at 10 slides (app + `home_sponsors()` limit, migration `20261116100000_sponsor_cap_10` + rollback). New "Creative Industry" in the industry list. Business form asks "Apakah usaha anda memiliki NIB?" (Ya/Belum), field only after Ya; blue tick also on the Home owner card.
 - "Belum punya akun? Hubungi IKAFE" has a button to the form in `kAlumniFormUrl` (placeholder: no button, release gate fails until filled) with the new text. Web remembers the person in browser storage so email code is only asked on first use (PIN after).
+## Web stage 1: login and start screens (16 Nov 2026)
+- Welcome, PIN lock, PIN setup and the new returning screen sit in one centred card from 600 px up (`AuthFrame`). Phone layout unchanged.
+- Web only (`AppEntry.web`): signed in with no PIN opens the app without a new email code; an expired sign in shows "Selamat datang kembali" (`ReturningScreen`, first name only in browser storage) instead of the first-time Welcome. Phones keep their flow.
+- Web page: HTML start screen until Flutter draws (`splash.js`), `main.dart.js` preload, start-up reads run side by side, zoom guard limited to iPhone and iPad, portrait lock removed from the manifest. No migration. Tests: `web_stage1_login_test`.
