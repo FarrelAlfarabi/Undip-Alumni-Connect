@@ -346,6 +346,32 @@ class AdminRepository {
     } catch (_) {}
   }
 
+  /// Riwayat with search and filters, newest first, at most [limit] rows.
+  /// [actionPrefix] keeps one kind ('member_', 'business_' ...), [since]
+  /// keeps rows from that time on.
+  Future<List<AdminLogEntry>> searchLog(
+    String adminId, {
+    String? search,
+    String? actionPrefix,
+    DateTime? since,
+    int limit = 300,
+  }) async {
+    final q = search?.trim();
+    final rows = await _guard(
+      () => _api.rpc('admin_actions_search', {
+        'p_admin': adminId,
+        'p_search': (q == null || q.isEmpty) ? null : q,
+        'p_action_prefix': actionPrefix,
+        'p_admin_filter': null,
+        'p_since': since?.toUtc().toIso8601String(),
+        'p_limit': limit,
+      }),
+    );
+    return (rows as List)
+        .map((r) => AdminLogEntry.fromMap(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   /// The last 200 admin actions, newest first.
   Future<List<AdminLogEntry>> actionLog(String adminId) async {
     final rows = await _guard(

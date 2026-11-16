@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Admin Riwayat search and filters (16 Nov 2026)
+- Admin > Riwayat: search (action, reason, admin name), Jenis and Waktu filters, Hapus filter. The database filters, so older rows are found (300 per search).
+- Migration 20261116210000_admin_log_search: admin_actions_search (admin only, LIKE wildcards literal) and an index. Tests: 30_admin_log_search_test.sql, test/admin_log_test.dart.
+
 ## Admin permanent delete of jobs and listings (16 Nov 2026)
 - Admin > Jobs: "Hapus" next to Tangguhkan. Marketplace review > Reports: "Hapus" next to Sembunyikan produk. Both need a reason and typing HAPUS.
 - Migration 20261116200000_admin_delete_posts: admin_job_delete (with applications, notifications, email log) and admin_listing_delete; admin only, login required, Riwayat row. Files go through the storage cleanup triggers. Tests: 29_admin_delete_posts_test.sql, test/admin_delete_posts_test.dart.
