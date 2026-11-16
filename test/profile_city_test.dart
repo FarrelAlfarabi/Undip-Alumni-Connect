@@ -26,7 +26,6 @@ void main() {
             showEditButton: own,
             chat: false,
             adminCheck: (_) async => false,
-            nimLoader: (_, _) async => null,
           ),
         ),
       );

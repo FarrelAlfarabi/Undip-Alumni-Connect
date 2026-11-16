@@ -8,12 +8,12 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - Hanya alumni yang sudah terverifikasi yang bisa memakainya.
 
 ## 2. Data yang kami kumpulkan, dan alasannya
-- Dari daftar alumni Ikafe, yang dimasukkan oleh admin: NIM, nama, fakultas, jurusan, tahun lulus, email, kota, dan data tempat bekerja. Alasan: memastikan Anda alumni dan menampilkan direktori alumni.
+- Dari daftar alumni Ikafe, yang dimasukkan oleh admin: nama, fakultas, jurusan, tahun lulus, email, kota, dan data tempat bekerja. Alasan: memastikan Anda alumni dan menampilkan direktori alumni.
 - Yang Anda isi atau ubah sendiri: tempat bekerja, jabatan, industri, dan perusahaan.
 - Lowongan yang Anda pasang: judul, perusahaan, industri, deskripsi, dan teks kontak.
 - Lamaran yang Anda kirim: nama, email, nomor telepon, tautan LinkedIn dan portofolio, catatan pengantar, dan file CV yang Anda lampirkan.
 - Bisnis Anda: nama, deskripsi, kategori, tautan Instagram atau situs web, dan kelompok omzet tahunan yang Anda pilih. Alasan: direktori bisnis.
-- Nomor Induk Berusaha (NIB) usaha Anda, jika Anda mengisinya. NIB tidak wajib. NIB adalah nomor izin usaha dari pemerintah, bukan NIM. Alasan: admin memeriksanya, lalu usaha Anda bisa mendapat tanda terverifikasi.
+- Nomor Induk Berusaha (NIB) usaha Anda, jika Anda mengisinya. NIB tidak wajib. NIB adalah nomor izin usaha dari pemerintah. Alasan: admin memeriksanya, lalu usaha Anda bisa mendapat tanda terverifikasi.
 - Statistik banner sponsor: jumlah tayangan dan ketukan per sponsor per hari, tanpa nama, email, atau ID pribadi. Alasan: melaporkan kinerja banner kepada sponsor.
 - Produk di marketplace: judul, deskripsi, harga, kota, foto, tautan toko, dan teks kontak yang Anda tulis.
 - Permintaan kontak: pesan singkat Anda, dan kontak yang dipilih orang lain untuk dibagikan saat menerima.
@@ -29,7 +29,7 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - Satu permintaan ke luar: aplikasi memuat font dari Google Fonts, jadi Google mungkin melihat alamat IP Anda saat font dimuat.
 
 ## 4. Siapa yang bisa melihat data Anda
-- Alumni terverifikasi lain bisa melihat nama, fakultas, jurusan, tahun lulus, data tempat bekerja, kota, dan NIM Anda di direktori dan di profil Anda, serta lowongan, bisnis, dan produk Anda.
+- Alumni terverifikasi lain bisa melihat nama, fakultas, jurusan, tahun lulus, data tempat bekerja, dan kota Anda di direktori dan di profil Anda, serta lowongan, bisnis, dan produk Anda.
 - Email, nomor telepon, dan teks kontak Anda hanya tampil di tempat yang Anda pilih: teks kontak pada lowongan, lamaran yang Anda kirim (ke pemasang lowongan), atau yang Anda bagikan saat menerima permintaan kontak (hanya untuk orang itu).
 - Bisnis dan produk terlihat oleh alumni terverifikasi. Admin bisa menyembunyikannya.
 - NIB Anda hanya dilihat oleh admin Ikafe untuk pemeriksaan. Alumni lain hanya melihat tanda terverifikasi biru di usaha Anda, bukan nomor NIB-nya.
@@ -37,7 +37,7 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - Penyedia layanan yang menyimpan atau mengantarkan aplikasi untuk kami: Supabase (database dan penyimpanan file, server di Singapura), Vercel (hosting web, terutama Amerika Serikat), GitHub (kode dan build uji, tanpa data pengguna), dan Google Fonts (huruf untuk web dan aplikasi). Karena itu data Anda diproses di luar Indonesia, Uni Eropa, dan India. Kami memakai kontrak atau ketentuan standar tiap penyedia, dan hanya membagikan yang dibutuhkan untuk tugasnya.
 - Foto produk dan file CV disimpan di penyimpanan publik. Siapa pun yang punya tautan persisnya bisa membukanya.
 - Sponsor: aplikasi menampilkan spanduk sponsor berbayar di Beranda, selalu dengan label "Disponsori". Mengetuk spanduk membuka situs di luar aplikasi yang tidak kami kelola dan punya kebijakan privasinya sendiri. Kami hanya menghitung berapa kali tiap spanduk tampil dan diketuk, sebagai angka per sponsor per hari, tanpa nama, perangkat, atau data pribadi Anda.
-- Batasan jujur beta ini: aplikasi belum memakai login sungguhan. Basis data masih mengirim baris profil lengkap, termasuk email dan NIM, ke aplikasi, jadi orang yang paham teknis dan memiliki kunci publik aplikasi bisa membacanya. Ini kekurangan yang diketahui dan harus diperbaiki sebelum aplikasi dibuka untuk lebih banyak orang.
+- Batasan jujur beta ini: aplikasi belum memakai login sungguhan. Basis data masih mengirim baris profil lengkap, termasuk email, ke aplikasi, jadi orang yang paham teknis dan memiliki kunci publik aplikasi bisa membacanya. Ini kekurangan yang diketahui dan harus diperbaiki sebelum aplikasi dibuka untuk lebih banyak orang.
 
 ## 5. Data yang hanya ada di perangkat Anda
 - PIN (hanya disimpan sebagai hash dengan salt), id profil yang diingat, nama Anda, email yang disamarkan, dan pilihan sidik jari. Semuanya disimpan di penyimpanan aman ponsel.

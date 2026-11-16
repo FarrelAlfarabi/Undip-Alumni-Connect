@@ -8,7 +8,7 @@
 #   1. Builds a stand-in database: local_stub.sql, the old migrations (errors
 #      tolerated: the old chain does not replay from scratch, see the audit),
 #      seed.sql and seed_marketplace.sql.
-#   2. Applies every beta migration, TWICE, and any error stops the run.
+#   2. Applies every beta migration, each twice in a row; any error stops the run.
 #   3. Runs every supabase/tests/beta/NN_*.sql (as the anon role where it
 #      matters). Each file runs inside a transaction that is rolled back.
 #   4. Rolls every beta migration back (newest first, twice), then applies them
@@ -37,6 +37,9 @@ $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/local_stub.sql"
 for f in "$ROOT"/supabase/migrations/2026091*.sql "$ROOT"/supabase/migrations/2026092*.sql "$ROOT"/supabase/migrations/2026093*.sql "$ROOT"/supabase/migrations/20261001*.sql; do
   $PSQL -f "$f" >/dev/null 2>&1 || true
 done
+# seed.sql has no NIM (removed 16 Nov 2026); the old chain still has the
+# column as NOT NULL until 20261003170000, so loosen it before seeding.
+$PSQL -v ON_ERROR_STOP=1 -c "do \$\$ begin if exists (select 1 from information_schema.columns where table_name = 'alumni_profiles' and column_name = 'nim') then alter table alumni_profiles alter column nim drop not null; end if; end \$\$" >/dev/null
 $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed.sql" >/dev/null
 $PSQL -v ON_ERROR_STOP=1 -f "$ROOT/supabase/seed_marketplace.sql" >/dev/null
 
@@ -48,13 +51,16 @@ FILTERED=()
 for f in "${MIGS[@]}"; do case "$f" in *_real_login_cutover.sql) ;; *) FILTERED+=("$f") ;; esac; done
 MIGS=("${FILTERED[@]}")
 
+# Each file runs twice in a row (it must be idempotent). The whole chain is not
+# replayed on top of itself: a later migration can drop what an earlier one
+# names (20261116180000_remove_nim drops the nim column).
 apply_all() {
   for f in "${MIGS[@]}"; do
     $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null
+    $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null
   done
 }
-echo "== beta migrations: ${#MIGS[@]} file(s), applied twice"
-apply_all
+echo "== beta migrations: ${#MIGS[@]} file(s), each applied twice"
 apply_all
 
 run_tests() {

@@ -175,7 +175,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     'Your contact requests, sent and received',
                     'Your notifications and blocks',
                     'Your feedback reports',
-                    'Your profile details: name, NIM, email, city, employer details',
+                    'Your profile details: name, email, city, employer details',
                     'On this phone: your PIN and everything remembered',
                   ]),
                   const SizedBox(height: 12),

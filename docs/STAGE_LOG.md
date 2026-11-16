@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## NIM removed from app and database (16 Nov 2026)
+- Farrel: erase NIM entirely, no backup. App: NIM row, profile_nim call, NIM in privacy text and delete list removed. Seed keyed on email.
+- Migration 20261116180000_remove_nim: clears passwords equal to the NIM, drops provision_alumni_accounts, profile_nim, the nim column and key; restrict_update and account_delete without nim. Rollback restores empty schema only.
+- SQL runners now apply each migration twice in a row (the chain no longer replays on top of the drop). Tests: 27_remove_nim_test.sql, test/security_fixes/remove_nim_test.dart.
+
 ## Admin member suspend and jurusan fix (16 Nov 2026)
 - Admin > Anggota (was Ubah profil anggota): Admin and Ditangguhkan tags, Status filter, Tangguhkan / Aktifkan lagi with reason and confirm, Perbaiki jurusan. No NIM (being removed).
 - Migration 20261116131000_admin_member_status: admin_members_list, admin_member_set_suspended, admin_member_set_major (admin only, Riwayat row each). Tests: 26_admin_member_status_test.sql, test/admin_member_status_test.dart.

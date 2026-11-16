@@ -28,18 +28,18 @@ begin execute 'select count(*) from (' || p_sql || ') q' into n; return n; end $
 grant usage on schema jt to public;
 grant execute on all functions in schema jt to public;
 -- The tests act as the app user through the anon role. Since 20261113100000
--- anon cannot read alumni_profiles; the runner gives it back (all columns but
--- nim) for every test except 24_*, which checks the real state.
+-- anon cannot read alumni_profiles; the runner gives it back (all
+-- columns) for every test except 24_*, which checks the real state.
 create or replace function jt.anon_reads_profiles(p_on boolean) returns void language plpgsql as $$
 declare cols text;
 begin
   select string_agg(quote_ident(column_name), ', ') into cols
     from information_schema.columns
-   where table_schema = 'public' and table_name = 'alumni_profiles' and column_name <> 'nim';
+   where table_schema = 'public' and table_name = 'alumni_profiles';
   if p_on then
     execute 'grant select (' || cols || ') on public.alumni_profiles to anon';
   else
     execute 'revoke select on public.alumni_profiles from anon';
-    execute 'revoke select (' || cols || ', nim) on public.alumni_profiles from anon';
+    execute 'revoke select (' || cols || ') on public.alumni_profiles from anon';
   end if;
 end $$;
