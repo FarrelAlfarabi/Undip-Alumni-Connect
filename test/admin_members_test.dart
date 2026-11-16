@@ -123,8 +123,7 @@ void main() {
     ]) {
       expect(find.byKey(Key(k)), findsOneWidget, reason: k);
     }
-    // NIM is never an input on this form: it has its own fix screen.
-    expect(find.byKey(const Key('identity-nim')), findsNothing);
+    expect(find.textContaining('NIM'), findsNothing);
     expect(find.byKey(const Key('member-email')), findsNothing);
     expect(find.byKey(const Key('member-name')), findsNothing);
   });

@@ -434,8 +434,6 @@ final Map<String, String> kEnglish = {
   'Anggota': 'Members',
   'Ditangguhkan': 'Suspended',
   'Ditangguhkan. Alasan: {0}': 'Suspended. Reason: {0}',
-  'Perbaiki NIM atau jurusan': 'Fix NIM or major',
-  'Untuk data impor yang salah': 'For wrong imported data',
   'Aktifkan lagi': 'Reactivate',
   'Tangguhkan anggota': 'Suspend member',
   'Admin dan akunmu sendiri tidak bisa ditangguhkan.':
@@ -447,19 +445,13 @@ final Map<String, String> kEnglish = {
   '{0} tidak bisa masuk dan hilang dari Directory sampai kamu mengaktifkannya lagi. Bisnis dan postingannya tetap ada: sembunyikan terpisah bila perlu.': '{0} cannot sign in and is gone from the Directory until you reactivate them. Their businesses and posts stay: hide those separately if needed.',
   'Anggota aktif lagi.': 'Member reactivated.',
   'Anggota ditangguhkan.': 'Member suspended.',
-  'NIM 5 sampai 30 huruf atau angka, dan jurusan wajib dipilih.':
-      'NIM must be 5 to 30 letters or digits, and a major is required.',
-  'NIM dan jurusan tersimpan.': 'NIM and major saved.',
-  'NIM dan jurusan': 'NIM and major',
-  'Perbaiki data alumni {0} bila hasil impor salah. NIM hanya terlihat oleh admin.': 'Fix the alumni data of {0} if the import was wrong. Only admins see the NIM.',
-  'NIM': 'NIM',
-  'Jurusan': 'Major',
-  'Cari anggota, ubah profil, perbaiki NIM, tangguhkan atau aktifkan':
-      'Find members, edit profiles, fix NIM, suspend or reactivate',
   'Ketik {0} untuk lanjut': 'Type {0} to continue',
   'Alasan wajib diisi.': 'A reason is required.',
   'Ketik {0} persis.': 'Type {0} exactly.',
   'Alasan (dicatat di Riwayat)': 'Reason (kept in History)',
-  'NIM ini sudah dipakai anggota lain.':
-      'This NIM is already used by another member.',
+  'Perbaiki jurusan': 'Fix major',
+  'Pilih jurusan yang benar': 'Choose the correct major',
+  'Jurusan tersimpan.': 'Major saved.',
+  'Cari anggota, ubah profil, perbaiki jurusan, tangguhkan atau aktifkan':
+      'Find members, edit profiles, fix major, suspend or reactivate',
 };

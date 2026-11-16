@@ -113,7 +113,7 @@ class _AdminScreenState extends State<AdminScreen> {
         icon: Icons.manage_accounts_outlined,
         title: tr('Anggota'),
         subtitle: tr(
-          'Cari anggota, ubah profil, perbaiki NIM, tangguhkan atau aktifkan',
+          'Cari anggota, ubah profil, perbaiki jurusan, tangguhkan atau aktifkan',
         ),
         builder: (_) =>
             AdminMembersScreen(adminId: adminId, repository: _admin),

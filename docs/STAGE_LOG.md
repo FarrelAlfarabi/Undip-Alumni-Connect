@@ -4,9 +4,9 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
-## Admin member suspend and NIM fix (16 Nov 2026)
-- Admin > Anggota (was Ubah profil anggota): Admin and Ditangguhkan tags, Status filter, Tangguhkan / Aktifkan lagi with reason and confirm, Perbaiki NIM atau jurusan screen.
-- Migration 20261116130000_admin_member_status: admin_members_list, admin_member_set_suspended, admin_member_identity, admin_member_set_identity (admin only, Riwayat row each). Tests: 26_admin_member_status_test.sql, test/admin_member_status_test.dart.
+## Admin member suspend and jurusan fix (16 Nov 2026)
+- Admin > Anggota (was Ubah profil anggota): Admin and Ditangguhkan tags, Status filter, Tangguhkan / Aktifkan lagi with reason and confirm, Perbaiki jurusan. No NIM (being removed).
+- Migration 20261116131000_admin_member_status: admin_members_list, admin_member_set_suspended, admin_member_set_major (admin only, Riwayat row each). Tests: 26_admin_member_status_test.sql, test/admin_member_status_test.dart.
 
 ## Sponsor card shape (16 Nov 2026)
 - Sponsor picture 16:9 instead of 2:1 (card 1.6 with the bar), admin crop and hint "1600 x 900". At most 480 px wide and centred on wide screens. No migration (old images are shown cropped to 16:9).

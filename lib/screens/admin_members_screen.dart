@@ -13,7 +13,7 @@ import '../widgets/searchable_choice.dart';
 
 /// Admin > Anggota: find a member, fix the basic fields a member can edit
 /// themselves (jabatan, perusahaan, industri, kota, bio, LinkedIn), fix a
-/// wrong NIM or jurusan, and suspend or lift a suspension. Same search and
+/// wrong jurusan, and suspend or lift a suspension. Same search and
 /// filters as the Directory (name or company, major, year, industry, city),
 /// plus email in the search and a status filter. All members, suspended ones
 /// included, are loaded once and filtered here. Email and nama cannot be
@@ -550,13 +550,13 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                     ),
                   ),
                 ListTile(
-                  key: const Key('member-identity'),
+                  key: const Key('member-major'),
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.badge_outlined),
-                  title: Text(tr('Perbaiki NIM atau jurusan')),
-                  subtitle: Text(tr('Untuk data impor yang salah')),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _saving ? null : _openIdentity,
+                  leading: const Icon(Icons.school_outlined),
+                  title: Text(tr('Perbaiki jurusan')),
+                  subtitle: Text(m.major ?? '-'),
+                  trailing: const Icon(Icons.edit_outlined),
+                  onTap: _saving ? null : _fixMajor,
                 ),
                 if (_canSuspend)
                   Padding(
@@ -602,17 +602,52 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   bool get _canSuspend =>
       !widget.member.isAdmin && widget.member.id != widget.adminId;
 
-  Future<void> _openIdentity() async {
-    final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => AdminMemberIdentityScreen(
-          adminId: widget.adminId,
-          repository: widget.repository,
-          member: widget.member,
-        ),
+  Future<void> _fixMajor() async {
+    final m = widget.member;
+    final options = {...kAdminMajors, ?m.major}.toList();
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(tr('Pilih jurusan yang benar')),
+        children: [
+          for (final o in options)
+            SimpleDialogOption(
+              key: Key('major-$o'),
+              onPressed: () => Navigator.of(ctx).pop(o),
+              child: Row(
+                children: [
+                  Icon(
+                    o == m.major
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(o)),
+                ],
+              ),
+            ),
+        ],
       ),
     );
-    if (saved == true && mounted) Navigator.of(context).pop(true);
+    if (picked == null || picked == m.major || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.setMemberMajor(widget.adminId, m.id, picked);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(tr('Jurusan tersimpan.'))));
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = adminErrorMessage(e);
+      });
+    }
   }
 
   Future<void> _toggleSuspend() async {
@@ -710,180 +745,6 @@ class _StatusTag extends StatelessWidget {
         text,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: error ? scheme.onErrorContainer : scheme.onSecondaryContainer,
-        ),
-      ),
-    );
-  }
-}
-
-/// Fix a wrong NIM or jurusan for one member. Loads the current values from
-/// the database (NIM is not in the member list). Pops true after a save.
-class AdminMemberIdentityScreen extends StatefulWidget {
-  const AdminMemberIdentityScreen({
-    super.key,
-    required this.adminId,
-    required this.repository,
-    required this.member,
-  });
-
-  final String adminId;
-  final AdminRepository repository;
-  final AdminMember member;
-
-  @override
-  State<AdminMemberIdentityScreen> createState() =>
-      _AdminMemberIdentityScreenState();
-}
-
-class _AdminMemberIdentityScreenState extends State<AdminMemberIdentityScreen> {
-  final _nim = TextEditingController();
-  final _majorText = TextEditingController();
-  String? _major;
-  bool _loading = true;
-  bool _saving = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _nim.dispose();
-    _majorText.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    try {
-      final r = await widget.repository.memberIdentity(
-        widget.adminId,
-        widget.member.id,
-      );
-      if (!mounted) return;
-      setState(() {
-        _nim.text = r.nim ?? '';
-        _major = r.major;
-        _majorText.text = r.major ?? '';
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error = adminErrorMessage(e);
-      });
-    }
-  }
-
-  Future<void> _save() async {
-    final nim = _nim.text.trim().toUpperCase();
-    final major = (_major ?? '').trim();
-    if (!RegExp(r'^[A-Z0-9-]{5,30}$').hasMatch(nim) || major.isEmpty) {
-      setState(
-        () => _error = tr(
-          'NIM 5 sampai 30 huruf atau angka, dan jurusan wajib dipilih.',
-        ),
-      );
-      return;
-    }
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
-    try {
-      await widget.repository.setMemberIdentity(
-        widget.adminId,
-        widget.member.id,
-        nim: nim,
-        major: major,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr('NIM dan jurusan tersimpan.'))));
-      Navigator.of(context).pop(true);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _error = adminErrorMessage(e);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final majors = {...kAdminMajors, ?_major}.toList();
-    return Scaffold(
-      appBar: AppBar(title: Text(tr('NIM dan jurusan'))),
-      body: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Text(
-                        trf(
-                          'Perbaiki data alumni {0} bila hasil impor salah. '
-                          'NIM hanya terlihat oleh admin.',
-                          [widget.member.name],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        key: const Key('identity-nim'),
-                        controller: _nim,
-                        enabled: !_saving,
-                        textCapitalization: TextCapitalization.characters,
-                        decoration: InputDecoration(
-                          labelText: tr('NIM'),
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SearchableChoice(
-                        fieldKey: const Key('identity-major'),
-                        label: tr('Jurusan'),
-                        controller: _majorText,
-                        options: majors,
-                        selected: _major,
-                        enabled: !_saving,
-                        onSelected: (v) => setState(() => _major = v),
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          _error!,
-                          key: const Key('identity-error'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        key: const Key('identity-save'),
-                        onPressed: _saving ? null : _save,
-                        child: _saving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : Text(tr('Simpan')),
-                      ),
-                    ],
-                  ),
-          ),
         ),
       ),
     );

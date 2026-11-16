@@ -17,7 +17,6 @@ enum AdminErrorCode {
   invalidAction,
   notFound,
   invalidInput,
-  nimTaken,
   unknown,
 }
 
@@ -49,8 +48,6 @@ String adminErrorMessage(Object error) {
         return tr('This item no longer exists.');
       case AdminErrorCode.invalidInput:
         return tr('Title and message are required, and must not be too long.');
-      case AdminErrorCode.nimTaken:
-        return tr('NIM ini sudah dipakai anggota lain.');
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
@@ -445,37 +442,16 @@ class AdminRepository {
     );
   }
 
-  /// NIM and jurusan of one member, for the fix form only.
-  Future<({String? nim, String? major})> memberIdentity(
+  /// Fixes a wrong jurusan from the import. Logged in Riwayat.
+  Future<void> setMemberMajor(
     String adminId,
     String profileId,
+    String major,
   ) async {
-    final rows = await _guard(
-      () => _api.rpc('admin_member_identity', {
-        'p_admin': adminId,
-        'p_profile': profileId,
-      }),
-    );
-    final list = rows is List ? rows : [rows];
-    if (list.isEmpty || list.first == null) {
-      throw const AdminException(AdminErrorCode.notFound, 'not_found');
-    }
-    final m = Map<String, dynamic>.from(list.first as Map);
-    return (nim: m['nim'] as String?, major: m['major'] as String?);
-  }
-
-  /// Fixes a wrong NIM or jurusan. Logged in Riwayat (field names only).
-  Future<void> setMemberIdentity(
-    String adminId,
-    String profileId, {
-    required String nim,
-    required String major,
-  }) async {
     await _guard(
-      () => _api.rpc('admin_member_set_identity', {
+      () => _api.rpc('admin_member_set_major', {
         'p_admin': adminId,
         'p_profile': profileId,
-        'p_nim': nim.trim(),
         'p_major': major.trim(),
       }),
     );
@@ -764,7 +740,6 @@ class AdminRepository {
     'invalid_view' => AdminErrorCode.invalidView,
     'not_found' => AdminErrorCode.notFound,
     'invalid_input' => AdminErrorCode.invalidInput,
-    'nim_taken' => AdminErrorCode.nimTaken,
     _ => AdminErrorCode.unknown,
   };
 }

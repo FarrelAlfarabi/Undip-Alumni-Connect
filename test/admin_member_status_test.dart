@@ -47,11 +47,8 @@ Future<FakeAdminApi> open(
 }
 
 void main() {
-  test('repository sends suspend, identity read and identity fix', () async {
-    final api = FakeAdminApi()
-      ..results['admin_member_identity'] = [
-        {'nim': '2101', 'faculty': 'FEB', 'major': 'Akuntansi'},
-      ];
+  test('repository sends suspend and jurusan fix', () async {
+    final api = FakeAdminApi();
     final repo = AdminRepository(api);
     await repo.setMemberSuspended('me', 'm1', suspend: true, reason: ' spam ');
     expect(api.params['admin_member_set_suspended'], {
@@ -60,20 +57,11 @@ void main() {
       'p_suspend': true,
       'p_reason': 'spam',
     });
-    final id = await repo.memberIdentity('me', 'm1');
-    expect(id.nim, '2101');
-    expect(id.major, 'Akuntansi');
-    await repo.setMemberIdentity(
-      'me',
-      'm1',
-      nim: ' 21010 ',
-      major: 'Manajemen',
-    );
-    expect(api.params['admin_member_set_identity'], {
+    await repo.setMemberMajor('me', 'm1', ' Akuntansi ');
+    expect(api.params['admin_member_set_major'], {
       'p_admin': 'me',
       'p_profile': 'm1',
-      'p_nim': '21010',
-      'p_major': 'Manajemen',
+      'p_major': 'Akuntansi',
     });
   });
 
@@ -175,53 +163,28 @@ void main() {
     }
   });
 
-  testWidgets('NIM fix loads, checks the format and saves', (tester) async {
+  testWidgets('jurusan fix picks from the list and saves', (tester) async {
     final api = await open(tester, [member()]);
-    api.results['admin_member_identity'] = [
-      {'nim': 'LAMA1', 'faculty': 'FEB', 'major': 'Manajemen'},
-    ];
     await tester.tap(find.text('Ahmad Ramadhan'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('member-identity')));
-    await tester.tap(find.byKey(const Key('member-identity')));
+    await tester.ensureVisible(find.byKey(const Key('member-major')));
+    await tester.tap(find.byKey(const Key('member-major')));
     await tester.pumpAndSettle();
-    expect(find.text('LAMA1'), findsOneWidget);
-    await tester.enterText(find.byKey(const Key('identity-nim')), '12');
-    await tester.tap(find.byKey(const Key('identity-save')));
+    await tester.tap(find.byKey(const Key('major-Akuntansi')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('identity-error')), findsOneWidget);
-    expect(api.calls, isNot(contains('admin_member_set_identity')));
-    await tester.enterText(
-      find.byKey(const Key('identity-nim')),
-      '21010118120001',
-    );
-    await tester.tap(find.byKey(const Key('identity-save')));
-    await tester.pumpAndSettle();
-    expect(api.params['admin_member_set_identity'], {
+    expect(api.params['admin_member_set_major'], {
       'p_admin': 'me',
       'p_profile': 'm1',
-      'p_nim': '21010118120001',
-      'p_major': 'Manajemen',
+      'p_major': 'Akuntansi',
     });
   });
 
-  testWidgets('NIM taken shows a plain sentence', (tester) async {
-    final api = await open(tester, [member()]);
-    api.results['admin_member_identity'] = [
-      {'nim': 'LAMA1', 'faculty': 'FEB', 'major': 'Manajemen'},
-    ];
+  testWidgets('no NIM anywhere on the member screens', (tester) async {
+    await open(tester, [member()]);
+    expect(find.textContaining('NIM'), findsNothing);
     await tester.tap(find.text('Ahmad Ramadhan'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('member-identity')));
-    await tester.tap(find.byKey(const Key('member-identity')));
-    await tester.pumpAndSettle();
-    api.throwOnCall = const AdminException(
-      AdminErrorCode.nimTaken,
-      'nim_taken',
-    );
-    await tester.tap(find.byKey(const Key('identity-save')));
-    await tester.pumpAndSettle();
-    expect(find.text('NIM ini sudah dipakai anggota lain.'), findsOneWidget);
+    expect(find.textContaining('NIM'), findsNothing);
   });
 
   for (final s in [const Size(360, 740), const Size(1440, 900)]) {
