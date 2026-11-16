@@ -74,12 +74,6 @@ begin
     city = null, user_id = null, policy_version = null, policy_accepted_at = null,
     verification_status = 'unverified', deleted_at = now(), updated_at = now()
   where id = p_profile;
-  -- NIM is being removed from the database; clear it only while it exists.
-  if exists (select 1 from information_schema.columns
-              where table_schema = 'public' and table_name = 'alumni_profiles'
-                and column_name = 'nim') then
-    execute 'update alumni_profiles set nim = null where id = $1' using p_profile;
-  end if;
 
   return jsonb_build_object(
     'deleted', true,
