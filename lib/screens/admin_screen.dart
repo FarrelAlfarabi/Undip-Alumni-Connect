@@ -16,6 +16,7 @@ import 'admin_feedback_screen.dart';
 import 'admin_ikafe_contacts_screen.dart';
 import 'admin_jobs_screen.dart';
 import 'admin_log_screen.dart';
+import 'admin_members_screen.dart';
 import 'admin_reports_screen.dart';
 import 'marketplace_admin_screen.dart';
 import '../widgets/business_photo.dart';
@@ -106,6 +107,16 @@ class _AdminScreenState extends State<AdminScreen> {
         subtitle: tr('Atur sponsor di carousel Home: gambar, tautan, tanggal'),
         builder: (_) =>
             AdminSponsorsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
+        key: 'admin-members',
+        icon: Icons.manage_accounts_outlined,
+        title: tr('Ubah profil anggota'),
+        subtitle: tr(
+          'Perbaiki jabatan, perusahaan, kota, bio dan LinkedIn anggota',
+        ),
+        builder: (_) =>
+            AdminMembersScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-ikafe-contacts',

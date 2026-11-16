@@ -301,3 +301,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Web login journey: email code once per browser (16 Nov 2026)
 - Web: "Keluar" in Profile locks instead of signing out when a PIN and a sign in exist (`leaveApp`), so coming back needs the PIN, not a new email code. Full sign out is "Bukan kamu? Ganti akun" on the PIN screen, which now also ends the Supabase sign in.
 - Web: a signed in person with no PIN must make one before entering. Phones unchanged. No migration. Tests: `web_stage1_login_test`.
+## Admin edit member profile (16 Nov 2026)
+- Admin > "Ubah profil anggota": search (name, company, email) and filters (major, year, industry, city) like the Directory, then edit jabatan, perusahaan, industri, kota, bio, LinkedIn. NIM, email, name, status are not shown and the database refuses them (`protected_field`).
+- Migration `20261116120000_admin_edit_profile` (`admin_update_profile`, `admin_members_search`, edits go to the admin log as field names) + rollback + SQL test `25_admin_edit_profile_test`. Tests: `admin_members_test`. Photo not covered.
