@@ -341,9 +341,9 @@ class _HomeShellState extends State<HomeShell> {
             alignment: Alignment.topCenter,
             child: SizedBox(
               key: const Key('shell-content'),
-              width: room < maxContentWidth(step)
+              width: room < shellContentWidth(constraints.maxWidth)
                   ? room
-                  : maxContentWidth(step),
+                  : shellContentWidth(constraints.maxWidth),
               height: double.infinity,
               // The global key keeps every tab alive (scroll, filters) when
               // the window is resized across the desktop width.

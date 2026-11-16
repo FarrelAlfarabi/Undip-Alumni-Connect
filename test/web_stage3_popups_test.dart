@@ -140,7 +140,11 @@ void main() {
                 onGenerateRoute: (_) => MaterialPageRoute(
                   builder: (context) => Scaffold(
                     body: TextButton(
-                      onPressed: () => signOutTo(context, const Text('OUT'), lock: makeLock()),
+                      onPressed: () => signOutTo(
+                        context,
+                        const Text('OUT'),
+                        lock: makeLock(),
+                      ),
                       child: const Text('SIGN OUT'),
                     ),
                   ),

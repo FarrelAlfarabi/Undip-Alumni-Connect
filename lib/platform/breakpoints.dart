@@ -16,3 +16,12 @@ double maxContentWidth(ScreenStep step) => switch (step) {
   ScreenStep.tablet => 720,
   ScreenStep.desktop => 960,
 };
+
+/// From this width the desktop column grows to [wideContentWidth].
+const double wideMinWidth = 1440;
+const double wideContentWidth = 1200;
+
+/// Width of the app shell's content column for a window [width] wide.
+double shellContentWidth(double width) => width >= wideMinWidth
+    ? wideContentWidth
+    : maxContentWidth(stepForWidth(width));

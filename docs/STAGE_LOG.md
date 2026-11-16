@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Web stage 4: lists in columns on wide screens (16 Nov 2026)
+- New `ResponsiveListView` and `ResponsiveColumns` (`lib/widgets/responsive_list.dart`): one column on phones (the plain list, unchanged), 2 to 3 columns when there is room. Used by Admin home (2 max), Admin Businesses, Members, Marketplace, Businesses, Jobs.
+- From 1440 px the desktop column is 1200 wide (`shellContentWidth`). Checked in a browser at 390, 768, 1024, 1280, 1920.
+- Tests: `test/web_stage4_wide_lists_test.dart`. Full suite passes.
+
 ## Web stage 3: screens open inside the column on desktop (16 Nov 2026)
 - From 1024 px, screens opened from a tab (News, Requests, Notifications, Admin) open in a navigator inside the content column, so the side nav stays. Browser back and a side nav tap close them first. Phones and tablets unchanged (full screen).
 - Sign out, Keluar and Delete account use the root navigator so they still replace the whole app. Home hides its logo on desktop (shown once, in the side nav).

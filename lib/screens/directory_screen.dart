@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
 import '../util/safe_url.dart';
@@ -349,7 +350,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           await _future;
                         } catch (_) {}
                       },
-                      child: ListView.separated(
+                      child: ResponsiveListView(
+                        minTileWidth: 300,
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: filtered.length,
