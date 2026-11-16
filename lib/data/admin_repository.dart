@@ -516,7 +516,6 @@ class AdminRepository {
     };
   }
 
-<<<<<<< HEAD
   /// Deletes a job for good, with its applications. Logged in Riwayat.
   Future<void> deleteJob(String adminId, String jobId, String reason) async {
     await _guard(
@@ -528,8 +527,6 @@ class AdminRepository {
     );
   }
 
-=======
->>>>>>> origin/main
   /// Fixes a wrong jurusan from the import. Logged in Riwayat.
   Future<void> setMemberMajor(
     String adminId,
