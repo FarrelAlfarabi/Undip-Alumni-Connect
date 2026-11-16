@@ -5,6 +5,7 @@ import '../util/app_language.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config/policy_config.dart' show hasPolicyPlaceholder;
 import '../config/support_config.dart';
 
 /// Subject of the email a person writes to the admin team from the login flow.
@@ -26,7 +27,12 @@ class ContactAdminScreen extends StatelessWidget {
     this.contacts = kSupportContacts,
     this.fromLogin = false,
     this.typedEmail = '',
+    this.alumniFormUrl = kAlumniFormUrl,
   });
+
+  /// The alumni database form, opened by a button when coming from login.
+  /// No button while it is still the placeholder (the form is not made yet).
+  final String alumniFormUrl;
 
   final List<SupportContact> contacts;
 
@@ -82,14 +88,31 @@ class ContactAdminScreen extends StatelessWidget {
           children: [
             Text(
               fromLogin
-                  ? 'Belum terdaftar, lupa email yang dipakai, atau kode tidak '
-                        'masuk? Hubungi tim admin. Input nama lengkap, angkatan, '
-                        'dan jurusanmu.'
+                  ? tr(
+                      'Yuk isi database alumni terlebih dahulu sebelum '
+                      'mengakses Aplikasi Lingkaran. Setelah mengisi, mohon '
+                      'tunggu beberapa hari untuk kami melakukan verifikasi '
+                      'atas data yang kamu input',
+                    )
                   : 'Butuh bantuan, ingin melaporkan masalah, atau butuh lebih '
                         'dari 3 usaha? Hubungi tim admin di sini.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            if (fromLogin && !hasPolicyPlaceholder(alumniFormUrl)) ...[
+              Center(
+                child: FilledButton.icon(
+                  key: const Key('alumni-form-open'),
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text(tr('Isi formulir database alumni')),
+                  onPressed: () => launchUrl(
+                    Uri.parse(alumniFormUrl),
+                    mode: LaunchMode.externalApplication,
+                  ).catchError((_) => false),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             for (final c in contacts)
               Card(
                 elevation: 0,

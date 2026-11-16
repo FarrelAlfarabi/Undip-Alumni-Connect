@@ -54,6 +54,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   late final TextEditingController _social;
   late final TextEditingController _website;
   late final TextEditingController _nib;
+  bool _hasNib = false;
   late final TextEditingController _categoryText;
   String? _category;
   BusinessBand? _band;
@@ -77,6 +78,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     _social = TextEditingController(text: e?.socialLink);
     _website = TextEditingController(text: e?.websiteLink);
     _nib = TextEditingController(text: e?.nib);
+    _hasNib = (e?.nib ?? '').isNotEmpty;
     _category = e?.category;
     _categoryText = TextEditingController(text: _category ?? '');
     CategoryRepository.shared.load();
@@ -205,7 +207,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
       var nibFailed = false;
       // The NIB is saved after the business too. It is optional; a number
       // that did not change is not sent again (that would take its tick).
-      final nib = cleanNib(_nib.text);
+      final nib = _hasNib ? cleanNib(_nib.text) : null;
       if (nib != existing?.nib) {
         try {
           result = await widget.repository.setNib(
@@ -463,22 +465,59 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       validator: _websiteField,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      key: const Key('nib-field'),
-                      controller: _nib,
-                      enabled: !_saving,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: tr('NIB (opsional)'),
-                        helperText: tr(
-                          'Nomor Induk Berusaha, 13 digit. Akan dicek admin. '
-                          'Kalau lolos, usahamu dapat tanda centang biru.',
-                        ),
-                        helperMaxLines: 3,
-                        border: OutlineInputBorder(),
+                    Text(
+                      tr(
+                        'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB '
+                        'usahamu untuk mendapatkan tanda "Verified"',
                       ),
-                      validator: nibFieldError,
+                      style: theme.textTheme.titleSmall,
                     ),
+                    RadioGroup<bool>(
+                      groupValue: _hasNib,
+                      onChanged: (v) {
+                        if (_saving) return;
+                        setState(() => _hasNib = v ?? false);
+                      },
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<bool>(
+                              key: const Key('nib-yes'),
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(tr('Ya')),
+                              value: true,
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<bool>(
+                              key: const Key('nib-no'),
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(tr('Belum')),
+                              value: false,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_hasNib) ...[
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        key: const Key('nib-field'),
+                        controller: _nib,
+                        enabled: !_saving,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: tr('Nomor NIB'),
+                          helperText: tr(
+                            'Nomor Induk Berusaha, 13 digit. Akan dicek admin. '
+                            'Kalau lolos, usahamu dapat tanda centang biru.',
+                          ),
+                          helperMaxLines: 3,
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: nibFieldError,
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     Text(
                       tr('Yearly sales *'),

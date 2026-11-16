@@ -8,6 +8,7 @@ const List<String> kIndustries = [
   'Automotive',
   'Banking and Finance',
   'Construction and Infrastructure',
+  'Creative Industry (Entertainment and Social Media)',
   'Education and Research',
   'Energy and Mining',
   'Engineering and Manufacturing',

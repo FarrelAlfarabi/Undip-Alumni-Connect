@@ -650,7 +650,7 @@ class _VerificationForm extends StatelessWidget {
             TextButton(
               key: const Key('login-contact-admin'),
               onPressed: loading ? null : onContact,
-              child: Text(tr('Belum terdaftar? Hubungi tim admin')),
+              child: Text(tr('Belum punya akun? Hubungi IKAFE')),
             ),
           ],
           if (codeController != null) ...[

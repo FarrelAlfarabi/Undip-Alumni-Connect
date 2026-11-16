@@ -73,7 +73,7 @@ class LockService {
       _shared ??= LockService.forPlatform(web: kIsWeb);
 
   factory LockService.forPlatform({required bool web}) => LockService(
-    store: const SecureLockStore(),
+    store: web ? const WebLockStore() : const SecureLockStore(),
     biometrics: web ? const NoBiometrics() : LocalAuthBiometrics(),
   );
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/policy_config.dart';
+import 'package:undip_alumni_connect/config/support_config.dart';
 
 /// Gate for anything handed to testers. The two groups below differ:
 ///  * 'detector' always runs and proves the check itself works.
@@ -50,6 +51,14 @@ void main() {
         reason: 'kOperatorAddress',
       );
       expect(kContactEmail, contains('@'));
+    }, skip: skipReason);
+
+    test('the alumni database form link is filled in', () {
+      expect(
+        hasPolicyPlaceholder(kAlumniFormUrl),
+        isFalse,
+        reason: 'kAlumniFormUrl in lib/config/support_config.dart',
+      );
     }, skip: skipReason);
 
     test('the policy files carry no leftover placeholder text', () {

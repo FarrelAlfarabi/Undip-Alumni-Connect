@@ -20,6 +20,10 @@ const _softYellow = Color(0xFFFFF6D6);
 /// design, so it never looks like an announcement. The label
 /// "Disponsori" is fixed and cannot be changed by the admin. Shows nothing
 /// when there is no sponsor.
+/// Most slides the carousel shows. The database function `home_sponsors()`
+/// applies the same limit.
+const int kMaxSponsorSlides = 10;
+
 class SponsorBanner extends StatelessWidget {
   const SponsorBanner({
     super.key,
@@ -39,7 +43,7 @@ class SponsorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
     return BannerCarousel(
-      items: items,
+      items: items.take(kMaxSponsorSlides).toList(),
       onOpen: onOpen,
       onShown: onShown,
       autoAdvance: autoAdvance,
