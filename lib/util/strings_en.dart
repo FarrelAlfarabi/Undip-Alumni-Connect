@@ -141,8 +141,8 @@ final Map<String, String> kEnglish = {
   'Ganti gambar': 'Change image',
   'Pilih gambar': 'Choose image',
   'Pilih gambar sponsor.': 'Choose the sponsor image.',
-  'Rasio 2:1 (misalnya 1600 x 800 px). JPG, PNG atau WebP, maksimal 2 MB.':
-      'Ratio 2:1 (for example 1600 x 800 px). JPG, PNG or WebP, 2 MB at most.',
+  'Rasio 16:9 (misalnya 1600 x 900 px). JPG, PNG atau WebP, maksimal 2 MB.':
+      'Ratio 16:9 (for example 1600 x 900 px). JPG, PNG or WebP, 2 MB at most.',
   'Mulai tayang': 'Start showing',
   'Berhenti tayang': 'Stop showing',
   'Tampil di Home': 'Show on Home',

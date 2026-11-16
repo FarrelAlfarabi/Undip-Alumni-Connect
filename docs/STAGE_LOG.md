@@ -4,6 +4,9 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Sponsor card shape (16 Nov 2026)
+- Sponsor picture 16:9 instead of 2:1 (card 1.6 with the bar), admin crop and hint "1600 x 900". At most 480 px wide and centred on wide screens. No migration (old images are shown cropped to 16:9).
+
 ## Web stage 4: lists in columns on wide screens (16 Nov 2026)
 - New `ResponsiveListView` and `ResponsiveColumns` (`lib/widgets/responsive_list.dart`): one column on phones (the plain list, unchanged), 2 to 3 columns when there is room. Used by Admin home (2 max), Admin Businesses, Members, Marketplace, Businesses, Jobs.
 - From 1440 px the desktop column is 1200 wide (`shellContentWidth`). Checked in a browser at 390, 768, 1024, 1280, 1920.

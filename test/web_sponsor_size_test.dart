@@ -37,7 +37,7 @@ void main() {
   testWidgets('1200 column: the card stays a banner, not a poster', (t) async {
     final s = await _cardSize(t, 1200);
     expect(s.width, lessThanOrEqualTo(kSponsorMaxWidth));
-    expect(s.height, lessThanOrEqualTo(320));
+    expect(s.height, lessThanOrEqualTo(310));
   });
 
   testWidgets('1200 column: the card is centred', (t) async {
