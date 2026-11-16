@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
+import '../widgets/auth_frame.dart';
 
 import 'biometrics.dart';
 import 'lock_config.dart';
@@ -18,8 +19,7 @@ enum _Step { enter, confirm, biometric }
 
 /// Offered right after the first successful verification: create a 6-digit
 /// PIN (entered twice) and, if the device supports it, turn on biometrics.
-/// Skipping is fine; the next launch then shows a "Continue" that re-runs
-/// verification.
+/// It can only be skipped when [mandatory] is false (from Settings).
 class PinSetupScreen extends StatefulWidget {
   const PinSetupScreen({
     super.key,
@@ -133,72 +133,65 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             ),
         ],
       ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 380),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    switch (_step) {
-                      _Step.enter => 'Buat PIN $kPinLength digit',
-                      _Step.confirm => 'Masukkan lagi untuk konfirmasi',
-                      _Step.biometric => 'Buka dengan sidik jari atau wajah?',
-                    },
-                    key: const Key('pin-setup-title'),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _step == _Step.biometric
-                        ? 'Opsional. PIN kamu tetap bisa dipakai.'
-                        : 'PIN membuka Lingkaran di perangkat ini, jadi kamu tidak '
-                              'perlu verifikasi tiap kali. Ini kunci praktis di '
-                              'perangkat ini, bukan perlindungan tambahan untuk '
-                              'akunmu.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (_step == _Step.biometric) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        key: const Key('bio-enable'),
-                        onPressed: _busy ? null : _enableBiometrics,
-                        icon: const Icon(Icons.fingerprint),
-                        label: Text(tr('Aktifkan')),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      key: const Key('bio-skip'),
-                      onPressed: _busy ? null : _finish,
-                      child: Text(tr('Nanti saja')),
-                    ),
-                  ] else
-                    PinPad(enabled: !_busy, onCompleted: _entered),
-                  if (_error != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      _error!,
-                      key: const Key('pin-setup-error'),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
-                    ),
-                  ],
-                ],
+      body: AuthFrame(
+        maxWidth: 380,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              switch (_step) {
+                _Step.enter => 'Buat PIN $kPinLength digit',
+                _Step.confirm => 'Masukkan lagi untuk konfirmasi',
+                _Step.biometric => 'Buka dengan sidik jari atau wajah?',
+              },
+              key: const Key('pin-setup-title'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _step == _Step.biometric
+                  ? 'Opsional. PIN kamu tetap bisa dipakai.'
+                  : 'PIN membuka Lingkaran di perangkat ini, jadi kamu tidak '
+                        'perlu verifikasi tiap kali. Ini kunci praktis di '
+                        'perangkat ini, bukan perlindungan tambahan untuk '
+                        'akunmu.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ),
+            const SizedBox(height: 24),
+            if (_step == _Step.biometric) ...[
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  key: const Key('bio-enable'),
+                  onPressed: _busy ? null : _enableBiometrics,
+                  icon: const Icon(Icons.fingerprint),
+                  label: Text(tr('Aktifkan')),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                key: const Key('bio-skip'),
+                onPressed: _busy ? null : _finish,
+                child: Text(tr('Nanti saja')),
+              ),
+            ] else
+              PinPad(enabled: !_busy, onCompleted: _entered),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                key: const Key('pin-setup-error'),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

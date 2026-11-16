@@ -51,10 +51,14 @@ void main() {
       expect(opened?['id'], 'sp1');
     });
 
-    testWidgets('card keeps its shape (bar plus 2:1 picture)', (tester) async {
+    test('the picture is a common photo shape, 16:9', () {
+      expect(kSponsorAspectRatio, closeTo(16 / 9, 0.001));
+    });
+
+    testWidgets('card keeps its shape (bar plus 16:9 picture)', (tester) async {
       await pumpBanner(tester, [sponsorMap(1)]);
       final box = tester.getSize(find.byKey(const Key('sponsor-pages')));
-      expect(box.width / box.height, closeTo(1.75, 0.01));
+      expect(box.width / box.height, closeTo(1.6, 0.01));
     });
 
     testWidgets('several sponsors: dots, auto slide and swipe', (tester) async {

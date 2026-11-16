@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
 import 'package:flutter/material.dart';
@@ -433,7 +434,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                   await _future;
                                 } catch (_) {}
                               },
-                              child: ListView.separated(
+                              child: ResponsiveListView(
+                                minTileWidth: 260,
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 padding: const EdgeInsets.fromLTRB(
                                   16,

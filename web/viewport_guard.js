@@ -10,8 +10,20 @@
 //   3. (in index.html) touch-action: manipulation stops double-tap zoom.
 // It is a separate file because the Content-Security-Policy only allows
 // scripts from this site.
+//
+// Only iPhones and iPads have this problem, so the guard only runs there.
+// On a computer (and on Android) the browser's own zoom keeps working, for
+// people who need bigger text.
 (function () {
   'use strict';
+
+  var ua = navigator.userAgent || '';
+  // An iPad asks for the desktop site and calls itself a Mac, but it is the
+  // only "Mac" with a touch screen.
+  var isIOS =
+    /iPhone|iPad|iPod/.test(ua) ||
+    (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if (!isIOS) return;
 
   var CONTENT =
     'width=device-width, initial-scale=1.0, maximum-scale=1.0, ' +

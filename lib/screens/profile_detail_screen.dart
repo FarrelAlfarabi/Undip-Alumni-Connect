@@ -12,7 +12,7 @@ import '../data/profile_fields.dart' show ProfileFieldSaver;
 import '../data/report_repository.dart';
 import '../lock/lock_service.dart';
 import '../models/contact_request.dart';
-import '../lock/session.dart';
+import '../lock/app_entry.dart';
 import '../policy/policy_screen.dart';
 import '../util/friendly_error.dart';
 import '../widgets/avatar.dart';
@@ -721,7 +721,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       // forgets this device's remembered person and PIN
                       // (local only).
                       onSignOut: () =>
-                          signOutTo(context, const VerificationScreen()),
+                          leaveApp(context, const VerificationScreen()),
                     ),
                   ],
                 ],

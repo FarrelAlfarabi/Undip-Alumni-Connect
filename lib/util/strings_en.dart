@@ -39,6 +39,9 @@ final Map<String, String> kEnglish = {
   'Ditangguhkan: {0}': 'Suspended: {0}',
   // Texts with values (trf)
   'Selamat datang kembali, {0}': 'Welcome back, {0}',
+  'Sesi masukmu di browser ini sudah berakhir. Masuk lagi dengan kode yang kami kirim ke emailmu.': 'Your sign in on this browser has ended. Sign in again with the code we send to your email.',
+  'Masuk lagi': 'Sign in again',
+  'Bukan kamu? Keluar': 'Not you? Sign out',
   '"{0}" akan dihapus permanen untuk semua orang.':
       '"{0}" will be deleted permanently for everyone.',
   'Tampil di Home: {0} produk, {1} lowongan. Yang dipin tampil dulu, urutan 1 paling depan.': 'Shown on Home: {0} products, {1} jobs. Pinned ones come first, number 1 at the front.',
@@ -138,8 +141,8 @@ final Map<String, String> kEnglish = {
   'Ganti gambar': 'Change image',
   'Pilih gambar': 'Choose image',
   'Pilih gambar sponsor.': 'Choose the sponsor image.',
-  'Rasio 2:1 (misalnya 1600 x 800 px). JPG, PNG atau WebP, maksimal 2 MB.':
-      'Ratio 2:1 (for example 1600 x 800 px). JPG, PNG or WebP, 2 MB at most.',
+  'Rasio 16:9 (misalnya 1600 x 900 px). JPG, PNG atau WebP, maksimal 2 MB.':
+      'Ratio 16:9 (for example 1600 x 900 px). JPG, PNG or WebP, 2 MB at most.',
   'Mulai tayang': 'Start showing',
   'Berhenti tayang': 'Stop showing',
   'Tampil di Home': 'Show on Home',

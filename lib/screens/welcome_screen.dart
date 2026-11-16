@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../kawung_mark.dart';
 import '../theme.dart';
 import '../util/app_info.dart';
+import '../widgets/auth_frame.dart';
 import 'verification_screen.dart';
 
 /// The app's actual entry screen — a proper branded landing moment in
@@ -25,132 +26,123 @@ class WelcomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(28),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (notice != null) ...[
-                    Container(
-                      key: const Key('welcome-notice'),
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        notice!,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  const SizedBox(height: 12),
-                  const KawungMark(size: 64, color: AppTheme.black),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Lingkaran',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                    ),
+      body: AuthFrame(
+        phonePadding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (notice != null) ...[
+              Container(
+                key: const Key('welcome-notice'),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  notice!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSecondaryContainer,
                   ),
-                  Text(
-                    tr('by Ikafe Undip'),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    tr(
-                      'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    tr(
-                      'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, '
-                      'dukung usaha alumni, dan rekomendasikan lowongan kerja.',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const VerificationScreen(),
-                          ),
-                        );
-                      },
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(tr('Mulai')),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const ClosedTestNotice(),
-                  const SizedBox(height: 12),
-                  Text(
-                    tr('Beta tertutup · data awal dari anggota Ikafe'),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  FutureBuilder<AppInfo>(
-                    future: AppInfo.load(),
-                    builder: (context, snap) => Text(
-                      'BETA${snap.data == null ? '' : ' · ${snap.data!.short}'}',
-                      key: const Key('welcome-version'),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Text(
-                    tr(
-                      'Beta tertutup. Tampilan sementara, bukan identitas resmi '
-                      'UNDIP atau Ikafe.',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.7,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            const SizedBox(height: 12),
+            const KawungMark(size: 64, color: AppTheme.black),
+            const SizedBox(height: 12),
+            Text(
+              'Lingkaran',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
               ),
             ),
-          ),
+            Text(
+              tr('by Ikafe Undip'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              tr(
+                'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineMedium?.copyWith(height: 1.15),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              tr(
+                'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, '
+                'dukung usaha alumni, dan rekomendasikan lowongan kerja.',
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 36),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const VerificationScreen(),
+                    ),
+                  );
+                },
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(tr('Mulai')),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const ClosedTestNotice(),
+            const SizedBox(height: 12),
+            Text(
+              tr('Beta tertutup · data awal dari anggota Ikafe'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 6),
+            FutureBuilder<AppInfo>(
+              future: AppInfo.load(),
+              builder: (context, snap) => Text(
+                'BETA${snap.data == null ? '' : ' · ${snap.data!.short}'}',
+                key: const Key('welcome-version'),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Text(
+              tr(
+                'Beta tertutup. Tampilan sementara, bukan identitas resmi '
+                'UNDIP atau Ikafe.',
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.7,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

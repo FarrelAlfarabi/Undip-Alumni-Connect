@@ -130,7 +130,9 @@ void main() {
       expect(find.byKey(const Key('alumni-form-open')), findsOneWidget);
     });
 
-    testWidgets('the Profile contact screen has no form button', (tester) async {
+    testWidgets('the Profile contact screen has no form button', (
+      tester,
+    ) async {
       await tester.pumpWidget(const MaterialApp(home: ContactAdminScreen()));
       expect(find.byKey(const Key('alumni-form-open')), findsNothing);
     });
