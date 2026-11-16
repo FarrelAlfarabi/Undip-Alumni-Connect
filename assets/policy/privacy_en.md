@@ -8,12 +8,12 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Only verified alumni can use it.
 
 ## 2. What we collect, and why
-- From the Ikafe alumni list, loaded by the admins: NIM, name, faculty, major, graduation year, email, city and employer details. Why: to check that you are an alumnus and to show the alumni directory.
+- From the Ikafe alumni list, loaded by the admins: name, faculty, major, graduation year, email, city and employer details. Why: to check that you are an alumnus and to show the alumni directory.
 - What you add or edit yourself: your current employer, role, industry and company.
 - Jobs you post: title, company, industry, description and contact text.
 - Job applications you send: your name, email, phone number, LinkedIn and portfolio links, cover note, and the CV file you attach.
 - Your businesses: name, description, category, Instagram or website link, and the yearly sales band you choose. Why: the business directory.
-- Your business registration number (Nomor Induk Berusaha, NIB), if you add one. It is optional. The NIB is a business licence number issued by the government, not your NIM. Why: admins check it, and your business can then get a verified badge.
+- Your business registration number (Nomor Induk Berusaha, NIB), if you add one. It is optional. The NIB is a business licence number issued by the government. Why: admins check it, and your business can then get a verified badge.
 - Sponsor banner statistics: the number of views and taps per sponsor per day, with no name, email or personal ID. Why: to report banner performance to sponsors.
 - Marketplace products: title, description, price, city, photo, shop link and contact text you write.
 - Contact requests: your short message, and the contact detail the other person chooses to share when they accept.
@@ -29,7 +29,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - One outside request: the app loads its fonts from Google Fonts, so Google may see your IP address when the fonts load.
 
 ## 4. Who can see your data
-- Other verified alumni can see your name, faculty, major, graduation year, employer details, city and NIM in the directory and on your profile, and your jobs, businesses and products.
+- Other verified alumni can see your name, faculty, major, graduation year, employer details and city in the directory and on your profile, and your jobs, businesses and products.
 - Your email, phone number and contact text are shown only where you chose to give them: a job's contact text, an application you send (to the person who posted the job), or what you share when you accept a contact request (to that person only).
 - Businesses and products are visible to verified alumni. Admins can hide them.
 - Your NIB is seen only by Ikafe admins, to check it. Other alumni see only the blue verified badge on your business, not the NIB number.
@@ -37,7 +37,7 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Service providers who store or deliver the app for us: Supabase (database and file storage, server region Singapore), Vercel (web hosting, mainly the United States), GitHub (code and test builds, no user data) and Google Fonts (fonts for the web and app). Your data is therefore processed outside Indonesia, the EU and India. We have a contract or the standard terms of each provider, and we share only what each one needs to do its job.
 - Product photos and CV files are kept in public storage. Anyone who has the exact link can open them.
 - Sponsors: the app shows paid sponsor banners on Home, always with the label "Disponsori" (Sponsored). Tapping a banner opens a website outside the app that we do not control and that has its own privacy policy. We only count how many times each banner is shown and tapped, as a number per sponsor per day, with no name, device or personal data about you.
-- Honest limit of this beta: the app does not use real sign in yet. The database still sends full profile rows, including email and NIM, to the app, so someone with technical skill and the app's public key could read them. This is a known gap. It must be fixed before the app is opened to more people.
+- Honest limit of this beta: the app does not use real sign in yet. The database still sends full profile rows, including email, to the app, so someone with technical skill and the app's public key could read them. This is a known gap. It must be fixed before the app is opened to more people.
 
 ## 5. What stays only on your device
 - A PIN (stored only as a salted hash), your remembered profile id, your name, a masked email, and your fingerprint choice. They are kept in the phone's secure storage.

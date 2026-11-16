@@ -34,7 +34,7 @@ import '../widgets/error_view.dart';
 import '../widgets/menu_list.dart';
 import '../widgets/safe_link_chip.dart';
 
-/// Read-only view of an alumnus's profile. Identity fields (name, NIM,
+/// Read-only view of an alumnus's profile. Identity fields (name,
 /// faculty, major, graduation year) came from verification and aren't
 /// editable here — only employment fields are, via ProfileSetupScreen.
 ///
@@ -56,7 +56,6 @@ class ProfileDetailScreen extends StatefulWidget {
     this.contactRepository,
     this.adminCheck,
     this.adminCounts,
-    this.nimLoader,
     this.lock,
     this.saveFields,
   });
@@ -75,11 +74,6 @@ class ProfileDetailScreen extends StatefulWidget {
   /// How many things wait for an admin (the red tag on Admin). Injectable for
   /// tests. A failure shows no tag.
   final Future<int> Function(String profileId)? adminCounts;
-
-  /// Asks the database for this profile's NIM on behalf of the viewer. It
-  /// answers only for the profile's owner and for admins; everyone else gets
-  /// null, and NIM is not shown. Injectable for tests.
-  final Future<String?> Function(String viewerId, String profileId)? nimLoader;
 
   /// Injectable for tests; defaults to the real repository.
   final ContactRepository? contactRepository;
@@ -104,13 +98,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool _messaging = false;
   Future<bool>? _isAdmin;
   int _adminBadge = 0;
-  Future<String?>? _nim;
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
-    _nim = _askNim();
     if (widget.showEditButton) {
       _isAdmin = _askAdmin();
     } else if (!_isOwnProfile) {
@@ -139,27 +131,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       final n = await ask(id);
       if (mounted) setState(() => _adminBadge = n);
     } catch (_) {}
-  }
-
-  // NIM is private: the database returns it to the owner and admins only. A
-  // failed or empty answer just leaves the NIM row out.
-  Future<String?> _askNim() async {
-    try {
-      final viewer = widget.currentUser.value['id'] as String;
-      final profile = _profile['id'] as String;
-      final ask = widget.nimLoader ?? _rpcNim;
-      return await ask(viewer, profile);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  static Future<String?> _rpcNim(String viewerId, String profileId) async {
-    final result = await Supabase.instance.client.rpc(
-      'profile_nim',
-      params: {'p_viewer': viewerId, 'p_profile': profileId},
-    );
-    return result is String && result.isNotEmpty ? result : null;
   }
 
   bool get _isOwnProfile => _profile['id'] == widget.currentUser.value['id'];
@@ -545,16 +516,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               icon: Icons.school_outlined,
                               title: tr('Academic'),
                               children: [
-                                FutureBuilder<String?>(
-                                  future: _nim,
-                                  builder: (context, snap) {
-                                    final nim = snap.data;
-                                    if (nim == null) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return _field(theme, 'NIM', nim);
-                                  },
-                                ),
                                 _field(theme, 'Faculty', _profile['faculty']),
                                 _field(theme, 'Major', _profile['major']),
                                 _field(
@@ -646,16 +607,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               icon: Icons.school_outlined,
                               title: tr('Academic'),
                               children: [
-                                FutureBuilder<String?>(
-                                  future: _nim,
-                                  builder: (context, snap) {
-                                    final nim = snap.data;
-                                    if (nim == null) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    return _field(theme, 'NIM', nim);
-                                  },
-                                ),
                                 _field(theme, 'Faculty', _profile['faculty']),
                                 _field(theme, 'Major', _profile['major']),
                                 _field(

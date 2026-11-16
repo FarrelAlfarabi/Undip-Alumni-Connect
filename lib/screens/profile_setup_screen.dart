@@ -11,7 +11,7 @@ import '../widgets/searchable_choice.dart';
 import 'verification_screen.dart';
 
 /// Lets the verified alumnus update their employment info. Identity fields
-/// (name, NIM, faculty, major, graduation year) came from verification and
+/// (name, faculty, major, graduation year) came from verification and
 /// aren't editable here.
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key, required this.profile});
@@ -103,7 +103,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       if (updated == null) {
         // Our cached id is stale -- look the row up again by email (a
         // stable natural key untouched by a reset regenerating ids) and
-        // retry once with whatever id it has now. NIM is not readable.
+        // retry once with whatever id it has now.
         final email = widget.profile['email'] as String?;
         final fresh = email == null
             ? null

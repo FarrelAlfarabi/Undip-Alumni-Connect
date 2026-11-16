@@ -72,7 +72,6 @@ final me = ValueNotifier<Map<String, dynamic>>({
   'id': 'me',
   'name': longName,
   'email': 'muhammad.fajar.ramadhan.nugroho.wijayakusuma@students.undip.ac.id',
-  'nim': '21120112130099',
   'faculty': longFaculty,
   'major': longMajor,
   'graduation_year': 2016,

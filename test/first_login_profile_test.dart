@@ -111,15 +111,6 @@ void main() {
       expect(find.byType(DefaultContactScreen), findsOneWidget);
     });
 
-    testWidgets('no NIM is shown on the step', (tester) async {
-      await enter(tester, {
-        ...testProfile(),
-        'nim': '12010120130001',
-        kFirstLoginKey: true,
-      });
-      expect(find.textContaining('12010120130001'), findsNothing);
-    });
-
     testWidgets('a returning person never sees the step', (tester) async {
       await enter(tester, testProfile());
       expect(find.byKey(const Key('first-login-profile')), findsNothing);

@@ -111,15 +111,14 @@ void main() {
           expect(text, contains(kOperatorName));
           expect(text, contains(kContactEmail));
           // Built from what the app really stores and does.
+          expect(text, isNot(matches(RegExp(r'\bNIM\b'))));
           for (final fact in [
-            'NIM',
             'CV',
             'GPS',
             'PIN',
             'Google Fonts',
             'Delete my account',
             'Send feedback',
-            'NIM',
             'Ikafe',
           ]) {
             expect(text, contains(fact), reason: '$fact in ${lang.name}');

@@ -14,7 +14,7 @@ import 'package:undip_alumni_connect/theme.dart';
 
 import 'support/fake_contact_api.dart';
 
-const me = {'id': 'me', 'name': 'Ahmad Ramadhan', 'nim': '12010120'};
+const me = {'id': 'me', 'name': 'Ahmad Ramadhan'};
 const other = {
   'id': 'u2',
   'name': 'Rani Putri',

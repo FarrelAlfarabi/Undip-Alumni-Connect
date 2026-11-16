@@ -33,16 +33,17 @@ for f in "$ROOT"/supabase/migrations/*.sql; do
   case "$f" in *_real_login_cutover.sql) CUTOVER="$f" ;; *) MIGS+=("$f") ;; esac
 done
 echo "== ${#MIGS[@]} migrations, in order, first error stops the run"
+# Beta migrations (20261003 and later) must be idempotent: each one runs a
+# second time right after itself. The chain is not replayed on top of itself,
+# because a later migration can drop what an earlier one names
+# (20261116180000_remove_nim drops the nim column).
 for f in "${MIGS[@]}"; do
   if ! $PSQL -f "$f" >/dev/null 2>"$WORK/err.txt"; then
     echo "FAIL: $(basename "$f")"; cat "$WORK/err.txt"; exit 1
   fi
-done
-echo "== second pass over the beta migrations (20261003 and later must be idempotent)"
-for f in "${MIGS[@]}"; do
   case "$(basename "$f")" in 2026100[3-9]*|202610[1-3]*|202611*) ;; *) continue ;; esac
   if ! $PSQL -f "$f" >/dev/null 2>"$WORK/err.txt"; then
-    echo "FAIL (second pass): $(basename "$f")"; cat "$WORK/err.txt"; exit 1
+    echo "FAIL (second run): $(basename "$f")"; cat "$WORK/err.txt"; exit 1
   fi
 done
 echo "== seed.sql"

@@ -93,17 +93,19 @@ select check_name, ok, detail from (
                         and has_function_privilege('anon', p.oid, 'execute')),
          'anon can call it: it creates notifications for anyone'
   union all
-  -- 9. NIM is hidden from the app, and nothing else got hidden with it.
-  select 'anon cannot read alumni_profiles.nim',
-         not has_column_privilege('anon', 'public.alumni_profiles', 'nim', 'select'),
-         'anon can read NIM: apply 20261018120000_hide_nim.sql'
+  -- 9. NIM is gone (20261116180000_remove_nim), and the app reads every
+  --    other profile column.
+  select 'alumni_profiles has no nim column',
+         not exists (select 1 from information_schema.columns
+                      where table_schema = 'public' and table_name = 'alumni_profiles'
+                        and column_name = 'nim'),
+         'NIM is still stored: apply 20261116180000_remove_nim.sql'
   union all
   select 'signed in app can read alumni_profiles.' || c.column_name,
          has_column_privilege('authenticated', 'public.alumni_profiles', c.column_name, 'select'),
          'the app cannot read it: grant select (' || c.column_name || ') on alumni_profiles to authenticated'
     from information_schema.columns c
    where c.table_schema = 'public' and c.table_name = 'alumni_profiles'
-     and c.column_name <> 'nim'
   union all
   -- 10. Strangers cannot read the alumni table (emails, auth ids).
   select 'anon cannot read alumni_profiles.email',

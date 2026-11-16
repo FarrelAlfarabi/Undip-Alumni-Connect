@@ -109,8 +109,8 @@ select t.expect_error(format($q$select * from marketplace_report_counts(%L)$q$, 
 select t.expect_error(format($q$select * from marketplace_admin_pending(%L, null, null)$q$, t.pid('demo.admin@example.com')), 'does not exist');
 reset role;
 -- an admin with no passphrase set cannot act
-insert into alumni_profiles (id, nim, name, faculty, major, graduation_year, email)
-  values ('99999999-0000-4000-8000-000000000001','Z1','No Key Admin','F','M',2020,'nokey.admin@example.com');
+insert into alumni_profiles (id, name, faculty, major, graduation_year, email)
+  values ('99999999-0000-4000-8000-000000000001','No Key Admin','F','M',2020,'nokey.admin@example.com');
 insert into marketplace_admins (profile_id) values ('99999999-0000-4000-8000-000000000001');
 set role anon;
 select t.expect_error(format($q$select * from marketplace_admin_pending(%L, t.k())$q$, '99999999-0000-4000-8000-000000000001'), 'not_admin');

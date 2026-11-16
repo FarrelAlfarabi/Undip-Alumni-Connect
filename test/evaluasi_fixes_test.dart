@@ -37,11 +37,7 @@ void main() {
     ]) async {
       phone(tester);
       await tester.pumpWidget(
-        MaterialApp(
-          home: ProfileSetupScreen(
-            profile: profile ?? {'id': 'me', 'nim': '1'},
-          ),
-        ),
+        MaterialApp(home: ProfileSetupScreen(profile: profile ?? {'id': 'me'})),
       );
       await tester.pumpAndSettle();
     }

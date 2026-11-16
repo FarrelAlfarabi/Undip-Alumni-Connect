@@ -427,7 +427,7 @@ class AdminRepository {
     return old is String && old.isNotEmpty ? old : null;
   }
 
-  /// Members an admin can edit (by name or email), 30 at most. No NIM.
+  /// Members an admin can edit (by name or email), 30 at most.
   Future<List<AdminMember>> searchMembers(String adminId, String query) async {
     final rows = await _guard(
       () => _api.rpc('admin_members_list', {
