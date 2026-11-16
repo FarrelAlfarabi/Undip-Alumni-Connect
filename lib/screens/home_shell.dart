@@ -70,6 +70,11 @@ class _HomeShellState extends State<HomeShell> {
   late final ValueNotifier<Map<String, dynamic>> _currentUser;
   final _stackKey = GlobalKey();
 
+  /// Desktop only: screens opened from a tab (News, Requests, Notifications,
+  /// Admin) open in this navigator, inside the content column, so the side
+  /// nav stays. Phones and tablets keep opening them over the whole screen.
+  final _innerNav = GlobalKey<NavigatorState>();
+
   // Home (latest jobs/listings/news), Directory, Market and Chat show data
   // that changes while the app is open (a conversation you just started, a
   // job someone just posted). IndexedStack keeps a visited tab alive, so such
@@ -188,6 +193,8 @@ class _HomeShellState extends State<HomeShell> {
   ];
 
   void _select(int i) {
+    // A side nav tap closes any screen opened on top of the tabs.
+    _innerNav.currentState?.popUntil((r) => r.isFirst);
     setState(() {
       if (i != _index) {
         final now = DateTime.now();
@@ -211,6 +218,11 @@ class _HomeShellState extends State<HomeShell> {
 
   void _handlePop(bool didPop) {
     if (didPop) return;
+    final inner = _innerNav.currentState;
+    if (inner != null && inner.canPop()) {
+      inner.maybePop();
+      return;
+    }
     if (_index != HomeShell.homeTab) {
       _select(HomeShell.homeTab);
       return;
@@ -320,6 +332,11 @@ class _HomeShellState extends State<HomeShell> {
           // centred column so lines do not stretch across the screen.
           final desktop = step == ScreenStep.desktop;
           final room = constraints.maxWidth - (desktop ? _SideNav.width : 0);
+          final stack = IndexedStack(
+            key: _stackKey,
+            index: _index,
+            children: tabs,
+          );
           final content = Align(
             alignment: Alignment.topCenter,
             child: SizedBox(
@@ -330,11 +347,15 @@ class _HomeShellState extends State<HomeShell> {
               height: double.infinity,
               // The global key keeps every tab alive (scroll, filters) when
               // the window is resized across the desktop width.
-              child: IndexedStack(
-                key: _stackKey,
-                index: _index,
-                children: tabs,
-              ),
+              child: desktop
+                  ? Navigator(
+                      key: _innerNav,
+                      pages: [
+                        MaterialPage(key: const ValueKey('tabs'), child: stack),
+                      ],
+                      onDidRemovePage: (_) {},
+                    )
+                  : stack,
             ),
           );
           if (desktop) {

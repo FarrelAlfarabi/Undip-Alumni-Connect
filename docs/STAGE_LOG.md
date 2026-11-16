@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Web stage 3: screens open inside the column on desktop (16 Nov 2026)
+- From 1024 px, screens opened from a tab (News, Requests, Notifications, Admin) open in a navigator inside the content column, so the side nav stays. Browser back and a side nav tap close them first. Phones and tablets unchanged (full screen).
+- Sign out, Keluar and Delete account use the root navigator so they still replace the whole app. Home hides its logo on desktop (shown once, in the side nav).
+- Tests: `test/web_stage3_popups_test.dart`. Full suite passes.
+
 ## Web stage 2: app shell and web addresses (16 Nov 2026)
 - From 1024 px a left side nav (logo, Home, Members, Explore, Profile) replaces the bottom bar. Tabs sit in a centred column (720 tablet, 960 desktop). Phone layout unchanged.
 - Web addresses: `/`, `/members`, `/explore`, `/explore/businesses`, `/explore/jobs`, `/profile` (`lib/platform/app_location.dart`). Refresh opens the same tab after the PIN; back from a tab goes Home. Clean paths (`usePathUrlStrategy`), `vercel.json` rewrites every path to index.html.

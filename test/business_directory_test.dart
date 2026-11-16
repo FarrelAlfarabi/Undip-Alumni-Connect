@@ -507,7 +507,9 @@ void main() {
       await tester.tap(find.text('Kopi Ahmad'));
       await tester.pumpAndSettle();
       expect(find.byType(AppPhoto), findsNothing);
-      final box = tester.getSize(find.byKey(const ValueKey('business-initials')));
+      final box = tester.getSize(
+        find.byKey(const ValueKey('business-initials')),
+      );
       expect(box.width, box.height);
       expect(box.width, greaterThan(200));
     });

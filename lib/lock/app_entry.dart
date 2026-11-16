@@ -70,7 +70,7 @@ Future<void> leaveApp(
   }
   l.sessionActive = false;
   FeedbackSession.profileId = null;
-  Navigator.of(context).pushAndRemoveUntil(
+  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
     MaterialPageRoute(
       builder: (_) =>
           entryBuilder?.call() ?? AppEntry(lock: l, loginApi: login),

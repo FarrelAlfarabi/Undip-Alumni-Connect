@@ -39,8 +39,7 @@ final Map<String, String> kEnglish = {
   'Ditangguhkan: {0}': 'Suspended: {0}',
   // Texts with values (trf)
   'Selamat datang kembali, {0}': 'Welcome back, {0}',
-  'Sesi masukmu di browser ini sudah berakhir. Masuk lagi dengan kode yang kami kirim ke emailmu.':
-      'Your sign in on this browser has ended. Sign in again with the code we send to your email.',
+  'Sesi masukmu di browser ini sudah berakhir. Masuk lagi dengan kode yang kami kirim ke emailmu.': 'Your sign in on this browser has ended. Sign in again with the code we send to your email.',
   'Masuk lagi': 'Sign in again',
   'Bukan kamu? Keluar': 'Not you? Sign out',
   '"{0}" akan dihapus permanen untuk semua orang.':
@@ -111,8 +110,7 @@ final Map<String, String> kEnglish = {
   'Dukung Usaha Alumni': 'Support Alumni Businesses',
   'Lihat semua pengumuman': 'See all announcements',
   'Disponsori': 'Sponsored',
-  'Data sponsor belum benar. Periksa nama, tautan (https://...), gambar dan tanggal.':
-      'The sponsor data is not right. Check the name, link (https://...), image and dates.',
+  'Data sponsor belum benar. Periksa nama, tautan (https://...), gambar dan tanggal.': 'The sponsor data is not right. Check the name, link (https://...), image and dates.',
   'dilihat': 'views',
   'diketuk': 'taps',
   'Sponsor': 'Sponsor',
@@ -398,8 +396,8 @@ final Map<String, String> kEnglish = {
           'Lingkaran. Setelah mengisi, mohon tunggu beberapa hari untuk kami '
           'melakukan verifikasi atas data yang kamu input':
       'Please fill in the alumni database first before using the Lingkaran '
-          'app. After you submit, please wait a few days while we verify the '
-          'data you entered.',
+      'app. After you submit, please wait a few days while we verify the '
+      'data you entered.',
   'Isi formulir database alumni': 'Fill in the alumni database form',
   'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB usahamu untuk '
           'mendapatkan tanda "Verified"':

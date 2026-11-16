@@ -8,6 +8,7 @@ import '../data/marketplace_repository.dart';
 import '../data/posting_text.dart';
 import '../models/business.dart';
 import '../models/marketplace_listing.dart';
+import '../platform/breakpoints.dart';
 import '../theme.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/brand_lockup.dart';
@@ -236,7 +237,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const BrandLockup(),
+        // Desktop shows the logo in the side nav, so not twice.
+        title: MediaQuery.sizeOf(context).width >= desktopMinWidth
+            ? null
+            : const BrandLockup(),
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
