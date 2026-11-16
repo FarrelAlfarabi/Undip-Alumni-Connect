@@ -4,6 +4,7 @@ import '../util/app_language.dart';
 
 import '../data/admin_repository.dart';
 import '../util/friendly_error.dart';
+import '../widgets/admin_reason_dialog.dart';
 import '../widgets/error_view.dart';
 import '../widgets/undo_snackbar.dart';
 
@@ -104,6 +105,41 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
       'Lowongan ditangguhkan. Pemasang diberi tahu.',
       undo: () => widget.repository.restoreJob(widget.adminId, j.id),
     );
+  }
+
+  Future<void> _delete(AdminJob j) async {
+    final reason = await askAdminReason(
+      context,
+      title: tr('Hapus lowongan ini untuk selamanya?'),
+      body: trf(
+        '"{0}" dan semua lamarannya dihapus. Tidak bisa dibatalkan. Kalau '
+        'hanya ingin menyembunyikan, pakai Tangguhkan.',
+        [j.title],
+      ),
+      action: tr('Hapus untuk selamanya'),
+      destructive: true,
+      confirmWord: 'HAPUS',
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _busy.add(j.id));
+    try {
+      await widget.repository.deleteJob(widget.adminId, j.id, reason);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Lowongan dihapus.'))));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: adminErrorMessage(e),
+          screen: 'Admin jobs',
+          error: e,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy.remove(j.id));
+    }
   }
 
   Future<void> _restore(AdminJob j) => _run(
@@ -246,30 +282,47 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                     ),
                                   ),
                                 ],
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: j.isHidden
-                                      ? OutlinedButton(
-                                          key: Key('job-restore-${j.id}'),
-                                          onPressed: _busy.contains(j.id)
-                                              ? null
-                                              : () => _restore(j),
-                                          child: Text(tr('Tampilkan lagi')),
-                                        )
-                                      : TextButton.icon(
-                                          key: Key('job-hide-${j.id}'),
-                                          onPressed: _busy.contains(j.id)
-                                              ? null
-                                              : () => _hide(j),
-                                          icon: const Icon(
-                                            Icons.visibility_off,
+                                Wrap(
+                                  alignment: WrapAlignment.end,
+                                  spacing: 8,
+                                  children: [
+                                    TextButton.icon(
+                                      key: Key('job-delete-${j.id}'),
+                                      onPressed: _busy.contains(j.id)
+                                          ? null
+                                          : () => _delete(j),
+                                      icon: const Icon(
+                                        Icons.delete_forever_outlined,
+                                      ),
+                                      label: Text(tr('Hapus')),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor:
+                                            theme.colorScheme.error,
+                                      ),
+                                    ),
+                                    j.isHidden
+                                        ? OutlinedButton(
+                                            key: Key('job-restore-${j.id}'),
+                                            onPressed: _busy.contains(j.id)
+                                                ? null
+                                                : () => _restore(j),
+                                            child: Text(tr('Tampilkan lagi')),
+                                          )
+                                        : TextButton.icon(
+                                            key: Key('job-hide-${j.id}'),
+                                            onPressed: _busy.contains(j.id)
+                                                ? null
+                                                : () => _hide(j),
+                                            icon: const Icon(
+                                              Icons.visibility_off,
+                                            ),
+                                            label: Text(tr('Tangguhkan')),
+                                            style: TextButton.styleFrom(
+                                              foregroundColor:
+                                                  theme.colorScheme.error,
+                                            ),
                                           ),
-                                          label: Text(tr('Tangguhkan')),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor:
-                                                theme.colorScheme.error,
-                                          ),
-                                        ),
+                                  ],
                                 ),
                               ],
                             ),

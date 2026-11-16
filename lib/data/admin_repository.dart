@@ -516,6 +516,17 @@ class AdminRepository {
     };
   }
 
+  /// Deletes a job for good, with its applications. Logged in Riwayat.
+  Future<void> deleteJob(String adminId, String jobId, String reason) async {
+    await _guard(
+      () => _api.rpc('admin_job_delete', {
+        'p_admin': adminId,
+        'p_job': jobId,
+        'p_reason': reason.trim(),
+      }),
+    );
+  }
+
   /// Fixes a wrong jurusan from the import. Logged in Riwayat.
   Future<void> setMemberMajor(
     String adminId,

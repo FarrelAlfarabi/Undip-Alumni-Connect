@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Admin permanent delete of jobs and listings (16 Nov 2026)
+- Admin > Jobs: "Hapus" next to Tangguhkan. Marketplace review > Reports: "Hapus" next to Sembunyikan produk. Both need a reason and typing HAPUS.
+- Migration 20261116200000_admin_delete_posts: admin_job_delete (with applications, notifications, email log) and admin_listing_delete; admin only, login required, Riwayat row. Files go through the storage cleanup triggers. Tests: 29_admin_delete_posts_test.sql, test/admin_delete_posts_test.dart.
+
 ## Admin remove member and their data (16 Nov 2026)
 - Admin > Anggota > member: "Hapus anggota dan datanya" (reason + type HAPUS). Hidden for admins and yourself.
 - Migration 20261116190000_admin_remove_member: account_delete body moved to account_delete_core (not callable by the app); account_delete keeps assert_caller then core; admin_member_remove (admin only, login required, Riwayat row with reason only). Tests: 28_admin_remove_member_test.sql, test/admin_member_remove_test.dart.
