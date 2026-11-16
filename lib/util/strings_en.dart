@@ -478,4 +478,13 @@ final Map<String, String> kEnglish = {
   'Pilih anggota': 'Choose a member',
   'Cari nama atau email...': 'Search name or email...',
   'Lihat, tambah atau hapus admin': 'See, add or remove admins',
+  'Hapus dulu akses admin orang ini di Kelola admin.':
+      'Remove this person\'s admin access in Manage admins first.',
+  'Aksi ini butuh login dengan kode email.':
+      'This action needs sign in with an email code.',
+  'Hapus anggota dan datanya': 'Remove member and their data',
+  'Hapus anggota ini untuk selamanya?': 'Remove this member for good?',
+  'Akun {0} dihapus bersama bisnis, produk, lowongan, lamaran, permintaan kontak dan notifikasinya. Tidak bisa dibatalkan. Pakai ini untuk akun palsu atau akun yang ditinggalkan.': 'The account of {0} is removed with its businesses, products, jobs, applications, contact requests and notifications. This cannot be undone. Use it for fake or abandoned accounts.',
+  'Hapus untuk selamanya': 'Remove for good',
+  '{0} dan datanya sudah dihapus.': '{0} and their data were removed.',
 };

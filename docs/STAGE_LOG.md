@@ -4,6 +4,10 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Admin remove member and their data (16 Nov 2026)
+- Admin > Anggota > member: "Hapus anggota dan datanya" (reason + type HAPUS). Hidden for admins and yourself.
+- Migration 20261116190000_admin_remove_member: account_delete body moved to account_delete_core (not callable by the app); account_delete keeps assert_caller then core; admin_member_remove (admin only, login required, Riwayat row with reason only). Tests: 28_admin_remove_member_test.sql, test/admin_member_remove_test.dart.
+
 ## NIM removed from app and database (16 Nov 2026)
 - Farrel: erase NIM entirely, no backup. App: NIM row, profile_nim call, NIM in privacy text and delete list removed. Seed keyed on email.
 - Migration 20261116180000_remove_nim: clears passwords equal to the NIM, drops provision_alumni_accounts, profile_nim, the nim column and key; restrict_update and account_delete without nim. Rollback restores empty schema only.

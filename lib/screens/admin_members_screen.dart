@@ -582,8 +582,21 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                       ),
                       onPressed: _saving ? null : _toggleSuspend,
                     ),
-                  )
-                else
+                  ),
+                if (_canSuspend)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton.icon(
+                      key: const Key('member-remove'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                      icon: const Icon(Icons.delete_forever_outlined),
+                      label: Text(tr('Hapus anggota dan datanya')),
+                      onPressed: _saving ? null : _remove,
+                    ),
+                  ),
+                if (!_canSuspend)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
@@ -643,6 +656,47 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(adminErrorMessage(e))));
+      setState(() {
+        _saving = false;
+        _error = adminErrorMessage(e);
+      });
+    }
+  }
+
+  Future<void> _remove() async {
+    final m = widget.member;
+    final reason = await askAdminReason(
+      context,
+      title: tr('Hapus anggota ini untuk selamanya?'),
+      body: trf(
+        'Akun {0} dihapus bersama bisnis, produk, lowongan, lamaran, '
+        'permintaan kontak dan notifikasinya. Tidak bisa dibatalkan. '
+        'Pakai ini untuk akun palsu atau akun yang ditinggalkan.',
+        [m.name],
+      ),
+      action: tr('Hapus untuk selamanya'),
+      destructive: true,
+      confirmWord: 'HAPUS',
+    );
+    if (reason == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.removeMember(widget.adminId, m.id, reason);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(trf('{0} dan datanya sudah dihapus.', [m.name])),
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(adminErrorMessage(e))));
       setState(() {
         _saving = false;
         _error = adminErrorMessage(e);
@@ -716,6 +770,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(adminErrorMessage(e))));
       setState(() {
         _saving = false;
         _error = adminErrorMessage(e);
