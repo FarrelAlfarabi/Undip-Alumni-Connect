@@ -4,6 +4,24 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Sponsor card shape (16 Nov 2026)
+- Sponsor picture 16:9 instead of 2:1 (card 1.6 with the bar), admin crop and hint "1600 x 900". At most 480 px wide and centred on wide screens. No migration (old images are shown cropped to 16:9).
+
+## Web stage 4: lists in columns on wide screens (16 Nov 2026)
+- New `ResponsiveListView` and `ResponsiveColumns` (`lib/widgets/responsive_list.dart`): one column on phones (the plain list, unchanged), 2 to 3 columns when there is room. Used by Admin home (2 max), Admin Businesses, Members, Marketplace, Businesses, Jobs.
+- From 1440 px the desktop column is 1200 wide (`shellContentWidth`). Checked in a browser at 390, 768, 1024, 1280, 1920.
+- Tests: `test/web_stage4_wide_lists_test.dart`. Full suite passes.
+
+## Web stage 3: screens open inside the column on desktop (16 Nov 2026)
+- From 1024 px, screens opened from a tab (News, Requests, Notifications, Admin) open in a navigator inside the content column, so the side nav stays. Browser back and a side nav tap close them first. Phones and tablets unchanged (full screen).
+- Sign out, Keluar and Delete account use the root navigator so they still replace the whole app. Home hides its logo on desktop (shown once, in the side nav).
+- Tests: `test/web_stage3_popups_test.dart`. Full suite passes.
+
+## Web stage 2: app shell and web addresses (16 Nov 2026)
+- From 1024 px a left side nav (logo, Home, Members, Explore, Profile) replaces the bottom bar. Tabs sit in a centred column (720 tablet, 960 desktop). Phone layout unchanged.
+- Web addresses: `/`, `/members`, `/explore`, `/explore/businesses`, `/explore/jobs`, `/profile` (`lib/platform/app_location.dart`). Refresh opens the same tab after the PIN; back from a tab goes Home. Clean paths (`usePathUrlStrategy`), `vercel.json` rewrites every path to index.html.
+- Tests: `test/web_stage2_shell_test.dart` (390, 768, 1280). Full suite passes. Pushed screens (News, Requests, Admin) still cover the whole window: later stages.
+
 ## Hack test fixes (13 Nov 2026)
 - Migration `20261113100000_hack_test_fixes.sql` (+ rollback, `24_hack_test_fixes_test.sql`): anon cannot read `alumni_profiles`; job application status cannot be edited and applying needs you to be the applicant (when login is required); `cvs` bucket private (poster reads by signed link, `job_applicants_screen.dart`); uploads need sign in; `claim_alumni_profile` needs a confirmed email.
 - Also `20261113120000_real_login_cutover.sql` (+ `rollback_real_login_cutover.sql`): the login switch as a migration, because the connector prompt could not be answered. Left out of the beta test chain, applied twice at the end of `run_fresh_chain.sh`. Production build has REAL_LOGIN=true (Vercel env). Still open: signed in members can read each other's email/user_id (directory needs an RPC).
@@ -276,3 +294,10 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Ikafe meeting changes (16 Nov 2026)
 - Sponsor carousel capped at 10 slides (app + `home_sponsors()` limit, migration `20261116100000_sponsor_cap_10` + rollback). New "Creative Industry" in the industry list. Business form asks "Apakah usaha anda memiliki NIB?" (Ya/Belum), field only after Ya; blue tick also on the Home owner card.
 - "Belum punya akun? Hubungi IKAFE" has a button to the form in `kAlumniFormUrl` (placeholder: no button, release gate fails until filled) with the new text. Web remembers the person in browser storage so email code is only asked on first use (PIN after).
+## Web stage 1: login and start screens (16 Nov 2026)
+- Welcome, PIN lock, PIN setup and the new returning screen sit in one centred card from 600 px up (`AuthFrame`). Phone layout unchanged.
+- Web only (`AppEntry.web`): signed in with no PIN opens the app without a new email code; an expired sign in shows "Selamat datang kembali" (`ReturningScreen`, first name only in browser storage) instead of the first-time Welcome. Phones keep their flow.
+- Web page: HTML start screen until Flutter draws (`splash.js`), `main.dart.js` preload, start-up reads run side by side, zoom guard limited to iPhone and iPad, portrait lock removed from the manifest. No migration. Tests: `web_stage1_login_test`.
+## Web login journey: email code once per browser (16 Nov 2026)
+- Web: "Keluar" in Profile locks instead of signing out when a PIN and a sign in exist (`leaveApp`), so coming back needs the PIN, not a new email code. Full sign out is "Bukan kamu? Ganti akun" on the PIN screen, which now also ends the Supabase sign in.
+- Web: a signed in person with no PIN must make one before entering. Phones unchanged. No migration. Tests: `web_stage1_login_test`.

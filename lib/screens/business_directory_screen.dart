@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
 import '../data/block_list.dart';
@@ -214,7 +215,8 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
                           await _future;
                         } catch (_) {}
                       },
-                      child: ListView.separated(
+                      child: ResponsiveListView(
+                        minTileWidth: 300,
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                         itemCount: items.length,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
 import '../data/admin_repository.dart';
@@ -167,39 +168,48 @@ class _AdminScreenState extends State<AdminScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
             if (_counts.total > 0) _PendingBanner(counts: _counts),
-            for (final s in sections)
-              Card(
-                key: Key(s.key),
-                elevation: 0,
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
+            // Two columns at most: section texts run to two or three lines
+            // and need the width.
+            ResponsiveColumns(
+              minTileWidth: 340,
+              maxColumns: 2,
+              gap: 12,
+              children: [
+                for (final s in sections)
+                  Card(
+                    key: Key(s.key),
+                    elevation: 0,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Icon(s.icon),
+                      title: Text(s.title),
+                      subtitle: Text(s.subtitle),
+                      trailing: s.badge > 0
+                          ? Badge(
+                              key: Key('badge-${s.key}'),
+                              label: Text('${s.badge}'),
+                              child: const Icon(Icons.chevron_right),
+                            )
+                          : const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await Navigator.of(context)
+                            .push(MaterialPageRoute(builder: s.builder));
+                        _loadCounts();
+                      },
+                    ),
                   ),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: Icon(s.icon),
-                  title: Text(s.title),
-                  subtitle: Text(s.subtitle),
-                  trailing: s.badge > 0
-                      ? Badge(
-                          key: Key('badge-${s.key}'),
-                          label: Text('${s.badge}'),
-                          child: const Icon(Icons.chevron_right),
-                        )
-                      : const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await Navigator.of(context)
-                        .push(MaterialPageRoute(builder: s.builder));
-                    _loadCounts();
-                  },
-                ),
-              ),
+              ],
+            ),
           ],
         ),
       ),
@@ -613,7 +623,8 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                   if (items.isEmpty) {
                     return Center(child: Text(tr('Nothing matches.')));
                   }
-                  return ListView.separated(
+                  return ResponsiveListView(
+                    minTileWidth: 360,
                     padding: const EdgeInsets.all(16),
                     itemCount: items.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),

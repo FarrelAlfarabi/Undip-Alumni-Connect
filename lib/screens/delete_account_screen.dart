@@ -98,7 +98,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       _error = null;
       _lastError = null;
     });
-    final navigator = Navigator.of(context);
+    final navigator = Navigator.of(context, rootNavigator: true);
     try {
       final result = await (widget.repository ?? AccountRepository())
           .deleteAccount(widget.currentUser.value['id'] as String);

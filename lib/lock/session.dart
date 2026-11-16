@@ -84,7 +84,9 @@ Future<void> signOutTo(
   LockService? lock,
   LoginApi? login,
 }) async {
-  final navigator = Navigator.of(context);
+  // The root navigator: on desktop the shell has its own navigator for the
+  // screens opened from a tab, and signing out must replace the whole app.
+  final navigator = Navigator.of(context, rootNavigator: true);
   FeedbackSession.profileId = null;
   final api = login ?? (kRealLogin ? SupabaseLoginApi() : null);
   try {

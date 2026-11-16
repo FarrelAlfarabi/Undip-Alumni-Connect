@@ -5,12 +5,18 @@ import '../theme.dart';
 import '../util/app_language.dart';
 import 'banner_carousel.dart';
 
-/// Wide and a little short, so the picture is easy to read without taking
-/// the whole first screen (about 175 px high on a phone).
-const kSponsorAspectRatio = 2.0;
+/// The picture is 16:9, the usual photo and banner shape, so most sponsor
+/// images fit with little trimming (Farrel, 16 Nov 2026: 2:1 was too thin).
+/// About 200 px high on a phone.
+const kSponsorAspectRatio = 16 / 9;
 
-/// The whole card: the yellow "Disponsori" bar plus the 2:1 picture below it.
-const kSponsorCardAspectRatio = 1.75;
+/// The whole card: the yellow "Disponsori" bar plus the 16:9 picture below.
+const kSponsorCardAspectRatio = 1.6;
+
+/// Widest the card gets. On a phone it fills the width as before; on a wide
+/// screen it stops here (about 300 px high) and sits centred, so it stays a
+/// banner and does not take the whole first screen.
+const double kSponsorMaxWidth = 480;
 
 const _softYellow = Color(0xFFFFF6D6);
 
@@ -42,7 +48,7 @@ class SponsorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
-    return BannerCarousel(
+    final carousel = BannerCarousel(
       items: items.take(kMaxSponsorSlides).toList(),
       onOpen: onOpen,
       onShown: onShown,
@@ -51,6 +57,12 @@ class SponsorBanner extends StatelessWidget {
       aspectRatio: kSponsorCardAspectRatio,
       cardBuilder: (context, item, onTap) =>
           _SponsorCard(item: item, onTap: onTap),
+    );
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kSponsorMaxWidth),
+        child: carousel,
+      ),
     );
   }
 }

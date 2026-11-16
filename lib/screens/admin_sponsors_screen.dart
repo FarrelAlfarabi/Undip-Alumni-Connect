@@ -439,7 +439,7 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   tr(
-                    'Rasio 2:1 (misalnya 1600 x 800 px). JPG, PNG atau WebP, '
+                    'Rasio 16:9 (misalnya 1600 x 900 px). JPG, PNG atau WebP, '
                     'maksimal 2 MB.',
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(

@@ -103,6 +103,9 @@ class LockService {
   static const _kWait = 'lingkaran.lock.v1.wait_until';
   static const _kBio = 'lingkaran.lock.v1.bio';
   static const _kIntroPrefix = 'lingkaran.intro.v1.seen.';
+  // Web only: "someone signed in on this browser before", with a first name.
+  // It only picks which start screen shows. It never grants entry.
+  static const _kReturning = 'lingkaran.returning.v1.first_name';
 
   final ValueNotifier<int> _changes = ValueNotifier(0);
   ValueListenable<int> get changes => _changes;
@@ -146,7 +149,25 @@ class LockService {
     await _store.write(_kId, profileId);
     await _store.write(_kName, displayName);
     await _store.write(_kMasked, maskEmail(email));
+    await _store.delete(_kReturning);
   }
+
+  /// Web: the first name of the person whose sign in expired on this
+  /// browser, or null. Used only to show "welcome back" instead of the
+  /// first-time Welcome; the person still signs in with an email code.
+  Future<String?> returningName() async {
+    final n = await _store.read(_kReturning);
+    return (n == null || n.isEmpty) ? null : n;
+  }
+
+  /// Keeps the first name only (no email, no id, no full name).
+  Future<void> markReturning(String displayName) async {
+    final n = displayName.trim();
+    if (n.isEmpty) return;
+    await _store.write(_kReturning, n.split(RegExp(r'\s+')).first);
+  }
+
+  Future<void> clearReturning() => _store.delete(_kReturning);
 
   /// Whether this person has already been through the feature intro on this
   /// device. Kept per profile id so a shared phone shows it to each person.
@@ -254,6 +275,7 @@ class LockService {
     await _store.delete(_kId);
     await _store.delete(_kName);
     await _store.delete(_kMasked);
+    await _store.delete(_kReturning);
     _changes.value++;
   }
 
@@ -266,6 +288,7 @@ class LockService {
     await _store.delete(_kId);
     await _store.delete(_kName);
     await _store.delete(_kMasked);
+    await _store.delete(_kReturning);
     _changes.value++;
   }
 }
