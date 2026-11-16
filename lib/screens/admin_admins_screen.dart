@@ -28,7 +28,9 @@ class _AdminAdminsScreenState extends State<AdminAdminsScreen> {
 
   Future<List<AdminUser>> _fetch() => widget.repository.admins(widget.adminId);
 
-  void _reload() => setState(() => _future = _fetch());
+  void _reload() => setState(() {
+    _future = _fetch();
+  });
 
   void _toast(String text) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
