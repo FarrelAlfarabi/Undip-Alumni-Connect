@@ -17,6 +17,10 @@ enum AdminErrorCode {
   invalidAction,
   notFound,
   invalidInput,
+  alreadyAdmin,
+  cannotRemoveSelf,
+  lastAdmin,
+  ownerProtected,
   unknown,
 }
 
@@ -48,6 +52,14 @@ String adminErrorMessage(Object error) {
         return tr('This item no longer exists.');
       case AdminErrorCode.invalidInput:
         return tr('Title and message are required, and must not be too long.');
+      case AdminErrorCode.alreadyAdmin:
+        return tr('Anggota ini sudah admin.');
+      case AdminErrorCode.cannotRemoveSelf:
+        return tr('Kamu tidak bisa melakukan ini pada akunmu sendiri.');
+      case AdminErrorCode.lastAdmin:
+        return tr('Admin terakhir tidak bisa dihapus.');
+      case AdminErrorCode.ownerProtected:
+        return tr('Admin pemilik hanya bisa diubah lewat dashboard Supabase.');
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
@@ -442,6 +454,38 @@ class AdminRepository {
     );
   }
 
+  /// Everyone with admin access, owners first.
+  Future<List<AdminUser>> admins(String adminId) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_admins_list', {'p_admin': adminId}),
+    );
+    return [
+      for (final r in rows as List)
+        AdminUser.fromMap(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Gives admin access to a verified, active member. Logged in Riwayat.
+  Future<void> addAdmin(String adminId, String profileId) async {
+    await _guard(
+      () => _api.rpc('admin_admin_add', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+      }),
+    );
+  }
+
+  /// Takes admin access away. The database refuses yourself, the last admin
+  /// and owners. Logged in Riwayat.
+  Future<void> removeAdmin(String adminId, String profileId) async {
+    await _guard(
+      () => _api.rpc('admin_admin_remove', {
+        'p_admin': adminId,
+        'p_profile': profileId,
+      }),
+    );
+  }
+
   /// Fixes a wrong jurusan from the import. Logged in Riwayat.
   Future<void> setMemberMajor(
     String adminId,
@@ -740,6 +784,10 @@ class AdminRepository {
     'invalid_view' => AdminErrorCode.invalidView,
     'not_found' => AdminErrorCode.notFound,
     'invalid_input' => AdminErrorCode.invalidInput,
+    'already_admin' => AdminErrorCode.alreadyAdmin,
+    'cannot_remove_self' => AdminErrorCode.cannotRemoveSelf,
+    'last_admin' => AdminErrorCode.lastAdmin,
+    'owner_protected' => AdminErrorCode.ownerProtected,
     _ => AdminErrorCode.unknown,
   };
 }
@@ -1017,6 +1065,7 @@ class AdminMember {
     this.suspendedAt,
     this.suspendedReason,
     this.isAdmin = false,
+    this.verificationStatus,
   });
 
   factory AdminMember.fromMap(Map<String, dynamic> m) => AdminMember(
@@ -1036,6 +1085,7 @@ class AdminMember {
         : DateTime.tryParse(m['suspended_at'] as String),
     suspendedReason: m['suspended_reason'] as String?,
     isAdmin: m['is_admin'] == true,
+    verificationStatus: m['verification_status'] as String?,
   );
 
   final String id;
@@ -1052,6 +1102,40 @@ class AdminMember {
   final DateTime? suspendedAt;
   final String? suspendedReason;
   final bool isAdmin;
+  final String? verificationStatus;
 
   bool get isSuspended => suspendedAt != null;
+}
+
+/// One person with admin access.
+class AdminUser {
+  const AdminUser({
+    required this.profileId,
+    required this.name,
+    this.email,
+    this.major,
+    this.graduationYear,
+    this.isOwner = false,
+    this.addedAt,
+  });
+
+  factory AdminUser.fromMap(Map<String, dynamic> m) => AdminUser(
+    profileId: m['profile_id'] as String,
+    name: (m['name'] as String?) ?? '',
+    email: m['email'] as String?,
+    major: m['major'] as String?,
+    graduationYear: m['graduation_year'] as int?,
+    isOwner: m['is_owner'] == true,
+    addedAt: m['added_at'] == null
+        ? null
+        : DateTime.tryParse(m['added_at'] as String),
+  );
+
+  final String profileId;
+  final String name;
+  final String? email;
+  final String? major;
+  final int? graduationYear;
+  final bool isOwner;
+  final DateTime? addedAt;
 }

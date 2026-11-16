@@ -454,4 +454,28 @@ final Map<String, String> kEnglish = {
   'Jurusan tersimpan.': 'Major saved.',
   'Cari anggota, ubah profil, perbaiki jurusan, tangguhkan atau aktifkan':
       'Find members, edit profiles, fix major, suspend or reactivate',
+  'Anggota ini sudah admin.': 'This member is already an admin.',
+  'Kamu tidak bisa melakukan ini pada akunmu sendiri.':
+      'You cannot do this to your own account.',
+  'Admin terakhir tidak bisa dihapus.': 'The last admin cannot be removed.',
+  'Admin pemilik hanya bisa diubah lewat dashboard Supabase.':
+      'Owner admins can only be changed in the Supabase dashboard.',
+  'Jadikan admin?': 'Make admin?',
+  '{0} bisa membuka menu Admin: melihat laporan, menyetujui bisnis, menangguhkan dan menghapus anggota.': '{0} can open the Admin menu: see reports, approve businesses, suspend and remove members.',
+  'Jadikan admin': 'Make admin',
+  '{0} sekarang admin.': '{0} is now an admin.',
+  'Hapus akses admin?': 'Remove admin access?',
+  '{0} tetap jadi anggota, tapi tidak bisa membuka menu Admin lagi.':
+      '{0} stays a member but can no longer open the Admin menu.',
+  'Hapus akses': 'Remove access',
+  'Akses admin {0} dihapus.': 'Admin access for {0} removed.',
+  'Kelola admin': 'Manage admins',
+  'Tambah admin': 'Add admin',
+  '{0} admin. Kamu tidak bisa menghapus dirimu sendiri, admin terakhir, atau admin pemilik.': '{0} admins. You cannot remove yourself, the last admin, or an owner admin.',
+  'Pemilik': 'Owner',
+  'Kamu': 'You',
+  'Hapus akses admin': 'Remove admin access',
+  'Pilih anggota': 'Choose a member',
+  'Cari nama atau email...': 'Search name or email...',
+  'Lihat, tambah atau hapus admin': 'See, add or remove admins',
 };
