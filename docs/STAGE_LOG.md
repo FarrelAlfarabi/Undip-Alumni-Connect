@@ -280,3 +280,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Welcome, PIN lock, PIN setup and the new returning screen sit in one centred card from 600 px up (`AuthFrame`). Phone layout unchanged.
 - Web only (`AppEntry.web`): signed in with no PIN opens the app without a new email code; an expired sign in shows "Selamat datang kembali" (`ReturningScreen`, first name only in browser storage) instead of the first-time Welcome. Phones keep their flow.
 - Web page: HTML start screen until Flutter draws (`splash.js`), `main.dart.js` preload, start-up reads run side by side, zoom guard limited to iPhone and iPad, portrait lock removed from the manifest. No migration. Tests: `web_stage1_login_test`.
+## Web login journey: email code once per browser (16 Nov 2026)
+- Web: "Keluar" in Profile locks instead of signing out when a PIN and a sign in exist (`leaveApp`), so coming back needs the PIN, not a new email code. Full sign out is "Bukan kamu? Ganti akun" on the PIN screen, which now also ends the Supabase sign in.
+- Web: a signed in person with no PIN must make one before entering. Phones unchanged. No migration. Tests: `web_stage1_login_test`.

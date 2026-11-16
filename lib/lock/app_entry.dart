@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_api.dart';
 import '../data/account_repository.dart';
 import '../data/avatar_repository.dart';
+import '../data/feedback_repository.dart';
 import '../data/profile_columns.dart';
 import '../screens/returning_screen.dart';
 import '../screens/verification_screen.dart';
@@ -12,6 +13,7 @@ import '../screens/welcome_screen.dart';
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
 import 'lock_screen.dart';
+import 'pin_setup_screen.dart';
 import 'lock_service.dart';
 import 'session.dart';
 
@@ -33,6 +35,49 @@ const String kSignInFailedNotice =
 const String kSessionExpiredNotice =
     'Your sign in expired. Please sign in again.';
 const String kTooManyPinsNotice = 'Too many wrong PINs. Please verify again.';
+
+/// "Keluar" from inside the app.
+///
+/// Web, with a PIN and a stored sign in: only lock. The sign in stays in the
+/// browser and the PIN screen shows, so coming back needs the PIN and not a
+/// new email code. To leave completely the person taps "Bukan kamu? Ganti
+/// akun" there.
+///
+/// Phones, and web without a PIN or a sign in: a full sign out to
+/// [destination], as before.
+Future<void> leaveApp(
+  BuildContext context,
+  Widget destination, {
+  LockService? lock,
+  LoginApi? login,
+  bool web = kIsWeb,
+  Widget Function()? entryBuilder,
+}) async {
+  final l = lock ?? LockService.shared;
+  final api = login ?? (kRealLogin ? SupabaseLoginApi() : null);
+  var canLock = false;
+  if (web && api != null && api.hasSession) {
+    try {
+      canLock = await l.load() != null && await l.hasPin();
+    } catch (_) {
+      canLock = false;
+    }
+  }
+  if (!context.mounted) return;
+  if (!canLock) {
+    await signOutTo(context, destination, lock: l, login: api);
+    return;
+  }
+  l.sessionActive = false;
+  FeedbackSession.profileId = null;
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) =>
+          entryBuilder?.call() ?? AppEntry(lock: l, loginApi: login),
+    ),
+    (_) => false,
+  );
+}
 
 /// The app's first screen. A person already verified on this device sees the
 /// lock screen; everyone else sees the Welcome screen, as before.
@@ -78,7 +123,7 @@ class _AppEntryState extends State<AppEntry> {
   /// returning screen. It never opens the app.
   String? _returning;
 
-  /// Web: signed in and no PIN set, so the app opens without a tap.
+  /// Web: signed in and no PIN set. No lock screen: straight to making a PIN.
   bool _entering = false;
 
   LoginApi? get _login =>
@@ -93,8 +138,9 @@ class _AppEntryState extends State<AppEntry> {
         return null;
       }
       if (_login != null && !await _lock.hasPin()) {
-        // No PIN to ask for. The stored sign in is the proof, so go in (or,
-        // if it has ended, to the returning screen) without another code.
+        // No PIN to ask for. The stored sign in is the proof, so go on to
+        // making a PIN (or, if it has ended, to the returning screen) without
+        // another code.
         _entering = true;
         WidgetsBinding.instance.addPostFrameCallback((_) => _autoEnter(user));
       }
@@ -156,6 +202,29 @@ class _AppEntryState extends State<AppEntry> {
       return false;
     }
     if (!mounted) return false;
+    if (widget.web && !await _lock.hasPin()) {
+      // Web: everyone has a PIN, so "Keluar" can come back with the PIN and
+      // not with another email code. Someone who removed theirs makes a new
+      // one here.
+      if (!mounted) return false;
+      final ready = profile;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PinSetupScreen(
+            lock: _lock,
+            onDone: (ctx) async => enterApp(
+              ctx,
+              ready,
+              lock: _lock,
+              homeBuilder: widget.homeBuilder,
+              accountRepository: widget.accountRepository,
+            ),
+          ),
+        ),
+      );
+      return true;
+    }
+    if (!mounted) return false;
     enterApp(
       context,
       profile,
@@ -167,6 +236,13 @@ class _AppEntryState extends State<AppEntry> {
   }
 
   Future<void> _forget([String? notice]) async {
+    try {
+      // "Ganti akun", "Lupa PIN" and the 5th wrong PIN end the sign in too,
+      // so nothing of this person is left in the browser or on the phone.
+      await _login?.signOut();
+    } catch (_) {
+      // The local wipe below still happens.
+    }
     await _lock.clear();
     _returning = null;
     if (mounted) _showWelcome(notice);

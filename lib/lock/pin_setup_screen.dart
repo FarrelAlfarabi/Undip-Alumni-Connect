@@ -19,8 +19,7 @@ enum _Step { enter, confirm, biometric }
 
 /// Offered right after the first successful verification: create a 6-digit
 /// PIN (entered twice) and, if the device supports it, turn on biometrics.
-/// Skipping is fine; the next launch then shows a "Continue" that re-runs
-/// verification.
+/// It can only be skipped when [mandatory] is false (from Settings).
 class PinSetupScreen extends StatefulWidget {
   const PinSetupScreen({
     super.key,

@@ -153,13 +153,23 @@ void main() {
       expect(api.sent, isEmpty);
     });
 
-    testWidgets('signed in without a PIN goes straight to the app', (t) async {
+    testWidgets('signed in without a PIN: make a PIN, no email code', (
+      t,
+    ) async {
       final api = FakeLoginApi();
       final lock = await makeRememberedLock(withPin: false);
       await _pumpEntry(t, lock, web: true, api: api);
       await t.pump();
-      expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
+      // No way to skip: the PIN is what lets "Keluar" come back without a code.
+      expect(find.byKey(const Key('pin-setup')), findsOneWidget);
+      expect(find.byKey(const Key('pin-skip')), findsNothing);
       expect(find.text('Verifikasi Status Alumni'), findsNothing);
+      await enterPin(t, testPin);
+      await enterPin(t, testPin);
+      await t.pump();
+      await t.pump();
+      expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
+      expect(await lock.hasPin(), isTrue);
       expect(api.sent, isEmpty);
     });
 
@@ -195,7 +205,8 @@ void main() {
       await t.tap(find.byKey(const Key('lock-continue')));
       await t.pump();
       await t.pump();
-      expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
+      await t.pump();
+      expect(find.byKey(const Key('pin-setup')), findsOneWidget);
     });
 
     testWidgets('expired sign in shows the returning screen, not Welcome', (
@@ -291,6 +302,106 @@ void main() {
       final lock = makeLock();
       await lock.markReturning('   ');
       expect(await lock.returningName(), isNull);
+    });
+  });
+
+  group('Keluar on web comes back with the PIN, not a new email code', () {
+    Future<void> pumpLeave(
+      WidgetTester t,
+      LockService lock,
+      FakeLoginApi api, {
+      required bool web,
+    }) async {
+      _size(t, 1280);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => leaveApp(
+                  context,
+                  const Text('VERIFY'),
+                  lock: lock,
+                  login: api,
+                  web: web,
+                  entryBuilder: () => AppEntry(
+                    lock: lock,
+                    web: web,
+                    loginApi: api,
+                    fetchProfile: (id) async => testProfile(),
+                    homeBuilder: appHome,
+                  ),
+                ),
+                child: const Text('KELUAR'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('KELUAR'));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('with a PIN: PIN screen, sign in kept, PIN opens the app', (
+      t,
+    ) async {
+      final lock = await makeRememberedLock();
+      lock.sessionActive = true;
+      final api = FakeLoginApi();
+      await pumpLeave(t, lock, api, web: true);
+      expect(find.byKey(const Key('lock-screen')), findsOneWidget);
+      expect(find.text('VERIFY'), findsNothing);
+      expect(api.signedOut, 0);
+      expect(lock.sessionActive, isFalse);
+      expect(await lock.load(), isNotNull);
+      await enterPin(t, testPin);
+      await t.pump();
+      expect(find.text('APP for Ahmad Ramadhan'), findsOneWidget);
+      expect(api.sent, isEmpty);
+    });
+
+    testWidgets('phone: Keluar still signs out fully (unchanged)', (t) async {
+      final lock = await makeRememberedLock();
+      final api = FakeLoginApi();
+      await pumpLeave(t, lock, api, web: false);
+      expect(find.text('VERIFY'), findsOneWidget);
+      expect(api.signedOut, 1);
+      expect(await lock.load(), isNull);
+    });
+
+    testWidgets('web without a PIN: full sign out', (t) async {
+      final noPin = await makeRememberedLock(withPin: false);
+      final api = FakeLoginApi();
+      await pumpLeave(t, noPin, api, web: true);
+      expect(find.text('VERIFY'), findsOneWidget);
+      expect(api.signedOut, 1);
+    });
+
+    testWidgets('web with an ended sign in: full sign out', (t) async {
+      final expired = await makeRememberedLock();
+      final api2 = FakeLoginApi(session: false);
+      await pumpLeave(t, expired, api2, web: true);
+      expect(find.text('VERIFY'), findsOneWidget);
+      expect(await expired.load(), isNull);
+    });
+
+    testWidgets('"Bukan kamu? Ganti akun" really signs out', (t) async {
+      final lock = await makeRememberedLock();
+      final api = FakeLoginApi();
+      await _pumpEntry(t, lock, web: true, api: api);
+      await t.ensureVisible(find.byKey(const Key('lock-switch')));
+      await t.tap(find.byKey(const Key('lock-switch')));
+      await t.pump(const Duration(milliseconds: 100));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.text('Mulai'), findsOneWidget);
+      expect(api.signedOut, 1);
+      expect(await lock.hasPin(), isFalse);
+    });
+
+    test('the Profile sign out button uses it', () {
+      final src = File('lib/screens/profile_detail_screen.dart')
+          .readAsStringSync();
+      expect(src, contains(RegExp(r'onSignOut: \(\) =>\s+leaveApp\(')));
     });
   });
 
