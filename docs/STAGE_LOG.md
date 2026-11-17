@@ -336,3 +336,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Admin: delete any product, full form link (17 Nov 2026)
 - Marketplace admin has a third tab "Products": every live product with search (title, seller, category, city) and a "..." menu to delete for good (reason + HAPUS). Uses `admin_listing_delete`, no migration. Tests: `admin_delete_posts_test`.
 - `kAlumniFormUrl` is now the full Google Form address (was the tinyurl).
+## Admin: edit name and email, Back flow, grouped admin home (17 Nov 2026)
+- Admin can change a member's name and email (migration `20261117110000_admin_edit_name_email` + rollback + SQL test 32). A real email change detaches the old sign in, so the member signs in once with the new email. An admin cannot change their own email. Riwayat keeps "old -> new".
+- Back: after sign in, Home is the only screen (Welcome was left underneath, so "Exit" landed on Welcome); Android back callback enabled in the manifest. Admin home grouped: "Perlu ditinjau", "Anggota dan admin", "Konten dan tampilan". Tests: `admin_members_test`, `ui_review_fixes_test`.

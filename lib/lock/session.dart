@@ -71,8 +71,13 @@ void enterApp(
   }
   l.sessionActive = true;
   FeedbackSession.profileId = profile['id'] as String?;
-  Navigator.of(context)
-      .pushReplacement(MaterialPageRoute(builder: (_) => homeBuilder(profile)));
+  // Home becomes the only route. With a plain replace, the Welcome screen
+  // stayed underneath, so Back from Home ("Exit") landed on Welcome while
+  // signed in.
+  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => homeBuilder(profile)),
+    (_) => false,
+  );
 }
 
 /// Sign out on this device: forget the remembered person but keep their PIN

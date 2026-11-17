@@ -77,6 +77,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ...widget.extraSections,
       AdminSection(
         key: 'admin-reports',
+        group: tr('Perlu ditinjau'),
         badge: _counts.reports,
         icon: Icons.flag_outlined,
         title: tr('Reports'),
@@ -86,6 +87,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-feedback',
+        group: tr('Perlu ditinjau'),
         badge: _counts.feedback,
         icon: Icons.feedback_outlined,
         title: tr('Feedback'),
@@ -95,6 +97,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-announcements',
+        group: tr('Konten dan tampilan'),
         icon: Icons.campaign_outlined,
         title: tr('Announcements'),
         subtitle: tr('Post news for all members, search past posts'),
@@ -103,6 +106,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-sponsors',
+        group: tr('Konten dan tampilan'),
         icon: Icons.workspace_premium_outlined,
         title: tr('Sponsor'),
         subtitle: tr('Atur sponsor di carousel Home: gambar, tautan, tanggal'),
@@ -111,16 +115,19 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-members',
+        group: tr('Anggota dan admin'),
         icon: Icons.manage_accounts_outlined,
         title: tr('Anggota'),
         subtitle: tr(
-          'Cari anggota, ubah profil, perbaiki jurusan, tangguhkan atau aktifkan',
+          'Cari anggota, ubah nama, email dan profil, perbaiki jurusan, '
+          'tangguhkan atau hapus',
         ),
         builder: (_) =>
             AdminMembersScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
         key: 'admin-admins',
+        group: tr('Anggota dan admin'),
         icon: Icons.admin_panel_settings_outlined,
         title: tr('Kelola admin'),
         subtitle: tr('Lihat, tambah atau hapus admin'),
@@ -128,6 +135,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-ikafe-contacts',
+        group: tr('Konten dan tampilan'),
         icon: Icons.contact_phone_outlined,
         title: tr('Kontak Ikafe'),
         subtitle: tr('Edit the contacts and socials members see'),
@@ -136,6 +144,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-businesses',
+        group: tr('Perlu ditinjau'),
         badge: _counts.businesses,
         icon: Icons.business_center_outlined,
         title: tr('Businesses'),
@@ -147,6 +156,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-jobs',
+        group: tr('Konten dan tampilan'),
         icon: Icons.work_outline,
         title: 'Jobs',
         subtitle: tr('Lihat semua lowongan, tangguhkan atau tampilkan lagi'),
@@ -154,6 +164,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-log',
+        group: tr('Anggota dan admin'),
         icon: Icons.history,
         title: tr('Riwayat'),
         subtitle: tr(
@@ -163,6 +174,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-home-order',
+        group: tr('Konten dan tampilan'),
         icon: Icons.push_pin_outlined,
         title: tr('Home order'),
         subtitle: tr('Pilih produk dan lowongan yang tampil dulu di Home'),
@@ -171,6 +183,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       AdminSection(
         key: 'admin-marketplace',
+        group: tr('Perlu ditinjau'),
         badge: _counts.listings,
         icon: Icons.storefront_outlined,
         title: tr('Marketplace review'),
@@ -187,53 +200,81 @@ class _AdminScreenState extends State<AdminScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
             if (_counts.total > 0) _PendingBanner(counts: _counts),
-            // Two columns at most: section texts run to two or three lines
-            // and need the width.
-            ResponsiveColumns(
-              minTileWidth: 340,
-              maxColumns: 2,
-              gap: 12,
-              children: [
-                for (final s in sections)
-                  Card(
-                    key: Key(s.key),
-                    elevation: 0,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: Icon(s.icon),
-                      title: Text(s.title),
-                      subtitle: Text(s.subtitle),
-                      trailing: s.badge > 0
-                          ? Badge(
-                              key: Key('badge-${s.key}'),
-                              label: Text('${s.badge}'),
-                              child: const Icon(Icons.chevron_right),
-                            )
-                          : const Icon(Icons.chevron_right),
-                      onTap: () async {
-                        await Navigator.of(context)
-                            .push(MaterialPageRoute(builder: s.builder));
-                        _loadCounts();
-                      },
+            // Sections come in groups with a heading, so a long list is
+            // easier to scan. Two columns at most: the texts run to two or
+            // three lines and need the width.
+            for (final group in _groupsOf(sections)) ...[
+              if (group.$1 != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                  child: Text(
+                    group.$1!,
+                    key: Key('admin-group-${group.$1}'),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-              ],
-            ),
+                ),
+              ResponsiveColumns(
+                minTileWidth: 340,
+                maxColumns: 2,
+                gap: 12,
+                children: [
+                  for (final s in group.$2)
+                    Card(
+                      key: Key(s.key),
+                      elevation: 0,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        leading: Icon(s.icon),
+                        title: Text(s.title),
+                        subtitle: Text(s.subtitle),
+                        trailing: s.badge > 0
+                            ? Badge(
+                                key: Key('badge-${s.key}'),
+                                label: Text('${s.badge}'),
+                                child: const Icon(Icons.chevron_right),
+                              )
+                            : const Icon(Icons.chevron_right),
+                        onTap: () async {
+                          await Navigator.of(context)
+                              .push(MaterialPageRoute(builder: s.builder));
+                          _loadCounts();
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
   }
+}
+
+/// Sections in the order they first appear, each group once.
+List<(String?, List<AdminSection>)> _groupsOf(List<AdminSection> all) {
+  final out = <(String?, List<AdminSection>)>[];
+  for (final s in all) {
+    final i = out.indexWhere((g) => g.$1 == s.group);
+    if (i >= 0) {
+      out[i].$2.add(s);
+    } else {
+      out.add((s.group, [s]));
+    }
+  }
+  return out;
 }
 
 /// Top of the Admin home: one sentence saying what waits, split by type.
@@ -288,9 +329,13 @@ class AdminSection {
     required this.subtitle,
     required this.builder,
     this.badge = 0,
+    this.group,
   });
 
   final String key;
+
+  /// Heading on the Admin home. Null shows the section first, with no heading.
+  final String? group;
 
   /// Red number on the button when above zero: things waiting for an admin.
   final int badge;

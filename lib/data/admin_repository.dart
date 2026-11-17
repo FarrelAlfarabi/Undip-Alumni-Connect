@@ -23,6 +23,9 @@ enum AdminErrorCode {
   ownerProtected,
   targetIsAdmin,
   loginRequired,
+  emailTaken,
+  cannotChangeOwnEmail,
+  cannotChangeAdminEmail,
   unknown,
 }
 
@@ -66,6 +69,18 @@ String adminErrorMessage(Object error) {
         return tr('Hapus dulu akses admin orang ini di Kelola admin.');
       case AdminErrorCode.loginRequired:
         return tr('Aksi ini butuh login dengan kode email.');
+      case AdminErrorCode.emailTaken:
+        return tr('Email ini sudah dipakai anggota lain.');
+      case AdminErrorCode.cannotChangeAdminEmail:
+        return tr(
+          'Email admin tidak diubah di sini. Hapus dari Kelola admin dulu, '
+          'ubah email, lalu tambahkan lagi.',
+        );
+      case AdminErrorCode.cannotChangeOwnEmail:
+        return tr(
+          'Email akunmu sendiri diubah oleh admin lain, supaya kamu tidak '
+          'terkunci.',
+        );
       case AdminErrorCode.invalidView:
       case AdminErrorCode.invalidAction:
       case AdminErrorCode.unknown:
@@ -857,6 +872,9 @@ class AdminRepository {
     'owner_protected' => AdminErrorCode.ownerProtected,
     'target_is_admin' => AdminErrorCode.targetIsAdmin,
     'login_required' => AdminErrorCode.loginRequired,
+    'email_taken' => AdminErrorCode.emailTaken,
+    'cannot_change_own_email' => AdminErrorCode.cannotChangeOwnEmail,
+    'cannot_change_admin_email' => AdminErrorCode.cannotChangeAdminEmail,
     _ => AdminErrorCode.unknown,
   };
 }

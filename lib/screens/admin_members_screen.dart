@@ -382,6 +382,8 @@ class AdminMemberEditScreen extends StatefulWidget {
 }
 
 class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
+  late final _name = TextEditingController(text: widget.member.name);
+  late final _email = TextEditingController(text: widget.member.email ?? '');
   late final _role = TextEditingController(text: widget.member.role ?? '');
   late final _company = TextEditingController(
     text: widget.member.company ?? '',
@@ -410,7 +412,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   void initState() {
     super.initState();
     // Rebuild on typing, so the "unsaved changes" check stays current.
-    for (final c in [_role, _company, _bio, _linkedin]) {
+    for (final c in [_name, _email, _role, _company, _bio, _linkedin]) {
       c.addListener(_typed);
     }
   }
@@ -449,7 +451,6 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   /// "Nama, email, jurusan, angkatan": lets the admin tell two people with
   /// the same name apart.
   String get _identity => [
-    if ((_m.email ?? '').isNotEmpty) _m.email!,
     [
       if (_m.major != null) _m.major!,
       if (_m.graduationYear != null) '${_m.graduationYear}',
@@ -464,6 +465,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   @override
   void dispose() {
     for (final c in [
+      _name,
+      _email,
       _role,
       _company,
       _bio,
@@ -484,6 +487,10 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
       if ((old ?? '').trim() != (now ?? '').trim()) out[key] = now;
     }
 
+    add('name', m.name, _name.text);
+    final oldEmail = (m.email ?? '').trim().toLowerCase();
+    final newEmail = _email.text.trim().toLowerCase();
+    if (_canEditEmail && oldEmail != newEmail) out['email'] = newEmail;
     add('current_role', m.role, _role.text);
     add('company', m.company, _company.text);
     add('industry', m.industry, _industry);
@@ -493,11 +500,55 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
     return out;
   }
 
+  /// Your own login email is changed by another admin, so a typo cannot lock
+  /// you out.
+  bool get _canEditEmail => widget.member.id != widget.adminId;
+
+  static final _emailShape = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   Future<void> _save() async {
     final changes = _changes();
     if (changes.isEmpty) {
       setState(() => _error = tr('Belum ada yang diubah.'));
       return;
+    }
+    final name = (changes['name'] ?? '').trim();
+    if (changes.containsKey('name') && (name.length < 2 || name.length > 100)) {
+      setState(() => _error = tr('Nama harus 2 sampai 100 huruf.'));
+      return;
+    }
+    if (changes.containsKey('email')) {
+      if (!_emailShape.hasMatch(changes['email'] ?? '')) {
+        setState(() => _error = tr('Tulis email yang benar.'));
+        return;
+      }
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('member-email-confirm'),
+          title: Text(tr('Ganti email anggota?')),
+          content: Text(
+            trf(
+              'Email {0} diganti menjadi {1}. Anggota ini harus masuk lagi '
+              'dengan email baru (kode email). Email lama tidak bisa masuk '
+              'lagi.',
+              [widget.member.email ?? '-', changes['email']],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(tr('Batal')),
+            ),
+            FilledButton(
+              key: const Key('member-email-confirm-yes'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(tr('Ganti email')),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
     }
     setState(() {
       _saving = true;
@@ -521,8 +572,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
         _saving = false;
         _error = invalid
             ? tr(
-                'Isian tidak valid. Bio paling banyak 200 huruf, dan tautan '
-                'harus dari linkedin.com.',
+                'Isian tidak valid. Nama dan email harus benar, bio paling '
+                'banyak 200 huruf, dan tautan harus dari linkedin.com.',
               )
             : adminErrorMessage(e);
       });
@@ -576,12 +627,33 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                     key: const Key('member-identity'),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    trf(
-                      'Kamu mengubah data {0}. Hanya isian yang bisa diubah '
-                      'anggota sendiri yang tampil di sini.',
-                      [m.name],
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('member-name'),
+                    controller: _name,
+                    enabled: !_saving,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      labelText: tr('Nama'),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('member-email'),
+                    controller: _email,
+                    enabled: !_saving && _canEditEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      helperMaxLines: 3,
+                      helperText: _canEditEmail
+                          ? tr(
+                              'Email dipakai untuk masuk. Kalau diganti, anggota '
+                              'masuk lagi dengan email baru.',
+                            )
+                          : tr('Email akunmu sendiri diubah oleh admin lain.'),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
