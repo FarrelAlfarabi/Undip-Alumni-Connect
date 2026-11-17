@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -49,7 +51,7 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
 
   Future<void> _editProfile() async {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(builder: (_) => ProfileSetupScreen(profile: _profile)),
+      AppRoute(builder: (_) => ProfileSetupScreen(profile: _profile)),
     );
     if (updated == null || !mounted) return;
     setState(() {
@@ -60,7 +62,7 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
 
   Future<void> _editPhoto() async {
     final url = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => ProfilePhotoScreen(
           profileId: _profile['id'] as String,
           name: _profile['name'] as String? ?? '',
@@ -78,7 +80,7 @@ class _FirstLoginProfileScreenState extends State<FirstLoginProfileScreen> {
 
   Future<void> _editContact() async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => DefaultContactScreen(
           profileId: _profile['id'] as String,
           repository: widget.contactRepository,

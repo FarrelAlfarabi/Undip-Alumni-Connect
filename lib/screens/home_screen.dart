@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -186,11 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
       : _push(widget.pages.marketplace(_user));
 
   void _push(Widget page) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    Navigator.of(context).push(AppRoute(builder: (_) => page));
   }
 
   Future<void> _pushThenRefresh(Widget page) async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    await Navigator.of(context).push(AppRoute(builder: (_) => page));
     if (mounted) {
       setState(() {
         _business = _loadBusiness();
@@ -209,9 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _completeProfile() async {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(
-        builder: (_) => ProfileSetupScreen(profile: _user.value),
-      ),
+      AppRoute(builder: (_) => ProfileSetupScreen(profile: _user.value)),
     );
     if (updated != null && mounted) {
       setState(() => _user.value = updated);
@@ -220,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openRequests() async {
     await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => widget.pages.requests(_user)));
+        .push(AppRoute(builder: (_) => widget.pages.requests(_user)));
     if (mounted) {
       setState(() {
         _pendingRequests = _api
@@ -258,9 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 tooltip: n > 0 ? 'Notifikasi ($n baru)' : 'Notifikasi',
                 onPressed: () async {
                   await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => widget.pages.notifications(_user),
-                    ),
+                    AppRoute(builder: (_) => widget.pages.notifications(_user)),
                   );
                   if (mounted) {
                     setState(() {

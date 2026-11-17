@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'dart:async';
 
 import '../util/app_language.dart';
@@ -320,7 +322,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     // First run: Welcome, verify, consent, PIN offer, app.
     if (needsConsent(profile)) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
+        AppRoute(
           builder: (_) => ConsentScreen(
             profile: profile,
             lock: lock,
@@ -352,7 +354,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       return;
     }
     Navigator.of(ctx).pushReplacement(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => PinSetupScreen(
           lock: lock,
           // The setup screen is replaced by the app once done or skipped.
@@ -375,7 +377,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   void _openContact() {
     Navigator.of(context).push(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => ContactAdminScreen(
           fromLogin: true,
           suspended: _state == _VerificationState.suspended,

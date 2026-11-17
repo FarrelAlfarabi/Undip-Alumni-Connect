@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -323,7 +325,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
               icon: const Icon(Icons.visibility_off_outlined),
               tooltip: tr('Hidden items'),
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
+                AppRoute(
                   builder: (_) => AdminReportsScreen(
                     adminId: widget.adminId,
                     repository: widget.repository,

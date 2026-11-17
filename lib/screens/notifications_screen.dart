@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -218,13 +220,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           return;
         }
         nav.push(
-          MaterialPageRoute(
+          AppRoute(
             builder: (_) => widget.buildPage(d, n, widget.currentUser, job),
           ),
         );
       default:
         nav.push(
-          MaterialPageRoute(
+          AppRoute(
             builder: (_) => widget.buildPage(d, n, widget.currentUser, null),
           ),
         );

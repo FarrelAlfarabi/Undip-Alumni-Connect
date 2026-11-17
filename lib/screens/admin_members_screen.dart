@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -100,7 +102,7 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
 
   Future<void> _open(AdminMember m) async {
     final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => AdminMemberEditScreen(
           adminId: widget.adminId,
           repository: widget.repository,

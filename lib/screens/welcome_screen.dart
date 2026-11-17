@@ -1,3 +1,4 @@
+import '../nav/back_guard.dart';
 import '../widgets/closed_test_notice.dart';
 import '../util/app_language.dart';
 
@@ -94,11 +95,9 @@ class WelcomeScreen extends StatelessWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const VerificationScreen(),
-                    ),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(AppRoute(builder: (_) => const VerificationScreen()));
                 },
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),

@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -26,11 +28,9 @@ class HelpScreen extends StatelessWidget {
                   icon: Icons.support_agent_outlined,
                   title: tr('Contact admin'),
                   subtitle: tr('Email the admin team'),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ContactAdminScreen(),
-                    ),
-                  ),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(AppRoute(builder: (_) => const ContactAdminScreen())),
                 ),
                 MenuItem(
                   key: const Key('profile-feedback'),
@@ -44,9 +44,9 @@ class HelpScreen extends StatelessWidget {
                   key: const Key('profile-about'),
                   icon: Icons.info_outline,
                   title: tr('About'),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AboutScreen()),
-                  ),
+                  onTap: () =>
+                      Navigator.of(context)
+                          .push(AppRoute(builder: (_) => const AboutScreen())),
                 ),
               ],
             ),

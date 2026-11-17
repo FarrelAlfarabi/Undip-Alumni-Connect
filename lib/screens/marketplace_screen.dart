@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../widgets/responsive_list.dart';
@@ -231,7 +233,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         kProductsNeedBusinessMessage,
         action: 'Register a business',
         onAction: () => Navigator.of(context).push(
-          MaterialPageRoute(
+          AppRoute(
             builder: (_) =>
                 BusinessFormScreen(ownerId: _myId, repository: _bizRepo),
           ),
@@ -254,7 +256,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     }
 
     await Navigator.of(context).push<MarketplaceListing>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => MarketplaceFormScreen(
           sellerId: _myId,
           businessId: business.id,
@@ -270,7 +272,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   Future<void> _openMine() async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => MyListingsScreen(
           sellerId: _myId,
           repository: _repo,
@@ -450,7 +452,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                   listing: listings[i],
                                   onTap: () {
                                     Navigator.of(context).push(
-                                      MaterialPageRoute(
+                                      AppRoute(
                                         builder: (_) => MarketplaceDetailScreen(
                                           listing: listings[i],
                                           repository: _repo,

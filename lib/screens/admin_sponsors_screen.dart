@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../data/admin_repository.dart';
@@ -45,7 +47,7 @@ class _AdminSponsorsScreenState extends State<AdminSponsorsScreen> {
 
   Future<void> _edit([Sponsor? sponsor]) async {
     final message = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => SponsorFormScreen(
           adminId: widget.adminId,
           repository: widget.repository,

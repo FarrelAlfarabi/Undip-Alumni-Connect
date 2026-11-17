@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -32,7 +34,7 @@ class SettingsScreen extends StatelessWidget {
   final ContactRepository? contactRepository;
 
   void _push(BuildContext context, Widget page) =>
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+      Navigator.of(context).push(AppRoute(builder: (_) => page));
 
   Future<void> _pickLanguage(BuildContext context) async {
     final picked = await showDialog<AppLang>(

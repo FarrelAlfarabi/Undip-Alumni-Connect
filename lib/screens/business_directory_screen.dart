@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../widgets/responsive_list.dart';
@@ -93,7 +95,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
 
   Future<void> _register() async {
     await Navigator.of(context).push<Business>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => BusinessFormScreen(ownerId: _myId, repository: _repo),
       ),
     );
@@ -101,7 +103,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
 
   Future<void> _openMine() async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => MyBusinessesScreen(ownerId: _myId, repository: _repo),
       ),
     );
@@ -224,7 +226,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
                         itemBuilder: (context, i) => _BusinessCard(
                           business: items[i],
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
+                            AppRoute(
                               builder: (_) => BusinessDetailScreen(
                                 business: items[i],
                                 currentUser: widget.currentUser,

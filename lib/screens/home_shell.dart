@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart' show kIsWeb, setEquals;
+import 'package:flutter/foundation.dart' show setEquals;
 
-import '../util/app_language.dart';
+import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../config/feature_flags.dart';
 import '../data/block_list.dart';
@@ -221,8 +220,7 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   // Back from any tab first brings you back to the first tab (Home). Back
-  // from Home asks "Exit the app?" and only leaves on Exit.
-  bool _askingToExit = false;
+  // from Home shows "Tekan sekali lagi untuk keluar"; a second Back leaves.
 
   void _handlePop(bool didPop) {
     if (didPop) return;
@@ -243,42 +241,13 @@ class _HomeShellState extends State<HomeShell> {
       _select(HomeShell.homeTab, record: false);
       return;
     }
-    // A browser has no app to exit: the tab or window is closed by the person,
-    // so the dialog would only get in the way of the back button.
-    if (kIsWeb) return;
-    _confirmExit();
-  }
-
-  Future<void> _confirmExit() async {
-    if (_askingToExit) return;
-    _askingToExit = true;
-    final leave = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        key: const Key('exit-dialog'),
-        title: Text(tr('Exit the app?')),
-        actions: [
-          TextButton(
-            key: const Key('exit-cancel'),
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(tr('Stay')),
-          ),
-          FilledButton(
-            key: const Key('exit-confirm'),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(tr('Exit')),
-          ),
-        ],
-      ),
-    );
-    _askingToExit = false;
-    if (leave != true || !mounted) return;
+    // Nothing left to go back to: the central rule decides (see BackGuard).
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       navigator.pop();
-    } else {
-      SystemNavigator.pop();
+      return;
     }
+    BackGuard.rootBack(navigator);
   }
 
   @override

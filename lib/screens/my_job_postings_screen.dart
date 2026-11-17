@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -235,9 +237,8 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
   }
 
   Future<void> _post() async {
-    final posted = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => PostJobScreen(posterId: _myId)),
-    );
+    final posted = await Navigator.of(context)
+        .push<bool>(AppRoute(builder: (_) => PostJobScreen(posterId: _myId)));
     if (posted == true && mounted) _reload();
   }
 
@@ -349,9 +350,7 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
                         ],
                       ),
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => JobApplicantsScreen(job: j),
-                        ),
+                        AppRoute(builder: (_) => JobApplicantsScreen(job: j)),
                       ),
                     ),
                   );

@@ -142,47 +142,24 @@ void main() {
       }
     });
 
-    testWidgets('from Home, back asks before leaving', (tester) async {
+    testWidgets('from Home, back does not exit when the shell is pushed', (
+      tester,
+    ) async {
       await pumpShell(tester);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.text('Exit the app?'), findsOneWidget);
-      expect(find.byType(HomeShell), findsOneWidget);
-    });
-
-    testWidgets('Stay keeps the app open', (tester) async {
-      await pumpShell(tester);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('exit-cancel')));
-      await tester.pumpAndSettle();
-      expect(find.text('Exit the app?'), findsNothing);
-      expect(find.byType(HomeShell), findsOneWidget);
-      expect(find.text('Halo, Ahmad'), findsOneWidget);
-    });
-
-    testWidgets('Exit leaves the shell', (tester) async {
-      await pumpShell(tester);
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('exit-confirm')));
-      await tester.pumpAndSettle();
+      // Pushed above another screen here, so Back pops it. As the first
+      // route of the app Back shows the exit hint (see back_guard_test).
       expect(find.byType(HomeShell), findsNothing);
     });
 
-    testWidgets('from another tab, back goes Home first and does not ask', (
-      tester,
-    ) async {
+    testWidgets('from another tab, back goes Home first', (tester) async {
       await pumpShell(tester);
       await tapNav(tester, 'Explore');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.text('Exit the app?'), findsNothing);
+      expect(find.byType(HomeShell), findsOneWidget);
       expect(find.text('Halo, Ahmad'), findsOneWidget);
-      // A second Back, now on Home, asks.
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.text('Exit the app?'), findsOneWidget);
     });
   });
 

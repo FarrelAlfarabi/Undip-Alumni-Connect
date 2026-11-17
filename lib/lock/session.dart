@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../auth/login_api.dart';
@@ -32,7 +34,7 @@ void enterApp(
   final l = lock ?? LockService.shared;
   if (needsConsent(profile)) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => ConsentScreen(
           profile: profile,
           lock: l,
@@ -54,7 +56,7 @@ void enterApp(
     // right after the first consent, so it never comes back.
     final clean = {...profile}..remove(kFirstLoginKey);
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => FirstLoginProfileScreen(
           profile: clean,
           onDone: (ctx, updated) => enterApp(
@@ -75,7 +77,7 @@ void enterApp(
   // stayed underneath, so Back from Home ("Exit") landed on Welcome while
   // signed in.
   Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (_) => homeBuilder(profile)),
+    AppRoute(builder: (_) => homeBuilder(profile)),
     (_) => false,
   );
 }
@@ -108,7 +110,7 @@ Future<void> signOutTo(
     // Nothing else to do; the screen change below still signs the person out.
   }
   navigator.pushAndRemoveUntil(
-    MaterialPageRoute(builder: (_) => destination),
+    AppRoute(builder: (_) => destination),
     (_) => false,
   );
 }

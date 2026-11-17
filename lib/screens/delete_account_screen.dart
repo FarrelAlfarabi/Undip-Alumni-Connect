@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -112,7 +114,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       // database table storage_cleanup_queue).
       debugPrint('Account deleted. Files not removed: ${result.failedPaths}');
       navigator.pushAndRemoveUntil(
-        MaterialPageRoute(
+        AppRoute(
           builder: (_) => const WelcomeScreen(notice: kAccountDeletedNotice),
         ),
         (_) => false,
