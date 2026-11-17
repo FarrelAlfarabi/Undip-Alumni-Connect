@@ -179,6 +179,36 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     setState(() => _bandError = bandMsg);
     if (!fieldsOk || bandMsg != null) return;
 
+    // Saying "Belum" on a business that has a NIB removes it, and the blue
+    // tick with it. Ask first.
+    final had = widget.existing?.nib;
+    if (had != null && !_hasNib) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('nib-remove-confirm'),
+          title: Text(tr('Hapus NIB?')),
+          content: Text(
+            widget.existing!.nibVerified
+                ? tr('NIB dan tanda centang biru akan dihapus. Lanjut?')
+                : tr('NIB akan dihapus. Lanjut?'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(tr('Batal')),
+            ),
+            FilledButton(
+              key: const Key('nib-remove-yes'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(tr('Lanjut')),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+    }
+
     setState(() {
       _saving = true;
       _error = null;
@@ -467,8 +497,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     const SizedBox(height: 16),
                     Text(
                       tr(
-                        'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB '
-                        'usahamu untuk mendapatkan tanda "Verified"',
+                        'Apakah usahamu memiliki NIB? Yuk cantumkan NIB '
+                        'usahamu untuk mendapatkan tanda centang biru.',
                       ),
                       style: theme.textTheme.titleSmall,
                     ),

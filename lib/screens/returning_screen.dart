@@ -80,7 +80,7 @@ class ReturningScreen extends StatelessWidget {
             TextButton(
               key: const Key('returning-not-you'),
               onPressed: onNotYou,
-              child: Text(tr('Bukan kamu? Keluar')),
+              child: Text(tr('Bukan kamu? Ganti akun')),
             ),
           ],
         ),

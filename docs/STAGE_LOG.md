@@ -329,3 +329,7 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Admin edit member profile (16 Nov 2026)
 - Admin > "Ubah profil anggota": search (name, company, email) and filters (major, year, industry, city) like the Directory, then edit jabatan, perusahaan, industri, kota, bio, LinkedIn. NIM, email, name, status are not shown and the database refuses them (`protected_field`).
 - Migration `20261116120000_admin_edit_profile` (`admin_update_profile`, `admin_members_search`, edits go to the admin log as field names) + rollback + SQL test `25_admin_edit_profile_test`. Tests: `admin_members_test`. Photo not covered.
+## UI/UX review fixes, all 20 (17 Nov 2026)
+- Login: PIN screen asks before "Lupa PIN" and "Ganti akun"; web Profile has "Kunci" and a real "Keluar dari browser ini" (`leaveBrowser`); PIN pad takes keyboard digits; notices and PIN texts are Indonesian through `tr`; forced PIN setup has "Ganti akun"; suspended member gets own contact text.
+- Admin: Riwayat shows "Oleh" and "Anggota" with saved name and email (migration `20261117100000_admin_log_target` + rollback + SQL test 31); member edit stays open after jurusan or suspend, warns on leave, shows email and jurusan; filters scroll away; Hapus moved into "..." menus; product delete in the review queue.
+- Business form confirms before removing a NIB. Web Back walks through visited tabs. Wording sweep (Ikafe, Members, "Ganti akun", Welcome beta lines). Tests: `ui_review_fixes_test`.

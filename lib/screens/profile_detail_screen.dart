@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -121,6 +122,32 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<void> _confirmLeaveBrowser(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Keluar dari browser ini?')),
+        content: Text(
+          tr(
+            'Kamu perlu kode email lagi untuk masuk. PIN di browser ini juga dihapus.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            key: const Key('signout-browser-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('Ya, keluar')),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) await leaveBrowser(context);
   }
 
   Future<void> _loadAdminBadge(String id) async {
@@ -673,6 +700,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       // (local only).
                       onSignOut: () =>
                           leaveApp(context, const VerificationScreen()),
+                      onSignOutBrowser: () => _confirmLeaveBrowser(context),
+                      web: kIsWeb,
                     ),
                   ],
                 ],
@@ -821,6 +850,8 @@ class _ProfileMenu extends StatelessWidget {
     required this.onHelp,
     required this.onAdmin,
     required this.onSignOut,
+    this.onSignOutBrowser,
+    required this.web,
   });
 
   final Future<bool>? adminFuture;
@@ -832,6 +863,10 @@ class _ProfileMenu extends StatelessWidget {
   final VoidCallback onHelp;
   final VoidCallback onAdmin;
   final VoidCallback onSignOut;
+
+  /// Web only: a real sign out of this browser (the other button only locks).
+  final VoidCallback? onSignOutBrowser;
+  final bool web;
 
   @override
   Widget build(BuildContext context) {
@@ -915,12 +950,30 @@ class _ProfileMenu extends StatelessWidget {
         const SizedBox(height: 12),
         MenuList(
           items: [
-            MenuItem(
-              key: const Key('profile-signout'),
-              icon: Icons.logout,
-              title: tr('Sign out'),
-              onTap: onSignOut,
-            ),
+            if (web) ...[
+              MenuItem(
+                key: const Key('profile-signout'),
+                icon: Icons.lock_outline,
+                title: tr('Kunci'),
+                subtitle: tr(
+                  'Buka lagi dengan PIN. Kamu tetap masuk di browser ini.',
+                ),
+                onTap: onSignOut,
+              ),
+              MenuItem(
+                key: const Key('profile-signout-browser'),
+                icon: Icons.logout,
+                title: tr('Keluar dari browser ini'),
+                subtitle: tr('Kode email dibutuhkan lagi untuk masuk.'),
+                onTap: onSignOutBrowser ?? onSignOut,
+              ),
+            ] else
+              MenuItem(
+                key: const Key('profile-signout'),
+                icon: Icons.logout,
+                title: tr('Sign out'),
+                onTap: onSignOut,
+              ),
           ],
         ),
       ],

@@ -125,7 +125,10 @@ void main() {
       'p_suspend': true,
       'p_reason': 'Akun palsu',
     });
-    // Back on the list, which reloads.
+    // The screen stays open. Going back reloads the list.
+    expect(find.byKey(const Key('member-suspend')), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
     expect(
       api.calls.where((c) => c == 'admin_members_list').length,
       greaterThanOrEqualTo(2),

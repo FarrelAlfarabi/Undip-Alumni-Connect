@@ -70,10 +70,14 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
           await _confirmRemove();
         }
       case PinWrong(:final attemptsLeft):
-        setState(() => _error = 'PIN salah. Sisa $attemptsLeft kesempatan.');
+        setState(
+          () => _error = trf('PIN salah. Sisa {0} kesempatan.', [attemptsLeft]),
+        );
       case PinWait():
         setState(
-          () => _error = 'Terlalu banyak percobaan salah. Tunggu sebentar, lalu coba lagi.',
+          () => _error = tr(
+            'Terlalu banyak percobaan salah. Tunggu sebentar, lalu coba lagi.',
+          ),
         );
       case PinLockedOut():
         // The lock wiped this device's unlock data. Start again from Welcome.
@@ -151,9 +155,11 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
       children: [
         Text(
           has
-              ? 'PIN membuka Lingkaran di ponsel ini. Ini pengaman praktis di '
-                    'perangkat, bukan perlindungan tambahan untuk akunmu.'
-              : 'Belum ada PIN. Lingkaran terbuka di ponsel ini tanpa PIN.',
+              ? tr(
+                  'PIN membuka Lingkaran di ponsel ini. Ini pengaman praktis di '
+                  'perangkat, bukan perlindungan tambahan untuk akunmu.',
+                )
+              : tr('Belum ada PIN. Lingkaran terbuka di ponsel ini tanpa PIN.'),
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),

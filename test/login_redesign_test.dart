@@ -41,7 +41,7 @@ void main() {
     ) async {
       await pumpVerify(tester, FakeLoginApi());
       expect(find.byKey(const Key('login-contact-admin')), findsOneWidget);
-      expect(find.text('Belum punya akun? Hubungi IKAFE'), findsOneWidget);
+      expect(find.text('Belum punya akun? Hubungi Ikafe'), findsOneWidget);
       expect(find.textContaining('lupa email yang dipakai?'), findsNothing);
       expect(find.text('Email tidak terdaftar'), findsNothing);
     });

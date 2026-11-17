@@ -378,6 +378,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       MaterialPageRoute(
         builder: (_) => ContactAdminScreen(
           fromLogin: true,
+          suspended: _state == _VerificationState.suspended,
           typedEmail: _emailController.text,
         ),
       ),
@@ -649,7 +650,7 @@ class _VerificationForm extends StatelessWidget {
             TextButton(
               key: const Key('login-contact-admin'),
               onPressed: loading ? null : onContact,
-              child: Text(tr('Belum punya akun? Hubungi IKAFE')),
+              child: Text(tr('Belum punya akun? Hubungi Ikafe')),
             ),
           ],
           if (codeController != null) ...[

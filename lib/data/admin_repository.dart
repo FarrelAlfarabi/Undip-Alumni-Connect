@@ -1029,6 +1029,7 @@ class AdminLogEntry {
     required this.action,
     required this.createdAt,
     this.targetType,
+    this.targetLabel,
     this.detail,
   });
 
@@ -1036,6 +1037,7 @@ class AdminLogEntry {
     adminName: m['admin_name'] as String? ?? 'Admin',
     action: m['action'] as String? ?? '',
     targetType: m['target_type'] as String?,
+    targetLabel: m['target_label'] as String?,
     detail: m['detail'] as String?,
     createdAt: DateTime.parse(m['created_at'] as String),
   );
@@ -1043,6 +1045,11 @@ class AdminLogEntry {
   final String adminName;
   final String action;
   final String? targetType;
+
+  /// Who or what the action was done to ("Name (email)", a title). Saved
+  /// when the action ran, so it stays after the member or post is deleted.
+  /// Null on rows from before this was kept.
+  final String? targetLabel;
   final String? detail;
   final DateTime createdAt;
 }
@@ -1174,6 +1181,44 @@ class AdminMember {
   final String? verificationStatus;
 
   bool get isSuspended => suspendedAt != null;
+
+  /// The same member with a new jurusan (after the admin fixed it).
+  AdminMember withMajor(String value) => AdminMember(
+    id: id,
+    name: name,
+    email: email,
+    major: value,
+    graduationYear: graduationYear,
+    role: role,
+    industry: industry,
+    company: company,
+    city: city,
+    bio: bio,
+    linkedinUrl: linkedinUrl,
+    suspendedAt: suspendedAt,
+    suspendedReason: suspendedReason,
+    isAdmin: isAdmin,
+    verificationStatus: verificationStatus,
+  );
+
+  /// The same member suspended (with [reason]) or active again.
+  AdminMember withSuspended(bool suspended, String? reason) => AdminMember(
+    id: id,
+    name: name,
+    email: email,
+    major: major,
+    graduationYear: graduationYear,
+    role: role,
+    industry: industry,
+    company: company,
+    city: city,
+    bio: bio,
+    linkedinUrl: linkedinUrl,
+    suspendedAt: suspended ? DateTime.now() : null,
+    suspendedReason: suspended ? reason : null,
+    isAdmin: isAdmin,
+    verificationStatus: verificationStatus,
+  );
 }
 
 /// One person with admin access.

@@ -30,18 +30,20 @@ Future<Map<String, dynamic>?> defaultProfileFetcher(String id) async {
   return {...row, if (urls[id] != null) 'avatar_url': urls[id]};
 }
 
+// Indonesian, shown through tr() by the Welcome screen.
 const String kSignInFailedNotice =
-    "We couldn't sign you in on this device. Please verify again.";
+    'Kami tidak bisa memasukkanmu di perangkat ini. Silakan verifikasi lagi.';
 const String kSessionExpiredNotice =
-    'Your sign in expired. Please sign in again.';
-const String kTooManyPinsNotice = 'Too many wrong PINs. Please verify again.';
+    'Sesimu sudah berakhir. Silakan masuk lagi.';
+const String kTooManyPinsNotice =
+    'PIN salah terlalu sering. Silakan verifikasi lagi.';
 
-/// "Keluar" from inside the app.
+/// "Kunci" (web) or "Keluar" (phone) from inside the app.
 ///
 /// Web, with a PIN and a stored sign in: only lock. The sign in stays in the
 /// browser and the PIN screen shows, so coming back needs the PIN and not a
-/// new email code. To leave completely the person taps "Bukan kamu? Ganti
-/// akun" there.
+/// new email code. To leave completely the person taps "Keluar dari browser
+/// ini" in Profile (see [leaveBrowser]) or "Bukan kamu? Ganti akun" there.
 ///
 /// Phones, and web without a PIN or a sign in: a full sign out to
 /// [destination], as before.
@@ -78,6 +80,21 @@ Future<void> leaveApp(
     (_) => false,
   );
 }
+
+/// Web "Keluar dari browser ini": a real sign out. The sign in, the remembered
+/// person and the PIN are all removed from this browser, so the next person
+/// needs an email code. Goes to the first-time Welcome screen.
+Future<void> leaveBrowser(
+  BuildContext context, {
+  LockService? lock,
+  LoginApi? login,
+}) => signOutTo(
+  context,
+  const WelcomeScreen(),
+  lock: lock ?? LockService.shared,
+  login: login,
+  forget: true,
+);
 
 /// The app's first screen. A person already verified on this device sees the
 /// lock screen; everyone else sees the Welcome screen, as before.

@@ -3,6 +3,81 @@ import '../data/contact_repository.dart' show kDailyRequestMax, kOpenRequestMax;
 /// English text for the Indonesian text used in the code (see [tr]). Add a
 /// line here when a new Indonesian text should have an English version.
 final Map<String, String> kEnglish = {
+  'Keluar dari akun ini? Kamu perlu kode email lagi untuk masuk.':
+      'Sign out of this account? You will need an email code to sign in again.',
+  'Ya, keluar': 'Yes, sign out',
+  'Ganti akun?': 'Switch account?',
+  'Kunci': 'Lock',
+  'Buka lagi dengan PIN. Kamu tetap masuk di browser ini.':
+      'Open again with your PIN. You stay signed in on this browser.',
+  'Keluar dari browser ini': 'Sign out of this browser',
+  'Kode email dibutuhkan lagi untuk masuk.':
+      'An email code is needed to sign in again.',
+  'Keluar dari browser ini?': 'Sign out of this browser?',
+  'Kamu perlu kode email lagi untuk masuk. PIN di browser ini juga dihapus.': 'You will need an email code to sign in again. The PIN on this browser is removed too.',
+  'Kami tidak bisa memasukkanmu di perangkat ini. Silakan verifikasi lagi.':
+      "We couldn't sign you in on this device. Please verify again.",
+  'Sesimu sudah berakhir. Silakan masuk lagi.':
+      'Your sign in expired. Please sign in again.',
+  'PIN salah terlalu sering. Silakan verifikasi lagi.':
+      'Too many wrong PINs. Please verify again.',
+  'PIN salah.': 'Wrong PIN.',
+  'Pakai PIN kamu saja.': 'Just use your PIN.',
+  'Coba lagi dalam {0} dtk.': 'Try again in {0} s.',
+  'Sisa 1 percobaan.': '1 try left.',
+  'Sisa {0} percobaan.': '{0} tries left.',
+  'Buka Lingkaran': 'Open Lingkaran',
+  'PIN itu terlalu mudah ditebak. Coba yang lain.':
+      'That PIN is too easy to guess. Try another.',
+  'PIN tidak sama. Ulangi dari awal.': 'The PINs do not match. Start again.',
+  'Konfirmasi untuk membuka dengan sidik jari atau wajah':
+      'Confirm to unlock with fingerprint or face',
+  'Belum berhasil. Coba lagi atau lewati; PIN kamu tetap bisa dipakai.':
+      'Did not work yet. Try again or skip; your PIN still works.',
+  'Buat PIN {0} digit': 'Create a {0} digit PIN',
+  'Masukkan lagi untuk konfirmasi': 'Enter it again to confirm',
+  'Buka dengan sidik jari atau wajah?': 'Unlock with fingerprint or face?',
+  'Opsional. PIN kamu tetap bisa dipakai.': 'Optional. Your PIN still works.',
+  'PIN membuka Lingkaran di perangkat ini, jadi kamu tidak perlu verifikasi tiap kali. Ini kunci praktis di perangkat ini, bukan perlindungan tambahan untuk akunmu.': 'The PIN opens Lingkaran on this device, so you do not verify every time. It is a convenience lock on this device, not extra protection for your account.',
+  'PIN salah. Sisa {0} kesempatan.': 'Wrong PIN. {0} tries left.',
+  'Terlalu banyak percobaan salah. Tunggu sebentar, lalu coba lagi.':
+      'Too many wrong tries. Wait a moment, then try again.',
+  'PIN membuka Lingkaran di ponsel ini. Ini pengaman praktis di perangkat, bukan perlindungan tambahan untuk akunmu.': 'The PIN opens Lingkaran on this phone. It is a convenience lock on the device, not extra protection for your account.',
+  'Belum ada PIN. Lingkaran terbuka di ponsel ini tanpa PIN.':
+      'No PIN yet. Lingkaran opens on this phone without a PIN.',
+  'Hapus NIB?': 'Remove NIB?',
+  'NIB dan tanda centang biru akan dihapus. Lanjut?':
+      'The NIB and the blue tick will be removed. Continue?',
+  'NIB akan dihapus. Lanjut?': 'The NIB will be removed. Continue?',
+  'Apakah usahamu memiliki NIB? Yuk cantumkan NIB usahamu untuk mendapatkan tanda centang biru.':
+      'Does your business have an NIB? Add it to get the blue tick.',
+  'Hubungi Ikafe': 'Contact Ikafe',
+  'Akunmu ditangguhkan. Hubungi admin untuk bertanya.':
+      'Your account is suspended. Contact the admin to ask.',
+  'Yuk isi database alumni terlebih dahulu sebelum mengakses Lingkaran. Setelah mengisi, mohon tunggu beberapa hari agar kami bisa memverifikasi data yang kamu isi.': 'Please fill in the alumni database first before using Lingkaran. After you submit, please wait a few days while we verify your data.',
+  'Butuh bantuan, ingin melaporkan masalah, atau butuh lebih dari 3 usaha? Hubungi tim admin di sini.': 'Need help, want to report a problem, or need more than 3 businesses? Contact the admin team here.',
+  'Buang perubahan?': 'Discard changes?',
+  'Perubahan yang belum disimpan akan hilang.':
+      'Changes that are not saved will be lost.',
+  'Lanjut mengedit': 'Keep editing',
+  'Buang': 'Discard',
+  'Akun {0} ({1}) dihapus bersama bisnis, produk, lowongan, lamaran, permintaan kontak dan notifikasinya. Tidak bisa dibatalkan. Pakai ini untuk akun palsu atau akun yang ditinggalkan.': 'The account of {0} ({1}) is deleted with its businesses, products, jobs, applications, contact requests and notifications. This cannot be undone. Use it for fake or abandoned accounts.',
+  'Hapus produk': 'Delete product',
+  'Produk dan fotonya dihapus. Tidak bisa dibatalkan. Kalau hanya ingin menolak, pakai Reject.': 'The product and its photo are deleted. This cannot be undone. If you only want to turn it down, use Reject.',
+  'Oleh: {0}': 'By: {0}',
+  '{0}: {1}': '{0}: {1}',
+  'Lowongan': 'Job',
+  'Produk': 'Product',
+  'Untuk': 'For',
+  'Laporan diabaikan': 'Report dismissed',
+  'Laporan dibuka lagi': 'Report reopened',
+  'Laporan: konten ditangguhkan': 'Report: content hidden',
+  'Laporan: konten ditampilkan lagi': 'Report: content shown again',
+  'Laporan: konten dihapus': 'Report: content deleted',
+  'Laporan diproses': 'Report handled',
+  '24 jam terakhir': 'Last 24 hours',
+  'Menampilkan {0} terbaru. Persempit pencarian untuk melihat yang lebih lama.':
+      'Showing the latest {0}. Narrow the search to see older ones.',
   'Usaha terverifikasi': 'Verified business',
   'NIB': 'NIB',
   'NIB (opsional)': 'NIB (optional)',
@@ -41,7 +116,7 @@ final Map<String, String> kEnglish = {
   'Selamat datang kembali, {0}': 'Welcome back, {0}',
   'Sesi masukmu di browser ini sudah berakhir. Masuk lagi dengan kode yang kami kirim ke emailmu.': 'Your sign in on this browser has ended. Sign in again with the code we send to your email.',
   'Masuk lagi': 'Sign in again',
-  'Bukan kamu? Keluar': 'Not you? Sign out',
+
   '"{0}" akan dihapus permanen untuk semua orang.':
       '"{0}" will be deleted permanently for everyone.',
   'Tampil di Home: {0} produk, {1} lowongan. Yang dipin tampil dulu, urutan 1 paling depan.': 'Shown on Home: {0} products, {1} jobs. Pinned ones come first, number 1 at the front.',
@@ -190,6 +265,8 @@ final Map<String, String> kEnglish = {
   'Kode tidak masuk atau email berubah?':
       'Code did not arrive or email changed?',
   'Belum masuk? Cek folder spam atau junk. Kode berlaku untuk waktu terbatas.': 'Not arrived? Check your spam or junk folder. The code is valid for a limited time.',
+  'Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.':
+      'Temporary look, not an official UNDIP or Ikafe identity.',
   'Beta tertutup. Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.':
       'Closed beta. Temporary look, not an official UNDIP or Ikafe identity.',
   'Beta tertutup · data awal dari anggota Ikafe':
@@ -409,7 +486,7 @@ final Map<String, String> kEnglish = {
   'Kode baru sudah dikirim': 'A new code was sent',
   'Kode 6 digit': '6-digit code',
   'Pakai email lain': 'Use another email',
-  'Belum punya akun? Hubungi IKAFE': 'No account yet? Contact IKAFE',
+  'Belum punya akun? Hubungi Ikafe': 'No account yet? Contact Ikafe',
   'Yuk isi database alumni terlebih dahulu sebelum mengakses Aplikasi '
           'Lingkaran. Setelah mengisi, mohon tunggu beberapa hari untuk kami '
           'melakukan verifikasi atas data yang kamu input':
@@ -417,9 +494,6 @@ final Map<String, String> kEnglish = {
       'app. After you submit, please wait a few days while we verify the '
       'data you entered.',
   'Isi formulir database alumni': 'Fill in the alumni database form',
-  'Apakah usaha anda memiliki NIB? Yuk cantumkan NIB usahamu untuk '
-          'mendapatkan tanda "Verified"':
-      'Does your business have an NIB? Add it to get the "Verified" tick',
   'Ya': 'Yes',
   'Nomor NIB': 'NIB number',
   'Belum': 'Not yet',
@@ -439,10 +513,10 @@ final Map<String, String> kEnglish = {
   'Admin dan akunmu sendiri tidak bisa ditangguhkan.':
       'Admins and your own account cannot be suspended.',
   'Aktifkan lagi anggota ini?': 'Reactivate this member?',
-  '{0} bisa masuk lagi dan tampil di Directory.':
-      '{0} can sign in again and shows in the Directory.',
+  '{0} bisa masuk lagi dan tampil di Members.':
+      '{0} can sign in again and shows in the Members.',
   'Tangguhkan anggota ini?': 'Suspend this member?',
-  '{0} tidak bisa masuk dan hilang dari Directory sampai kamu mengaktifkannya lagi. Bisnis dan postingannya tetap ada: sembunyikan terpisah bila perlu.': '{0} cannot sign in and is gone from the Directory until you reactivate them. Their businesses and posts stay: hide those separately if needed.',
+  '{0} tidak bisa masuk dan hilang dari Members sampai kamu mengaktifkannya lagi. Bisnis dan postingannya tetap ada: sembunyikan terpisah bila perlu.': '{0} cannot sign in and is gone from the Members until you reactivate them. Their businesses and posts stay: hide those separately if needed.',
   'Anggota aktif lagi.': 'Member reactivated.',
   'Anggota ditangguhkan.': 'Member suspended.',
   'Ketik {0} untuk lanjut': 'Type {0} to continue',

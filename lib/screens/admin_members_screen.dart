@@ -154,6 +154,8 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
                   kAllFilter,
                   ...distinct((m) => (m.city ?? '').trim()),
                 ];
+                // Only the search box stays in place. The filters scroll away
+                // with the list, so a small phone still shows results.
                 return Column(
                   children: [
                     Padding(
@@ -164,120 +166,168 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
                         hintText: tr('Cari nama, perusahaan atau email...'),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FilterDropdown(
-                              label: tr('Major'),
-                              value: _major,
-                              options: majors,
-                              onChanged: (v) => setState(() => _major = v),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilterDropdown(
-                              label: tr('Year'),
-                              value: _year,
-                              options: years,
-                              onChanged: (v) => setState(() => _year = v),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: SearchableChoice(
-                              fieldKey: const Key('members-industry'),
-                              label: tr('Industry'),
-                              controller: _industryText,
-                              options: industries,
-                              selected: _industry == kAllFilter
-                                  ? null
-                                  : _industry,
-                              enabled: true,
-                              dense: true,
-                              onSelected: (v) =>
-                                  setState(() => _industry = v ?? kAllFilter),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilterDropdown(
-                              label: tr('City'),
-                              value: _city,
-                              options: cities,
-                              onChanged: (v) => setState(() => _city = v),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: FilterDropdown(
-                        key: const Key('members-status'),
-                        label: tr('Status'),
-                        value: _status,
-                        options: const [
-                          kAllFilter,
-                          _statusActive,
-                          _statusSuspended,
-                          _statusAdmin,
-                        ],
-                        onChanged: (v) => setState(() => _status = v),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _active
-                                  ? trf('{0} dari {1} anggota', [
-                                      list.length,
-                                      all.length,
-                                    ])
-                                  : trf('{0} anggota', [all.length]),
-                              key: const Key('members-count'),
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                          ),
-                          ClearFiltersButton(
-                            active: _active,
-                            onPressed: _clear,
-                          ),
-                        ],
-                      ),
-                    ),
                     Expanded(
-                      child: list.isEmpty
-                          ? Center(
-                              child: Text(tr('Tidak ada anggota yang cocok.')),
+                      child: CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    0,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: FilterDropdown(
+                                          label: tr('Major'),
+                                          value: _major,
+                                          options: majors,
+                                          onChanged: (v) =>
+                                              setState(() => _major = v),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: FilterDropdown(
+                                          label: tr('Year'),
+                                          value: _year,
+                                          options: years,
+                                          onChanged: (v) =>
+                                              setState(() => _year = v),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    0,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: SearchableChoice(
+                                          fieldKey: const Key(
+                                            'members-industry',
+                                          ),
+                                          label: tr('Industry'),
+                                          controller: _industryText,
+                                          options: industries,
+                                          selected: _industry == kAllFilter
+                                              ? null
+                                              : _industry,
+                                          enabled: true,
+                                          dense: true,
+                                          onSelected: (v) => setState(
+                                            () => _industry = v ?? kAllFilter,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: FilterDropdown(
+                                          label: tr('City'),
+                                          value: _city,
+                                          options: cities,
+                                          onChanged: (v) =>
+                                              setState(() => _city = v),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    0,
+                                  ),
+                                  child: FilterDropdown(
+                                    key: const Key('members-status'),
+                                    label: tr('Status'),
+                                    value: _status,
+                                    options: const [
+                                      kAllFilter,
+                                      _statusActive,
+                                      _statusSuspended,
+                                      _statusAdmin,
+                                    ],
+                                    onChanged: (v) =>
+                                        setState(() => _status = v),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _active
+                                              ? trf('{0} dari {1} anggota', [
+                                                  list.length,
+                                                  all.length,
+                                                ])
+                                              : trf('{0} anggota', [
+                                                  all.length,
+                                                ]),
+                                          key: const Key('members-count'),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium,
+                                        ),
+                                      ),
+                                      ClearFiltersButton(
+                                        active: _active,
+                                        onPressed: _clear,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (list.isEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(
+                                  child: Text(
+                                    tr('Tidak ada anggota yang cocok.'),
+                                  ),
+                                ),
+                              ),
                             )
-                          : ListView.separated(
-                              padding: const EdgeInsets.only(bottom: 24),
+                          else
+                            SliverList.separated(
                               itemCount: list.length,
                               separatorBuilder: (_, _) =>
                                   const Divider(height: 1),
                               itemBuilder: (_, i) => ListTile(
                                 key: Key('member-${list[i].id}'),
+                                isThreeLine: (list[i].email ?? '').isNotEmpty,
                                 title: Text(list[i].name),
                                 subtitle: Text(
                                   [
-                                    if (list[i].major != null) list[i].major!,
-                                    if (list[i].graduationYear != null)
-                                      '${list[i].graduationYear}',
-                                    if ((list[i].company ?? '').isNotEmpty)
-                                      list[i].company!,
-                                  ].join(' · '),
+                                    if ((list[i].email ?? '').isNotEmpty)
+                                      '${list[i].email}\n',
+                                    [
+                                      if (list[i].major != null) list[i].major!,
+                                      if (list[i].graduationYear != null)
+                                        '${list[i].graduationYear}',
+                                      if ((list[i].company ?? '').isNotEmpty)
+                                        list[i].company!,
+                                    ].join(' · '),
+                                  ].join(),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -299,6 +349,9 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
                                 onTap: () => _open(list[i]),
                               ),
                             ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                        ],
+                      ),
                     ),
                   ],
                 );
@@ -345,6 +398,63 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   late String? _city = _clean(widget.member.city);
   bool _saving = false;
   String? _error;
+
+  /// The member as it is now: jurusan and suspension change in place, the
+  /// screen stays open (typed text is kept).
+  late AdminMember _m = widget.member;
+
+  /// Something was saved (jurusan, suspend): the list must reload on leave.
+  bool _changed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild on typing, so the "unsaved changes" check stays current.
+    for (final c in [_role, _company, _bio, _linkedin]) {
+      c.addListener(_typed);
+    }
+  }
+
+  void _typed() {
+    if (mounted) setState(() {});
+  }
+
+  /// Back (and the app bar arrow): ask first when typed changes are unsaved.
+  Future<void> _onBack() async {
+    if (_changes().isNotEmpty && !_saving) {
+      final leave = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('member-discard'),
+          title: Text(tr('Buang perubahan?')),
+          content: Text(tr('Perubahan yang belum disimpan akan hilang.')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(tr('Lanjut mengedit')),
+            ),
+            FilledButton(
+              key: const Key('member-discard-yes'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(tr('Buang')),
+            ),
+          ],
+        ),
+      );
+      if (leave != true || !mounted) return;
+    }
+    Navigator.of(context).pop(_changed);
+  }
+
+  /// "Nama, email, jurusan, angkatan": lets the admin tell two people with
+  /// the same name apart.
+  String get _identity => [
+    if ((_m.email ?? '').isNotEmpty) _m.email!,
+    [
+      if (_m.major != null) _m.major!,
+      if (_m.graduationYear != null) '${_m.graduationYear}',
+    ].join(' · '),
+  ].where((e) => e.isNotEmpty).join('\n');
 
   static String? _clean(String? v) {
     final s = v?.trim();
@@ -421,190 +531,215 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final m = widget.member;
-    return Scaffold(
-      appBar: AppBar(title: Text(m.name)),
-      body: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text(
-                  trf(
-                    'Kamu mengubah data {0}. Hanya isian yang bisa diubah '
-                    'anggota sendiri yang tampil di sini.',
-                    [m.name],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  key: const Key('member-role'),
-                  controller: _role,
-                  enabled: !_saving,
-                  decoration: InputDecoration(
-                    labelText: tr('Jabatan'),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  key: const Key('member-company'),
-                  controller: _company,
-                  enabled: !_saving,
-                  decoration: InputDecoration(
-                    labelText: tr('Perusahaan'),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SearchableChoice(
-                  fieldKey: const Key('member-industry'),
-                  label: tr('Industri'),
-                  controller: _industryText,
-                  options: kIndustries,
-                  selected: _industry,
-                  enabled: !_saving,
-                  onSelected: (v) => setState(() => _industry = v),
-                ),
-                const SizedBox(height: 16),
-                SearchableChoice(
-                  fieldKey: const Key('member-city'),
-                  label: tr('Kota'),
-                  controller: _cityText,
-                  options: kNearbyCities,
-                  selected: _city,
-                  enabled: !_saving,
-                  onSelected: (v) => setState(() => _city = v),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  key: const Key('member-bio'),
-                  controller: _bio,
-                  enabled: !_saving,
-                  maxLines: 3,
-                  inputFormatters: const [CodePointLimit(kBioMax)],
-                  decoration: InputDecoration(
-                    labelText: tr('Bio'),
-                    helperText: tr(
-                      'Kosongkan untuk menghapus. Paling banyak 200 huruf.',
-                    ),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  key: const Key('member-linkedin'),
-                  controller: _linkedin,
-                  enabled: !_saving,
-                  keyboardType: TextInputType.url,
-                  decoration: InputDecoration(
-                    labelText: 'LinkedIn',
-                    helperText: tr(
-                      'Tautan linkedin.com. Kosongkan untuk menghapus.',
-                    ),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _error!,
-                    key: const Key('member-error'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                FilledButton(
-                  key: const Key('member-save'),
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
-                        )
-                      : Text(tr('Simpan')),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  tr('Akun'),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                if (m.isSuspended)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+    final m = _m;
+    return PopScope<bool>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(m.name),
+          actions: [
+            // The rare, final action sits in a menu, away from the safe ones.
+            if (_canSuspend)
+              PopupMenuButton<String>(
+                key: const Key('member-more'),
+                enabled: !_saving,
+                tooltip: tr('Lainnya'),
+                onSelected: (_) => _remove(),
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    key: const Key('member-remove'),
+                    value: 'remove',
                     child: Text(
-                      trf('Ditangguhkan. Alasan: {0}', [
-                        m.suspendedReason ?? '-',
-                      ]),
-                      key: const Key('member-suspended-note'),
+                      tr('Hapus anggota dan datanya'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
                   ),
-                ListTile(
-                  key: const Key('member-major'),
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.school_outlined),
-                  title: Text(tr('Perbaiki jurusan')),
-                  subtitle: Text(m.major ?? '-'),
-                  trailing: const Icon(Icons.edit_outlined),
-                  onTap: _saving ? null : _fixMajor,
-                ),
-                if (_canSuspend)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: OutlinedButton.icon(
-                      key: const Key('member-suspend'),
-                      style: m.isSuspended
-                          ? null
-                          : OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .error,
-                            ),
-                      icon: Icon(
-                        m.isSuspended
-                            ? Icons.lock_open_outlined
-                            : Icons.block_outlined,
-                      ),
-                      label: Text(
-                        m.isSuspended
-                            ? tr('Aktifkan lagi')
-                            : tr('Tangguhkan anggota'),
-                      ),
-                      onPressed: _saving ? null : _toggleSuspend,
+                ],
+              ),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(
+                    _identity,
+                    key: const Key('member-identity'),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    trf(
+                      'Kamu mengubah data {0}. Hanya isian yang bisa diubah '
+                      'anggota sendiri yang tampil di sini.',
+                      [m.name],
                     ),
                   ),
-                if (_canSuspend)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: OutlinedButton.icon(
-                      key: const Key('member-remove'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('member-role'),
+                    controller: _role,
+                    enabled: !_saving,
+                    decoration: InputDecoration(
+                      labelText: tr('Jabatan'),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('member-company'),
+                    controller: _company,
+                    enabled: !_saving,
+                    decoration: InputDecoration(
+                      labelText: tr('Perusahaan'),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SearchableChoice(
+                    fieldKey: const Key('member-industry'),
+                    label: tr('Industri'),
+                    controller: _industryText,
+                    options: kIndustries,
+                    selected: _industry,
+                    enabled: !_saving,
+                    onSelected: (v) => setState(() => _industry = v),
+                  ),
+                  const SizedBox(height: 16),
+                  SearchableChoice(
+                    fieldKey: const Key('member-city'),
+                    label: tr('Kota'),
+                    controller: _cityText,
+                    options: kNearbyCities,
+                    selected: _city,
+                    enabled: !_saving,
+                    onSelected: (v) => setState(() => _city = v),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('member-bio'),
+                    controller: _bio,
+                    enabled: !_saving,
+                    maxLines: 3,
+                    inputFormatters: const [CodePointLimit(kBioMax)],
+                    decoration: InputDecoration(
+                      labelText: tr('Bio'),
+                      helperMaxLines: 2,
+                      helperText: tr(
+                        'Kosongkan untuk menghapus. Paling banyak 200 huruf.',
                       ),
-                      icon: const Icon(Icons.delete_forever_outlined),
-                      label: Text(tr('Hapus anggota dan datanya')),
-                      onPressed: _saving ? null : _remove,
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                if (!_canSuspend)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      tr('Admin dan akunmu sendiri tidak bisa ditangguhkan.'),
-                      style: Theme.of(context).textTheme.bodySmall,
+                  const SizedBox(height: 16),
+                  TextField(
+                    key: const Key('member-linkedin'),
+                    controller: _linkedin,
+                    enabled: !_saving,
+                    keyboardType: TextInputType.url,
+                    decoration: InputDecoration(
+                      labelText: 'LinkedIn',
+                      helperMaxLines: 2,
+                      helperText: tr(
+                        'Tautan linkedin.com. Kosongkan untuk menghapus.',
+                      ),
+                      border: OutlineInputBorder(),
                     ),
                   ),
-              ],
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      key: const Key('member-error'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    key: const Key('member-save'),
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          )
+                        : Text(tr('Simpan')),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    tr('Akun'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  if (m.isSuspended)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        trf('Ditangguhkan. Alasan: {0}', [
+                          m.suspendedReason ?? '-',
+                        ]),
+                        key: const Key('member-suspended-note'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ListTile(
+                    key: const Key('member-major'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.school_outlined),
+                    title: Text(tr('Perbaiki jurusan')),
+                    subtitle: Text(m.major ?? '-'),
+                    trailing: const Icon(Icons.edit_outlined),
+                    onTap: _saving ? null : _fixMajor,
+                  ),
+                  if (_canSuspend)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: OutlinedButton.icon(
+                        key: const Key('member-suspend'),
+                        style: m.isSuspended
+                            ? null
+                            : OutlinedButton.styleFrom(
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .error,
+                              ),
+                        icon: Icon(
+                          m.isSuspended
+                              ? Icons.lock_open_outlined
+                              : Icons.block_outlined,
+                        ),
+                        label: Text(
+                          m.isSuspended
+                              ? tr('Aktifkan lagi')
+                              : tr('Tangguhkan anggota'),
+                        ),
+                        onPressed: _saving ? null : _toggleSuspend,
+                      ),
+                    ),
+                  if (!_canSuspend)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        tr('Admin dan akunmu sendiri tidak bisa ditangguhkan.'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -616,7 +751,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
       !widget.member.isAdmin && widget.member.id != widget.adminId;
 
   Future<void> _fixMajor() async {
-    final m = widget.member;
+    final m = _m;
     final options = {...kAdminMajors, ?m.major}.toList();
     final picked = await showDialog<String>(
       context: context,
@@ -653,7 +788,12 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
       await widget.repository.setMemberMajor(widget.adminId, m.id, picked);
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(tr('Jurusan tersimpan.'))));
-      Navigator.of(context).pop(true);
+      // Stay here: what was typed above is kept.
+      setState(() {
+        _m = m.withMajor(picked);
+        _changed = true;
+        _saving = false;
+      });
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(adminErrorMessage(e))));
@@ -665,15 +805,22 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   }
 
   Future<void> _remove() async {
-    final m = widget.member;
+    final m = _m;
     final reason = await askAdminReason(
       context,
       title: tr('Hapus anggota ini untuk selamanya?'),
       body: trf(
-        'Akun {0} dihapus bersama bisnis, produk, lowongan, lamaran, '
+        'Akun {0} ({1}) dihapus bersama bisnis, produk, lowongan, lamaran, '
         'permintaan kontak dan notifikasinya. Tidak bisa dibatalkan. '
         'Pakai ini untuk akun palsu atau akun yang ditinggalkan.',
-        [m.name],
+        [
+          m.name,
+          [
+            if ((m.email ?? '').isNotEmpty) m.email!,
+            if (m.major != null) m.major!,
+            if (m.graduationYear != null) '${m.graduationYear}',
+          ].join(' · '),
+        ],
       ),
       action: tr('Hapus untuk selamanya'),
       destructive: true,
@@ -705,7 +852,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
   }
 
   Future<void> _toggleSuspend() async {
-    final m = widget.member;
+    final m = _m;
     final messenger = ScaffoldMessenger.of(context);
     String? reason;
     if (m.isSuspended) {
@@ -714,7 +861,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
         builder: (ctx) => AlertDialog(
           title: Text(tr('Aktifkan lagi anggota ini?')),
           content: Text(
-            trf('{0} bisa masuk lagi dan tampil di Directory.', [m.name]),
+            trf('{0} bisa masuk lagi dan tampil di Members.', [m.name]),
           ),
           actions: [
             TextButton(
@@ -735,7 +882,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
         context,
         title: tr('Tangguhkan anggota ini?'),
         body: trf(
-          '{0} tidak bisa masuk dan hilang dari Directory sampai kamu '
+          '{0} tidak bisa masuk dan hilang dari Members sampai kamu '
           'mengaktifkannya lagi. Bisnis dan postingannya tetap ada: '
           'sembunyikan terpisah bila perlu.',
           [m.name],
@@ -767,7 +914,12 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
           ),
         ),
       );
-      Navigator.of(context).pop(true);
+      // Stay here: what was typed above is kept.
+      setState(() {
+        _m = m.withSuspended(!m.isSuspended, reason);
+        _changed = true;
+        _saving = false;
+      });
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text(adminErrorMessage(e))));

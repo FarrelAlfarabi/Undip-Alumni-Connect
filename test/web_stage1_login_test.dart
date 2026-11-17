@@ -391,6 +391,8 @@ void main() {
       await _pumpEntry(t, lock, web: true, api: api);
       await t.ensureVisible(find.byKey(const Key('lock-switch')));
       await t.tap(find.byKey(const Key('lock-switch')));
+      await t.pump();
+      await t.tap(find.byKey(const Key('lock-confirm-yes')));
       await t.pump(const Duration(milliseconds: 100));
       await t.pump(const Duration(milliseconds: 100));
       expect(find.text('Mulai'), findsOneWidget);

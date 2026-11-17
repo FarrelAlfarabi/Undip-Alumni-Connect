@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../screens/welcome_screen.dart';
 import '../util/app_language.dart';
 import '../widgets/auth_frame.dart';
 
@@ -7,6 +8,7 @@ import 'biometrics.dart';
 import 'lock_config.dart';
 import 'lock_service.dart';
 import 'pin_pad.dart';
+import 'session.dart';
 
 /// PINs that are too easy to guess. Deliberately tiny; a device lock, not a
 /// password policy.
@@ -61,7 +63,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     if (_step == _Step.enter) {
       if (isWeakPin(pin)) {
         setState(
-          () => _error = 'PIN itu terlalu mudah ditebak. Coba yang lain.',
+          () => _error = tr('PIN itu terlalu mudah ditebak. Coba yang lain.'),
         );
         return;
       }
@@ -75,7 +77,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     if (pin != _first) {
       setState(() {
         _first = '';
-        _error = 'PIN tidak sama. Ulangi dari awal.';
+        _error = tr('PIN tidak sama. Ulangi dari awal.');
         _step = _Step.enter;
       });
       return;
@@ -101,9 +103,41 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     }
   }
 
+  /// A forced PIN setup (web) must still have a way out for someone on the
+  /// wrong account.
+  Future<void> _leave() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Ganti akun?')),
+        content: Text(
+          tr('Keluar dari akun ini? Kamu perlu kode email lagi untuk masuk.'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            key: const Key('pin-setup-switch-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('Ya, keluar')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await signOutTo(
+      context,
+      const WelcomeScreen(),
+      lock: widget.lock,
+      forget: true,
+    );
+  }
+
   Future<void> _enableBiometrics() async {
     final r = await widget.lock.authenticateBiometric(
-      'Konfirmasi untuk membuka dengan sidik jari atau wajah',
+      tr('Konfirmasi untuk membuka dengan sidik jari atau wajah'),
     );
     if (!mounted) return;
     if (r == BiometricResult.success) {
@@ -111,7 +145,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       await _finish();
     } else {
       setState(
-        () => _error = 'Belum berhasil. Coba lagi atau lewati; PIN kamu tetap bisa dipakai.',
+        () => _error = tr(
+          'Belum berhasil. Coba lagi atau lewati; PIN kamu tetap bisa dipakai.',
+        ),
       );
     }
   }
@@ -140,9 +176,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
           children: [
             Text(
               switch (_step) {
-                _Step.enter => 'Buat PIN $kPinLength digit',
-                _Step.confirm => 'Masukkan lagi untuk konfirmasi',
-                _Step.biometric => 'Buka dengan sidik jari atau wajah?',
+                _Step.enter => trf('Buat PIN {0} digit', [kPinLength]),
+                _Step.confirm => tr('Masukkan lagi untuk konfirmasi'),
+                _Step.biometric => tr('Buka dengan sidik jari atau wajah?'),
               },
               key: const Key('pin-setup-title'),
               textAlign: TextAlign.center,
@@ -151,11 +187,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             const SizedBox(height: 8),
             Text(
               _step == _Step.biometric
-                  ? 'Opsional. PIN kamu tetap bisa dipakai.'
-                  : 'PIN membuka Lingkaran di perangkat ini, jadi kamu tidak '
-                        'perlu verifikasi tiap kali. Ini kunci praktis di '
-                        'perangkat ini, bukan perlindungan tambahan untuk '
-                        'akunmu.',
+                  ? tr('Opsional. PIN kamu tetap bisa dipakai.')
+                  : tr(
+                      'PIN membuka Lingkaran di perangkat ini, jadi kamu tidak '
+                      'perlu verifikasi tiap kali. Ini kunci praktis di '
+                      'perangkat ini, bukan perlindungan tambahan untuk '
+                      'akunmu.',
+                    ),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -180,6 +218,14 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               ),
             ] else
               PinPad(enabled: !_busy, onCompleted: _entered),
+            if (widget.mandatory) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                key: const Key('pin-setup-switch'),
+                onPressed: _busy ? null : _leave,
+                child: Text(tr('Bukan kamu? Ganti akun')),
+              ),
+            ],
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(

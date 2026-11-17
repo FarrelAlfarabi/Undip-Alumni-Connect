@@ -131,6 +131,43 @@ class _ReviewQueueState extends State<_ReviewQueue> {
     }
   }
 
+  Future<void> _deleteListing(MarketplaceListing l) async {
+    final reason = await askAdminReason(
+      context,
+      title: tr('Hapus produk ini untuk selamanya?'),
+      body: tr(
+        'Produk dan fotonya dihapus. Tidak bisa dibatalkan. Kalau hanya '
+        'ingin menolak, pakai Reject.',
+      ),
+      action: tr('Hapus untuk selamanya'),
+      destructive: true,
+      confirmWord: 'HAPUS',
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _busy.add(l.id));
+    try {
+      await widget.repository.adminDeleteListing(
+        adminId: widget.adminId,
+        listingId: l.id,
+        reason: reason,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Produk dihapus.'))));
+      _busy.remove(l.id);
+      _reload();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy.remove(l.id));
+      showErrorSnackBar(
+        context,
+        message: marketplaceErrorMessage(e),
+        screen: 'Marketplace review',
+        error: e,
+      );
+    }
+  }
+
   Future<String?> _askReason() {
     final controller = TextEditingController();
     return showDialog<String>(
@@ -280,6 +317,24 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
+                        PopupMenuButton<String>(
+                          key: Key('review-more-${l.id}'),
+                          enabled: !busy,
+                          tooltip: tr('Lainnya'),
+                          onSelected: (_) => _deleteListing(l),
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              key: Key('review-delete-${l.id}'),
+                              value: 'delete',
+                              child: Text(
+                                tr('Hapus produk'),
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                         Expanded(
                           child: OutlinedButton(
                             onPressed: busy
@@ -669,14 +724,23 @@ class _ReportsTabState extends State<_ReportsTab> {
                                   ),
                                   child: Text(tr('Sembunyikan produk')),
                                 ),
-                              TextButton.icon(
-                                key: Key('report-delete-${d.listingId}'),
-                                onPressed: busy ? null : () => _delete(d),
-                                icon: const Icon(Icons.delete_forever_outlined),
-                                label: Text(tr('Hapus')),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: theme.colorScheme.error,
-                                ),
+                              PopupMenuButton<String>(
+                                key: Key('report-more-${d.listingId}'),
+                                enabled: !busy,
+                                tooltip: tr('Lainnya'),
+                                onSelected: (_) => _delete(d),
+                                itemBuilder: (_) => [
+                                  PopupMenuItem(
+                                    key: Key('report-delete-${d.listingId}'),
+                                    value: 'delete',
+                                    child: Text(
+                                      tr('Hapus produk'),
+                                      style: TextStyle(
+                                        color: theme.colorScheme.error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

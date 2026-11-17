@@ -42,7 +42,7 @@ const List<SupportContact> kSupportContacts = [
 ];
 
 /// I MUST FILL IN: the link of the alumni database form (Google Form or
-/// similar). "Belum punya akun? Hubungi IKAFE" opens it with a button. While it
+/// similar). "Belum punya akun? Hubungi Ikafe" opens it with a button. While it
 /// still has the `[FILL IN` text, no button is shown and the release gate
 /// (test/release_check_test.dart) fails.
 const String kAlumniFormUrl = 'https://tinyurl.com/DatabaseIKAFE';

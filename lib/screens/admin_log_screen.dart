@@ -43,7 +43,7 @@ const _kinds = <String, String?>{
 
 const _periods = <String, int?>{
   kAllFilter: null,
-  'Hari ini': 1,
+  '24 jam terakhir': 1,
   '7 hari': 7,
   '30 hari': 30,
 };
@@ -78,13 +78,22 @@ String adminActionLabel(String action) {
   };
   final hit = exact[action];
   if (hit != null) return tr(hit);
-  if (action.startsWith('report_')) {
-    return trf('Laporan: {0}', [action.substring(7)]);
-  }
+  const reports = {
+    'report_dismiss': 'Laporan diabaikan',
+    'report_reopen': 'Laporan dibuka lagi',
+    'report_hide': 'Laporan: konten ditangguhkan',
+    'report_restore': 'Laporan: konten ditampilkan lagi',
+    'report_remove': 'Laporan: konten dihapus',
+    'report_delete': 'Laporan: konten dihapus',
+  };
+  final rep = reports[action];
+  if (rep != null) return tr(rep);
+  if (action.startsWith('report_')) return tr('Laporan diproses');
   return action;
 }
 
 class _AdminLogScreenState extends State<AdminLogScreen> {
+  static const _limit = 300;
   final _search = TextEditingController();
   Timer? _debounce;
   String _kind = kAllFilter;
@@ -104,6 +113,7 @@ class _AdminLogScreenState extends State<AdminLogScreen> {
       widget.adminId,
       search: _search.text,
       actionPrefix: _kinds[_kind],
+      limit: _limit,
       since: days == null
           ? null
           : DateTime.now().subtract(Duration(days: days)),
@@ -127,6 +137,16 @@ class _AdminLogScreenState extends State<AdminLogScreen> {
     _kind = _period = kAllFilter;
     _reload();
   }
+
+  /// "Anggota", "Bisnis", "Lowongan" ... for the line that names who or what
+  /// the action was done to.
+  static String _targetWord(AdminLogEntry e) => switch (e.targetType) {
+    'profile' => tr('Anggota'),
+    'business' => tr('Bisnis'),
+    'job' => tr('Lowongan'),
+    'listing' => tr('Produk'),
+    _ => tr('Untuk'),
+  };
 
   static String _when(DateTime t) {
     final l = t.toLocal();
@@ -228,23 +248,47 @@ class _AdminLogScreenState extends State<AdminLogScreen> {
                           ),
                         );
                       }
+                      // The search asks for 300 rows at most. Say so when the
+                      // limit was reached, so nobody thinks that is everything.
+                      final capped = items.length >= _limit;
                       return RefreshIndicator(
                         onRefresh: () async => _reload(),
                         child: ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          itemCount: items.length,
+                          itemCount: items.length + (capped ? 1 : 0),
                           separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (context, i) {
+                            if (i == items.length) {
+                              return Padding(
+                                key: const Key('log-capped'),
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  trf(
+                                    'Menampilkan {0} terbaru. Persempit '
+                                    'pencarian untuk melihat yang lebih lama.',
+                                    [_limit],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              );
+                            }
                             final e = items[i];
                             return ListTile(
                               key: Key('log-$i'),
+                              isThreeLine: (e.targetLabel ?? '').isNotEmpty,
                               title: Text(adminActionLabel(e.action)),
                               subtitle: Text(
                                 [
-                                  e.adminName,
+                                  trf('Oleh: {0}', [e.adminName]),
+                                  if ((e.targetLabel ?? '').isNotEmpty)
+                                    trf('{0}: {1}', [
+                                      _targetWord(e),
+                                      e.targetLabel,
+                                    ]),
                                   if (e.detail != null && e.detail!.isNotEmpty)
                                     e.detail!,
-                                ].join(' · '),
+                                ].join('\n'),
                               ),
                               trailing: Text(
                                 _when(e.createdAt),
