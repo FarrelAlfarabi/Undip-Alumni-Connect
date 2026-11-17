@@ -42,6 +42,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('job-more-j1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('job-delete-j1')));
     await tester.pumpAndSettle();
     await confirmDelete(tester, word: 'salah');
@@ -83,11 +85,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Reports'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('report-more-l1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('report-delete-l1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('admin-reason-cancel')));
     await tester.pumpAndSettle();
     expect(api.calls, isNot(contains('admin_listing_delete')));
+    await tester.tap(find.byKey(const Key('report-more-l1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('report-delete-l1')));
     await tester.pumpAndSettle();
     await confirmDelete(tester);

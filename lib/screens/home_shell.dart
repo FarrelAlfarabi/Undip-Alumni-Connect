@@ -192,11 +192,19 @@ class _HomeShellState extends State<HomeShell> {
     if (widget.chat) _chatTab,
   ];
 
-  void _select(int i) {
+  /// Tabs left behind, newest last: Back walks through them in reverse
+  /// instead of jumping to Home.
+  final List<int> _tabHistory = [];
+
+  void _select(int i, {bool record = true}) {
     // A side nav tap closes any screen opened on top of the tabs.
     _innerNav.currentState?.popUntil((r) => r.isFirst);
     setState(() {
       if (i != _index) {
+        if (record) {
+          _tabHistory.add(_index);
+          if (_tabHistory.length > 20) _tabHistory.removeAt(0);
+        }
         final now = DateTime.now();
         _leftAt[_index] = now;
         final left = _leftAt[i];
@@ -223,8 +231,16 @@ class _HomeShellState extends State<HomeShell> {
       inner.maybePop();
       return;
     }
+    // Back goes to the tab you were on before, then Home.
+    while (_tabHistory.isNotEmpty) {
+      final prev = _tabHistory.removeLast();
+      if (prev != _index) {
+        _select(prev, record: false);
+        return;
+      }
+    }
     if (_index != HomeShell.homeTab) {
-      _select(HomeShell.homeTab);
+      _select(HomeShell.homeTab, record: false);
       return;
     }
     // A browser has no app to exit: the tab or window is closed by the person,

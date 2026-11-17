@@ -181,7 +181,7 @@ void main() {
     testWidgets('asks first, field only after Ya', (tester) async {
       await pumpForm(tester);
       expect(
-        find.textContaining('Apakah usaha anda memiliki NIB?'),
+        find.textContaining('Apakah usahamu memiliki NIB?'),
         findsOneWidget,
       );
       expect(find.byKey(const Key('nib-field')), findsNothing);
@@ -201,6 +201,11 @@ void main() {
       await tester.tap(find.byKey(const Key('nib-no')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save and send again'));
+      await tester.pumpAndSettle();
+      // Removing a NIB asks first.
+      expect(find.byKey(const Key('nib-remove-confirm')), findsOneWidget);
+      expect(api.calls, isNot(contains('business_set_nib')));
+      await tester.tap(find.byKey(const Key('nib-remove-yes')));
       await tester.pumpAndSettle();
       expect(api.calls, contains('business_set_nib'));
       expect(api.params['business_set_nib']!['p_nib'], isNull);

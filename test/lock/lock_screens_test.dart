@@ -285,6 +285,9 @@ void main() {
         await pumpEntry(tester, lock);
         await tester.ensureVisible(find.byKey(Key(key)));
         await tester.tap(find.byKey(Key(key)));
+        await tester.pump();
+        expect(find.byKey(const Key('lock-confirm-text')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('lock-confirm-yes')));
         await tester.pump(const Duration(milliseconds: 100));
         await tester.pump(const Duration(milliseconds: 100));
         expect(find.text('Mulai'), findsOneWidget);
@@ -594,6 +597,8 @@ void main() {
         await background(tester, clock, const Duration(minutes: 6));
         await tester.ensureVisible(find.byKey(const Key('lock-switch')));
         await tester.tap(find.byKey(const Key('lock-switch')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('lock-confirm-yes')));
         await tester.pump(const Duration(milliseconds: 100));
         await tester.pump(const Duration(milliseconds: 400));
         expect(find.text('Mulai'), findsOneWidget);

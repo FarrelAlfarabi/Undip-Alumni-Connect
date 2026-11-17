@@ -286,19 +286,23 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                   alignment: WrapAlignment.end,
                                   spacing: 8,
                                   children: [
-                                    TextButton.icon(
-                                      key: Key('job-delete-${j.id}'),
-                                      onPressed: _busy.contains(j.id)
-                                          ? null
-                                          : () => _delete(j),
-                                      icon: const Icon(
-                                        Icons.delete_forever_outlined,
-                                      ),
-                                      label: Text(tr('Hapus')),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            theme.colorScheme.error,
-                                      ),
+                                    PopupMenuButton<String>(
+                                      key: Key('job-more-${j.id}'),
+                                      enabled: !_busy.contains(j.id),
+                                      tooltip: tr('Lainnya'),
+                                      onSelected: (_) => _delete(j),
+                                      itemBuilder: (_) => [
+                                        PopupMenuItem(
+                                          key: Key('job-delete-${j.id}'),
+                                          value: 'delete',
+                                          child: Text(
+                                            tr('Hapus lowongan'),
+                                            style: TextStyle(
+                                              color: theme.colorScheme.error,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     j.isHidden
                                         ? OutlinedButton(

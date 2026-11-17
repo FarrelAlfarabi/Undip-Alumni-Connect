@@ -324,7 +324,7 @@ void main() {
       expect(find.text('Rejected: Foto kurang jelas'), findsOneWidget);
       expect(
         find.text(
-          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab IKAFE). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
+          'Produk, usaha, dan lowongan yang diunggah alumni sepenuhnya menjadi tanggung jawab alumni (bukan tanggung jawab Ikafe). Pastikan validitasnya dan laporkan jika ada hal mencurigakan.',
         ),
         findsOneWidget,
       );

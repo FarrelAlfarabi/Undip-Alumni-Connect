@@ -13,9 +13,9 @@ import 'real_login_test.dart' show FakeLoginApi, pumpVerify;
 import 'support/fake_home.dart';
 
 const _intro =
-    'Yuk isi database alumni terlebih dahulu sebelum mengakses Aplikasi '
-    'Lingkaran. Setelah mengisi, mohon tunggu beberapa hari untuk kami '
-    'melakukan verifikasi atas data yang kamu input';
+    'Yuk isi database alumni terlebih dahulu sebelum mengakses Lingkaran. '
+    'Setelah mengisi, mohon tunggu beberapa hari agar kami bisa memverifikasi '
+    'data yang kamu isi.';
 
 void main() {
   group('industry list', () {
@@ -86,9 +86,9 @@ void main() {
   });
 
   group('Belum punya akun', () {
-    testWidgets('the login link says Hubungi IKAFE', (tester) async {
+    testWidgets('the login link says Hubungi Ikafe', (tester) async {
       await pumpVerify(tester, FakeLoginApi());
-      expect(find.text('Belum punya akun? Hubungi IKAFE'), findsOneWidget);
+      expect(find.text('Belum punya akun? Hubungi Ikafe'), findsOneWidget);
     });
 
     testWidgets('shows the explanation and a link button', (tester) async {

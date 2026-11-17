@@ -220,8 +220,14 @@ class _PickMemberScreen extends StatefulWidget {
 
 class _PickMemberScreenState extends State<_PickMemberScreen> {
   final _search = TextEditingController();
-  late final Future<List<AdminMember>> _future = widget.repository
-      .searchMembers(widget.adminId, '');
+  late Future<List<AdminMember>> _future = widget.repository.searchMembers(
+    widget.adminId,
+    '',
+  );
+
+  void _retry() => setState(() {
+    _future = widget.repository.searchMembers(widget.adminId, '');
+  });
 
   @override
   void initState() {
@@ -251,7 +257,12 @@ class _PickMemberScreenState extends State<_PickMemberScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snap.hasError) {
-                  return Center(child: Text(adminErrorMessage(snap.error!)));
+                  return ErrorView(
+                    message: adminErrorMessage(snap.error!),
+                    screen: 'Admin pilih anggota',
+                    error: snap.error,
+                    onRetry: _retry,
+                  );
                 }
                 final q = _search.text.trim().toLowerCase();
                 final list = (snap.data ?? const <AdminMember>[])

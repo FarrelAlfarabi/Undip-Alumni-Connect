@@ -4,6 +4,7 @@ import '../models/business.dart' show kMaxBusinesses;
 /// Indonesian text for the English text used in the code (see [tr]). Add a
 /// line here when an English text in the code needs an Indonesian version.
 final Map<String, String> kIndonesian = {
+  'All': 'Semua',
   'All time': 'Semua waktu',
   'Micro': 'Mikro',
   'Small': 'Kecil',

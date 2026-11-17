@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'lock_config.dart';
 
@@ -55,10 +56,65 @@ class _PinPadState extends State<PinPad> {
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
   }
 
+  /// Computer keyboard: number keys (top row and number pad) and Backspace.
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final ch = event.character;
+    if (key == LogicalKeyboardKey.backspace ||
+        key == LogicalKeyboardKey.delete) {
+      _back();
+      return KeyEventResult.handled;
+    }
+    final digit =
+        _digitOf(key) ??
+        (ch != null && RegExp(r'^[0-9]$').hasMatch(ch) ? ch : null);
+    if (digit != null) {
+      _digit(digit);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  static String? _digitOf(LogicalKeyboardKey k) {
+    const top = [
+      LogicalKeyboardKey.digit0,
+      LogicalKeyboardKey.digit1,
+      LogicalKeyboardKey.digit2,
+      LogicalKeyboardKey.digit3,
+      LogicalKeyboardKey.digit4,
+      LogicalKeyboardKey.digit5,
+      LogicalKeyboardKey.digit6,
+      LogicalKeyboardKey.digit7,
+      LogicalKeyboardKey.digit8,
+      LogicalKeyboardKey.digit9,
+    ];
+    const pad = [
+      LogicalKeyboardKey.numpad0,
+      LogicalKeyboardKey.numpad1,
+      LogicalKeyboardKey.numpad2,
+      LogicalKeyboardKey.numpad3,
+      LogicalKeyboardKey.numpad4,
+      LogicalKeyboardKey.numpad5,
+      LogicalKeyboardKey.numpad6,
+      LogicalKeyboardKey.numpad7,
+      LogicalKeyboardKey.numpad8,
+      LogicalKeyboardKey.numpad9,
+    ];
+    final a = top.indexOf(k);
+    if (a >= 0) return '$a';
+    final b = pad.indexOf(k);
+    return b >= 0 ? '$b' : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final fg = widget.foreground ?? Theme.of(context).colorScheme.onSurface;
     final dim = fg.withValues(alpha: widget.enabled ? 1 : 0.4);
+    return Focus(autofocus: true, onKeyEvent: _onKey, child: _pad(dim));
+  }
+
+  Widget _pad(Color dim) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

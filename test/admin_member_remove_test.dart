@@ -57,7 +57,8 @@ void main() {
 
   testWidgets('remove needs a reason and the word HAPUS', (tester) async {
     final api = await open(tester, [member()]);
-    await tester.ensureVisible(find.byKey(const Key('member-remove')));
+    await tester.tap(find.byKey(const Key('member-more')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('member-remove')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('admin-reason')), 'Akun palsu');
@@ -82,7 +83,8 @@ void main() {
 
   testWidgets('cancel removes nothing', (tester) async {
     final api = await open(tester, [member()]);
-    await tester.ensureVisible(find.byKey(const Key('member-remove')));
+    await tester.tap(find.byKey(const Key('member-more')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('member-remove')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('admin-reason-cancel')));

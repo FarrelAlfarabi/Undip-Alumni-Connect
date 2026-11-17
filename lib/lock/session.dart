@@ -83,6 +83,7 @@ Future<void> signOutTo(
   Widget destination, {
   LockService? lock,
   LoginApi? login,
+  bool forget = false,
 }) async {
   // The root navigator: on desktop the shell has its own navigator for the
   // screens opened from a tab, and signing out must replace the whole app.
@@ -95,7 +96,9 @@ Future<void> signOutTo(
     // The device is signed out locally even if the server call fails.
   }
   try {
-    await (lock ?? LockService.shared).signOut();
+    // [forget]: leave nothing of this person on this device (PIN too).
+    final l = lock ?? LockService.shared;
+    await (forget ? l.clear() : l.signOut());
   } catch (_) {
     // Nothing else to do; the screen change below still signs the person out.
   }

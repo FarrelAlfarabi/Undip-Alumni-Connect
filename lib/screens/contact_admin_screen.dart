@@ -28,7 +28,11 @@ class ContactAdminScreen extends StatelessWidget {
     this.fromLogin = false,
     this.typedEmail = '',
     this.alumniFormUrl = kAlumniFormUrl,
+    this.suspended = false,
   });
+
+  /// Opened by a suspended member: its own text and no alumni form button.
+  final bool suspended;
 
   /// The alumni database form, opened by a button when coming from login.
   /// No button while it is still the placeholder (the form is not made yet).
@@ -81,59 +85,79 @@ class ContactAdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Kontak admin'))),
+      appBar: AppBar(
+        title: Text(
+          suspended
+              ? tr('Kontak admin')
+              : fromLogin
+              ? tr('Hubungi Ikafe')
+              : tr('Kontak admin'),
+        ),
+      ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text(
-              fromLogin
-                  ? tr(
-                      'Yuk isi database alumni terlebih dahulu sebelum '
-                      'mengakses Aplikasi Lingkaran. Setelah mengisi, mohon '
-                      'tunggu beberapa hari untuk kami melakukan verifikasi '
-                      'atas data yang kamu input',
-                    )
-                  : 'Butuh bantuan, ingin melaporkan masalah, atau butuh lebih '
-                        'dari 3 usaha? Hubungi tim admin di sini.',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            if (fromLogin && !hasPolicyPlaceholder(alumniFormUrl)) ...[
-              Center(
-                child: FilledButton.icon(
-                  key: const Key('alumni-form-open'),
-                  icon: const Icon(Icons.open_in_new),
-                  label: Text(tr('Isi formulir database alumni')),
-                  onPressed: () => launchUrl(
-                    Uri.parse(alumniFormUrl),
-                    mode: LaunchMode.externalApplication,
-                  ).catchError((_) => false),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  suspended
+                      ? tr('Akunmu ditangguhkan. Hubungi admin untuk bertanya.')
+                      : fromLogin
+                      ? tr(
+                          'Yuk isi database alumni terlebih dahulu sebelum '
+                          'mengakses Lingkaran. Setelah mengisi, mohon tunggu '
+                          'beberapa hari agar kami bisa memverifikasi data yang '
+                          'kamu isi.',
+                        )
+                      : tr(
+                          'Butuh bantuan, ingin melaporkan masalah, atau butuh '
+                          'lebih dari 3 usaha? Hubungi tim admin di sini.',
+                        ),
+                  style: theme.textTheme.bodyMedium,
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
-            for (final c in contacts)
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: theme.colorScheme.outlineVariant),
-                ),
-                child: ListTile(
-                  key: Key('support-${c.kind.name}'),
-                  leading: Icon(_icon(c.kind)),
-                  title: Text(c.label),
-                  subtitle: Text(c.value),
-                  onTap: () => _open(context, c),
-                  trailing: IconButton(
-                    tooltip: tr('Salin'),
-                    icon: const Icon(Icons.copy_outlined),
-                    onPressed: () => _copy(context, c),
+                const SizedBox(height: 16),
+                if (fromLogin &&
+                    !suspended &&
+                    !hasPolicyPlaceholder(alumniFormUrl)) ...[
+                  Center(
+                    child: FilledButton.icon(
+                      key: const Key('alumni-form-open'),
+                      icon: const Icon(Icons.open_in_new),
+                      label: Text(tr('Isi formulir database alumni')),
+                      onPressed: () => launchUrl(
+                        Uri.parse(alumniFormUrl),
+                        mode: LaunchMode.externalApplication,
+                      ).catchError((_) => false),
+                    ),
                   ),
-                ),
-              ),
-          ],
+                  const SizedBox(height: 16),
+                ],
+                for (final c in contacts)
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: ListTile(
+                      key: Key('support-${c.kind.name}'),
+                      leading: Icon(_icon(c.kind)),
+                      title: Text(c.label),
+                      subtitle: Text(c.value),
+                      onTap: () => _open(context, c),
+                      trailing: IconButton(
+                        tooltip: tr('Salin'),
+                        icon: const Icon(Icons.copy_outlined),
+                        onPressed: () => _copy(context, c),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

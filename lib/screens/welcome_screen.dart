@@ -42,7 +42,7 @@ class WelcomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  notice!,
+                  tr(notice!),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSecondaryContainer,
@@ -109,14 +109,6 @@ class WelcomeScreen extends StatelessWidget {
             const SizedBox(height: 16),
             const ClosedTestNotice(),
             const SizedBox(height: 12),
-            Text(
-              tr('Beta tertutup · data awal dari anggota Ikafe'),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 6),
             FutureBuilder<AppInfo>(
               future: AppInfo.load(),
               builder: (context, snap) => Text(
@@ -131,10 +123,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             Text(
-              tr(
-                'Beta tertutup. Tampilan sementara, bukan identitas resmi '
-                'UNDIP atau Ikafe.',
-              ),
+              tr('Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.'),
               textAlign: TextAlign.center,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant.withValues(
