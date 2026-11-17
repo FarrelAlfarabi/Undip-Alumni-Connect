@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/lock/lock_config.dart';
 import 'package:undip_alumni_connect/lock/pin_pad.dart';
 import 'package:undip_alumni_connect/lock/app_entry.dart';
+import 'package:undip_alumni_connect/lock/session.dart';
+import 'package:undip_alumni_connect/config/policy_config.dart';
 import 'package:undip_alumni_connect/screens/admin_log_screen.dart';
 import 'package:undip_alumni_connect/screens/contact_admin_screen.dart';
 
@@ -27,6 +29,30 @@ void main() {
     await tester.pump();
     expect(kPinLength, 6);
     expect(got, '134567');
+  });
+
+  testWidgets('after sign in the app is the only screen, no Welcome below', (
+    tester,
+  ) async {
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const Text('welcome');
+          },
+        ),
+      ),
+    );
+    enterApp(ctx, {
+      'id': 'p1',
+      'name': 'Dewi',
+      'policy_version': kPolicyVersion,
+    }, homeBuilder: (_) => const Text('home'));
+    await tester.pumpAndSettle();
+    expect(find.text('home'), findsOneWidget);
+    expect(Navigator.of(tester.element(find.text('home'))).canPop(), isFalse);
   });
 
   testWidgets('a suspended member sees their own text, no alumni form', (

@@ -107,9 +107,7 @@ void main() {
     expect(api.calls.where((c) => c == 'admin_members_list').length, 1);
   });
 
-  testWidgets('edit form shows only editable fields, never NIM or email', (
-    tester,
-  ) async {
+  testWidgets('edit form shows name and email, never NIM', (tester) async {
     await open(tester);
     await tester.tap(find.text('Ahmad Ramadhan'));
     await tester.pumpAndSettle();
@@ -124,8 +122,80 @@ void main() {
       expect(find.byKey(Key(k)), findsOneWidget, reason: k);
     }
     expect(find.textContaining('NIM'), findsNothing);
-    expect(find.byKey(const Key('member-email')), findsNothing);
-    expect(find.byKey(const Key('member-name')), findsNothing);
+    expect(find.byKey(const Key('member-email')), findsOneWidget);
+    expect(find.byKey(const Key('member-name')), findsOneWidget);
+  });
+
+  testWidgets('changing the name sends only the name', (tester) async {
+    final api = await open(tester);
+    await tester.tap(find.text('Ahmad Ramadhan'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('member-name')), 'Ahmad R.');
+    await tester.ensureVisible(find.byKey(const Key('member-save')));
+    await tester.tap(find.byKey(const Key('member-save')));
+    await tester.pumpAndSettle();
+    expect(api.params['admin_update_profile']!['p_changes'], {
+      'name': 'Ahmad R.',
+    });
+  });
+
+  testWidgets('changing the email asks first and sends it in lower case', (
+    tester,
+  ) async {
+    final api = await open(tester);
+    await tester.tap(find.text('Ahmad Ramadhan'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('member-email')),
+      'Ahmad.Baru@Example.com',
+    );
+    await tester.ensureVisible(find.byKey(const Key('member-save')));
+    await tester.tap(find.byKey(const Key('member-save')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('member-email-confirm')), findsOneWidget);
+    expect(api.calls, isNot(contains('admin_update_profile')));
+    await tester.tap(find.byKey(const Key('member-email-confirm-yes')));
+    await tester.pumpAndSettle();
+    expect(api.params['admin_update_profile']!['p_changes'], {
+      'email': 'ahmad.baru@example.com',
+    });
+  });
+
+  testWidgets('a bad email or a short name is refused on screen', (
+    tester,
+  ) async {
+    final api = await open(tester);
+    await tester.tap(find.text('Ahmad Ramadhan'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('member-email')),
+      'bukan-email',
+    );
+    await tester.ensureVisible(find.byKey(const Key('member-save')));
+    await tester.tap(find.byKey(const Key('member-save')));
+    await tester.pumpAndSettle();
+    expect(find.text('Tulis email yang benar.'), findsOneWidget);
+    expect(api.calls, isNot(contains('admin_update_profile')));
+  });
+
+  testWidgets('a taken email shows a plain sentence', (tester) async {
+    final api = await open(tester);
+    await tester.tap(find.text('Ahmad Ramadhan'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('member-email')),
+      'siti@example.com',
+    );
+    api.throwOnCall = const AdminException(
+      AdminErrorCode.emailTaken,
+      'email_taken',
+    );
+    await tester.ensureVisible(find.byKey(const Key('member-save')));
+    await tester.tap(find.byKey(const Key('member-save')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('member-email-confirm-yes')));
+    await tester.pumpAndSettle();
+    expect(find.text('Email ini sudah dipakai anggota lain.'), findsOneWidget);
   });
 
   testWidgets('save sends only what changed', (tester) async {

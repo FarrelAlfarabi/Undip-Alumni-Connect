@@ -3,6 +3,24 @@ import '../data/contact_repository.dart' show kDailyRequestMax, kOpenRequestMax;
 /// English text for the Indonesian text used in the code (see [tr]). Add a
 /// line here when a new Indonesian text should have an English version.
 final Map<String, String> kEnglish = {
+  'Perlu ditinjau': 'Needs review',
+  'Anggota dan admin': 'Members and admins',
+  'Konten dan tampilan': 'Content and display',
+  'Cari anggota, ubah nama, email dan profil, perbaiki jurusan, tangguhkan atau hapus': 'Find members, change name, email and profile, fix jurusan, suspend or remove',
+  'Email ini sudah dipakai anggota lain.':
+      'This email is already used by another member.',
+  'Email akunmu sendiri diubah oleh admin lain, supaya kamu tidak terkunci.': 'Your own account email is changed by another admin, so you do not get locked out.',
+  'Email akunmu sendiri diubah oleh admin lain.':
+      'Your own account email is changed by another admin.',
+  'Nama harus 2 sampai 100 huruf.': 'The name must be 2 to 100 characters.',
+  'Tulis email yang benar.': 'Enter a valid email.',
+  'Ganti email anggota?': 'Change the member email?',
+  'Email {0} diganti menjadi {1}. Anggota ini harus masuk lagi dengan email baru (kode email). Email lama tidak bisa masuk lagi.': 'Email {0} becomes {1}. This member must sign in again with the new email (email code). The old email can no longer sign in.',
+  'Ganti email': 'Change email',
+  'Nama': 'Name',
+  'Email dipakai untuk masuk. Kalau diganti, anggota masuk lagi dengan email baru.': 'The email is used to sign in. If changed, the member signs in again with the new email.',
+  'Isian tidak valid. Nama dan email harus benar, bio paling banyak 200 huruf, dan tautan harus dari linkedin.com.': 'Invalid input. Name and email must be valid, bio at most 200 characters, and the link must be from linkedin.com.',
+  'Kamu mengubah data {0}.': 'You are changing the data of {0}.',
   'Cari produk, penjual, kategori atau kota...':
       'Search product, seller, category or city...',
   'Tidak ada produk yang cocok.': 'No matching products.',

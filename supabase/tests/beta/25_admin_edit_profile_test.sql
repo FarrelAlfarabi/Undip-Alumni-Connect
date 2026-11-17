@@ -42,9 +42,9 @@ select jt.assert((select bio is null and linkedin_url is null and city = 'Jakart
 
 -- Protected fields are refused, even mixed with allowed ones, and nothing is saved.
 select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"nim":"24060000000"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
-select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"email":"x@example.com"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
+select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"user_id":"00000000-0000-0000-0000-000000000000"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
 select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"verification_status":"verified"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
-select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"name":"Lain"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
+select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"major":"Manajemen"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
 select jt.expect_error(format($q$select admin_update_profile(%L, %L, '{"city":"Bandung","subscription_status":"x"}')$q$, (select v from t_ids where k = 'clara'), (select v from t_ids where k = 'ahmad')), 'protected_field');
 select jt.assert((select city = 'Jakarta' from alumni_profiles where id = (select v from t_ids where k = 'ahmad')), 'protected attempt saved nothing');
 
