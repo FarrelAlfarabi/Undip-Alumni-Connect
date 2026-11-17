@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../widgets/responsive_list.dart';
@@ -125,7 +127,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   Future<void> _postJob() async {
     if (!mounted) return;
     final posted = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) =>
             PostJobScreen(posterId: widget.currentUser.value['id'] as String),
       ),
@@ -151,7 +153,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                   tooltip: tr('My job postings'),
                   icon: const Icon(Icons.assignment_outlined),
                   onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
+                    AppRoute(
                       builder: (_) =>
                           MyJobPostingsScreen(currentUser: widget.currentUser),
                     ),
@@ -264,7 +266,7 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                               job: jobs[i],
                               onTap: () {
                                 Navigator.of(context).push(
-                                  MaterialPageRoute(
+                                  AppRoute(
                                     builder: (_) => JobDetailScreen(
                                       job: jobs[i],
                                       currentUser: widget.currentUser,

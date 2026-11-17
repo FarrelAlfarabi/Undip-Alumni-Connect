@@ -339,3 +339,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Admin: edit name and email, Back flow, grouped admin home (17 Nov 2026)
 - Admin can change a member's name and email (migration `20261117110000_admin_edit_name_email` + rollback + SQL test 32). A real email change detaches the old sign in, so the member signs in once with the new email. An admin cannot change their own email. Riwayat keeps "old -> new".
 - Back: after sign in, Home is the only screen (Welcome was left underneath, so "Exit" landed on Welcome); Android back callback enabled in the manifest. Admin home grouped: "Perlu ditinjau", "Anggota dan admin", "Konten dan tampilan". Tests: `admin_members_test`, `ui_review_fixes_test`.
+## Central Back rule (17 Nov 2026)
+- One rule for Back: every screen uses `AppRoute` (`lib/nav/back_guard.dart`), which tells Android the app handles Back when the screen is the first route, so no screen exits on the first press. Back pops sheet, screen, previous tab, Home; only the first screen exits, on a second press within 2 seconds after "Tekan sekali lagi untuk keluar". Browser Back never leaves the app. Lock overlay blocks Back to the hidden screens. The old "Exit the app?" dialog is gone.
+- Tests: `back_guard_test` (source rules, first Back on 8 first screens, web, pushed screens, lock overlay), `home_shell_test`. No migration.

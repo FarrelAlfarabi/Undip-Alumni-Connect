@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -40,7 +42,7 @@ class _AdminIkafeContactsScreenState extends State<AdminIkafeContactsScreen> {
 
   Future<void> _edit([IkafeContact? contact]) async {
     final change = await Navigator.of(context).push<IkafeChange>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => IkafeContactFormScreen(
           adminId: widget.adminId,
           repository: widget.repository,

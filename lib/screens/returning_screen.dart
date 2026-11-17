@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
@@ -67,9 +69,8 @@ class ReturningScreen extends StatelessWidget {
               width: double.infinity,
               child: FilledButton(
                 key: const Key('returning-continue'),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const VerificationScreen()),
-                ),
+                onPressed: () => Navigator.of(context)
+                    .push(AppRoute(builder: (_) => const VerificationScreen())),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

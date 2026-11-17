@@ -1,4 +1,7 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../screens/welcome_screen.dart';
 import 'app_entry.dart';
@@ -65,21 +68,28 @@ class _LockOverlayState extends State<LockOverlay> with WidgetsBindingObserver {
     try {
       if (!await lock.hasPin()) return;
       final user = await lock.load();
-      if (user != null && mounted) setState(() => _lockedFor = user);
+      if (user != null && mounted) _setLocked(user);
     } catch (_) {
       // Cannot read secure storage: leave the app as it is.
     }
   }
 
-  void _unlockedNow() => setState(() => _lockedFor = null);
+  void _unlockedNow() => _setLocked(null);
+
+  void _setLocked(RememberedUser? user) {
+    setState(() => _lockedFor = user);
+    BackGuard.locked.value = user != null;
+    // Tell Android that Back is handled here while the lock screen is up.
+    if (user != null) SystemNavigator.setFrameworkHandlesBack(true);
+  }
 
   /// Wipe local data, drop the overlay and start the first-time flow.
   Future<void> _forget([String? notice]) async {
     await widget.lock.clear();
     if (!mounted) return;
-    setState(() => _lockedFor = null);
+    _setLocked(null);
     widget.navigatorKey.currentState?.pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => WelcomeScreen(notice: notice)),
+      AppRoute(builder: (_) => WelcomeScreen(notice: notice)),
       (_) => false,
     );
   }

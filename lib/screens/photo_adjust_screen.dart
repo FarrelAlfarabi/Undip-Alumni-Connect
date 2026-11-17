@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -25,7 +27,7 @@ class PhotoAdjust {
   }) async {
     if (!enabled || context == null) return image;
     return Navigator.of(context).push<PickedImage>(
-      MaterialPageRoute(
+      AppRoute(
         fullscreenDialog: true,
         builder: (_) => PhotoAdjustScreen(
           image: image,

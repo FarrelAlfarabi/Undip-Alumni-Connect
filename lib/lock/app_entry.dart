@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -73,7 +75,7 @@ Future<void> leaveApp(
   l.sessionActive = false;
   FeedbackSession.profileId = null;
   Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-    MaterialPageRoute(
+    AppRoute(
       builder: (_) =>
           entryBuilder?.call() ?? AppEntry(lock: l, loginApi: login),
     ),
@@ -226,7 +228,7 @@ class _AppEntryState extends State<AppEntry> {
       if (!mounted) return false;
       final ready = profile;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
+        AppRoute(
           builder: (_) => PinSetupScreen(
             lock: _lock,
             onDone: (ctx) async => enterApp(

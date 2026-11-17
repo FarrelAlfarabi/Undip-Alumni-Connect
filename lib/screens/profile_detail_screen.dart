@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
@@ -164,7 +166,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Future<void> _editField(Widget screen) async {
     final updated = await Navigator.of(context)
-        .push<Map<String, dynamic>>(MaterialPageRoute(builder: (_) => screen));
+        .push<Map<String, dynamic>>(AppRoute(builder: (_) => screen));
     if (updated != null && mounted) {
       setState(() => _profile = {..._profile, ...updated});
       if (_isOwnProfile) widget.currentUser.value = _profile;
@@ -271,7 +273,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Future<void> _editProfile() async {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(builder: (_) => ProfileSetupScreen(profile: _profile)),
+      AppRoute(builder: (_) => ProfileSetupScreen(profile: _profile)),
     );
     if (updated != null) {
       // The edit screen does not read the photo link; keep the one we have.
@@ -285,7 +287,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Future<void> _editPhoto() async {
     final url = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => ProfilePhotoScreen(
           profileId: _profile['id'] as String,
           name: _profile['name'] as String? ?? '',
@@ -357,7 +359,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       if (!mounted) return;
       Navigator.of(context).push(
-        MaterialPageRoute(
+        AppRoute(
           builder: (_) => ChatScreen(
             conversationId: conversation['id'] as String,
             currentProfileId: viewerId,
@@ -656,21 +658,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       adminFuture: _isAdmin,
                       adminBadge: _adminBadge,
                       onBusiness: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        AppRoute(
                           builder: (_) => MyBusinessesScreen(
                             ownerId: widget.currentUser.value['id'] as String,
                           ),
                         ),
                       ),
                       onJobs: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        AppRoute(
                           builder: (_) => MyJobPostingsScreen(
                             currentUser: widget.currentUser,
                           ),
                         ),
                       ),
                       onSettings: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        AppRoute(
                           builder: (_) => SettingsScreen(
                             currentUser: widget.currentUser,
                             lock: widget.lock,
@@ -679,18 +681,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
-                      onPolicy: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const PolicyScreen()),
-                      ),
-                      onHelp: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const HelpScreen()),
-                      ),
+                      onPolicy: () => Navigator.of(context)
+                          .push(AppRoute(builder: (_) => const PolicyScreen())),
+                      onHelp: () => Navigator.of(context)
+                          .push(AppRoute(builder: (_) => const HelpScreen())),
                       onAdmin: () async {
                         final id = widget.currentUser.value['id'] as String;
                         await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => AdminScreen(adminId: id),
-                          ),
+                          AppRoute(builder: (_) => AdminScreen(adminId: id)),
                         );
                         _loadAdminBadge(id);
                       },

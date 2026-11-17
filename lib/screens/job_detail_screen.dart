@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -137,7 +139,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   Future<void> _apply(BuildContext context) async {
     final applied = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => ApplyJobScreen(
           job: widget.job,
           applicant: widget.currentUser.value,
@@ -269,7 +271,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                     ? null
                                     : () {
                                         Navigator.of(context).push(
-                                          MaterialPageRoute(
+                                          AppRoute(
                                             builder: (_) => JobApplicantsScreen(
                                               job: widget.job,
                                             ),

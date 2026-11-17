@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../widgets/responsive_list.dart';
@@ -248,7 +250,7 @@ class _AdminScreenState extends State<AdminScreen> {
                             : const Icon(Icons.chevron_right),
                         onTap: () async {
                           await Navigator.of(context)
-                              .push(MaterialPageRoute(builder: s.builder));
+                              .push(AppRoute(builder: s.builder));
                           _loadCounts();
                         },
                       ),

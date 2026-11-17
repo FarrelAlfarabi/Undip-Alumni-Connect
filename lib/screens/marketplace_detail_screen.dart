@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -83,7 +85,7 @@ class _MarketplaceDetailScreenState extends State<MarketplaceDetailScreen> {
         return;
       }
       navigator.push(
-        MaterialPageRoute(
+        AppRoute(
           builder: (_) => ProfileDetailScreen(
             profile: profile,
             showEditButton: false,

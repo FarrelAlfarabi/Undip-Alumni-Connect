@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -196,7 +198,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                                   : null,
                               onTap: () {
                                 Navigator.of(context).push(
-                                  MaterialPageRoute(
+                                  AppRoute(
                                     builder: (_) => ChatScreen(
                                       conversationId: c['id'] as String,
                                       currentProfileId:

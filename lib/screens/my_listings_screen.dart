@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -87,7 +89,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
   Future<void> _edit(MarketplaceListing l) async {
     final saved = await Navigator.of(context).push<MarketplaceListing>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => MarketplaceFormScreen(
           sellerId: widget.sellerId,
           repository: widget.repository,

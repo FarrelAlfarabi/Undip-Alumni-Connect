@@ -1,3 +1,5 @@
+import 'nav/back_guard.dart';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -70,10 +72,9 @@ class _MyAppState extends State<MyApp> {
       // address is. The shell reads AppLocation.initialPath itself, so a
       // deep address never skips the PIN screen.
       onGenerateInitialRoutes: (_) => [
-        MaterialPageRoute(builder: (_) => const AppEntry()),
+        AppRoute(builder: (_) => const AppEntry()),
       ],
-      onGenerateRoute: (_) =>
-          MaterialPageRoute(builder: (_) => const AppEntry()),
+      onGenerateRoute: (_) => AppRoute(builder: (_) => const AppEntry()),
     );
   }
 }

@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../data/admin_repository.dart';
@@ -37,7 +39,7 @@ class _AdminAdminsScreenState extends State<AdminAdminsScreen> {
 
   Future<void> _add() async {
     final picked = await Navigator.of(context).push<AdminMember>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => _PickMemberScreen(
           adminId: widget.adminId,
           repository: widget.repository,

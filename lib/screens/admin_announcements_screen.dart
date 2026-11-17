@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -98,7 +100,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 
   Future<void> _new() async {
     final newId = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => AnnouncementFormScreen(
           adminId: widget.adminId,
           repository: widget.repository,
@@ -122,7 +124,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 
   Future<void> _edit(AdminAnnouncement a) async {
     final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => AnnouncementFormScreen(
           adminId: widget.adminId,
           repository: widget.repository,

@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../widgets/responsive_list.dart';
@@ -389,7 +391,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                   ),
                             onTap: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(
+                                AppRoute(
                                   builder: (_) => ProfileDetailScreen(
                                     profile: p,
                                     showEditButton: false,

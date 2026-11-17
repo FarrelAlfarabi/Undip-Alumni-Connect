@@ -1,3 +1,5 @@
+import '../nav/back_guard.dart';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -166,7 +168,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
       return;
     }
     await Navigator.of(context).push<Business>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => BusinessFormScreen(
           ownerId: widget.ownerId,
           repository: _repo,
