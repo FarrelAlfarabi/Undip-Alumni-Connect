@@ -187,7 +187,19 @@ class MarketplaceRepository {
     final rows = await _guard(
       () => _api.rpc('marketplace_admin_pending', {'p_admin': adminId}),
     );
-    final listings = _listings(rows);
+    return _withSellers(_listings(rows));
+  }
+
+  /// Every live (approved) product with its seller, newest first, for the
+  /// admin "Products" tab. Nobody is filtered out by blocks.
+  Future<List<MarketplaceListing>> fetchAllLive() async {
+    final rows = await _guard(() => _api.selectApprovedListings());
+    return _withSellers(rows.map(MarketplaceListing.fromMap).toList());
+  }
+
+  Future<List<MarketplaceListing>> _withSellers(
+    List<MarketplaceListing> listings,
+  ) async {
     if (listings.isEmpty) return listings;
     final sellers = await _guard(
       () => _api.selectProfileNames(

@@ -3,6 +3,10 @@ import '../data/contact_repository.dart' show kDailyRequestMax, kOpenRequestMax;
 /// English text for the Indonesian text used in the code (see [tr]). Add a
 /// line here when a new Indonesian text should have an English version.
 final Map<String, String> kEnglish = {
+  'Cari produk, penjual, kategori atau kota...':
+      'Search product, seller, category or city...',
+  'Tidak ada produk yang cocok.': 'No matching products.',
+  'Produk dan fotonya dihapus. Tidak bisa dibatalkan. Kalau hanya ingin menyembunyikan, pakai Sembunyikan produk di tab Reports.': 'The product and its photo are deleted. This cannot be undone. If you only want to hide it, use Sembunyikan produk in the Reports tab.',
   'Keluar dari akun ini? Kamu perlu kode email lagi untuk masuk.':
       'Sign out of this account? You will need an email code to sign in again.',
   'Ya, keluar': 'Yes, sign out',

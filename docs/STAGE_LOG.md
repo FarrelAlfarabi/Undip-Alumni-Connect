@@ -333,3 +333,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 - Login: PIN screen asks before "Lupa PIN" and "Ganti akun"; web Profile has "Kunci" and a real "Keluar dari browser ini" (`leaveBrowser`); PIN pad takes keyboard digits; notices and PIN texts are Indonesian through `tr`; forced PIN setup has "Ganti akun"; suspended member gets own contact text.
 - Admin: Riwayat shows "Oleh" and "Anggota" with saved name and email (migration `20261117100000_admin_log_target` + rollback + SQL test 31); member edit stays open after jurusan or suspend, warns on leave, shows email and jurusan; filters scroll away; Hapus moved into "..." menus; product delete in the review queue.
 - Business form confirms before removing a NIB. Web Back walks through visited tabs. Wording sweep (Ikafe, Members, "Ganti akun", Welcome beta lines). Tests: `ui_review_fixes_test`.
+## Admin: delete any product, full form link (17 Nov 2026)
+- Marketplace admin has a third tab "Products": every live product with search (title, seller, category, city) and a "..." menu to delete for good (reason + HAPUS). Uses `admin_listing_delete`, no migration. Tests: `admin_delete_posts_test`.
+- `kAlumniFormUrl` is now the full Google Form address (was the tinyurl).
