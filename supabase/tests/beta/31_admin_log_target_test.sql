@@ -54,6 +54,16 @@ select jt.assert((select target_label from admin_actions_search((select v from t
                  'search returns the label');
 reset role;
 
+-- a target id that is not a uuid never aborts the trigger
+insert into admin_actions (admin_id, action, target_type, target_id, detail)
+  values ((select v from t_ids where k = 'clara'), 'member_fix_major', 'profile',
+          'abcdefabcdefabcdefabcdefabcdefabcdef', 'x');
+select jt.assert(not has_function_privilege('anon', 'admin_actions_fill_label()', 'execute'), 'anon cannot run the label trigger function');
+select jt.assert(not has_function_privilege('authenticated', 'admin_actions_fill_label()', 'execute'), 'signed-in cannot run the label trigger function');
+set role anon;
+select jt.expect_error(format($q$select * from admin_actions_search(%L)$q$, (select v from t_ids where k = 'dewi')), 'not_admin');
+reset role;
+
 rollback;
 \o
 \echo admin log target checks passed

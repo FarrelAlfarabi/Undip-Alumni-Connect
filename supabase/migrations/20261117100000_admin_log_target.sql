@@ -27,8 +27,9 @@ begin
   if new.target_label is null and new.target_id is not null then
     begin
       if new.target_type = 'profile' then
-        select left(name || ' (' || email || ')', 200) into new.target_label
-          from alumni_profiles where id = new.target_id::uuid;
+        select left(concat_ws(' ', nullif(name, ''), '(' || email || ')'), 200)
+          into new.target_label
+          from alumni_profiles where id = new.target_id::uuid and deleted_at is null;
       elsif new.target_type = 'business' then
         select left(name, 200) into new.target_label
           from businesses where id = new.target_id::uuid;
@@ -52,11 +53,11 @@ create trigger trg_admin_actions_fill_label
 
 -- Old rows: only where the target still exists with its real name.
 update admin_actions a
-   set target_label = left(p.name || ' (' || p.email || ')', 200)
+   set target_label = left(concat_ws(' ', nullif(p.name, ''), '(' || p.email || ')'), 200)
   from alumni_profiles p
  where a.target_type = 'profile'
    and a.target_label is null
-   and a.target_id ~ '^[0-9a-fA-F-]{36}$'
+   and a.target_id ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
    and p.id = a.target_id::uuid
    and p.deleted_at is null;
 
@@ -75,7 +76,7 @@ begin
   perform app_admin_assert(p_admin);
   if v_reason is null then raise exception 'reason_required'; end if;
   if p_profile is null or p_profile = p_admin then raise exception 'cannot_remove_self'; end if;
-  select left(name || ' (' || email || ')', 200) into v_label
+  select left(concat_ws(' ', nullif(name, ''), '(' || email || ')'), 200) into v_label
     from alumni_profiles where id = p_profile and deleted_at is null;
   if not found then raise exception 'not_found'; end if;
   if exists (select 1 from app_admins where profile_id = p_profile) then
