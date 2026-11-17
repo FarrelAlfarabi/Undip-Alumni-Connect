@@ -29,7 +29,7 @@ class MarketplaceAdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(tr('Marketplace review')),
@@ -37,6 +37,7 @@ class MarketplaceAdminScreen extends StatelessWidget {
             tabs: [
               Tab(text: tr('Review queue')),
               Tab(text: tr('Reports')),
+              Tab(text: tr('Products')),
             ],
           ),
         ),
@@ -50,6 +51,7 @@ class MarketplaceAdminScreen extends StatelessWidget {
                   children: [
                     _ReviewQueue(adminId: adminId, repository: repository),
                     _ReportsTab(adminId: adminId, repository: repository),
+                    _ProductsTab(adminId: adminId, repository: repository),
                   ],
                 ),
               ),
@@ -754,6 +756,182 @@ class _ReportsTabState extends State<_ReportsTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Every live product, with search by title, seller, category or city. Lets
+/// an admin delete a product nobody reported (the delete sits in a "..." menu).
+class _ProductsTab extends StatefulWidget {
+  const _ProductsTab({required this.adminId, required this.repository});
+
+  final String adminId;
+  final MarketplaceRepository repository;
+
+  @override
+  State<_ProductsTab> createState() => _ProductsTabState();
+}
+
+class _ProductsTabState extends State<_ProductsTab> {
+  final _search = TextEditingController();
+  late Future<List<MarketplaceListing>> _future = widget.repository
+      .fetchAllLive();
+  final _busy = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _reload() => setState(() {
+    _future = widget.repository.fetchAllLive();
+  });
+
+  Future<void> _delete(MarketplaceListing l) async {
+    final reason = await askAdminReason(
+      context,
+      title: tr('Hapus produk ini untuk selamanya?'),
+      body: tr(
+        'Produk dan fotonya dihapus. Tidak bisa dibatalkan. Kalau hanya '
+        'ingin menyembunyikan, pakai Sembunyikan produk di tab Reports.',
+      ),
+      action: tr('Hapus untuk selamanya'),
+      destructive: true,
+      confirmWord: 'HAPUS',
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _busy.add(l.id));
+    try {
+      await widget.repository.adminDeleteListing(
+        adminId: widget.adminId,
+        listingId: l.id,
+        reason: reason,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Produk dihapus.'))));
+      _busy.remove(l.id);
+      _reload();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy.remove(l.id));
+      showErrorSnackBar(
+        context,
+        message: marketplaceErrorMessage(e),
+        screen: 'Marketplace products',
+        error: e,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<MarketplaceListing>>(
+      future: _future,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return _ErrorRetry(
+            text: marketplaceErrorMessage(snap.error!),
+            onRetry: _reload,
+            screen: 'Marketplace products',
+            error: snap.error,
+          );
+        }
+        final q = _search.text.trim().toLowerCase();
+        final items = (snap.data ?? const <MarketplaceListing>[]).where((l) {
+          if (q.isEmpty) return true;
+          return l.title.toLowerCase().contains(q) ||
+              l.category.toLowerCase().contains(q) ||
+              l.city.toLowerCase().contains(q) ||
+              (l.seller?.name ?? '').toLowerCase().contains(q);
+        }).toList();
+        final theme = Theme.of(context);
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: TextField(
+                key: const Key('products-search'),
+                controller: _search,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: tr('Cari produk, penjual, kategori atau kota...'),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ),
+            Expanded(
+              child: items.isEmpty
+                  ? Center(child: Text(tr('Tidak ada produk yang cocok.')))
+                  : RefreshIndicator(
+                      onRefresh: () async => _reload(),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (_, i) {
+                          final l = items[i];
+                          return ListTile(
+                            key: Key('product-${l.id}'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: ListingImage(
+                                url: l.imageUrl,
+                                size: 48,
+                                semanticLabel: trf('Photo of {0}', [l.title]),
+                              ),
+                            ),
+                            title: Text(
+                              l.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              [
+                                l.seller?.name ?? 'Alumni',
+                                l.category,
+                                if (l.city.isNotEmpty) l.city,
+                              ].join(' · '),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              key: Key('product-more-${l.id}'),
+                              enabled: !_busy.contains(l.id),
+                              tooltip: tr('Lainnya'),
+                              onSelected: (_) => _delete(l),
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  key: Key('product-delete-${l.id}'),
+                                  value: 'delete',
+                                  child: Text(
+                                    tr('Hapus produk'),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

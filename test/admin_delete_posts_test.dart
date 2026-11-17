@@ -103,4 +103,46 @@ void main() {
       'p_reason': 'Spam',
     });
   });
+
+  testWidgets('admin deletes any live product from the Products tab', (
+    tester,
+  ) async {
+    phone(tester);
+    final api = FakeApi()
+      ..rpcResults['marketplace_admin_pending'] = <dynamic>[]
+      ..rpcResults['marketplace_report_details'] = <dynamic>[]
+      ..approved = [
+        listingMap(id: 'p1', title: 'Kopi Arabika'),
+        listingMap(id: 'p2', title: 'Batik Tulis', category: 'Fashion'),
+      ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MarketplaceAdminScreen(
+          adminId: 'admin',
+          repository: MarketplaceRepository(api),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Products'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kopi Arabika'), findsOneWidget);
+    expect(find.text('Batik Tulis'), findsOneWidget);
+    // Search narrows the list.
+    await tester.enterText(find.byKey(const Key('products-search')), 'batik');
+    await tester.pumpAndSettle();
+    expect(find.text('Kopi Arabika'), findsNothing);
+    await tester.tap(find.byKey(const Key('product-more-p2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('product-delete-p2')));
+    await tester.pumpAndSettle();
+    await confirmDelete(tester, word: 'salah');
+    expect(api.calls, isNot(contains('admin_listing_delete')));
+    await confirmDelete(tester);
+    expect(api.params['admin_listing_delete'], {
+      'p_admin': 'admin',
+      'p_listing': 'p2',
+      'p_reason': 'Spam',
+    });
+  });
 }

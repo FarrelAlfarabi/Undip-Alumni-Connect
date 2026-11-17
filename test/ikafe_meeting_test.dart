@@ -123,7 +123,10 @@ void main() {
     testWidgets('the real form link is set and the button shows by default', (
       tester,
     ) async {
-      expect(kAlumniFormUrl, 'https://tinyurl.com/DatabaseIKAFE');
+      expect(
+        kAlumniFormUrl,
+        'https://docs.google.com/forms/d/e/1FAIpQLSfgGUdMLdo8O-WzyQJSWuumwyCK3lLBYiR8hXBBgEQUiEIKkA/viewform',
+      );
       await tester.pumpWidget(
         const MaterialApp(home: ContactAdminScreen(fromLogin: true)),
       );
