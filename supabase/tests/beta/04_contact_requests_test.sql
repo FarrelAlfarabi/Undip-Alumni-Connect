@@ -48,15 +48,15 @@ select jt.expect_error(format($q$select contact_request_respond(%L, gen_random_u
 select jt.expect_error(format($q$select contact_request_shared_contact(%L, %L)$q$, jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'r1')), 'not_accepted');
 
 -- Accept, with what the target types.
-select contact_request_respond(jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'r1'), true, 'WA 0812-3456-7890');
+select contact_request_respond(jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'r1'), true, 'WA-RAHASIA-0812');
 select jt.expect_error(format($q$select contact_request_respond(%L, %L, false, null)$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'r1')), 'invalid_state');
 select jt.assert((select status from contact_requests_outgoing(jt.pid('ahmad.ramadhan@example.com')) where id = (select v from t_ids where k = 'r1')) = 'accepted', 'requester sees accepted');
-select jt.assert((select contact_request_shared_contact(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'r1'))) = 'WA 0812-3456-7890', 'requester gets the shared contact after accept');
+select jt.assert((select contact_request_shared_contact(jt.pid('ahmad.ramadhan@example.com'), (select v from t_ids where k = 'r1'))) = 'WA-RAHASIA-0812', 'requester gets the shared contact after accept');
 select jt.expect_error(format($q$select contact_request_shared_contact(%L, %L)$q$, jt.pid('clara.putri@example.com'), (select v from t_ids where k = 'r1')), 'not_requester');
 select jt.expect_error(format($q$select contact_request_shared_contact(%L, %L)$q$, jt.pid('siti.azizah@example.com'), (select v from t_ids where k = 'r1')), 'not_requester');
 -- The list functions still do not carry it.
-select jt.assert((select count(*) from contact_requests_outgoing(jt.pid('ahmad.ramadhan@example.com')) o where to_jsonb(o)::text like '%0812%') = 0, 'outgoing list has no shared contact');
-select jt.assert((select count(*) from contact_requests_incoming(jt.pid('siti.azizah@example.com')) o where to_jsonb(o)::text like '%0812%') = 0, 'incoming list has no shared contact');
+select jt.assert((select count(*) from contact_requests_outgoing(jt.pid('ahmad.ramadhan@example.com')) o where to_jsonb(o)::text like '%RAHASIA%') = 0, 'outgoing list has no shared contact');
+select jt.assert((select count(*) from contact_requests_incoming(jt.pid('siti.azizah@example.com')) o where to_jsonb(o)::text like '%RAHASIA%') = 0, 'incoming list has no shared contact');
 
 -- Reject: requester only sees status rejected (the app says "not accepted").
 select contact_request_respond(jt.pid('bagas.prasetyo@example.com'), (select v from t_ids where k = 'r_nomsg'), false, 'ignored text');
@@ -91,7 +91,7 @@ select contact_request_send(jt.pid('siti.azizah@example.com'), jt.pid('clara.put
 reset role;
 
 -- Dashboard can read and edit everything, shared_contact included.
-select jt.assert((select shared_contact from contact_requests where id = (select v from t_ids where k = 'r1')) = 'WA 0812-3456-7890', 'dashboard can read shared_contact');
+select jt.assert((select shared_contact from contact_requests where id = (select v from t_ids where k = 'r1')) = 'WA-RAHASIA-0812', 'dashboard can read shared_contact');
 
 rollback;
 \o
