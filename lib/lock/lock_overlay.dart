@@ -112,6 +112,7 @@ class _LockOverlayState extends State<LockOverlay> with WidgetsBindingObserver {
               onSwitchAccount: _forget,
               onForgotPin: _forget,
               onLockedOut: () => _forget(kTooManyPinsNotice),
+              onResetElsewhere: () => _forget(kPinResetNotice),
               onContinue: () async => _unlockedNow(),
             ),
           ),

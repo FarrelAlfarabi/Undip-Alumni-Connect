@@ -8,6 +8,8 @@ import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
 import '../widgets/admin_reason_dialog.dart';
 import '../widgets/marketplace_demo_notice.dart';
+import '../nav/back_guard.dart';
+import 'admin_detail_screens.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
 import '../widgets/undo_snackbar.dart';
@@ -61,6 +63,12 @@ class MarketplaceAdminScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Opens the admin product detail.
+void _openDetail(BuildContext context, MarketplaceListing l) {
+  Navigator.of(context)
+      .push(AppRoute(builder: (_) => AdminProductDetailScreen(listing: l)));
 }
 
 class _ReviewQueue extends StatefulWidget {
@@ -316,7 +324,13 @@ class _ReviewQueueState extends State<_ReviewQueue> {
                         trf('Contact: {0}', [l.contactInfo]),
                         style: theme.textTheme.bodySmall,
                       ),
-                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: AdminDetailButton(
+                        key: Key('review-detail-${l.id}'),
+                        onPressed: () => _openDetail(context, l),
+                      ),
+                    ),
                     Row(
                       children: [
                         PopupMenuButton<String>(
@@ -906,21 +920,31 @@ class _ProductsTabState extends State<_ProductsTab> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            trailing: PopupMenuButton<String>(
-                              key: Key('product-more-${l.id}'),
-                              enabled: !_busy.contains(l.id),
-                              tooltip: tr('Lainnya'),
-                              onSelected: (_) => _delete(l),
-                              itemBuilder: (_) => [
-                                PopupMenuItem(
-                                  key: Key('product-delete-${l.id}'),
-                                  value: 'delete',
-                                  child: Text(
-                                    tr('Hapus produk'),
-                                    style: TextStyle(
-                                      color: theme.colorScheme.error,
+                            onTap: () => _openDetail(context, l),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AdminDetailButton(
+                                  key: Key('product-detail-${l.id}'),
+                                  onPressed: () => _openDetail(context, l),
+                                ),
+                                PopupMenuButton<String>(
+                                  key: Key('product-more-${l.id}'),
+                                  enabled: !_busy.contains(l.id),
+                                  tooltip: tr('Lainnya'),
+                                  onSelected: (_) => _delete(l),
+                                  itemBuilder: (_) => [
+                                    PopupMenuItem(
+                                      key: Key('product-delete-${l.id}'),
+                                      value: 'delete',
+                                      child: Text(
+                                        tr('Hapus produk'),
+                                        style: TextStyle(
+                                          color: theme.colorScheme.error,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),

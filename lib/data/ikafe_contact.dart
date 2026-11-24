@@ -13,6 +13,15 @@ enum IkafeContactKind {
   /// Name used in the admin picker.
   final String title;
 
+  /// The words on the open button in Kontak Ikafe.
+  String get openLabel => switch (this) {
+    IkafeContactKind.whatsapp => 'Chat WhatsApp',
+    IkafeContactKind.email => 'Kirim email',
+    IkafeContactKind.instagram => 'Buka Instagram',
+    IkafeContactKind.linkedin => 'Buka LinkedIn',
+    IkafeContactKind.website => 'Buka website',
+  };
+
   /// Instagram, LinkedIn and Website go under "Media sosial"; WhatsApp and
   /// Email go under "Hubungi".
   bool get isSocial => switch (this) {
@@ -68,14 +77,21 @@ class IkafeContact {
     final v = value.trim();
     switch (kind) {
       case IkafeContactKind.whatsapp:
-        return Uri.parse(
-          'https://wa.me/${v.replaceAll(RegExp(r'[^0-9]'), '')}',
-        );
+        // A link (wa.me, a group invite) opens as it is.
+        if (v.contains('/')) return _web(v);
+        var digits = v.replaceAll(RegExp(r'[^0-9]'), '');
+        // 0812... is an Indonesian number: wa.me needs 62812...
+        if (digits.startsWith('0')) digits = '62${digits.substring(1)}';
+        return Uri.parse('https://wa.me/$digits');
       case IkafeContactKind.email:
         return Uri(scheme: 'mailto', path: v);
       case IkafeContactKind.instagram:
         if (v.startsWith('@')) {
           return Uri.parse('https://www.instagram.com/${v.substring(1)}');
+        }
+        // A bare handle ("ikafeundip"), not a link.
+        if (!v.contains('/') && !v.contains('.')) {
+          return Uri.parse('https://www.instagram.com/$v');
         }
         return _web(v);
       case IkafeContactKind.linkedin:

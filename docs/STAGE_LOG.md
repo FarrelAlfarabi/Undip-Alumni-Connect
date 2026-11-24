@@ -4,6 +4,12 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Five admin and business fixes (24 Nov 2026)
+- One PIN per account: migration 20261124100000_account_pin (member_pins bcrypt hash, pin_status/pin_set/pin_check/pin_remove for the signed in person, 5 tries per account, replacing needs old PIN or fresh email sign in). App checks on the server, caches a hash for offline, moves old device PINs. Tests: 33_account_pin_test.sql, test/lock/account_pin_test.dart.
+- Admin Bisnis and Marketplace: Detail button and read-only detail screens (test/admin_details_test.dart).
+- Business size Mikro/Kecil/Menengah/Besar on the card and as a filter, from approved_band, no migration (test/business_size_test.dart).
+- Kontak Ikafe: visible open button per contact, WhatsApp 08xx and group links, bare Instagram handles (test/kontak_ikafe_links_test.dart). NIB blue tick unchanged (already admin-verified).
+
 ## Admin Riwayat search and filters (16 Nov 2026)
 - Admin > Riwayat: search (action, reason, admin name), Jenis and Waktu filters, Hapus filter. The database filters, so older rows are found (300 per search).
 - Migration 20261116210000_admin_log_search: admin_actions_search (admin only, LIKE wildcards literal) and an index. Tests: 30_admin_log_search_test.sql, test/admin_log_test.dart.
