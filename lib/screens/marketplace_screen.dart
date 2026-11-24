@@ -99,7 +99,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   late Future<List<MarketplaceListing>> _future;
 
   final _searchController = TextEditingController();
-  final _categoryText = TextEditingController(text: kAllFilter);
+  final _categoryText = TextEditingController(text: tr(kAllFilter));
   String _category = kAllFilter;
   MarketplaceSort _sort = MarketplaceSort.newest;
 
@@ -134,7 +134,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     setState(() {
       _searchController.clear();
       _category = kAllFilter;
-      _categoryText.text = kAllFilter;
+      _categoryText.text = tr(kAllFilter);
       _sort = MarketplaceSort.newest;
     });
   }
@@ -154,12 +154,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     return showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
+        title: Text(tr(title)),
+        content: Text(tr(body)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(action == null ? 'OK' : 'Not now'),
+            child: Text(action == null ? 'OK' : tr('Not now')),
           ),
           if (action != null)
             FilledButton(
@@ -167,7 +167,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 Navigator.of(ctx).pop();
                 onAction?.call();
               },
-              child: Text(action),
+              child: Text(tr(action)),
             ),
         ],
       ),
@@ -249,8 +249,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     if (u != null && !u.canPost) {
       await _info(
         'Product limit reached',
-        'You have used ${u.used} of ${u.freeLimit} products for '
-            '${business.name}.\n\n$kPostLimitMessage',
+        trf('You have used {0} of {1} products for {2}.\n\n{3}', [
+          '${u.used}',
+          '${u.freeLimit}',
+          business.name,
+          tr(kPostLimitMessage),
+        ]),
       );
       return;
     }

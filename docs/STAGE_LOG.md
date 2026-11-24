@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Phone web: zoom and half-height screen (24 Nov 2026)
+- viewport_guard.js: no stuck zoom on any phone; desktop Ctrl+wheel zoom works.
+- App drawn in the top half after the keyboard closed (Android): guard sends Flutter a resize when the app is shorter than the screen and nobody types.
+- English leftovers (product posted snackbar, "All" in Kategori, business limit note, product dialogs) now Indonesian.
+
 ## Five admin and business fixes (24 Nov 2026)
 - One PIN per account: migration 20261124100000_account_pin (member_pins bcrypt hash, pin_status/pin_set/pin_check/pin_remove for the signed in person, 5 tries per account, replacing needs old PIN or fresh email sign in). App checks on the server, caches a hash for offline, moves old device PINs. Tests: 33_account_pin_test.sql, test/lock/account_pin_test.dart.
 - Admin Bisnis and Marketplace: Detail button and read-only detail screens (test/admin_details_test.dart).

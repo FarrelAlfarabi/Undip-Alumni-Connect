@@ -73,7 +73,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
       widget.repository ?? BusinessRepository();
   final _search = TextEditingController();
   late Future<List<Business>> _future;
-  final _categoryText = TextEditingController(text: kAllFilter);
+  final _categoryText = TextEditingController(text: tr(kAllFilter));
   String _category = kAllFilter;
   String _size = kAllFilter;
 

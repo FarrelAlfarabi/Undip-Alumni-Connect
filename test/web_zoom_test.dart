@@ -32,4 +32,40 @@ void main() {
     expect(js, contains('stopImmediatePropagation'));
     expect(js, contains('capture: true'));
   });
+
+  // Farrel, 24 Nov 2026 (Android Chrome, after posting a product): the app was
+  // drawn in the top half of the screen with grey below. The keyboard height
+  // had been kept as the app height after the keyboard closed. Flutter only
+  // measures again on a resize event, so the guard sends one when the app is
+  // shorter than the screen and nobody is typing.
+  group('the app fills the screen again after the keyboard closes', () {
+    test('it compares the app height with the screen height', () {
+      expect(js, contains("querySelector('flutter-view')"));
+      expect(js, contains('function viewTooShort()'));
+    });
+
+    test(
+      'it asks Flutter to measure again, but not while typing or zoomed',
+      () {
+        expect(js, contains("dispatchEvent(new Event('resize'))"));
+        expect(js, contains('typing() || zoomed() || !viewTooShort()'));
+      },
+    );
+
+    test('it checks after a field is left, a resize, a tap and a return', () {
+      for (final event in [
+        "'focusout'",
+        "'touchstart'",
+        "'visibilitychange'",
+        "'pageshow'",
+      ]) {
+        expect(js, contains(event), reason: event);
+      }
+      expect(js, contains('fitViewSoon('));
+    });
+
+    test('its own resize event does not start the check again', () {
+      expect(js, contains('if (nudging) return;'));
+    });
+  });
 }

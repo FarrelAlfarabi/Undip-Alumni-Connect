@@ -12,7 +12,9 @@
 //   2. the viewport tag is kept at maximum-scale=1 (also after Flutter writes
 //      its own), and whenever the page is zoomed past 100% while no field is
 //      being typed in, the tag is written again, which snaps the page back;
-//   3. (in index.html) touch-action: manipulation stops double-tap zoom.
+//   3. (in index.html) touch-action: manipulation stops double-tap zoom;
+//   4. the app always fills the screen again after the keyboard closes (see
+//      fitView below).
 //
 // Computers: Ctrl + mouse wheel and a trackpad pinch are browser zoom. Flutter
 // takes these wheel events for itself and cancels them, so zooming out with
@@ -111,6 +113,58 @@
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function () {
       resetIfZoomed(150);
+    });
+  }
+
+  // The app drawn in only the top half of the screen, grey below (Farrel,
+  // Android Chrome, after posting a product, 24 Nov 2026). Flutter keeps its
+  // height while a field is being typed in, so the keyboard does not squash
+  // the page. If the keyboard opened before the field counted as "typing", the
+  // short keyboard height was kept as the app height, and when the keyboard
+  // closed while typing, it was not measured again. Flutter only measures on a
+  // resize event, so when the app is shorter than the screen and nobody is
+  // typing, send it one: it then takes the full screen height again.
+  var fitTimer = null;
+  var nudging = false;
+
+  function viewTooShort() {
+    var view = document.querySelector('flutter-view');
+    var vv = window.visualViewport;
+    if (!view || !vv) return false;
+    return Math.abs(view.getBoundingClientRect().height - vv.height) > 2;
+  }
+
+  function fitView() {
+    if (typing() || zoomed() || !viewTooShort()) return;
+    nudging = true;
+    try {
+      window.visualViewport.dispatchEvent(new Event('resize'));
+    } finally {
+      nudging = false;
+    }
+  }
+
+  function fitViewSoon(delay) {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitView, delay);
+  }
+
+  document.addEventListener('focusout', function () {
+    fitViewSoon(400);
+  }, true);
+  document.addEventListener('touchstart', function () {
+    fitView();
+  }, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) fitViewSoon(300);
+  });
+  window.addEventListener('pageshow', function () {
+    fitViewSoon(300);
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function () {
+      if (nudging) return;
+      fitViewSoon(300);
     });
   }
 

@@ -68,7 +68,7 @@ class SearchableChoice extends StatelessWidget {
         menuHeight: 280,
         dropdownMenuEntries: [
           for (final o in entries)
-            DropdownMenuEntry<String>(value: o, label: o),
+            DropdownMenuEntry<String>(value: o, label: tr(o)),
         ],
         onSelected: onSelected,
       ),

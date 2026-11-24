@@ -380,7 +380,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   String _category = kAllFilter;
   String _period = kAllTime;
   final _search = TextEditingController();
-  final _categoryText = TextEditingController(text: kAllFilter);
+  final _categoryText = TextEditingController(text: tr(kAllFilter));
   late Future<List<Business>> _future;
   final _busy = <String>{};
 
