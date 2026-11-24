@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Fewer email codes at login (24 Nov 2026)
+- Live logs: a correct code made the sign in (session kept) but the app was not entered (Back, reload), then the email box asked for a second code.
+- VerificationScreen now resumes a stored sign in (claim_alumni_profile again, no code). Network slips keep the sign in; no stored sign in changes nothing.
+- No change to the PIN lockout or to "Keluar dari browser ini". No Supabase setting needed: sessions live for days, none time-boxed.
+
 ## CV button "url tidak valid" (24 Nov 2026)
 - Cause: signed CV link (long token) was refused by the 500 letter limit meant for typed links.
 - App-made links now allow 4000 letters (kMaxSignedUrlLength); LinkedIn and portfolio keep 500.

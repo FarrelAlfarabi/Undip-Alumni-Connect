@@ -22,6 +22,14 @@ abstract class LoginApi {
   /// True when a signed in session is stored on this device.
   bool get hasSession;
 
+  /// The email of the stored sign in, or null.
+  String? get sessionEmail;
+
+  /// Opens the profile behind a stored sign in, without a new code. Returns
+  /// null when that sign in has no usable verified profile (it is then ended).
+  /// Throws on a network or server error; the sign in is kept in that case.
+  Future<Map<String, dynamic>?> resumeSession();
+
   Future<void> signOut();
 }
 
@@ -48,6 +56,21 @@ class SupabaseLoginApi implements LoginApi {
       token: code.trim(),
       type: OtpType.email,
     );
+    return _claim();
+  }
+
+  @override
+  Future<Map<String, dynamic>?> resumeSession() async {
+    if (!hasSession) return null;
+    return _claim();
+  }
+
+  @override
+  String? get sessionEmail => _c.auth.currentUser?.email;
+
+  /// Links the sign in to the alumni profile (safe to repeat) and returns
+  /// the verified profile, or ends the sign in and returns null.
+  Future<Map<String, dynamic>?> _claim() async {
     final r = await _c.rpc('claim_alumni_profile');
     Object? row = r;
     if (r is List) row = r.isEmpty ? null : r.first;

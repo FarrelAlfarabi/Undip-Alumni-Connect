@@ -111,6 +111,39 @@ class _VerificationScreenState extends State<VerificationScreen> {
   Object? _lastError;
 
   @override
+  void initState() {
+    super.initState();
+    // A sign in is already stored here (a code was entered before and the
+    // app was not entered: Back, a reload, a closed tab). The person has
+    // proved their email, so no second code is sent.
+    final api = _login;
+    if (api != null && api.hasSession) {
+      _state = _VerificationState.loading;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _resume(api));
+    }
+  }
+
+  Future<void> _resume(LoginApi api) async {
+    try {
+      final profile = await api.resumeSession();
+      if (!mounted) return;
+      if (profile != null) {
+        setState(() => _state = _VerificationState.idle);
+        await _afterVerified(profile, (api.sessionEmail ?? '').toLowerCase());
+        return;
+      }
+    } catch (e) {
+      // A network or server slip: show the email box, keep the sign in.
+      if (!mounted) return;
+      if (isSuspendedError(e)) {
+        setState(() => _state = _VerificationState.suspended);
+        return;
+      }
+    }
+    if (mounted) setState(() => _state = _VerificationState.idle);
+  }
+
+  @override
   void dispose() {
     _resendTimer?.cancel();
     _emailController.dispose();
