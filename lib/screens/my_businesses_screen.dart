@@ -164,7 +164,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   Future<void> _openForm([Business? existing]) async {
     if (existing == null && _activeCount >= kMaxBusinesses) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text(_limitNote)));
+          .showSnackBar(SnackBar(content: Text(tr(_limitNote))));
       return;
     }
     await Navigator.of(context).push<Business>(
@@ -216,7 +216,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
                   child: Text(
                     trf(
                       'You have not registered a business yet. Register one so other alumni can find it.\n\n{0}',
-                      [_limitNote],
+                      [tr(_limitNote)],
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -238,7 +238,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
                 itemBuilder: (context, i) {
                   if (i == 0) {
                     return Text(
-                      _limitNote,
+                      tr(_limitNote),
                       key: const Key('business-limit-note'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,

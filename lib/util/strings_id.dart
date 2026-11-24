@@ -370,4 +370,24 @@ final Map<String, String> kIndonesian = {
   'What were you doing? (optional)': 'Sedang apa kamu tadi? (opsional)',
   'Copy details': 'Salin detail',
   'Close': 'Tutup',
+  // Marketplace messages and the business limit note (24 Nov 2026).
+  'Product posted. It is now visible in the marketplace.':
+      'Produk sudah diposting dan sekarang tampil di Marketplace.',
+  'Changes saved.': 'Perubahan disimpan.',
+  'Changes saved. Your listing is back in review and hidden until an '
+          'admin approves it again.':
+      'Perubahan disimpan. Produkmu ditinjau lagi dan disembunyikan sampai '
+      'admin menyetujuinya kembali.',
+  'Changes saved. Your listing will appear once an admin approves it.':
+      'Perubahan disimpan. Produkmu akan tampil setelah admin menyetujuinya.',
+  'Thanks, your report was sent. An admin will take a look.':
+      'Terima kasih, laporanmu sudah terkirim. Admin akan memeriksanya.',
+  'Product limit reached': 'Batas produk tercapai',
+  'You have used {0} of {1} products for {2}.\n\n{3}':
+      'Kamu sudah memakai {0} dari {1} produk untuk {2}.\n\n{3}',
+  'Not now': 'Nanti saja',
+  'You can own up to $kMaxBusinesses businesses. To add more, email '
+          '$kContactEmail.':
+      'Kamu bisa memiliki sampai $kMaxBusinesses bisnis. Untuk menambah, '
+      'kirim email ke $kContactEmail.',
 };

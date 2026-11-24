@@ -78,7 +78,7 @@ class _ReportSheetState extends State<_ReportSheet> {
         note: _note.text,
       );
       widget.messenger.showSnackBar(
-        const SnackBar(content: Text(kReportSentMessage)),
+        SnackBar(content: Text(tr(kReportSentMessage))),
       );
       navigator.pop();
     } catch (e) {

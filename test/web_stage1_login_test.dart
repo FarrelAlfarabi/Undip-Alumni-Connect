@@ -416,14 +416,15 @@ void main() {
       expect(manifest.containsKey('orientation'), isFalse);
     });
 
-    test('the zoom guard only acts on iPhone and iPad', () {
+    test('the zoom guard blocks zoom only on phones and tablets', () {
       final js = File('web/viewport_guard.js').readAsStringSync();
       expect(js, contains('iPhone'));
       expect(js, contains('maxTouchPoints'));
-      // Everywhere else the script stops before blocking anything.
-      expect(js.indexOf('if (!isIOS) return;'), isNonNegative);
+      // On a computer the script stops before blocking anything, so browser
+      // zoom keeps working for people who need bigger text.
+      expect(js.indexOf('if (!isPhoneOrTablet) {'), isNonNegative);
       expect(
-        js.indexOf('if (!isIOS) return;'),
+        js.indexOf('if (!isPhoneOrTablet) {'),
         lessThan(js.indexOf('gesturestart')),
       );
     });

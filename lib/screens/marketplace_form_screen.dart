@@ -187,7 +187,10 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                       ? kEditedApprovedMessage
                       : kEditedMessage));
       messenger.showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 7)),
+        SnackBar(
+          content: Text(tr(message)),
+          duration: const Duration(seconds: 7),
+        ),
       );
       navigator.pop(saved);
     } catch (e) {
