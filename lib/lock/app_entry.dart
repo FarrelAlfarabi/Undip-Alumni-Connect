@@ -39,6 +39,9 @@ const String kSessionExpiredNotice =
     'Sesimu sudah berakhir. Silakan masuk lagi.';
 const String kTooManyPinsNotice =
     'PIN salah terlalu sering. Silakan verifikasi lagi.';
+const String kPinResetNotice =
+    'PIN akunmu dihapus atau diganti di perangkat lain. Silakan masuk lagi '
+    'dengan kode email.';
 
 /// "Kunci" (web) or "Keluar" (phone) from inside the app.
 ///
@@ -151,6 +154,22 @@ class _AppEntryState extends State<AppEntry> {
   Future<RememberedUser?> _load() async {
     try {
       final user = await _lock.load();
+      if (user != null && _login?.hasSession == true) {
+        // One PIN per account: a PIN made on another device is asked for
+        // here, and no second PIN is made. Offline: nothing changes.
+        if (await _lock.syncFromAccount()) {
+          // The account PIN was removed on another device (5 wrong tries
+          // there, or "Hapus PIN"): sign in again with an email code here
+          // too, so the lock is never simply gone.
+          try {
+            await _login?.signOut();
+          } catch (_) {}
+          await _lock.clear();
+          _notice = kPinResetNotice;
+          _returning = null;
+          return null;
+        }
+      }
       if (!widget.web) return user;
       if (user == null) {
         _returning = await _lock.returningName();
@@ -299,6 +318,7 @@ class _AppEntryState extends State<AppEntry> {
           onSwitchAccount: _forget,
           onForgotPin: _forget,
           onLockedOut: () => _forget(kTooManyPinsNotice),
+          onResetElsewhere: () => _forget(kPinResetNotice),
           onContinue: () async {
             if (widget.web && _login?.hasSession == true) {
               // Web, still signed in: try again to open the app.

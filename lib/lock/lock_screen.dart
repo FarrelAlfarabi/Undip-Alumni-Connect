@@ -14,6 +14,16 @@ import 'lock_service.dart';
 import 'masking.dart';
 import 'pin_pad.dart';
 
+/// The PIN this device had before one PIN per account was typed.
+const String kOldDevicePinMessage =
+    'Ini PIN lama perangkat ini. Sekarang satu PIN untuk semua perangkat: '
+    'pakai PIN yang kamu buat di perangkat lain, atau pilih Lupa PIN.';
+
+/// The account PIN is not on this device yet and there is no internet.
+const String kPinOfflineMessage =
+    'PIN akunmu belum ada di perangkat ini. Sambungkan ke internet, lalu '
+    'coba lagi.';
+
 /// Shown to a person already verified on this device. Black and a PIN
 /// pad, so it reads as a different screen from the first-time Welcome.
 ///
@@ -28,6 +38,7 @@ class LockScreen extends StatefulWidget {
     required this.onForgotPin,
     required this.onLockedOut,
     required this.onContinue,
+    this.onResetElsewhere,
     this.autoBiometric = true,
     this.clock = DateTime.now,
   });
@@ -42,6 +53,10 @@ class LockScreen extends StatefulWidget {
 
   /// 5th wrong PIN (local data is already wiped).
   final Future<void> Function() onLockedOut;
+
+  /// The account PIN was removed on another device (5 wrong tries there or
+  /// "Hapus PIN"). Local data is already wiped. Defaults to [onLockedOut].
+  final Future<void> Function()? onResetElsewhere;
 
   /// Shown instead of the PIN pad when no PIN was ever set.
   final Future<void> Function() onContinue;
@@ -138,8 +153,16 @@ class _LockScreenState extends State<LockScreen> {
         _startWait(waitUntil);
       case PinWait(:final until):
         _startWait(until);
-      case PinLockedOut():
-        await _run(widget.onLockedOut);
+      case PinLockedOut(:final resetElsewhere):
+        await _run(
+          resetElsewhere
+              ? (widget.onResetElsewhere ?? widget.onLockedOut)
+              : widget.onLockedOut,
+        );
+      case PinOldDevicePin():
+        setState(() => _message = tr(kOldDevicePinMessage));
+      case PinOffline():
+        setState(() => _message = tr(kPinOfflineMessage));
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../util/app_language.dart';
 
 import '../screens/welcome_screen.dart';
+import 'lock_screen.dart' show kOldDevicePinMessage, kPinOfflineMessage;
 import 'lock_service.dart';
 import 'pin_pad.dart';
 import 'pin_setup_screen.dart';
@@ -84,6 +85,10 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
       case PinLockedOut():
         // The lock wiped this device's unlock data. Start again from Welcome.
         await signOutTo(context, const WelcomeScreen(), lock: widget.lock);
+      case PinOldDevicePin():
+        setState(() => _error = tr(kOldDevicePinMessage));
+      case PinOffline():
+        setState(() => _error = tr(kPinOfflineMessage));
     }
   }
 
@@ -94,8 +99,9 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
         title: Text(tr('Hapus PIN?')),
         content: Text(
           tr(
-            'Lingkaran akan terbuka di ponsel ini tanpa PIN. Kamu bisa membuat '
-            'PIN baru kapan saja.',
+            'PIN dihapus dari akunmu, jadi juga dari perangkat lain. '
+            'Lingkaran akan terbuka tanpa PIN. Kamu bisa membuat PIN baru '
+            'kapan saja.',
           ),
         ),
         actions: [
@@ -112,7 +118,17 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> {
       ),
     );
     if (ok == true) {
-      await widget.lock.removePin();
+      try {
+        await widget.lock.removePin();
+      } on PinSyncException {
+        if (!mounted) return;
+        setState(
+          () => _error = tr(
+            'PIN belum dihapus. Periksa internet, lalu coba lagi.',
+          ),
+        );
+        return;
+      }
       if (mounted) await _refresh();
     } else if (mounted) {
       setState(() {

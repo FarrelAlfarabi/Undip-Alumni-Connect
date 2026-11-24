@@ -12,10 +12,25 @@ import '../widgets/error_view.dart';
 /// Home > Kontak Ikafe: the official Ikafe contacts and socials. Each row
 /// opens the right app; the copy button copies the value.
 class KontakIkafeScreen extends StatefulWidget {
-  const KontakIkafeScreen({super.key, this.repository, this.showBack = true});
+  const KontakIkafeScreen({
+    super.key,
+    this.repository,
+    this.showBack = true,
+    this.launcher,
+  });
 
   final IkafeContactRepository? repository;
   final bool showBack;
+
+  /// Opens a link. Tests pass a stand-in; the app opens it in a new tab
+  /// (web) or the right app (phone).
+  final Future<bool> Function(Uri uri)? launcher;
+
+  static Future<bool> defaultLauncher(Uri uri) => launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+    webOnlyWindowName: '_blank',
+  );
 
   @override
   State<KontakIkafeScreen> createState() => _KontakIkafeScreenState();
@@ -32,7 +47,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
     final messenger = ScaffoldMessenger.of(context);
     var ok = false;
     try {
-      ok = await launchUrl(c.uri, mode: LaunchMode.externalApplication);
+      ok = await (widget.launcher ?? KontakIkafeScreen.defaultLauncher)(c.uri);
     } catch (_) {}
     if (!ok) {
       messenger.showSnackBar(
@@ -85,17 +100,41 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(color: theme.colorScheme.outlineVariant),
               ),
-              child: ListTile(
-                key: Key('ikafe-contact-${c.id}'),
-                leading: Icon(_icon(c.kind)),
-                title: Text(c.label),
-                subtitle: Text(c.value),
-                onTap: () => _open(c),
-                trailing: IconButton(
-                  tooltip: tr('Salin'),
-                  icon: const Icon(Icons.copy_outlined),
-                  onPressed: () => _copy(c),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTile(
+                    key: Key('ikafe-contact-${c.id}'),
+                    leading: Icon(_icon(c.kind)),
+                    title: Text(c.label),
+                    subtitle: Text(
+                      c.value,
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: theme.colorScheme.primary,
+                      ),
+                    ),
+                    onTap: () => _open(c),
+                    trailing: IconButton(
+                      tooltip: tr('Salin'),
+                      icon: const Icon(Icons.copy_outlined),
+                      onPressed: () => _copy(c),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.tonalIcon(
+                        key: Key('ikafe-open-${c.id}'),
+                        onPressed: () => _open(c),
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        label: Text(tr(c.kind.openLabel)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

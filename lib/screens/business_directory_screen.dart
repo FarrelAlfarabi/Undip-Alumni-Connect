@@ -23,15 +23,19 @@ import '../widgets/error_view.dart';
 import '../widgets/verified_badge.dart';
 import '../lock/masking.dart' show initialsOf;
 
-/// Client-side search by name or category, plus a category filter.
+/// Client-side search by name or category, plus category and size filters.
+/// [size] is a [BusinessBand.sizeLabel] (Mikro, Kecil, ...) or [kAllFilter];
+/// the size is the band the admin approved.
 List<Business> applyBusinessFilters(
   List<Business> all, {
   required String query,
   required String category,
+  String size = kAllFilter,
 }) {
   final q = query.trim().toLowerCase();
   return all.where((b) {
     if (category != kAllFilter && b.category != category) return false;
+    if (size != kAllFilter && b.approvedBand?.sizeLabel != size) return false;
     if (q.isNotEmpty &&
         !b.name.toLowerCase().contains(q) &&
         !b.category.toLowerCase().contains(q)) {
@@ -71,6 +75,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
   late Future<List<Business>> _future;
   final _categoryText = TextEditingController(text: kAllFilter);
   String _category = kAllFilter;
+  String _size = kAllFilter;
 
   String get _myId => widget.currentUser.value['id'] as String;
 
@@ -174,6 +179,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
           all,
           query: _search.text,
           category: _category,
+          size: _size,
         );
         return Column(
           children: [
@@ -200,6 +206,18 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
                         enabled: true,
                         onSelected: (v) =>
                             setState(() => _category = v ?? kAllFilter),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: KeyedSubtree(
+                      key: const Key('business-size-filter'),
+                      child: FilterDropdown(
+                        label: tr('Ukuran usaha'),
+                        value: _size,
+                        options: [kAllFilter, ...BusinessBand.sizeOptions],
+                        onChanged: (v) => setState(() => _size = v),
                       ),
                     ),
                   ),
@@ -327,6 +345,13 @@ class _BusinessCard extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
+                    if (business.approvedBand != null) ...[
+                      const SizedBox(height: 6),
+                      BusinessSizeChip(
+                        key: Key('business-size-${business.id}'),
+                        band: business.approvedBand!,
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       business.description,
@@ -404,6 +429,13 @@ class BusinessDetailScreen extends StatelessWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (b.approvedBand != null) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: BusinessSizeChip(band: b.approvedBand!),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Text(b.description, style: theme.textTheme.bodyLarge),
                   const SizedBox(height: 20),
@@ -427,6 +459,38 @@ class BusinessDetailScreen extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The business size as a small pill: "Mikro", "Kecil", ...
+class BusinessSizeChip extends StatelessWidget {
+  const BusinessSizeChip({super.key, required this.band});
+
+  final BusinessBand band;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      label: trf('Ukuran: {0}', [band.sizeLabel]),
+      excludeSemantics: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: Text(
+            band.sizeLabel,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: scheme.onSecondaryContainer,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),

@@ -313,6 +313,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
           displayName: profile['name'] as String? ?? '',
           email: email,
         );
+        // One PIN per account: someone who made a PIN on another device
+        // uses that one here, so no new PIN is offered.
+        await lock.syncFromAccount();
         offerPin = !await lock.hasPin();
       }
     } catch (_) {

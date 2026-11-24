@@ -12,6 +12,7 @@ import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import 'admin_admins_screen.dart';
+import 'admin_detail_screens.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_sponsors_screen.dart';
 import 'admin_home_order_screen.dart';
@@ -738,6 +739,12 @@ class _AdminBusinessCard extends StatelessWidget {
     final theme = Theme.of(context);
     final b = business;
     final actions = <Widget>[
+      AdminDetailButton(
+        key: Key('business-detail-${b.id}'),
+        onPressed: () => Navigator.of(context).push(
+          AppRoute(builder: (_) => AdminBusinessDetailScreen(business: b)),
+        ),
+      ),
       if (b.status == BusinessStatus.pending) ...[
         OutlinedButton(
           key: Key('reject-${b.id}'),

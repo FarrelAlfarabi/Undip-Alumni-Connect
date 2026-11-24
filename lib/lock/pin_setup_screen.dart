@@ -19,6 +19,15 @@ bool isWeakPin(String pin) {
 
 enum _Step { enter, confirm, biometric }
 
+/// The account could not be reached while saving the PIN.
+const String kPinNotSavedMessage =
+    'PIN belum tersimpan. Periksa internet, lalu coba lagi.';
+
+/// The account has a PIN and this sign in may not replace it.
+const String kPinNeedsOldMessage =
+    'Akunmu sudah punya PIN. Buka dengan PIN itu dulu, atau pilih Lupa PIN '
+    'lalu masuk lagi dengan kode email.';
+
 /// Offered right after the first successful verification: create a 6-digit
 /// PIN (entered twice) and, if the device supports it, turn on biometrics.
 /// It can only be skipped when [mandatory] is false (from Settings).
@@ -82,7 +91,17 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       });
       return;
     }
-    await widget.lock.setPin(pin);
+    try {
+      await widget.lock.setPin(pin);
+    } on PinSyncException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _first = '';
+        _error = tr(e.needsOldPin ? kPinNeedsOldMessage : kPinNotSavedMessage);
+        _step = _Step.enter;
+      });
+      return;
+    }
     if (!mounted) return;
     if (_bioAvailable) {
       setState(() {

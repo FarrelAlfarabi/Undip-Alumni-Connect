@@ -22,6 +22,18 @@ enum BusinessBand {
   /// "Micro: Up to Rp 2 miliar a year".
   String get described => '$label: $range';
 
+  /// Business size in the Indonesian UMKM words, for the card and the size
+  /// filter in the business list: Mikro, Kecil, Menengah, Besar.
+  String get sizeLabel => tr(switch (this) {
+    BusinessBand.micro => 'Mikro',
+    BusinessBand.small => 'Kecil',
+    BusinessBand.medium => 'Menengah',
+    BusinessBand.large => 'Besar',
+  });
+
+  /// The size filter choices, in order (after "All").
+  static List<String> get sizeOptions => [for (final b in values) b.sizeLabel];
+
   static BusinessBand? fromName(String? name) {
     for (final b in values) {
       if (b.name == name) return b;

@@ -5,6 +5,7 @@ import 'package:undip_alumni_connect/lock/biometrics.dart';
 import 'package:undip_alumni_connect/lock/lock_service.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:undip_alumni_connect/lock/pin_hasher.dart';
+import 'package:undip_alumni_connect/lock/pin_server.dart';
 
 /// A test clock you move by hand.
 class FakeClock {
@@ -58,6 +59,7 @@ LockService makeLock({
   FakeBiometrics? bio,
   FakeClock? clock,
   bool enabled = true,
+  PinServer? server,
 }) {
   return LockService(
     store: store ?? MemoryLockStore(),
@@ -65,6 +67,7 @@ LockService makeLock({
     hasher: PinHasher(iterations: 50, direct: true),
     clock: clock?.call,
     enabled: enabled,
+    server: server,
   );
 }
 
