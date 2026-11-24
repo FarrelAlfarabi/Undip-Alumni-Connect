@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## CV button "url tidak valid" (24 Nov 2026)
+- Cause: signed CV link (long token) was refused by the 500 letter limit meant for typed links.
+- App-made links now allow 4000 letters (kMaxSignedUrlLength); LinkedIn and portfolio keep 500.
+- No migration: cvs bucket already limits reading to the job's poster.
+
 ## Phone web: zoom and half-height screen (24 Nov 2026)
 - viewport_guard.js: no stuck zoom on any phone; desktop Ctrl+wheel zoom works.
 - App drawn in the top half after the keyboard closed (Android): guard sends Flutter a resize when the app is shorter than the screen and nobody types.

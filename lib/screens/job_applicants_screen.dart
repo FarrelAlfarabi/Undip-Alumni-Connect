@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../widgets/error_view.dart';
 import '../util/friendly_error.dart';
+import '../util/safe_url.dart' show kMaxSignedUrlLength;
 import '../widgets/safe_link_chip.dart';
 
 /// Applicant list for a job post you own (added 17 Sep 2026, Master Plan
@@ -165,6 +166,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                                 icon: Icons.description_outlined,
                                 label: 'CV',
                                 url: cvUrl,
+                                // A signed storage link: long token.
+                                maxLength: kMaxSignedUrlLength,
                               ),
                           ],
                         ),
