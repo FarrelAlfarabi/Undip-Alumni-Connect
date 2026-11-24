@@ -2,14 +2,19 @@ import 'package:url_launcher/url_launcher.dart';
 
 const int kMaxUrlLength = 500;
 
+/// Limit for a link the app made itself, such as a signed link to a CV in
+/// private storage (its token alone is several hundred letters). Links a
+/// person types keep [kMaxUrlLength].
+const int kMaxSignedUrlLength = 4000;
+
 /// Parses [raw] as a web link, or returns null. Only `http` and `https` are
 /// allowed, with a real host and no embedded username or password. A bare
 /// `linkedin.com/in/someone` becomes `https://linkedin.com/in/someone`.
 /// Everything else (`javascript:`, `tel:`, `sms:`, `intent:`, `file:`,
 /// `data:`, `mailto:`, custom app schemes) is refused.
-Uri? parseHttpUrl(String? raw) {
+Uri? parseHttpUrl(String? raw, {int maxLength = kMaxUrlLength}) {
   var text = (raw ?? '').trim();
-  if (text.isEmpty || text.length > kMaxUrlLength) return null;
+  if (text.isEmpty || text.length > maxLength) return null;
   if (RegExp(r'\s').hasMatch(text)) return null;
 
   // "example.com/path" with no scheme: assume https.
@@ -59,8 +64,9 @@ Future<bool> openHttpUrlDefault(Uri uri) =>
 Future<bool> openHttpUrl(
   String? raw, {
   UrlLauncher launcher = openHttpUrlDefault,
+  int maxLength = kMaxUrlLength,
 }) async {
-  final uri = parseHttpUrl(raw);
+  final uri = parseHttpUrl(raw, maxLength: maxLength);
   if (uri == null) return false;
   try {
     return await launcher(uri);

@@ -13,12 +13,16 @@ class SafeLinkChip extends StatelessWidget {
     required this.label,
     required this.url,
     this.launcher = defaultLauncher,
+    this.maxLength = kMaxUrlLength,
   });
 
   final IconData icon;
   final String label;
   final String url;
   final UrlLauncher launcher;
+
+  /// Longest link accepted. Raise it only for a link the app made itself.
+  final int maxLength;
 
   static Future<bool> defaultLauncher(Uri uri) => openHttpUrlDefault(uri);
 
@@ -29,7 +33,11 @@ class SafeLinkChip extends StatelessWidget {
       label: Text(label),
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);
-        final ok = await openHttpUrl(url, launcher: launcher);
+        final ok = await openHttpUrl(
+          url,
+          launcher: launcher,
+          maxLength: maxLength,
+        );
         if (!ok) {
           messenger.showSnackBar(
             SnackBar(
