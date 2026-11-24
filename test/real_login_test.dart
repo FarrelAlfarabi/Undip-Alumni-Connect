@@ -18,6 +18,11 @@ class FakeLoginApi implements LoginApi {
   Object? emailKnownError;
   Object? sendError;
   Map<String, dynamic>? profile = testProfile();
+
+  /// What a stored sign in resumes to (null: nothing usable).
+  Map<String, dynamic>? resumeProfile;
+  Object? resumeError;
+  var resumed = 0;
   final sent = <String>[];
   final checked = <String>[];
   var signedOut = 0;
@@ -45,6 +50,16 @@ class FakeLoginApi implements LoginApi {
   bool get hasSession => session;
 
   @override
+  String? get sessionEmail => 'ahmad.ramadhan@example.com';
+
+  @override
+  Future<Map<String, dynamic>?> resumeSession() async {
+    resumed++;
+    if (resumeError != null) throw resumeError!;
+    return resumeProfile;
+  }
+
+  @override
   Future<void> signOut() async => signedOut++;
 }
 
@@ -61,6 +76,10 @@ Future<void> pumpVerify(WidgetTester tester, FakeLoginApi api) async {
       ),
     ),
   );
+  // A stored sign in is looked at first (see login_resume_test.dart); a fake
+  // with nothing to resume leaves the email box after one frame.
+  await tester.pump();
+  await tester.pump();
 }
 
 Future<void> settle(WidgetTester tester) async {

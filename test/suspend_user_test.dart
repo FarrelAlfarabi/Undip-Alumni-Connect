@@ -24,6 +24,10 @@ class _SuspendedLogin implements LoginApi {
   @override
   bool get hasSession => false;
   @override
+  String? get sessionEmail => null;
+  @override
+  Future<Map<String, dynamic>?> resumeSession() async => null;
+  @override
   Future<void> signOut() async {}
 }
 
