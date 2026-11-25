@@ -371,3 +371,9 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 
 ## 2026-11-25 Test sheet fixes
 A02 carousel drag with mouse, C25 sponsor cap dialog at 10 active, B18 edit required documents, A19 zoom slider in photo adjuster, A09 sender sees Dibatalkan. Migration 20261125100000 (rollback file added). A12 waits for wording.
+
+## 2026-11-25 Explore note (A12)
+Closable note under the Explore segments (Marketplace and Businesses): deals are direct between alumni, Lingkaran handles no payment or delivery. Closed for the app session only. No migration.
+
+## 2026-11-25 Sheet leftovers
+U14: PIN pad takes the keyboard back on click. C16: Home refetches after 20 s away (was 2 min). C06 is by design (products of an approved business are approved at creation). C29 and C30 not reproduced. No migration.
