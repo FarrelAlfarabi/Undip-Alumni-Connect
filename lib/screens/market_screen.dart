@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/business_repository.dart';
 import '../data/marketplace_repository.dart';
+import '../util/app_language.dart';
 import 'business_directory_screen.dart';
 import 'job_board_screen.dart';
 import 'marketplace_screen.dart';
@@ -27,6 +28,10 @@ class MarketScreen extends StatefulWidget {
 
   /// Injectable for tests; defaults to the Supabase query.
   final Future<List<Map<String, dynamic>>> Function()? fetchJobs;
+
+  /// The note under the segments is closed for this app session only; it
+  /// comes back the next time the app opens.
+  static bool noteClosed = false;
 
   @override
   State<MarketScreen> createState() => _MarketScreenState();
@@ -74,6 +79,32 @@ class _MarketScreenState extends State<MarketScreen> {
                   ),
                 ),
               ),
+              if (index != 2 && !MarketScreen.noteClosed)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 8, 4),
+                  child: Row(
+                    key: const Key('explore-note'),
+                    children: [
+                      Expanded(
+                        child: Text(
+                          tr(
+                            'Transaksi dilakukan langsung antar alumni. '
+                            'Lingkaran tidak mengurus pembayaran maupun '
+                            'pengiriman.',
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      IconButton(
+                        key: const Key('explore-note-close'),
+                        tooltip: tr('Tutup'),
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () =>
+                            setState(() => MarketScreen.noteClosed = true),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: IndexedStack(
                   index: index,
