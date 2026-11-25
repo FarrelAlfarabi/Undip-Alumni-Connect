@@ -371,6 +371,7 @@ final Map<String, String> kEnglish = {
   'Dibatalkan.': 'Undone.',
   'Salin': 'Copy',
   'Tutup': 'Close',
+  'Transaksi dilakukan langsung antar alumni. Lingkaran tidak mengurus pembayaran maupun pengiriman.': 'Deals are made directly between alumni. Lingkaran does not handle payment or delivery.',
   // Errors
   'Terjadi kesalahan. Coba lagi.': 'Something went wrong. Please try again.',
   'Tidak bisa terhubung ke server. Periksa koneksimu lalu coba lagi.':
