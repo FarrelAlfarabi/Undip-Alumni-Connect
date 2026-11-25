@@ -363,6 +363,11 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Central Back rule (17 Nov 2026)
 - One rule for Back: every screen uses `AppRoute` (`lib/nav/back_guard.dart`), which tells Android the app handles Back when the screen is the first route, so no screen exits on the first press. Back pops sheet, screen, previous tab, Home; only the first screen exits, on a second press within 2 seconds after "Tekan sekali lagi untuk keluar". Browser Back never leaves the app. Lock overlay blocks Back to the hidden screens. The old "Exit the app?" dialog is gone.
 - Tests: `back_guard_test` (source rules, first Back on 8 first screens, web, pushed screens, lock overlay), `home_shell_test`. No migration.
+## Migration Action for the new database (25 Nov 2026)
+- `supabase-deploy.yml` now has two jobs: `deploy` (old project, secret `SUPABASE_DB_URL`) and `deploy-new` (new project `hotbjigrocdofykrlsef`, secret `SUPABASE_DB_URL_NEW`). They run apart, so one failing does not stop the other.
+- `supabase/deploy/repair_history_new.sh` swaps the 8 `demo_m*` history rows for the 95 file versions up to 20261125100000; later files are pushed normally. Check: `supabase/tests/check_new_db_baseline.sh`.
+- Do NOT merge before the secret `SUPABASE_DB_URL_NEW` exists (the job would fail on every main push).
+
 
 ## 2026-11-25 Test sheet fixes
 A02 carousel drag with mouse, C25 sponsor cap dialog at 10 active, B18 edit required documents, A19 zoom slider in photo adjuster, A09 sender sees Dibatalkan. Migration 20261125100000 (rollback file added). A12 waits for wording.
