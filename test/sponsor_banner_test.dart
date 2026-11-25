@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/widgets/sponsor_banner.dart';
@@ -76,6 +77,25 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.textContaining('Sponsor 3'), findsOneWidget);
+    });
+  });
+
+  group('mouse', () {
+    testWidgets('a mouse drag moves the carousel (laptop)', (tester) async {
+      await pumpBanner(tester, [sponsorMap(1), sponsorMap(2), sponsorMap(3)]);
+      expect(find.textContaining('Sponsor 1'), findsOneWidget);
+      final centre = tester.getCenter(find.byKey(const Key('sponsor-pages')));
+      final mouse = await tester.startGesture(
+        centre,
+        kind: PointerDeviceKind.mouse,
+      );
+      await mouse.moveBy(const Offset(-100, 0));
+      await tester.pump();
+      await mouse.moveBy(const Offset(-200, 0));
+      await tester.pump();
+      await mouse.up();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
     });
   });
 

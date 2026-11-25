@@ -6,6 +6,7 @@ void main() {
   Future<List<(String, Map<String, dynamic>)>> pump(
     WidgetTester tester, {
     Object? closedAt,
+    bool requireCv = false,
   }) async {
     tester.view.physicalSize = const Size(600, 1600);
     tester.view.devicePixelRatio = 1;
@@ -22,6 +23,7 @@ void main() {
               'company': 'Bank X',
               'description': 'Kerja',
               'closed_at': closedAt,
+              'require_cv': requireCv,
             },
           ],
           rpc: (f, p) async => calls.add((f, p)),
@@ -61,5 +63,23 @@ void main() {
     expect(calls.single.$1, 'job_post_update');
     expect(calls.single.$2['p_title'], 'Senior Analyst');
     expect(calls.single.$2['p_company'], 'Bank X');
+  });
+
+  testWidgets('poster can change the required documents', (tester) async {
+    final calls = await pump(tester, requireCv: true);
+    await tester.tap(find.byKey(const Key('edit-job-j1')));
+    await tester.pumpAndSettle();
+    final cv = tester.widget<CheckboxListTile>(
+      find.byKey(const Key('edit-require-cv')),
+    );
+    expect(cv.value, isTrue);
+    await tester.tap(find.byKey(const Key('edit-require-linkedin')));
+    await tester.tap(find.byKey(const Key('edit-require-cv')));
+    await tester.tap(find.byKey(const Key('edit-save')));
+    await tester.pumpAndSettle();
+    expect(calls.single.$2['p_require_cv'], false);
+    expect(calls.single.$2['p_require_linkedin'], true);
+    expect(calls.single.$2['p_require_portfolio'], false);
+    expect(calls.single.$2['p_require_cover_note'], false);
   });
 }

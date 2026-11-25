@@ -222,6 +222,29 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
     });
   }
 
+  /// Zoom slider (0 = whole photo covers the frame, 1 = 6x), for the mouse.
+  double get _zoomValue {
+    final v = _view, f = _lastFrame;
+    if (v == null || f == null || _photo == null) return 0;
+    final cover = coverScale(_photoSize, f);
+    return ((v.scale / cover - 1) / 5).clamp(0.0, 1.0).toDouble();
+  }
+
+  void _onZoomSlider(double t) {
+    final v = _view, f = _lastFrame;
+    if (v == null || f == null || _photo == null) return;
+    final cover = coverScale(_photoSize, f);
+    setState(() {
+      _view = zoomAt(
+        _photoSize,
+        f,
+        v,
+        cover * (1 + 5 * t),
+        Offset(f.width / 2, f.height / 2),
+      );
+    });
+  }
+
   void _onDoubleTap(Rect frame) {
     if (_view == null || _photo == null) return;
     final cover = coverScale(_photoSize, frame.size);
@@ -392,7 +415,22 @@ class _PhotoAdjustScreenState extends State<PhotoAdjustScreen> {
                       style: const TextStyle(color: Colors.redAccent),
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.zoom_out, color: Colors.white70),
+                      Expanded(
+                        child: Slider(
+                          key: const Key('photo-adjust-zoom'),
+                          value: _zoomValue,
+                          onChanged: _photo == null || _saving
+                              ? null
+                              : _onZoomSlider,
+                        ),
+                      ),
+                      const Icon(Icons.zoom_in, color: Colors.white70),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Expanded(

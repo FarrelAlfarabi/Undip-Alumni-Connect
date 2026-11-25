@@ -363,3 +363,6 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Central Back rule (17 Nov 2026)
 - One rule for Back: every screen uses `AppRoute` (`lib/nav/back_guard.dart`), which tells Android the app handles Back when the screen is the first route, so no screen exits on the first press. Back pops sheet, screen, previous tab, Home; only the first screen exits, on a second press within 2 seconds after "Tekan sekali lagi untuk keluar". Browser Back never leaves the app. Lock overlay blocks Back to the hidden screens. The old "Exit the app?" dialog is gone.
 - Tests: `back_guard_test` (source rules, first Back on 8 first screens, web, pushed screens, lock overlay), `home_shell_test`. No migration.
+
+## 2026-11-25 Test sheet fixes
+A02 carousel drag with mouse, C25 sponsor cap dialog at 10 active, B18 edit required documents, A19 zoom slider in photo adjuster, A09 sender sees Dibatalkan. Migration 20261125100000 (rollback file added). A12 waits for wording.

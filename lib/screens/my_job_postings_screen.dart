@@ -168,33 +168,61 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
     final contact = TextEditingController(
       text: j['contact_info'] as String? ?? '',
     );
+    final require = <String, bool>{
+      'cv': j['require_cv'] == true,
+      'linkedin': j['require_linkedin'] == true,
+      'portfolio': j['require_portfolio'] == true,
+      'cover_note': j['require_cover_note'] == true,
+    };
     final save = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('Ubah lowongan')),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final (key, label, c, lines) in [
-                ('edit-title', 'Judul', title, 1),
-                ('edit-company', 'Perusahaan', company, 1),
-                ('edit-description', 'Deskripsi', desc, 5),
-                ('edit-contact', 'Kontak', contact, 1),
-              ])
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TextField(
-                    key: Key(key),
-                    controller: c,
-                    maxLines: lines,
-                    decoration: InputDecoration(
-                      labelText: label,
-                      border: const OutlineInputBorder(),
+        content: StatefulBuilder(
+          builder: (ctx, setInner) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (key, label, c, lines) in [
+                  ('edit-title', 'Judul', title, 1),
+                  ('edit-company', 'Perusahaan', company, 1),
+                  ('edit-description', 'Deskripsi', desc, 5),
+                  ('edit-contact', 'Kontak', contact, 1),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      key: Key(key),
+                      controller: c,
+                      maxLines: lines,
+                      decoration: InputDecoration(
+                        labelText: label,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
                   ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    tr('Require applicants to provide'),
+                    style: Theme.of(ctx).textTheme.labelLarge,
+                  ),
                 ),
-            ],
+                for (final (k, label) in [
+                  ('cv', 'CV'),
+                  ('linkedin', tr('LinkedIn URL')),
+                  ('portfolio', tr('Portfolio / other link')),
+                  ('cover_note', tr('Cover note')),
+                ])
+                  CheckboxListTile(
+                    key: Key('edit-require-${k.replaceAll('_', '-')}'),
+                    contentPadding: EdgeInsets.zero,
+                    value: require[k],
+                    onChanged: (v) => setInner(() => require[k] = v ?? false),
+                    title: Text(label),
+                  ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -219,6 +247,10 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
         'p_company': company.text,
         'p_description': desc.text,
         'p_contact': contact.text,
+        'p_require_cv': require['cv'],
+        'p_require_linkedin': require['linkedin'],
+        'p_require_portfolio': require['portfolio'],
+        'p_require_cover_note': require['cover_note'],
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context)

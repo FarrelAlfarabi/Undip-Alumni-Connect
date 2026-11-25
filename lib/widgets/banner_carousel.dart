@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../util/app_language.dart';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../data/marketplace_format.dart';
@@ -123,26 +124,38 @@ class _BannerCarouselState extends State<BannerCarousel> {
       onPointerDown: (_) => _timer?.cancel(),
       onPointerUp: (_) => _startTimer(),
       onPointerCancel: (_) => _startTimer(),
-      child: PageView.builder(
-        key: Key('$prefix-pages'),
-        controller: _controller,
-        itemCount: items.length,
-        onPageChanged: (i) {
-          setState(() => _page = i);
-          widget.onShown?.call(items[i]);
-        },
-        itemBuilder: (context, i) {
-          void open() => widget.onOpen(items[i]);
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: KeyedSubtree(
-              key: Key('$prefix-hero-$i'),
-              child:
-                  widget.cardBuilder?.call(context, items[i], open) ??
-                  _BannerCard(item: items[i], onTap: open),
-            ),
-          );
-        },
+      // A mouse can drag too (laptop). Flutter only lets touch drag a
+      // PageView by default.
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+            PointerDeviceKind.trackpad,
+            PointerDeviceKind.stylus,
+          },
+        ),
+        child: PageView.builder(
+          key: Key('$prefix-pages'),
+          controller: _controller,
+          itemCount: items.length,
+          onPageChanged: (i) {
+            setState(() => _page = i);
+            widget.onShown?.call(items[i]);
+          },
+          itemBuilder: (context, i) {
+            void open() => widget.onOpen(items[i]);
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: KeyedSubtree(
+                key: Key('$prefix-hero-$i'),
+                child:
+                    widget.cardBuilder?.call(context, items[i], open) ??
+                    _BannerCard(item: items[i], onTap: open),
+              ),
+            );
+          },
+        ),
       ),
     );
     return Column(
