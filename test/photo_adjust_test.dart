@@ -111,6 +111,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a zoom slider zooms with the mouse (laptop)', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PhotoAdjustScreen(
+          image: PickedImage(name: 'a.png', bytes: png),
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await load(tester);
+    final slider = find.byKey(const Key('photo-adjust-zoom'));
+    expect(slider, findsOneWidget);
+    expect(tester.widget<Slider>(slider).value, 0);
+    await tester.drag(slider, Offset(tester.getSize(slider).width, 0));
+    await tester.pump();
+    expect(tester.widget<Slider>(slider).value, greaterThan(0.5));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Cancel and Save buttons sit above the bottom bar', (
     tester,
   ) async {
