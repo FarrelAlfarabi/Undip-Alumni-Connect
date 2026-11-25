@@ -35,7 +35,7 @@ class HomeShell extends StatefulWidget {
     this.marketplaceRepository,
     this.autoAdvance = const Duration(seconds: 5),
     this.chat = chatEnabled,
-    this.refreshAfter = const Duration(minutes: 2),
+    this.refreshAfter = const Duration(seconds: 20),
   });
 
   /// A tab you left is refetched when you come back to it only if you were

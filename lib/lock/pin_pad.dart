@@ -29,6 +29,13 @@ class PinPad extends StatefulWidget {
 class _PinPadState extends State<PinPad> {
   String _pin = '';
   bool _busy = false;
+  final _focus = FocusNode(debugLabel: 'pin-pad');
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
 
   bool get _canType => widget.enabled && !_busy;
 
@@ -111,7 +118,17 @@ class _PinPadState extends State<PinPad> {
   Widget build(BuildContext context) {
     final fg = widget.foreground ?? Theme.of(context).colorScheme.onSurface;
     final dim = fg.withValues(alpha: widget.enabled ? 1 : 0.4);
-    return Focus(autofocus: true, onKeyEvent: _onKey, child: _pad(dim));
+    // A click anywhere on the pad takes the keyboard back (laptop), for the
+    // case where focus went to another field or button.
+    return Listener(
+      onPointerDown: (_) => _focus.requestFocus(),
+      child: Focus(
+        focusNode: _focus,
+        autofocus: true,
+        onKeyEvent: _onKey,
+        child: _pad(dim),
+      ),
+    );
   }
 
   Widget _pad(Color dim) {
