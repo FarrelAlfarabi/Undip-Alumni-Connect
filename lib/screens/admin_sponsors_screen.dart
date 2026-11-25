@@ -10,7 +10,8 @@ import '../util/friendly_error.dart';
 import '../util/safe_url.dart';
 import '../widgets/error_view.dart';
 import 'photo_adjust_screen.dart';
-import '../widgets/sponsor_banner.dart' show kSponsorAspectRatio;
+import '../widgets/sponsor_banner.dart'
+    show kSponsorAspectRatio, kMaxSponsorSlides;
 
 /// Admin > Sponsor: every sponsor of the Home carousel, hidden and
 /// out-of-date ones too. The database refuses every change for non-admins.
@@ -34,16 +35,52 @@ class AdminSponsorsScreen extends StatefulWidget {
 
 class _AdminSponsorsScreenState extends State<AdminSponsorsScreen> {
   late Future<List<Sponsor>> _future;
+  int _activeCount = 0;
+
+  Future<List<Sponsor>> _load() =>
+      widget.repository.sponsors(widget.adminId).then((list) {
+        if (mounted) {
+          setState(() => _activeCount = list.where((s) => s.active).length);
+        }
+        return list;
+      });
 
   @override
   void initState() {
     super.initState();
-    _future = widget.repository.sponsors(widget.adminId);
+    _future = _load();
   }
 
   void _reload() => setState(() {
-    _future = widget.repository.sponsors(widget.adminId);
+    _future = _load();
   });
+
+  /// Home shows at most [kMaxSponsorSlides]; a new one would never appear.
+  Future<void> _add() async {
+    if (_activeCount >= kMaxSponsorSlides) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('Sponsor sudah penuh')),
+          content: Text(
+            trf(
+              'Sponsor yang tayang maksimal {0}. Sembunyikan atau hapus satu '
+              'sponsor dulu sebelum menambah yang baru.',
+              ['$kMaxSponsorSlides'],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(tr('Mengerti')),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    await _edit();
+  }
 
   Future<void> _edit([Sponsor? sponsor]) async {
     final message = await Navigator.of(context).push<String>(
@@ -80,7 +117,7 @@ class _AdminSponsorsScreenState extends State<AdminSponsorsScreen> {
       appBar: AppBar(title: Text(tr('Sponsor'))),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('sponsor-new'),
-        onPressed: _edit,
+        onPressed: _add,
         icon: const Icon(Icons.add),
         label: Text(tr('Tambah sponsor')),
       ),

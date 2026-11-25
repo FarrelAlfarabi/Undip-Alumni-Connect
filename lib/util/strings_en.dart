@@ -253,6 +253,9 @@ final Map<String, String> kEnglish = {
   'diketuk': 'taps',
   'Sponsor': 'Sponsor',
   'Tambah sponsor': 'Add sponsor',
+  'Sponsor sudah penuh': 'Sponsors are full',
+  'Sponsor yang tayang maksimal {0}. Sembunyikan atau hapus satu sponsor dulu sebelum menambah yang baru.': 'At most {0} sponsors can be live. Hide or delete one before adding a new one.',
+  'Mengerti': 'Got it',
   'Ubah sponsor': 'Edit sponsor',
   'Atur sponsor di carousel Home: gambar, tautan, tanggal':
       'Manage the sponsors in the Home carousel: image, link, dates',
