@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
@@ -9,6 +11,43 @@ const kAllFilter = 'All';
 /// How long typing must pause before a long list (members) follows its search
 /// box. Redrawing hundreds of rows on every key made typing lag.
 const kSearchDelay = Duration(milliseconds: 250);
+
+/// Tells [onSettled] when the text of [controller] has stopped changing for
+/// [delay] (or at once when the box is cleared). Screens use it instead of
+/// `controller.addListener(() => setState(() {}))`, which redrew the whole
+/// screen, filters and list included, on every key and every caret move.
+class SearchDebounce {
+  SearchDebounce(
+    this.controller,
+    this.onSettled, {
+    this.delay = kSearchDelay,
+  }) : _last = controller.text {
+    controller.addListener(_onChange);
+  }
+
+  final TextEditingController controller;
+  final VoidCallback onSettled;
+  final Duration delay;
+  Timer? _timer;
+  String _last;
+
+  void _onChange() {
+    final text = controller.text;
+    if (text == _last) return;
+    _last = text;
+    _timer?.cancel();
+    if (text.isEmpty) {
+      onSettled();
+      return;
+    }
+    _timer = Timer(delay, onSettled);
+  }
+
+  void dispose() {
+    _timer?.cancel();
+    controller.removeListener(_onChange);
+  }
+}
 
 /// One look for every search box and filter in a search+filter bar: rounded,
 /// softly filled, same height. [FilterDropdown], [ClearableSearchField] and

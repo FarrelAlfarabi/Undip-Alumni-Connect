@@ -104,17 +104,22 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   String _category = kAllFilter;
   MarketplaceSort _sort = MarketplaceSort.newest;
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _repo = widget.repository ?? MarketplaceRepository();
     _future = _fetchListings();
-    _searchController.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_searchController, () {
+      if (mounted) setState(() {});
+    });
     CategoryRepository.shared.load();
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _searchController.dispose();
     _categoryText.dispose();
     super.dispose();

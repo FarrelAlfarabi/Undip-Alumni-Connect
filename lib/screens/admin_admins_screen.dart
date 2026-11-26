@@ -231,14 +231,19 @@ class _PickMemberScreenState extends State<_PickMemberScreen> {
     _future = widget.repository.searchMembers(widget.adminId, '');
   });
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     super.dispose();
   }

@@ -418,3 +418,6 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 ## 2026-11-26 Faster tab switching
 - Measured on the live site (signed in, phone width, CPU slowed 4x): each tab tap spent about 350 ms rebuilding the tabs that stayed hidden. HomeShell now keeps each tab's widget until its refresh, so hidden tabs are not rebuilt.
 - A tab that refreshes after 20 s showed a blank spinner for 2 to 4 s. Members, Marketplace, Businesses and Jobs now show the last list at once and refetch behind it (in-memory StaleCache, emptied on sign out and on block). Explore builds a segment only when opened. Members pages and photo list, the business list calls and the admin red-tag counts are asked together. No migration.
+
+## 2026-11-26 Smoother typing in search boxes
+- Measured (CPU slowed 4x): Explore, Jobs, Businesses and 7 admin lists redrew the whole screen (filters, list, photos) on every key and every caret move. They now follow the box through SearchDebounce (250 ms pause, instant on clear), the same way Members already did. Explore typing main-thread work dropped from 2.66 s to 1.89 s for 12 keys. No migration.

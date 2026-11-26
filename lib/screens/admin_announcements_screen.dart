@@ -35,15 +35,20 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   final _search = TextEditingController();
   String _period = kAllTime;
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = widget.repository.announcements(widget.adminId);
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     super.dispose();
   }
