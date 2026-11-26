@@ -386,3 +386,5 @@ Profile field labels and Admin Reports texts now go through tr() (Indonesian cop
 
 ## 2026-11-26 Kontak Ikafe YouTube + admin demo data
 New "youtube" contact kind (app, admin picker, migration 20261126110000, rollback file). Demo DB: Kontak Ikafe = alumni@ikafeundip.com, @ikafeundip, YouTube @IkafeTV (examples removed). [DUMMY] reports, masukan, pending/rejected businesses and products, contact requests added; SQL + rollback in project demo-data folder.
+## 2026-11-26 Sponsor view counting
+DB side checked on the demo project: counts and the 10 cap work (home_sponsors only sees live rows). App over-counted: a slide counted when it auto-slid off screen, below the fold or on another tab. Now a view counts only when the carousel is in view and on top. No migration.
