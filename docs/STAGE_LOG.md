@@ -383,3 +383,6 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 
 ## 2026-11-26 UI text fixes
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Kontak Ikafe YouTube + admin demo data
+New "youtube" contact kind (app, admin picker, migration 20261126110000, rollback file). Demo DB: Kontak Ikafe = alumni@ikafeundip.com, @ikafeundip, YouTube @IkafeTV (examples removed). [DUMMY] reports, masukan, pending/rejected businesses and products, contact requests added; SQL + rollback in project demo-data folder.
