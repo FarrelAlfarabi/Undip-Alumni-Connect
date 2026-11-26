@@ -28,8 +28,52 @@ void main() {
       ),
     );
     expect(find.text('Jobs'), findsOneWidget);
-    expect(find.byType(JobBoardScreen, skipOffstage: false), findsOneWidget);
+    segment.value = 2;
+    await tester.pump();
+    expect(find.byType(JobBoardScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a segment is only built and fetched once it is opened', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final segment = ValueNotifier<int>(0);
+    final businessApi = FakeBusinessApi();
+    var jobFetches = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MarketScreen(
+          currentUser: ValueNotifier({'id': 'me'}),
+          segment: segment,
+          marketplaceRepository: MarketplaceRepository(FakeApi()),
+          businessRepository: BusinessRepository(businessApi),
+          fetchJobs: () async {
+            jobFetches++;
+            return [];
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Opened on Marketplace: Businesses and Jobs have not been asked for yet.
+    expect(jobFetches, 0);
+    expect(businessApi.calls, isEmpty);
+    expect(find.byType(JobBoardScreen, skipOffstage: false), findsNothing);
+
+    segment.value = 2;
+    await tester.pumpAndSettle();
+    expect(jobFetches, 1);
+
+    // Going back and forth keeps what was built: no second request.
+    segment.value = 0;
+    await tester.pumpAndSettle();
+    segment.value = 2;
+    await tester.pumpAndSettle();
+    expect(jobFetches, 1);
+    expect(find.byType(JobBoardScreen, skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('embedded job board has no second app bar', (tester) async {

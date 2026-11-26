@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/config/feature_flags.dart';
+import 'package:undip_alumni_connect/data/block_list.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
+import 'package:undip_alumni_connect/data/stale_cache.dart';
 import 'package:undip_alumni_connect/screens/alumni_screen.dart';
 import 'package:undip_alumni_connect/screens/kontak_ikafe_screen.dart';
 import 'package:undip_alumni_connect/screens/home_pages.dart';
@@ -230,6 +232,53 @@ void main() {
     await tapNav(tester, 'Home');
     await tapNav(tester, 'Chat');
     expect(chatBuilds.length, 1);
+  });
+
+  testWidgets('switching tabs does not rebuild the tabs that stay hidden', (
+    tester,
+  ) async {
+    final builds = <int>[];
+    final rebuilds = <int>[];
+    await pumpShell(
+      tester,
+      pages: fakePages(directoryBuilds: builds, directoryRebuilds: rebuilds),
+    );
+    await tapNav(tester, 'Members');
+    expect(builds.length, 1);
+    final afterOpen = rebuilds.length;
+    // Every tap below used to rebuild the Members page although it was hidden.
+    await tapNav(tester, 'Home');
+    await tapNav(tester, 'Explore');
+    await tapNav(tester, 'Profile');
+    expect(rebuilds.length, afterOpen);
+    expect(builds.length, 1);
+    // Coming back shows the same page, still alive.
+    await tapNav(tester, 'Members');
+    expect(find.text('TAB Directory'), findsOneWidget);
+    expect(builds.length, 1);
+  });
+
+  testWidgets('what screens kept in memory is dropped when the shell closes', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    await StaleCache.remember<int>('directory:me', Future.value(1));
+    expect(StaleCache.peek<int>('directory:me'), 1);
+    Navigator.of(tester.element(find.byType(HomeShell))).pop();
+    await tester.pumpAndSettle();
+    expect(StaleCache.peek<int>('directory:me'), isNull);
+  });
+
+  testWidgets('blocking someone drops what screens kept in memory', (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    await StaleCache.remember<int>('directory:me', Future.value(1));
+    BlockList.shared.blocked.value = {'someone'};
+    await tester.pump();
+    expect(StaleCache.peek<int>('directory:me'), isNull);
+    BlockList.shared.blocked.value = const {};
+    await tester.pump();
   });
 
   group('reachability: everything reachable before is still reachable', () {

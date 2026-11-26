@@ -9,6 +9,7 @@ import '../data/block_list.dart';
 import '../data/home_repository.dart';
 import '../data/category_repository.dart';
 import '../data/marketplace_repository.dart';
+import '../data/stale_cache.dart';
 import '../platform/app_location.dart';
 import '../platform/breakpoints.dart';
 import '../theme.dart';
@@ -91,6 +92,22 @@ class _HomeShellState extends State<HomeShell> {
   // loading. Once built, IndexedStack keeps a tab alive (scroll position,
   // filters).
   final Set<int> _visited = {HomeShell.homeTab};
+
+  // The widget each tab was last built with, kept per epoch. Flutter skips a
+  // child whose widget is the very same object, so a tab tap no longer
+  // rebuilds the tabs that stay hidden (that was most of the cost of every
+  // tap). A tab is built again when its epoch changes or the shell gets new
+  // inputs.
+  final Map<int, (int, Widget)> _built = {};
+  Widget _tabWidget(int index, Widget Function() build) {
+    final epoch = _epochOf(index);
+    final hit = _built[index];
+    if (hit != null && hit.$1 == epoch) return hit.$2;
+    final made = build();
+    _built[index] = (epoch, made);
+    return made;
+  }
+
   final Map<int, DateTime> _leftAt = {};
   Set<String> _lastBlocked = const {};
 
@@ -123,6 +140,8 @@ class _HomeShellState extends State<HomeShell> {
     final now = BlockList.shared.blocked.value;
     if (setEquals(now, _lastBlocked)) return;
     _lastBlocked = {...now};
+    // A blocked person must not show up from the last list kept in memory.
+    StaleCache.clear();
     if (!mounted) return;
     setState(() {
       for (final tab in _refreshable) {
@@ -132,12 +151,21 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   @override
+  void didUpdateWidget(HomeShell old) {
+    super.didUpdateWidget(old);
+    // New pages, data sources or profile: build every tab again.
+    _built.clear();
+  }
+
+  @override
   void dispose() {
     BlockList.shared.blocked.removeListener(_onBlockedChanged);
     _marketSegment.removeListener(_reportPlace);
     // The shell is gone (Keluar, Ganti akun): the address goes back to the
     // start so the next person does not land on this person's tab.
     AppLocation.report(AppLocation.pathFor(ShellPlace.home));
+    // Nothing of this person stays in memory for the next one.
+    StaleCache.clear();
     _currentUser.dispose();
     _marketSegment.dispose();
     super.dispose();
@@ -257,8 +285,9 @@ class _HomeShellState extends State<HomeShell> {
     // their page is not even created until the first visit.
     final chatTab = _chatTab;
     final profileTab = _profileTab;
-    Widget tab(int index, Widget Function() build) =>
-        _visited.contains(index) ? build() : const SizedBox.shrink();
+    Widget tab(int index, Widget Function() build) => _visited.contains(index)
+        ? _tabWidget(index, build)
+        : const SizedBox.shrink();
     final tabs = [
       tab(
         HomeShell.homeTab,

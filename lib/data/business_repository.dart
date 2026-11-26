@@ -299,15 +299,20 @@ class BusinessRepository {
 
   /// Approved businesses, for verified alumni.
   Future<List<Business>> directory(String viewerId) async {
-    final rows = await _guard(
+    // The three questions do not depend on each other: ask them together
+    // (photoUrls and nibVerifiedIds never throw, so none is left unhandled).
+    final rowsAsk = _guard(
       () => _api.rpc('business_directory', {'p_viewer': viewerId}),
     );
-    final photos = await photoUrls(
+    final photosAsk = photoUrls(
       () => _api.rpc('business_photo_urls', {'p_viewer': viewerId}),
     );
-    final verified = await nibVerifiedIds(
+    final verifiedAsk = nibVerifiedIds(
       () => _api.rpc('business_nib_verified_ids', {'p_viewer': viewerId}),
     );
+    final rows = await rowsAsk;
+    final photos = await photosAsk;
+    final verified = await verifiedAsk;
     return withNibBadges(withPhotos(_list(rows), photos), verified);
   }
 

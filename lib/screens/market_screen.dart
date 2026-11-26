@@ -38,6 +38,10 @@ class MarketScreen extends StatefulWidget {
 }
 
 class _MarketScreenState extends State<MarketScreen> {
+  // A segment is built (and fetches its data) the first time it is opened,
+  // then kept alive. Before, opening Explore built all three at once.
+  final Set<int> _opened = {};
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,86 +53,95 @@ class _MarketScreenState extends State<MarketScreen> {
         top: false,
         child: ValueListenableBuilder<int>(
           valueListenable: widget.segment,
-          builder: (context, index, _) => Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<int>(
-                    key: const Key('market-segments'),
-                    showSelectedIcon: false,
-                    style: const ButtonStyle(
-                      padding: WidgetStatePropertyAll(
-                        EdgeInsets.symmetric(horizontal: 4),
-                      ),
-                    ),
-                    segments: const [
-                      ButtonSegment(
-                        value: 0,
-                        label: _SegmentLabel('Marketplace'),
-                      ),
-                      ButtonSegment(
-                        value: 1,
-                        label: _SegmentLabel('Businesses'),
-                      ),
-                      ButtonSegment(value: 2, label: _SegmentLabel('Jobs')),
-                    ],
-                    selected: {index},
-                    onSelectionChanged: (s) => widget.segment.value = s.first,
-                  ),
-                ),
-              ),
-              if (index != 2 && !MarketScreen.noteClosed)
+          builder: (context, index, _) {
+            _opened.add(index);
+            return Column(
+              children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 8, 4),
-                  child: Row(
-                    key: const Key('explore-note'),
-                    children: [
-                      Expanded(
-                        child: Text(
-                          tr(
-                            'Transaksi dilakukan langsung antar alumni. '
-                            'Lingkaran tidak mengurus pembayaran maupun '
-                            'pengiriman.',
-                          ),
-                          style: Theme.of(context).textTheme.bodySmall,
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<int>(
+                      key: const Key('market-segments'),
+                      showSelectedIcon: false,
+                      style: const ButtonStyle(
+                        padding: WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 4),
                         ),
                       ),
-                      IconButton(
-                        key: const Key('explore-note-close'),
-                        tooltip: tr('Tutup'),
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () =>
-                            setState(() => MarketScreen.noteClosed = true),
-                      ),
+                      segments: const [
+                        ButtonSegment(
+                          value: 0,
+                          label: _SegmentLabel('Marketplace'),
+                        ),
+                        ButtonSegment(
+                          value: 1,
+                          label: _SegmentLabel('Businesses'),
+                        ),
+                        ButtonSegment(value: 2, label: _SegmentLabel('Jobs')),
+                      ],
+                      selected: {index},
+                      onSelectionChanged: (s) => widget.segment.value = s.first,
+                    ),
+                  ),
+                ),
+                if (index != 2 && !MarketScreen.noteClosed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 8, 4),
+                    child: Row(
+                      key: const Key('explore-note'),
+                      children: [
+                        Expanded(
+                          child: Text(
+                            tr(
+                              'Transaksi dilakukan langsung antar alumni. '
+                              'Lingkaran tidak mengurus pembayaran maupun '
+                              'pengiriman.',
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        IconButton(
+                          key: const Key('explore-note-close'),
+                          tooltip: tr('Tutup'),
+                          icon: const Icon(Icons.close, size: 18),
+                          onPressed: () =>
+                              setState(() => MarketScreen.noteClosed = true),
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: IndexedStack(
+                    index: index,
+                    children: [
+                      _opened.contains(0)
+                          ? MarketplaceScreen(
+                              currentUser: widget.currentUser,
+                              repository: widget.marketplaceRepository,
+                              embedded: true,
+                            )
+                          : const SizedBox.shrink(),
+                      _opened.contains(1)
+                          ? BusinessDirectoryScreen(
+                              currentUser: widget.currentUser,
+                              repository: widget.businessRepository,
+                              embedded: true,
+                            )
+                          : const SizedBox.shrink(),
+                      _opened.contains(2)
+                          ? JobBoardScreen(
+                              currentUser: widget.currentUser,
+                              embedded: true,
+                              fetchJobs: widget.fetchJobs,
+                            )
+                          : const SizedBox.shrink(),
                     ],
                   ),
                 ),
-              Expanded(
-                child: IndexedStack(
-                  index: index,
-                  children: [
-                    MarketplaceScreen(
-                      currentUser: widget.currentUser,
-                      repository: widget.marketplaceRepository,
-                      embedded: true,
-                    ),
-                    BusinessDirectoryScreen(
-                      currentUser: widget.currentUser,
-                      repository: widget.businessRepository,
-                      embedded: true,
-                    ),
-                    JobBoardScreen(
-                      currentUser: widget.currentUser,
-                      embedded: true,
-                      fetchJobs: widget.fetchJobs,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

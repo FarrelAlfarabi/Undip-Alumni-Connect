@@ -4,6 +4,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../data/stale_cache.dart';
+
 import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
@@ -35,14 +37,24 @@ Future<List<Map<String, dynamic>>> fetchAllPages(
   Future<List<Map<String, dynamic>>> Function(int from, int to) page, {
   int pageSize = 1000,
   int maxRows = kDirectoryMaxRows,
+  int ahead = 1,
 }) async {
   final all = <Map<String, dynamic>>[];
-  while (all.length < maxRows) {
+  var done = false;
+  while (!done && all.length < maxRows) {
     final from = all.length;
-    final to = from + pageSize - 1;
-    final rows = await page(from, to);
-    all.addAll(rows);
-    if (rows.length < pageSize) break;
+    // [ahead] pages are asked at the same time, one round trip for all.
+    final batch = await Future.wait([
+      for (var i = 0; i < ahead; i++)
+        page(from + i * pageSize, from + (i + 1) * pageSize - 1),
+    ]);
+    for (final rows in batch) {
+      all.addAll(rows);
+      if (rows.length < pageSize) {
+        done = true;
+        break;
+      }
+    }
   }
   return all.length > maxRows ? all.sublist(0, maxRows) : all;
 }
@@ -165,13 +177,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return rows;
   }
 
-  Future<List<Map<String, dynamic>>> _fetchAlumni() async {
+  String get _cacheKey => 'directory:${widget.currentUser.value['id']}';
+
+  /// The last list this session, shown while the new one loads.
+  List<Map<String, dynamic>>? get _stale =>
+      StaleCache.peek<List<Map<String, dynamic>>>(_cacheKey);
+
+  Future<List<Map<String, dynamic>>> _fetchAlumni() =>
+      StaleCache.remember(_cacheKey, _loadAlumni());
+
+  Future<List<Map<String, dynamic>>> _loadAlumni() async {
     if (widget.fetchAlumni != null) {
       return _withDefaultYear(
         await withoutBlockedProfiles(await widget.fetchAlumni!()),
       );
     }
+    // The photo list does not depend on the member pages: ask both at once.
+    final photos = AvatarRepository().urlsById()..ignore();
     final rows = await fetchAllPages(
+      ahead: 2,
       (from, to) async => List<Map<String, dynamic>>.from(
         await Supabase.instance.client
                 .from('alumni_profiles')
@@ -185,7 +209,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
     return _withDefaultYear(
       await withoutBlockedProfiles(
-        AvatarRepository.withAvatars(rows, await AvatarRepository().urlsById()),
+        AvatarRepository.withAvatars(rows, await photos),
       ),
     );
   }
@@ -271,8 +295,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _future,
+      initialData: _stale,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {

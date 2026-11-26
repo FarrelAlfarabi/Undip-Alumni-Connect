@@ -1,5 +1,7 @@
 import '../nav/back_guard.dart';
 
+import '../data/stale_cache.dart';
+
 import 'package:flutter/material.dart';
 
 import '../widgets/job_status_chip.dart';
@@ -75,7 +77,12 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     super.dispose();
   }
 
-  Future<List<Map<String, dynamic>>> _fetchJobs() async {
+  static const _cacheKey = 'jobs';
+
+  Future<List<Map<String, dynamic>>> _fetchJobs() =>
+      StaleCache.remember(_cacheKey, _loadJobs());
+
+  Future<List<Map<String, dynamic>>> _loadJobs() async {
     if (widget.fetchJobs != null) {
       final rows = await widget.fetchJobs!();
       await BlockList.shared.ensureLoaded();
@@ -177,8 +184,10 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
         top: false,
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _future,
+          initialData: StaleCache.peek<List<Map<String, dynamic>>>(_cacheKey),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {

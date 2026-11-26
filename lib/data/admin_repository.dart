@@ -265,6 +265,8 @@ class AdminRepository {
 
   /// The numbers for the red tags on the admin buttons.
   Future<AdminCounts> pendingCounts(String adminId) async {
+    // Both counts are asked together (businessEditCount never throws).
+    final editsAsk = businessEditCount(adminId);
     final rows = await _guard(
       () => _api.rpc('admin_pending_counts', {'p_admin': adminId}),
     );
@@ -279,7 +281,7 @@ class AdminRepository {
       listings: n('listings'),
       reports: n('reports'),
       feedback: n('feedback'),
-      businessEdits: await businessEditCount(adminId),
+      businessEdits: await editsAsk,
     );
   }
 
