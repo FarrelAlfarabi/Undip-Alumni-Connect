@@ -222,7 +222,25 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  if (_isOwnJob)
+                  if (_isOwnJob) ...[
+                    Row(
+                      key: const Key('owner-contact'),
+                      children: [
+                        Icon(
+                          Icons.mail_outline,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.job['contact_info'] as String? ??
+                                tr('No contact info provided.'),
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     FutureBuilder<int>(
                       future: _applicantCountFuture,
                       builder: (context, snapshot) {
@@ -253,12 +271,18 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               Expanded(
                                 child: Text(
                                   !notify
-                                      ? 'Applicant notifications are off for this job.'
+                                      ? tr(
+                                          'Applicant notifications are off for this job.',
+                                        )
                                       : count == null
-                                      ? 'Loading applicants…'
+                                      ? tr('Loading applicants…')
                                       : count == 0
-                                      ? 'No applications yet.'
-                                      : '$count application${count == 1 ? '' : 's'} received.',
+                                      ? tr('No applications yet.')
+                                      : count == 1
+                                      ? tr('1 application received.')
+                                      : trf('{0} applications received.', [
+                                          count,
+                                        ]),
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: notify
                                         ? theme.colorScheme.onSecondaryContainer
@@ -284,8 +308,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           ),
                         );
                       },
-                    )
-                  else
+                    ),
+                  ] else
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -305,7 +329,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               Expanded(
                                 child: Text(
                                   widget.job['contact_info'] as String? ??
-                                      'No contact info provided.',
+                                      tr('No contact info provided.'),
                                   style: theme.textTheme.bodyMedium,
                                 ),
                               ),

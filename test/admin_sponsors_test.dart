@@ -191,6 +191,18 @@ void main() {
       expect(find.byType(SponsorFormScreen), findsOneWidget);
     });
 
+    testWidgets('sponsors past their end date do not count towards 10', (
+      tester,
+    ) async {
+      await pump(tester, [
+        for (var i = 0; i < 9; i++) row('s$i', 'Sponsor $i'),
+        for (var i = 0; i < 3; i++) row('e$i', 'Lewat $i', ends: '2020-01-01'),
+      ]);
+      await tester.tap(find.byKey(const Key('sponsor-new')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SponsorFormScreen), findsOneWidget);
+    });
+
     testWidgets('empty form is refused without a call', (tester) async {
       final api = await pump(tester, []);
       await tester.tap(find.byKey(const Key('sponsor-new')));

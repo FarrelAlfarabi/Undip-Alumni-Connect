@@ -319,6 +319,12 @@ final Map<String, String> kIndonesian = {
   'Something broken or confusing?': 'Ada yang rusak atau membingungkan?',
   'Exit the app?': 'Keluar dari aplikasi?',
   'No applications yet.': 'Belum ada lamaran.',
+  'Applicant notifications are off for this job.':
+      'Notifikasi pelamar untuk lowongan ini mati.',
+  'Loading applicants…': 'Memuat pelamar…',
+  '1 application received.': '1 lamaran diterima.',
+  '{0} applications received.': '{0} lamaran diterima.',
+  'No contact info provided.': 'Kontak tidak tersedia.',
   'Job Board': 'Daftar lowongan',
   'My job postings': 'Lowongan saya',
   'Post a Job': 'Pasang lowongan',
