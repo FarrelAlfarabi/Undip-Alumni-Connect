@@ -33,7 +33,8 @@ void enterApp(
 }) {
   final l = lock ?? LockService.shared;
   if (needsConsent(profile)) {
-    Navigator.of(context).pushReplacement(
+    // pushAndRemoveUntil: no stale Welcome or Verification stays underneath.
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       AppRoute(
         builder: (_) => ConsentScreen(
           profile: profile,
@@ -48,6 +49,7 @@ void enterApp(
           ),
         ),
       ),
+      (_) => false,
     );
     return;
   }
@@ -55,7 +57,7 @@ void enterApp(
     // Optional, shown once: the flag only exists on the profile handed over
     // right after the first consent, so it never comes back.
     final clean = {...profile}..remove(kFirstLoginKey);
-    Navigator.of(context).pushReplacement(
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
       AppRoute(
         builder: (_) => FirstLoginProfileScreen(
           profile: clean,
@@ -68,6 +70,7 @@ void enterApp(
           ),
         ),
       ),
+      (_) => false,
     );
     return;
   }

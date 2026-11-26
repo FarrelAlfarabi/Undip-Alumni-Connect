@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../util/app_language.dart';
 
 import '../data/home_repository.dart';
+import '../data/profile_fields.dart';
 import '../data/marketplace_format.dart';
 import '../data/marketplace_repository.dart';
 import '../data/posting_text.dart';
@@ -21,6 +22,7 @@ import '../widgets/verified_badge.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
 import 'marketplace_screen.dart' show ListingImage;
+import 'profile_city_screen.dart';
 import 'profile_setup_screen.dart';
 
 /// First name for the greeting: the first word of `name`, or null.
@@ -213,8 +215,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final updated = await Navigator.of(context).push<Map<String, dynamic>>(
       AppRoute(builder: (_) => ProfileSetupScreen(profile: _user.value)),
     );
-    if (updated != null && mounted) {
-      setState(() => _user.value = updated);
+    if (updated == null || !mounted) return;
+    setState(() => _user.value = mergeSavedProfile(_user.value, updated));
+    // Job info has no city box, so ask for the city next. Otherwise the card
+    // stays and it looks as if nothing was saved.
+    final city = ((_user.value['city'] as String?) ?? '').trim();
+    if (city.isEmpty) {
+      final withCity = await Navigator.of(context).push<Map<String, dynamic>>(
+        AppRoute(builder: (_) => ProfileCityScreen(profile: _user.value)),
+      );
+      if (withCity != null && mounted) {
+        setState(() => _user.value = mergeSavedProfile(_user.value, withCity));
+      }
     }
   }
 
@@ -502,11 +514,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Shrinks a little on narrow phones instead of cutting the words.
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text(
-          tr('Lihat semua pengumuman'),
-          maxLines: 1,
-          softWrap: false,
-        ),
+        child: Text(tr('Lihat semua pengumuman'), maxLines: 1, softWrap: false),
       ),
     );
     Widget withSeeAll(Widget card) => Column(

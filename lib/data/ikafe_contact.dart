@@ -6,7 +6,8 @@ enum IkafeContactKind {
   email('Email'),
   instagram('Instagram'),
   linkedin('LinkedIn'),
-  website('Website');
+  website('Website'),
+  youtube('YouTube');
 
   const IkafeContactKind(this.title);
 
@@ -20,6 +21,7 @@ enum IkafeContactKind {
     IkafeContactKind.instagram => 'Buka Instagram',
     IkafeContactKind.linkedin => 'Buka LinkedIn',
     IkafeContactKind.website => 'Buka website',
+    IkafeContactKind.youtube => 'Buka YouTube',
   };
 
   /// Instagram, LinkedIn and Website go under "Media sosial"; WhatsApp and
@@ -96,6 +98,7 @@ class IkafeContact {
         return _web(v);
       case IkafeContactKind.linkedin:
       case IkafeContactKind.website:
+      case IkafeContactKind.youtube:
         return _web(v);
     }
   }
@@ -142,5 +145,12 @@ const List<IkafeContact> kPlaceholderIkafeContacts = [
     label: 'Website Ikafe',
     value: 'ikafe.example',
     sortOrder: 5,
+  ),
+  IkafeContact(
+    id: 'placeholder-youtube',
+    kind: IkafeContactKind.youtube,
+    label: 'YouTube Ikafe',
+    value: 'youtube.com/@ikafe-contoh',
+    sortOrder: 6,
   ),
 ];

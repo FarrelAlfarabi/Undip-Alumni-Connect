@@ -741,7 +741,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                     key: const Key('member-linkedin'),
                     controller: _linkedin,
                     enabled: !_saving,
-                    keyboardType: TextInputType.url,
+                    keyboardType: kUrlKeyboard,
                     decoration: InputDecoration(
                       labelText: 'LinkedIn',
                       helperMaxLines: 2,

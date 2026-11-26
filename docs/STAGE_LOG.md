@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Phone Back button map and first-run fix (26 Nov 2026)
+- docs/BACK_MAP.md lists what Back does on every screen; test/back_map_test.dart fails when a screen is missing from it.
+- Bug fixed: Consent, PIN offer and first profile left a stale Welcome under them, so Back walked to Welcome. They are now the first screen (Back asks to exit). Tests: test/back_first_run_test.dart.
+- test/back_android_test.dart checks the app tells Android "I handle Back" on every first screen (Android closed the app before asking otherwise). No migration.
+
 ## Fewer email codes at login (24 Nov 2026)
 - Live logs: a correct code made the sign in (session kept) but the app was not entered (Back, reload), then the email box asked for a second code.
 - VerificationScreen now resumes a stored sign in (claim_alumni_profile again, no code). Network slips keep the sign in; no stored sign in changes nothing.
@@ -386,3 +391,15 @@ Profile field labels and Admin Reports texts now go through tr() (Indonesian cop
 
 ## 2026-11-26 Typing lag in member search
 Member list (1.9k) and Admin Anggota followed every key press, so typing lagged. The list now follows the search box 250 ms after the last key (kSearchDelay); the box itself, the filters and their option lists no longer redraw per key. Browser test, 15 keys: slow frames 14 down to 1. No migration.
+## 2026-11-26 Lamaran saya + job status
+Profile menu "Lamaran saya": my applied jobs with date and Masih dibuka / Ditutup / Tidak tersedia (admin hidden); deleted jobs drop out with their applications. Jobs list: Dibuka/Ditutup mark on cards and detail, Status filter (default Dibuka), no Apply on closed jobs. Closed = closed_at only (no expiry date). Migration 20261126120000 (rollback file).
+
+## 2026-11-26 Job info save + link fields
+- Home card "Lengkapi profil" now asks for city after job info (card stayed, looked unsaved); saved row merged so photo is kept.
+- Link fields (LinkedIn, business website, product, admin, sponsor, Ikafe) use text keyboard on web; LinkedIn lost maxLength: Android web repeated characters.
+
+## 2026-11-26 Kontak Ikafe YouTube + admin demo data
+New "youtube" contact kind (app, admin picker, migration 20261126110000, rollback file). Demo DB: Kontak Ikafe = alumni@ikafeundip.com, @ikafeundip, YouTube @IkafeTV (examples removed). [DUMMY] reports, masukan, pending/rejected businesses and products, contact requests added; SQL + rollback in project demo-data folder.
+
+## 2026-11-26 Sponsor view counting
+DB side checked on the demo project: counts and the 10 cap work (home_sponsors only sees live rows). App over-counted: a slide counted when it auto-slid off screen, below the fold or on another tab. Now a view counts only when the carousel is in view and on top. No migration.

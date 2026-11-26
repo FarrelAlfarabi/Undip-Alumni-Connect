@@ -30,6 +30,7 @@ final Map<String, String> kEnglish = {
   'Kirim email': 'Send email',
   'Buka Instagram': 'Open Instagram',
   'Buka website': 'Open website',
+  'Buka YouTube': 'Open YouTube',
   'Akunmu sudah punya PIN. Buka dengan PIN itu dulu, atau pilih Lupa PIN lalu masuk lagi dengan kode email.': 'Your account already has a PIN. Open with that PIN first, or choose Forgot PIN and sign in again with an email code.',
   'Mikro': 'Micro',
   'Kecil': 'Small',
@@ -460,6 +461,10 @@ final Map<String, String> kEnglish = {
   'Urutan Home disimpan.': 'Home order saved.',
   'Riwayat admin': 'Admin history',
   'Tarik lamaran?': 'Withdraw application?',
+  'Lamaran saya': 'My applications',
+  'Lowongan ditutup': 'Job closed',
+  'Kamu belum melamar lowongan apa pun. Lowongan yang kamu lamar akan muncul di sini.':
+      'You have not applied to any job yet. Jobs you apply to show up here.',
   'Abaikan laporan': 'Dismiss reports',
   'Ceritakan singkat tentang dirimu': 'Tell us a little about yourself',
   'Permintaan terkirim': 'Request sent',
