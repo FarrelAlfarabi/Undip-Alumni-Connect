@@ -383,3 +383,6 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 
 ## 2026-11-26 UI text fixes
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Sponsor view counting
+DB side checked on the demo project: counts and the 10 cap work (home_sponsors only sees live rows). App over-counted: a slide counted when it auto-slid off screen, below the fold or on another tab. Now a view counts only when the carousel is in view and on top. No migration.
