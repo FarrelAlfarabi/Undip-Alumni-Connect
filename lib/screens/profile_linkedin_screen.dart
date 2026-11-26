@@ -80,10 +80,7 @@ class _ProfileLinkedInScreenState extends State<ProfileLinkedInScreen> {
                 key: const Key('linkedin-field'),
                 controller: _text,
                 enabled: !_saving,
-                maxLength: kLinkedInMax,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                enableSuggestions: false,
+                keyboardType: kUrlKeyboard,
                 decoration: InputDecoration(
                   labelText: tr('LinkedIn (opsional)'),
                   hintText: 'linkedin.com/in/namamu',

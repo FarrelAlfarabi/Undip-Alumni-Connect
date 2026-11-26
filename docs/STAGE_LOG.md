@@ -383,3 +383,7 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 
 ## 2026-11-26 UI text fixes
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Job info save + link fields
+- Home card "Lengkapi profil" now asks for city after job info (card stayed, looked unsaved); saved row merged so photo is kept.
+- Link fields (LinkedIn, business website, product, admin, sponsor, Ikafe) use text keyboard on web; LinkedIn lost maxLength: Android web repeated characters.

@@ -9,8 +9,9 @@ import 'support/fake_report_api.dart';
 /// Pushed list screens must stay in the centred column on wide windows,
 /// like the screens inside the app shell.
 void main() {
-  testWidgets('Blocked users list stays within the tablet column',
-      (tester) async {
+  testWidgets('Blocked users list stays within the tablet column', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1000, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
