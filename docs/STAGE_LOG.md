@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Phone Back button map and first-run fix (26 Nov 2026)
+- docs/BACK_MAP.md lists what Back does on every screen; test/back_map_test.dart fails when a screen is missing from it.
+- Bug fixed: Consent, PIN offer and first profile left a stale Welcome under them, so Back walked to Welcome. They are now the first screen (Back asks to exit). Tests: test/back_first_run_test.dart.
+- test/back_android_test.dart checks the app tells Android "I handle Back" on every first screen (Android closed the app before asking otherwise). No migration.
+
 ## Fewer email codes at login (24 Nov 2026)
 - Live logs: a correct code made the sign in (session kept) but the app was not entered (Back, reload), then the email box asked for a second code.
 - VerificationScreen now resumes a stored sign in (claim_alumni_profile again, no code). Network slips keep the sign in; no stored sign in changes nothing.
