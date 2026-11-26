@@ -10,6 +10,7 @@ import '../config/policy_config.dart';
 import '../data/business_repository.dart';
 import '../data/posting_text.dart';
 import '../models/business.dart';
+import '../models/business_edit_request.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
 import '../widgets/business_photo.dart';
@@ -43,6 +44,9 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
       widget.repository ?? BusinessRepository();
   late Future<(List<Business>, List<BusinessUsage>)> _future;
 
+  /// Open (or recently rejected) change requests, by business id.
+  Map<String, BusinessEditRequest> _edits = {};
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +56,8 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   Future<(List<Business>, List<BusinessUsage>)> _load() async {
     final mine = await _repo.mine(widget.ownerId);
     final usage = await _repo.usage(widget.ownerId);
+    final edits = await _repo.myEdits(widget.ownerId);
+    _edits = {for (final r in edits) r.businessId: r};
     _activeCount = mine
         .where((b) => b.status != BusinessStatus.rejected)
         .length;
@@ -163,6 +169,44 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
     }
   }
 
+  Future<void> _cancelEdit(BusinessEditRequest r) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Batalkan permintaan perubahan?')),
+        content: Text(tr('Data bisnismu tidak berubah.')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Tidak')),
+          ),
+          FilledButton(
+            key: const Key('cancel-edit-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('Batalkan')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await _repo.cancelEdit(widget.ownerId, r.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Permintaan dibatalkan.'))));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: businessErrorMessage(e),
+          screen: 'My businesses',
+          error: e,
+        );
+      }
+    }
+  }
+
   Future<void> _openForm([Business? existing]) async {
     if (existing == null && _activeCount >= kMaxBusinesses) {
       ScaffoldMessenger.of(context)
@@ -175,6 +219,11 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
           ownerId: widget.ownerId,
           repository: _repo,
           existing: existing,
+          pendingEdit: existing == null
+              ? null
+              : _edits[existing.id]?.isPending == true
+              ? _edits[existing.id]
+              : null,
         ),
       ),
     );
@@ -254,6 +303,10 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
                       usage: usage[b.id],
                       onEdit: () => _openForm(b),
                       onEditNib: () => _editNib(b),
+                      edit: _edits[b.id],
+                      onCancelEdit: _edits[b.id] == null
+                          ? null
+                          : () => _cancelEdit(_edits[b.id]!),
                       onDelete: () => _delete(b),
                     );
                   },
@@ -276,6 +329,8 @@ class BusinessOwnerCard extends StatelessWidget {
     this.onEdit,
     this.onEditNib,
     this.onDelete,
+    this.edit,
+    this.onCancelEdit,
   });
 
   final Business business;
@@ -283,6 +338,10 @@ class BusinessOwnerCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onEditNib;
   final VoidCallback? onDelete;
+
+  /// The open or recently rejected change request of this business.
+  final BusinessEditRequest? edit;
+  final VoidCallback? onCancelEdit;
 
   bool get _canEdit =>
       business.status == BusinessStatus.pending ||
@@ -420,6 +479,56 @@ class BusinessOwnerCard extends StatelessWidget {
                   key: Key('nib-edit-${b.id}'),
                   onPressed: onEditNib,
                   child: Text(tr(b.nib == null ? 'Tambah NIB' : 'Ubah NIB')),
+                ),
+              ),
+            ],
+            if (b.status == BusinessStatus.approved && edit != null) ...[
+              const SizedBox(height: 8),
+              if (edit!.isPending)
+                Text(
+                  tr(
+                    'Perubahan menunggu persetujuan admin. Data lama tetap '
+                    'tampil sampai disetujui.',
+                  ),
+                  key: Key('edit-pending-${b.id}'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else
+                Text(
+                  trf('Perubahan ditolak: {0}', [
+                    edit!.rejectReason ?? tr('tanpa alasan'),
+                  ]),
+                  key: Key('edit-rejected-${b.id}'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+            ],
+            if (b.status == BusinessStatus.approved && onEdit != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    if (edit?.isPending == true && onCancelEdit != null)
+                      TextButton(
+                        key: Key('edit-cancel-${b.id}'),
+                        onPressed: onCancelEdit,
+                        child: Text(tr('Batalkan permintaan')),
+                      ),
+                    OutlinedButton(
+                      key: Key('request-edit-${b.id}'),
+                      onPressed: onEdit,
+                      child: Text(
+                        tr(
+                          edit?.isPending == true
+                              ? 'Ubah permintaan'
+                              : 'Ajukan perubahan',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

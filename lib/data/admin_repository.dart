@@ -3,6 +3,7 @@ import '../util/app_language.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/business.dart';
+import '../models/business_edit_request.dart';
 import 'business_repository.dart';
 import 'ikafe_contact.dart';
 import 'report_repository.dart';
@@ -207,6 +208,61 @@ class AdminRepository {
     return Business.fromMap(Map<String, dynamic>.from(map as Map));
   }
 
+  /// Change requests for approved businesses, pending first. [status] null
+  /// means every request.
+  Future<List<BusinessEditRequest>> businessEdits(
+    String adminId, {
+    String? status = 'pending',
+  }) async {
+    final rows = await _guard(
+      () => _api.rpc('admin_business_edit_requests', {
+        'p_admin': adminId,
+        'p_status': status,
+      }),
+    );
+    return [
+      for (final r in (rows as List))
+        BusinessEditRequest.fromAdminRow(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// Approves (the values go live) or rejects (a reason is needed) a change
+  /// request.
+  Future<void> decideBusinessEdit(
+    String adminId,
+    String requestId,
+    bool approve, {
+    String? reason,
+  }) async {
+    await _guard(
+      () => _api.rpc('admin_business_edit_decide', {
+        'p_admin': adminId,
+        'p_request': requestId,
+        'p_action': approve ? 'approve' : 'reject',
+        'p_reason': reason,
+      }),
+    );
+    await _log(
+      adminId,
+      approve ? 'business_edit_approve' : 'business_edit_reject',
+      'business',
+      requestId,
+      reason,
+    );
+  }
+
+  /// How many change requests wait. A failure gives 0 (no red tag).
+  Future<int> businessEditCount(String adminId) async {
+    try {
+      final n = await _api.rpc('admin_business_edit_pending_count', {
+        'p_admin': adminId,
+      });
+      return n is num ? n.toInt() : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   /// The numbers for the red tags on the admin buttons.
   Future<AdminCounts> pendingCounts(String adminId) async {
     final rows = await _guard(
@@ -223,6 +279,7 @@ class AdminRepository {
       listings: n('listings'),
       reports: n('reports'),
       feedback: n('feedback'),
+      businessEdits: await businessEditCount(adminId),
     );
   }
 
@@ -995,6 +1052,7 @@ class AdminCounts {
     this.listings = 0,
     this.reports = 0,
     this.feedback = 0,
+    this.businessEdits = 0,
   });
 
   final int businesses;
@@ -1002,7 +1060,10 @@ class AdminCounts {
   final int reports;
   final int feedback;
 
-  int get total => businesses + listings + reports + feedback;
+  /// Change requests for approved businesses waiting for an admin.
+  final int businessEdits;
+
+  int get total => businesses + listings + reports + feedback + businessEdits;
 }
 
 /// One job post in the admin Jobs list.
