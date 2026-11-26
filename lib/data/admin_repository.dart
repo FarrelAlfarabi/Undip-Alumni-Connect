@@ -525,18 +525,28 @@ class AdminRepository {
     return old is String && old.isNotEmpty ? old : null;
   }
 
-  /// Members an admin can edit (by name or email), 30 at most.
+  /// Members an admin can edit (by name or email). The database returns 500
+  /// at a time, so this asks again until a page comes back short. Before,
+  /// only the first 1000 members could be reached.
   Future<List<AdminMember>> searchMembers(String adminId, String query) async {
-    final rows = await _guard(
-      () => _api.rpc('admin_members_list', {
-        'p_admin': adminId,
-        'p_search': query.trim().isEmpty ? null : query.trim(),
-      }),
-    );
-    return [
-      for (final r in rows as List)
-        AdminMember.fromMap(Map<String, dynamic>.from(r as Map)),
-    ];
+    const page = 500;
+    final out = <AdminMember>[];
+    for (var offset = 0; offset < 50000; offset += page) {
+      final rows = await _guard(
+        () => _api.rpc('admin_members_list', {
+          'p_admin': adminId,
+          'p_search': query.trim().isEmpty ? null : query.trim(),
+          'p_offset': offset,
+        }),
+      );
+      final list = rows as List;
+      out.addAll([
+        for (final r in list)
+          AdminMember.fromMap(Map<String, dynamic>.from(r as Map)),
+      ]);
+      if (list.length < page) break;
+    }
+    return out;
   }
 
   /// Suspends ([suspend] true, [reason] required) or lifts a suspension.

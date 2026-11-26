@@ -47,6 +47,7 @@ void main() {
     expect(api.params['admin_members_list'], {
       'p_admin': 'me',
       'p_search': 'ahmad',
+      'p_offset': 0,
     });
     expect(found.single.name, 'Ahmad Ramadhan');
     expect(found.single.bio, 'Bio lama');
