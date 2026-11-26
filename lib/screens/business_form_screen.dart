@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/profile_fields.dart';
+
 import '../util/app_language.dart';
 
 import '../data/business_repository.dart';
@@ -486,7 +488,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     TextFormField(
                       controller: _website,
                       enabled: !_saving,
-                      keyboardType: TextInputType.url,
+                      keyboardType: kUrlKeyboard,
                       decoration: InputDecoration(
                         labelText: tr('Website link (optional)'),
                         hintText: 'https://...',

@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../data/profile_fields.dart';
+
 import '../data/admin_repository.dart';
 import '../data/marketplace_image_picker.dart';
 import '../data/sponsor.dart';
@@ -439,7 +441,7 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
                 controller: _link,
                 enabled: !_busy,
                 autocorrect: false,
-                keyboardType: TextInputType.url,
+                keyboardType: kUrlKeyboard,
                 decoration: InputDecoration(
                   labelText: tr('Tautan (https://...)'),
                   border: const OutlineInputBorder(),

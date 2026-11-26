@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/profile_fields.dart';
+
 import '../util/app_language.dart';
 
 import 'package:flutter/services.dart';
@@ -382,7 +384,7 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           TextFormField(
                             controller: _shop,
                             enabled: !_saving,
-                            keyboardType: TextInputType.url,
+                            keyboardType: kUrlKeyboard,
                             decoration: InputDecoration(
                               labelText: tr('Online shop link (optional)'),
                               hintText: 'https://...',
