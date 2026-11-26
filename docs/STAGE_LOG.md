@@ -414,3 +414,7 @@ Found on the live site with a test login. Text boxes had no limit, so a 260 char
 
 ## 2026-11-26 Admin member list reads all members
 Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones after about M could not be found, edited or suspended in the app. Migration 20261126140000 adds p_offset (500 per call); the app asks again until a page is short. Rollback file included.
+
+## 2026-11-26 Faster tab switching
+- Measured on the live site (signed in, phone width, CPU slowed 4x): each tab tap spent about 350 ms rebuilding the tabs that stayed hidden. HomeShell now keeps each tab's widget until its refresh, so hidden tabs are not rebuilt.
+- A tab that refreshes after 20 s showed a blank spinner for 2 to 4 s. Members, Marketplace, Businesses and Jobs now show the last list at once and refetch behind it (in-memory StaleCache, emptied on sign out and on block). Explore builds a segment only when opened. Members pages and photo list, the business list calls and the admin red-tag counts are asked together. No migration.

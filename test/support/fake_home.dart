@@ -130,9 +130,12 @@ class MarkerPage extends StatelessWidget {
 
 /// Counts how many times it was created (initState), to prove tab refetch.
 class CountingPage extends StatefulWidget {
-  const CountingPage(this.label, this.counter, {super.key});
+  const CountingPage(this.label, this.counter, {this.rebuilds, super.key});
   final String label;
   final List<int> counter;
+
+  /// When given, one entry is added every time the page is rebuilt.
+  final List<int>? rebuilds;
 
   @override
   State<CountingPage> createState() => _CountingPageState();
@@ -146,7 +149,10 @@ class _CountingPageState extends State<CountingPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Text('TAB ${widget.label}');
+  Widget build(BuildContext context) {
+    widget.rebuilds?.add(1);
+    return Text('TAB ${widget.label}');
+  }
 }
 
 /// Fake pages. [users] collects the notifier every page received.
@@ -154,6 +160,7 @@ HomePages fakePages({
   List<ValueNotifier<Map<String, dynamic>>>? users,
   List<int>? chatBuilds,
   List<int>? directoryBuilds,
+  List<int>? directoryRebuilds,
   List<int>? marketBuilds,
 }) {
   void note(ValueNotifier<Map<String, dynamic>> u) => users?.add(u);
@@ -166,7 +173,11 @@ HomePages fakePages({
       note(u);
       return directoryBuilds == null
           ? const MarkerPage('Directory')
-          : CountingPage('Directory', directoryBuilds);
+          : CountingPage(
+              'Directory',
+              directoryBuilds,
+              rebuilds: directoryRebuilds,
+            );
     },
     market: (u, segment) {
       note(u);

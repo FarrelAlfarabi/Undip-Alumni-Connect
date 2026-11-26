@@ -2,6 +2,7 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../data/stale_cache.dart';
 import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
@@ -79,10 +80,15 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
 
   String get _myId => widget.currentUser.value['id'] as String;
 
+  String get _cacheKey => 'businesses:$_myId';
+
+  Future<List<Business>> _fetchBusinesses() =>
+      StaleCache.remember(_cacheKey, _repo.directory(_myId));
+
   @override
   void initState() {
     super.initState();
-    _future = _repo.directory(_myId);
+    _future = _fetchBusinesses();
     _search.addListener(() => setState(() {}));
     CategoryRepository.shared.load();
   }
@@ -95,7 +101,7 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
   }
 
   void _reload() => setState(() {
-    _future = _repo.directory(_myId);
+    _future = _fetchBusinesses();
   });
 
   Future<void> _register() async {
@@ -137,8 +143,9 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
   Widget _body() {
     return FutureBuilder<List<Business>>(
       future: _future,
+      initialData: StaleCache.peek<List<Business>>(_cacheKey),
       builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
+        if (snap.connectionState != ConnectionState.done && !snap.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
