@@ -7,6 +7,7 @@ import '../data/category_repository.dart';
 import '../data/marketplace_image_picker.dart';
 import 'photo_adjust_screen.dart';
 import '../models/business.dart';
+import '../models/business_edit_request.dart';
 import '../util/safe_url.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/error_view.dart';
@@ -18,6 +19,11 @@ const String kBusinessSubmittedMessage =
     'Permintaanmu sudah kami terima. Admin akan meninjau bisnismu dan kamu '
     'akan mendapat pemberitahuan saat ada keputusan. Status bisa dilihat di '
     '"My businesses".';
+
+/// What the owner is told after asking to change an approved business.
+const String kBusinessEditSentMessage =
+    'Permintaan perubahan sudah dikirim. Data lama tetap tampil sampai admin '
+    'menyetujui. Kamu akan mendapat pemberitahuan.';
 
 /// Added to [kBusinessSubmittedMessage] when the business was saved but its
 /// photo could not be.
@@ -33,12 +39,16 @@ class BusinessFormScreen extends StatefulWidget {
     required this.ownerId,
     required this.repository,
     this.existing,
+    this.pendingEdit,
     this.pickPhoto = pickListingImage,
   });
 
   final String ownerId;
   final BusinessRepository repository;
   final Business? existing;
+
+  /// The open change request of an approved business, to edit it again.
+  final BusinessEditRequest? pendingEdit;
 
   /// Injectable for tests; defaults to the file picker.
   final ImagePickerFn pickPhoto;
@@ -69,21 +79,31 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
 
   bool get _isEdit => widget.existing != null;
 
+  /// An approved business cannot be changed directly: the form sends a
+  /// change request and the old version stays until an admin approves.
+  bool get _isRequest => widget.existing?.status == BusinessStatus.approved;
+
+  String? _photoUrl;
+
   @override
   void initState() {
     super.initState();
     final e = widget.existing;
-    _name = TextEditingController(text: e?.name);
-    _description = TextEditingController(text: e?.description);
-    _social = TextEditingController(text: e?.socialLink);
-    _website = TextEditingController(text: e?.websiteLink);
-    _nib = TextEditingController(text: e?.nib);
-    _hasNib = (e?.nib ?? '').isNotEmpty;
-    _category = e?.category;
+    final v =
+        widget.pendingEdit?.proposed ??
+        (e == null ? null : BusinessValues.of(e));
+    _name = TextEditingController(text: v?.name);
+    _description = TextEditingController(text: v?.description);
+    _social = TextEditingController(text: v?.socialLink);
+    _website = TextEditingController(text: v?.websiteLink);
+    _nib = TextEditingController(text: v?.nib);
+    _hasNib = (v?.nib ?? '').isNotEmpty;
+    _photoUrl = v?.photoUrl;
+    _category = v?.category;
     _categoryText = TextEditingController(text: _category ?? '');
     CategoryRepository.shared.load();
     _band = e?.requestedBand;
-    _personal = e?.isPersonal ?? false;
+    _personal = v?.isPersonal ?? false;
   }
 
   @override
@@ -182,7 +202,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     // Saying "Belum" on a business that has a NIB removes it, and the blue
     // tick with it. Ask first.
     final had = widget.existing?.nib;
-    if (had != null && !_hasNib) {
+    if (!_isRequest && had != null && !_hasNib) {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -227,6 +247,37 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
         isPersonal: _personal,
       );
       final existing = widget.existing;
+      if (_isRequest) {
+        // Approved business: a change request. The photo is uploaded first;
+        // the business itself is not touched until an admin approves.
+        var photo = _removePhoto ? null : _photoUrl;
+        if (_picked != null) {
+          photo = await widget.repository.uploadPhoto(
+            ownerId: widget.ownerId,
+            fileName: _picked!.name,
+            bytes: _picked!.bytes,
+          );
+        }
+        final req = await widget.repository.submitEdit(
+          widget.ownerId,
+          existing!.id,
+          BusinessValues(
+            name: input.name,
+            description: input.description,
+            category: input.category,
+            socialLink: input.socialLink,
+            websiteLink: input.websiteLink,
+            isPersonal: input.isPersonal,
+            nib: _hasNib ? cleanNib(_nib.text) : null,
+            photoUrl: photo,
+          ),
+        );
+        messenger.showSnackBar(
+          SnackBar(content: Text(tr(kBusinessEditSentMessage))),
+        );
+        navigator.pop(req);
+        return;
+      }
       final saved = existing == null
           ? await widget.repository.register(widget.ownerId, input)
           : await widget.repository.update(widget.ownerId, existing.id, input);
@@ -293,7 +344,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
 
   /// The optional photo: a preview, then Add / Change and Remove buttons.
   Widget _photoSection(ThemeData theme) {
-    final existingUrl = _removePhoto ? null : widget.existing?.photoUrl;
+    final existingUrl = _removePhoto ? null : _photoUrl;
     final hasPhoto = _picked != null || (existingUrl?.isNotEmpty ?? false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,7 +406,11 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Edit business' : 'Register a business'),
+        title: Text(
+          _isRequest
+              ? tr('Ajukan perubahan')
+              : (_isEdit ? 'Edit business' : 'Register a business'),
+        ),
       ),
       body: SafeArea(
         child: Center(
@@ -368,6 +423,26 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (_isRequest) ...[
+                      Container(
+                        key: const Key('edit-request-note'),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          tr(
+                            'Perubahan harus disetujui admin dulu. Sampai '
+                            'disetujui, data lama tetap tampil untuk semua orang.',
+                          ),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     if (widget.existing?.status == BusinessStatus.rejected) ...[
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -617,7 +692,9 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                               ),
                             )
                           : Text(
-                              _isEdit
+                              _isRequest
+                                  ? tr('Kirim perubahan')
+                                  : _isEdit
                                   ? 'Save and send again'
                                   : 'Submit for review',
                             ),

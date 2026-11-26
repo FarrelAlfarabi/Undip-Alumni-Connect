@@ -383,3 +383,6 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 
 ## 2026-11-26 UI text fixes
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Edit business with admin approval
+Owner of an approved business sends a change request (name, description, category, links, personal, NIB, photo). Old version stays live until an admin approves in Admin > Perubahan bisnis (old vs new, reject needs a reason); owner can cancel, gets notices. Changed NIB loses its blue tick. Migration 20261126120000 (rollback file, SQL test 35).

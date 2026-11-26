@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/policy_config.dart';
 import '../models/business.dart';
+import '../models/business_edit_request.dart';
 import 'marketplace_repository.dart' show imageContentType;
 
 /// Error codes raised by the business SQL functions (see
@@ -23,6 +24,7 @@ enum BusinessErrorCode {
   notOwner,
   locked,
   invalidNib,
+  noChange,
   unknown,
 }
 
@@ -69,6 +71,8 @@ String businessErrorMessage(Object error) {
         );
       case BusinessErrorCode.invalidNib:
         return tr('NIB harus 13 digit angka.');
+      case BusinessErrorCode.noChange:
+        return tr('Belum ada yang kamu ubah.');
       case BusinessErrorCode.notFound:
         return tr('This business no longer exists.');
       case BusinessErrorCode.notOwner:
@@ -180,6 +184,56 @@ class BusinessRepository {
       }),
     );
     return Business.fromMap(_single(row));
+  }
+
+  /// Asks to change an approved business. The business keeps its old values
+  /// until an admin approves. Sending again replaces the open request.
+  Future<BusinessEditRequest> submitEdit(
+    String ownerId,
+    String businessId,
+    BusinessValues v,
+  ) async {
+    final row = await _guard(
+      () => _api.rpc('business_edit_request_submit', {
+        'p_owner': ownerId,
+        'p_business': businessId,
+        'p_name': v.name,
+        'p_description': v.description,
+        'p_category': v.category,
+        'p_social_link': v.socialLink,
+        'p_website_link': v.websiteLink,
+        'p_is_personal': v.isPersonal,
+        'p_nib': cleanNib(v.nib),
+        'p_photo_url': v.photoUrl,
+      }),
+    );
+    return BusinessEditRequest.fromOwnerRow(_single(row));
+  }
+
+  /// Cancels my open change request.
+  Future<void> cancelEdit(String ownerId, String requestId) async {
+    await _guard(
+      () => _api.rpc('business_edit_request_cancel', {
+        'p_owner': ownerId,
+        'p_request': requestId,
+      }),
+    );
+  }
+
+  /// My open requests, and ones turned down in the last 30 days. A failure
+  /// gives none: the list still works without the status line.
+  Future<List<BusinessEditRequest>> myEdits(String ownerId) async {
+    try {
+      final rows = await _api.rpc('business_edit_request_my', {
+        'p_owner': ownerId,
+      });
+      return [
+        for (final r in (rows as List))
+          BusinessEditRequest.fromOwnerRow(Map<String, dynamic>.from(r as Map)),
+      ];
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Uploads a photo for a business and returns its public URL. The file
@@ -336,6 +390,7 @@ class BusinessRepository {
       'not_owner' => BusinessErrorCode.notOwner,
       'locked' => BusinessErrorCode.locked,
       'invalid_nib' => BusinessErrorCode.invalidNib,
+      'no_change' => BusinessErrorCode.noChange,
       _ => BusinessErrorCode.unknown,
     };
     return BusinessException(code, e.message);
