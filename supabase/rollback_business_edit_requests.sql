@@ -1,4 +1,4 @@
--- Undo 20261126120000_business_edit_requests.sql. Safe to run twice.
+-- Undo 20261126130000_business_edit_requests.sql. Safe to run twice.
 -- Requests still waiting are deleted with the table. Businesses keep the
 -- values that were already approved.
 drop function if exists admin_business_edit_decide(uuid, uuid, text, text);

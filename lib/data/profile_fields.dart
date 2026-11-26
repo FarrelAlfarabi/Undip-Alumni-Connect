@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -73,3 +74,17 @@ Future<Map<String, dynamic>?> saveProfileFields(
   final list = rows as List;
   return list.isEmpty ? null : list.first as Map<String, dynamic>;
 }
+
+/// The saved row only has the columns in [kProfileColumns], so it has no photo
+/// link. Lay it over what we already hold so nothing else is lost.
+Map<String, dynamic> mergeSavedProfile(
+  Map<String, dynamic> current,
+  Map<String, dynamic> saved,
+) => {...current, ...saved};
+
+/// Keyboard for link fields. On the web, `TextInputType.url` makes an
+/// `<input type="url">`, and Android browsers repeat typed characters in it.
+/// Plain text avoids that; phone apps keep the link keyboard.
+final TextInputType kUrlKeyboard = kIsWeb
+    ? TextInputType.text
+    : TextInputType.url;

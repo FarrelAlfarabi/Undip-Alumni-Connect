@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../data/profile_fields.dart';
+
 import '../util/app_language.dart';
 
 import '../data/admin_repository.dart';
@@ -329,7 +331,7 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
                 controller: _value,
                 enabled: !_busy,
                 autocorrect: false,
-                keyboardType: TextInputType.url,
+                keyboardType: kUrlKeyboard,
                 decoration: InputDecoration(
                   labelText: tr('Nomor, email, @akun atau link'),
                   border: OutlineInputBorder(),

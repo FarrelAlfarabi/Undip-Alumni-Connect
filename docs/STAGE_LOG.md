@@ -385,4 +385,16 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
 
 ## 2026-11-26 Edit business with admin approval
-Owner of an approved business sends a change request (name, description, category, links, personal, NIB, photo). Old version stays live until an admin approves in Admin > Perubahan bisnis (old vs new, reject needs a reason); owner can cancel, gets notices. Changed NIB loses its blue tick. Migration 20261126120000 (rollback file, SQL test 35).
+Owner of an approved business sends a change request (name, description, category, links, personal, NIB, photo). Old version stays live until an admin approves in Admin > Perubahan bisnis (old vs new, reject needs a reason); owner can cancel, gets notices. Changed NIB loses its blue tick. Migration 20261126130000 (rollback file, SQL test 35).
+## 2026-11-26 Lamaran saya + job status
+Profile menu "Lamaran saya": my applied jobs with date and Masih dibuka / Ditutup / Tidak tersedia (admin hidden); deleted jobs drop out with their applications. Jobs list: Dibuka/Ditutup mark on cards and detail, Status filter (default Dibuka), no Apply on closed jobs. Closed = closed_at only (no expiry date). Migration 20261126120000 (rollback file).
+
+## 2026-11-26 Job info save + link fields
+- Home card "Lengkapi profil" now asks for city after job info (card stayed, looked unsaved); saved row merged so photo is kept.
+- Link fields (LinkedIn, business website, product, admin, sponsor, Ikafe) use text keyboard on web; LinkedIn lost maxLength: Android web repeated characters.
+
+## 2026-11-26 Kontak Ikafe YouTube + admin demo data
+New "youtube" contact kind (app, admin picker, migration 20261126110000, rollback file). Demo DB: Kontak Ikafe = alumni@ikafeundip.com, @ikafeundip, YouTube @IkafeTV (examples removed). [DUMMY] reports, masukan, pending/rejected businesses and products, contact requests added; SQL + rollback in project demo-data folder.
+
+## 2026-11-26 Sponsor view counting
+DB side checked on the demo project: counts and the 10 cap work (home_sponsors only sees live rows). App over-counted: a slide counted when it auto-slid off screen, below the fold or on another tab. Now a view counts only when the carousel is in view and on top. No migration.
