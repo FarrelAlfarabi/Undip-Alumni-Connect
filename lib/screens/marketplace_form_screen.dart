@@ -383,6 +383,8 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _shop,
+                            // No length formatter on link and email fields: it made Android browsers
+                            // repeat typed characters. Length is checked on save.
                             enabled: !_saving,
                             keyboardType: kUrlKeyboard,
                             decoration: InputDecoration(
@@ -553,7 +555,7 @@ class _PhotoPicker extends StatelessWidget {
           onPressed: enabled ? onTap : null,
           icon: const Icon(Icons.photo_outlined),
           label: Text(
-            picked != null || hasExisting ? 'Change photo' : 'Choose photo',
+            tr(picked != null || hasExisting ? 'Change photo' : 'Choose photo'),
           ),
         ),
         if (error == null)

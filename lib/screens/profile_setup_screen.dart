@@ -157,6 +157,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 children: [
                   TextField(
                     controller: _roleController,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Current Role'),
@@ -167,6 +168,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   TextField(
                     key: const Key('profile-company'),
                     controller: _companyController,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Company'),

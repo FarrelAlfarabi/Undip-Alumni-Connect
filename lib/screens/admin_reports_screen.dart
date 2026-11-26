@@ -596,14 +596,14 @@ class _ReportCard extends StatelessWidget {
       child: FilledButton(
         key: key,
         onPressed: busy ? null : onTap,
-        child: Text(label),
+        child: Text(tr(label)),
       ),
     );
     Widget quiet(Key key, String label, VoidCallback onTap) => Expanded(
       child: OutlinedButton(
         key: key,
         onPressed: busy ? null : onTap,
-        child: Text(label),
+        child: Text(tr(label)),
       ),
     );
 

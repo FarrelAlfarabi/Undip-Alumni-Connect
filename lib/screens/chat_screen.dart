@@ -5,6 +5,7 @@ import '../util/app_language.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../util/friendly_error.dart';
+import '../data/profile_fields.dart';
 
 /// Basic messaging UI (Day 6, demo scope). One conversation, no realtime —
 /// the thread refetches after you send, and on the refresh button for
@@ -126,6 +127,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      inputFormatters: const [CodePointLimit(4000)],
                       enabled: !_sending,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),

@@ -64,4 +64,60 @@ void main() {
     );
     expect(kIndonesian['All'], 'Semua');
   });
+
+  // Bug hunt, 26 Nov 2026: these texts showed in English on Indonesian screens
+  // because they sat inside a condition or a helper, where the language sweep
+  // does not look.
+  test('texts that were left in English have Indonesian text', () {
+    for (final k in [
+      'Dismiss',
+      'Suspend user',
+      'Mark as handled',
+      'Lift suspension',
+      'Required',
+      'Choose photo',
+      'Change photo',
+      'Add photo',
+      'Edit business',
+      'Submit for review',
+      'Save and send again',
+      'Choose honestly. You cannot change it after you submit. An admin '
+          'checks it.',
+      'Newest',
+      'Price: low to high',
+      'Price: high to low',
+      'seen',
+      'Pending',
+      'Approved band: {0}',
+      'Products posted: {0} of {1} allowed',
+    ]) {
+      expect(kIndonesian.containsKey(k), isTrue, reason: k);
+    }
+  });
+
+  test('the report buttons, status filter and sort menu go through tr()', () {
+    expect(
+      _src('lib/screens/admin_reports_screen.dart'),
+      contains('child: Text(tr(label))'),
+    );
+    expect(
+      _src('lib/screens/admin_screen.dart'),
+      contains('options: [for (final f in _filters) tr(f.\$1)]'),
+    );
+    expect(
+      _src('lib/screens/marketplace_screen.dart'),
+      contains('Text(tr(s.label))'),
+    );
+    expect(
+      _src('lib/screens/admin_feedback_screen.dart'),
+      contains('Text(tr(f.status))'),
+    );
+  });
+
+  test('messages point to "Bisnis saya", the name the screen really has', () {
+    expect(
+      _src('lib/screens/business_form_screen.dart'),
+      isNot(contains('"My businesses"')),
+    );
+  });
 }

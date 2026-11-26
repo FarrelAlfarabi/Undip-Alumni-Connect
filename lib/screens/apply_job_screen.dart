@@ -9,6 +9,7 @@ import '../util/friendly_error.dart';
 import '../util/cv_upload.dart';
 import '../util/safe_url.dart';
 import '../widgets/error_view.dart';
+import '../data/profile_fields.dart';
 
 /// Job application form (added 17 Sep 2026, Master Plan §3.4 item 7).
 ///
@@ -250,27 +251,31 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
+            inputFormatters: const [CodePointLimit(200)],
             decoration: InputDecoration(
               labelText: tr('Full Name'),
               border: OutlineInputBorder(),
             ),
             validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Required' : null,
+                (v == null || v.trim().isEmpty) ? tr('Required') : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _emailController,
+            // No length formatter on link and email fields: it made Android browsers
+            // repeat typed characters. Length is checked on save.
             keyboardType: TextInputType.emailAddress,
             decoration: const InputDecoration(
               labelText: 'Email',
               border: OutlineInputBorder(),
             ),
             validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Required' : null,
+                (v == null || v.trim().isEmpty) ? tr('Required') : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _phoneController,
+            inputFormatters: const [CodePointLimit(50)],
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               labelText: tr('Phone (optional)'),
@@ -280,10 +285,14 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _linkedinController,
+            // No length formatter on link and email fields: it made Android browsers
+            // repeat typed characters. Length is checked on save.
             decoration: InputDecoration(
-              labelText: _requireLinkedin
-                  ? 'LinkedIn URL (required by this job)'
-                  : 'LinkedIn URL (optional)',
+              labelText: tr(
+                _requireLinkedin
+                    ? 'LinkedIn URL (required by this job)'
+                    : 'LinkedIn URL (optional)',
+              ),
               border: const OutlineInputBorder(),
             ),
             validator: (v) => validateHttpUrl(v, required: _requireLinkedin),
@@ -291,10 +300,14 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _portfolioController,
+            // No length formatter on link and email fields: it made Android browsers
+            // repeat typed characters. Length is checked on save.
             decoration: InputDecoration(
-              labelText: _requirePortfolio
-                  ? 'Portfolio / other link (required by this job)'
-                  : 'Portfolio / other link (optional)',
+              labelText: tr(
+                _requirePortfolio
+                    ? 'Portfolio / other link (required by this job)'
+                    : 'Portfolio / other link (optional)',
+              ),
               border: const OutlineInputBorder(),
             ),
             validator: (v) => validateHttpUrl(v, required: _requirePortfolio),
@@ -302,17 +315,20 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _noteController,
+            inputFormatters: const [CodePointLimit(5000)],
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: _requireCoverNote
-                  ? 'Cover note (required by this job)'
-                  : 'Cover note (optional)',
+              labelText: tr(
+                _requireCoverNote
+                    ? 'Cover note (required by this job)'
+                    : 'Cover note (optional)',
+              ),
               border: const OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
             validator: (v) =>
                 (_requireCoverNote && (v == null || v.trim().isEmpty))
-                ? 'Required by this job'
+                ? tr('Required by this job')
                 : null,
           ),
           const SizedBox(height: 16),
@@ -321,9 +337,11 @@ class _ApplyJobScreenState extends State<ApplyJobScreen> {
             icon: const Icon(Icons.attach_file),
             label: Text(
               _cvFile == null
-                  ? (_requireCv
-                        ? 'Attach CV (required by this job)'
-                        : 'Attach CV (optional, PDF/DOC)')
+                  ? tr(
+                      _requireCv
+                          ? 'Attach CV (required by this job)'
+                          : 'Attach CV (optional, PDF/DOC)',
+                    )
                   : _cvFile!.name,
               overflow: TextOverflow.ellipsis,
             ),
