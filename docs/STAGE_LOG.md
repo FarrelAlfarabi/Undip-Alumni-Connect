@@ -411,3 +411,6 @@ DB side checked on the demo project: counts and the 10 cap work (home_sponsors o
 
 ## 2026-11-26 Bug hunt: length limits and English wording
 Found on the live site with a test login. Text boxes had no limit, so a 260 character job title only said "Gagal memasang"; now plain text boxes stop at the database limit (link and email boxes check on save, because limits there made Android repeat characters). English left on Indonesian screens fixed (Laporan buttons, business form and cards, Pasang lowongan, Lamar, sort, status). Admin count badge no longer covers the arrow; business status chip shows in full. No migration.
+
+## 2026-11-26 Admin member list reads all members
+Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones after about M could not be found, edited or suspended in the app. Migration 20261126140000 adds p_offset (500 per call); the app asks again until a page is short. Rollback file included.
