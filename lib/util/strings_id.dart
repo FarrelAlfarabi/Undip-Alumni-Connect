@@ -254,6 +254,9 @@ final Map<String, String> kIndonesian = {
   'Reason (kept for admins)': 'Alasan (hanya untuk admin)',
   'Suspend': 'Tangguhkan',
   'Hidden items': 'Item tersembunyi',
+  'Graduation Year': 'Tahun lulus',
+  'No open reports.': 'Belum ada laporan terbuka.',
+  'Nothing is hidden.': 'Tidak ada yang disembunyikan.',
   'Search title, owner, note or reason...':
       'Cari judul, pemilik, catatan atau alasan...',
   'Clear search': 'Hapus pencarian',
