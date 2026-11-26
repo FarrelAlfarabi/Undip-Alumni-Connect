@@ -369,7 +369,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           ),
                           PopupMenuButton<MarketplaceSort>(
                             key: const Key('sort-menu'),
-                            tooltip: trf('Sort: {0}', [_sort.label]),
+                            tooltip: trf('Sort: {0}', [tr(_sort.label)]),
                             icon: Icon(
                               Icons.swap_vert,
                               color: _sort == MarketplaceSort.newest
@@ -380,7 +380,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                             onSelected: (v) => setState(() => _sort = v),
                             itemBuilder: (_) => [
                               for (final s in MarketplaceSort.values)
-                                PopupMenuItem(value: s, child: Text(s.label)),
+                                PopupMenuItem(
+                                  value: s,
+                                  child: Text(tr(s.label)),
+                                ),
                             ],
                           ),
                         ],

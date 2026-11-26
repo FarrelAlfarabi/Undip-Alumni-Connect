@@ -17,6 +17,7 @@ import '../widgets/business_photo.dart';
 import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import '../widgets/verified_badge.dart';
+import '../data/profile_fields.dart';
 
 const String _limitNote =
     'You can own up to $kMaxBusinesses businesses. To add more, email '
@@ -122,6 +123,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
               TextFormField(
                 key: const Key('nib-dialog-field'),
                 controller: text,
+                inputFormatters: const [CodePointLimit(13)],
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: tr('NIB (opsional)'),
@@ -377,15 +379,11 @@ class BusinessOwnerCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Flexible(
-                  child: Chip(
-                    key: Key('status-${b.id}'),
-                    label: Text(
-                      b.status.label,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    visualDensity: VisualDensity.compact,
-                  ),
+                // Not squeezed by the name: the whole status shows.
+                Chip(
+                  key: Key('status-${b.id}'),
+                  label: Text(b.status.label),
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -400,9 +398,11 @@ class BusinessOwnerCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               b.approvedBand != null
-                  ? 'Approved band: ${b.approvedBand!.label}'
-                  : 'Band you chose: ${b.requestedBand?.label ?? '-'} '
-                        '(an admin sets the approved band)',
+                  ? trf('Approved band: {0}', [b.approvedBand!.label])
+                  : trf(
+                      'Band you chose: {0} (an admin sets the approved band)',
+                      [b.requestedBand?.label ?? '-'],
+                    ),
               style: theme.textTheme.bodyMedium,
             ),
             if (b.nib != null) ...[

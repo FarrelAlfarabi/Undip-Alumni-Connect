@@ -656,6 +656,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-name'),
                     controller: _name,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
@@ -667,6 +668,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-email'),
                     controller: _email,
+                    // No length formatter on link and email fields: it made Android browsers
+                    // repeat typed characters. Length is checked on save.
                     enabled: !_saving && _canEditEmail,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
@@ -685,6 +688,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-role'),
                     controller: _role,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Jabatan'),
@@ -695,6 +699,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-company'),
                     controller: _company,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Perusahaan'),
@@ -741,6 +746,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-linkedin'),
                     controller: _linkedin,
+                    // No length formatter on link and email fields: it made Android browsers
+                    // repeat typed characters. Length is checked on save.
                     enabled: !_saving,
                     keyboardType: kUrlKeyboard,
                     decoration: InputDecoration(

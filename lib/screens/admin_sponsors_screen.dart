@@ -439,6 +439,8 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
               TextFormField(
                 key: const Key('sponsor-link'),
                 controller: _link,
+                // No length formatter on link and email fields: it made Android browsers
+                // repeat typed characters. Length is checked on save.
                 enabled: !_busy,
                 autocorrect: false,
                 keyboardType: kUrlKeyboard,
@@ -507,6 +509,7 @@ class _SponsorFormScreenState extends State<SponsorFormScreen> {
               TextFormField(
                 key: const Key('sponsor-rank'),
                 controller: _rank,
+                inputFormatters: const [CodePointLimit(4)],
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(

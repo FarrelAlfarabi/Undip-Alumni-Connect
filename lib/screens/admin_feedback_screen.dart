@@ -240,7 +240,7 @@ class _FeedbackCard extends StatelessWidget {
                 ),
                 if (!f.isNew)
                   Chip(
-                    label: Text(f.status),
+                    label: Text(tr(f.status)),
                     visualDensity: VisualDensity.compact,
                   ),
               ],

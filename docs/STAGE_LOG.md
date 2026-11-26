@@ -408,3 +408,6 @@ DB side checked on the demo project: counts and the 10 cap work (home_sponsors o
 
 ## 2026-11-26 Wrong remembered profile
 - Browser remembered "[DUMMY] Admin Demo" while signed in as Farrel: every profile save hit a row the sign in cannot edit (200, no rows, "Tautan belum tersimpan"). AppEntry now checks the sign in's own profile on unlock and switches to it.
+
+## 2026-11-26 Bug hunt: length limits and English wording
+Found on the live site with a test login. Text boxes had no limit, so a 260 character job title only said "Gagal memasang"; now plain text boxes stop at the database limit (link and email boxes check on save, because limits there made Android repeat characters). English left on Indonesian screens fixed (Laporan buttons, business form and cards, Pasang lowongan, Lamar, sort, status). Admin count badge no longer covers the arrow; business status chip shows in full. No migration.

@@ -13,6 +13,7 @@ import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import 'job_applicants_screen.dart';
 import 'post_job_screen.dart';
+import '../data/profile_fields.dart';
 
 /// The jobs I posted, newest first, with how many people applied. Tap one to
 /// see its applicants.
@@ -196,6 +197,15 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
                     child: TextField(
                       key: Key(key),
                       controller: c,
+                      inputFormatters: [
+                        CodePointLimit(
+                          (key == 'edit-description'
+                              ? 10000
+                              : key == 'edit-contact'
+                              ? 500
+                              : 200),
+                        ),
+                      ],
                       maxLines: lines,
                       decoration: InputDecoration(
                         labelText: label,

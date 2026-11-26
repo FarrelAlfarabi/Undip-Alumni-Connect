@@ -20,7 +20,7 @@ import '../widgets/searchable_choice.dart';
 const String kBusinessSubmittedMessage =
     'Permintaanmu sudah kami terima. Admin akan meninjau bisnismu dan kamu '
     'akan mendapat pemberitahuan saat ada keputusan. Status bisa dilihat di '
-    '"My businesses".';
+    '"Bisnis saya".';
 
 /// What the owner is told after asking to change an approved business.
 const String kBusinessEditSentMessage =
@@ -30,7 +30,7 @@ const String kBusinessEditSentMessage =
 /// Added to [kBusinessSubmittedMessage] when the business was saved but its
 /// photo could not be.
 const String kBusinessPhotoFailedMessage =
-    ' Fotonya belum terunggah. Buka bisnisnya dari "My businesses" lalu '
+    ' Fotonya belum terunggah. Buka bisnisnya dari "Bisnis saya" lalu '
     'tambahkan lagi.';
 
 /// Register a business, or (when [existing] is set) fix a pending or rejected
@@ -151,25 +151,30 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
 
   static String? _requiredName(String? v) {
     final t = (v ?? '').trim();
-    if (t.isEmpty) return 'Required';
-    if (t.length < 2) return 'Name must be at least 2 characters';
-    if (t.length > 100) return 'Name must be 100 characters or fewer';
+    if (t.isEmpty) return tr('Required');
+    if (t.length < 2) return tr('Name must be at least 2 characters');
+    if (t.length > 100) return tr('Name must be 100 characters or fewer');
     return null;
   }
 
   static String? _requiredDescription(String? v) {
     final t = (v ?? '').trim();
-    if (t.isEmpty) return 'Required';
-    if (t.length > 500) return 'Description must be 500 characters or fewer';
+    if (t.isEmpty) return tr('Required');
+    if (t.length > 500) {
+      return tr('Description must be 500 characters or fewer');
+    }
     return null;
   }
 
   static String? _instagramField(String? v) {
     final t = (v ?? '').trim();
-    if (t.isEmpty) return 'Required';
+    if (t.isEmpty) return tr('Required');
+    if (t.length > 300) return tr('Link must be 300 characters or fewer');
     final uri = parseInstagram(t);
     if (uri == null || !uri.host.contains('.')) {
-      return 'Enter @username or a link like https://instagram.com/yourshop';
+      return tr(
+        'Enter @username or a link like https://instagram.com/yourshop',
+      );
     }
     return null;
   }
@@ -177,9 +182,10 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
   static String? _websiteField(String? v) {
     final t = (v ?? '').trim();
     if (t.isEmpty) return null;
+    if (t.length > 300) return tr('Link must be 300 characters or fewer');
     final uri = parseHttpUrl(t);
     if (uri == null || !uri.host.contains('.')) {
-      return 'Enter a link like https://yourshop.com';
+      return tr('Enter a link like https://yourshop.com');
     }
     return null;
   }
@@ -196,7 +202,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
     final social = _clean(_social.text, instagram: true);
     final website = _clean(_website.text);
     final bandMsg = (!_isEdit && _band == null)
-        ? 'Choose the yearly sales band.'
+        ? tr('Choose the yearly sales band.')
         : null;
     setState(() => _bandError = bandMsg);
     if (!fieldsOk || bandMsg != null) return;
@@ -379,7 +385,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
               key: const Key('business-photo-pick'),
               onPressed: _saving ? null : _choosePhoto,
               icon: const Icon(Icons.add_photo_alternate_outlined),
-              label: Text(hasPhoto ? 'Change photo' : 'Add photo'),
+              label: Text(tr(hasPhoto ? 'Change photo' : 'Add photo')),
             ),
             if (hasPhoto)
               TextButton(
@@ -411,7 +417,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
         title: Text(
           _isRequest
               ? tr('Ajukan perubahan')
-              : (_isEdit ? 'Edit business' : 'Register a business'),
+              : tr(_isEdit ? 'Edit business' : 'Register a business'),
         ),
       ),
       body: SafeArea(
@@ -549,6 +555,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _social,
+                      // No length formatter on link and email fields: it made Android browsers
+                      // repeat typed characters. Length is checked on save.
                       enabled: !_saving,
                       keyboardType: TextInputType.text,
                       textInputAction: TextInputAction.next,
@@ -562,6 +570,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _website,
+                      // No length formatter on link and email fields: it made Android browsers
+                      // repeat typed characters. Length is checked on save.
                       enabled: !_saving,
                       keyboardType: kUrlKeyboard,
                       decoration: InputDecoration(
@@ -611,6 +621,7 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                       TextFormField(
                         key: const Key('nib-field'),
                         controller: _nib,
+                        inputFormatters: const [CodePointLimit(13)],
                         enabled: !_saving,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
@@ -633,10 +644,14 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                     const SizedBox(height: 4),
                     Text(
                       _isEdit
-                          ? 'The band was chosen when you registered and '
-                                'cannot be changed.'
-                          : 'Choose honestly. You cannot change it after you '
-                                'submit. An admin checks it.',
+                          ? tr(
+                              'The band was chosen when you registered and '
+                              'cannot be changed.',
+                            )
+                          : tr(
+                              'Choose honestly. You cannot change it after you '
+                              'submit. An admin checks it.',
+                            ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -697,8 +712,8 @@ class _BusinessFormScreenState extends State<BusinessFormScreen> {
                               _isRequest
                                   ? tr('Kirim perubahan')
                                   : _isEdit
-                                  ? 'Save and send again'
-                                  : 'Submit for review',
+                                  ? tr('Save and send again')
+                                  : tr('Submit for review'),
                             ),
                     ),
                   ],

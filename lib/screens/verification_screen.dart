@@ -637,6 +637,8 @@ class _VerificationForm extends StatelessWidget {
             TextFormField(
               key: const Key('login-email'),
               controller: controller,
+              // No length formatter on link and email fields: it made Android browsers
+              // repeat typed characters. Length is checked on save.
               autofocus: true,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,

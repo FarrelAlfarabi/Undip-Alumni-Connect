@@ -255,13 +255,20 @@ class _AdminScreenState extends State<AdminScreen> {
                         leading: Icon(s.icon),
                         title: Text(s.title),
                         subtitle: Text(s.subtitle),
-                        trailing: s.badge > 0
-                            ? Badge(
+                        // The count sits beside the arrow, not on top of it.
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (s.badge > 0) ...[
+                              Badge(
                                 key: Key('badge-${s.key}'),
                                 label: Text('${s.badge}'),
-                                child: const Icon(Icons.chevron_right),
-                              )
-                            : const Icon(Icons.chevron_right),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            const Icon(Icons.chevron_right),
+                          ],
+                        ),
                         onTap: () async {
                           await Navigator.of(context)
                               .push(AppRoute(builder: s.builder));
@@ -631,11 +638,11 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                           key: const Key('admin-business-status'),
                           child: FilterDropdown(
                             label: 'Status',
-                            value: _statusLabel,
-                            options: [for (final f in _filters) f.$1],
+                            value: tr(_statusLabel),
+                            options: [for (final f in _filters) tr(f.$1)],
                             onChanged: (v) {
                               _status = _filters
-                                  .firstWhere((f) => f.$1 == v)
+                                  .firstWhere((f) => tr(f.$1) == v)
                                   .$2;
                               _reload();
                             },

@@ -10,6 +10,7 @@ import '../data/marketplace_repository.dart' show imageContentType;
 import '../util/friendly_error.dart';
 import '../widgets/error_view.dart';
 import '../widgets/image_size_hint.dart';
+import '../data/profile_fields.dart';
 
 /// Stores the job photo and returns its public link. Replaced in tests.
 typedef JobPhotoUploader = Future<String> Function(
@@ -227,6 +228,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           (context, controller, focusNode, onFieldSubmitted) {
                             return TextFormField(
                               controller: controller,
+                              inputFormatters: const [CodePointLimit(200)],
                               focusNode: focusNode,
                               enabled: !_saving,
                               decoration: InputDecoration(
@@ -234,7 +236,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                                 border: OutlineInputBorder(),
                               ),
                               validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'Required'
+                                  ? tr('Required')
                                   : null,
                             );
                           },
@@ -242,17 +244,20 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _companyController,
+                      inputFormatters: const [CodePointLimit(200)],
                       enabled: !_saving,
                       decoration: InputDecoration(
                         labelText: tr('Company'),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? tr('Required')
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _industryController,
+                      inputFormatters: const [CodePointLimit(100)],
                       enabled: !_saving,
                       decoration: InputDecoration(
                         labelText: tr('Industry'),
@@ -262,6 +267,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _descriptionController,
+                      inputFormatters: const [CodePointLimit(10000)],
                       enabled: !_saving,
                       maxLines: 4,
                       decoration: InputDecoration(
@@ -269,19 +275,22 @@ class _PostJobScreenState extends State<PostJobScreen> {
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? tr('Required')
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _contactController,
+                      inputFormatters: const [CodePointLimit(500)],
                       enabled: !_saving,
                       decoration: InputDecoration(
                         labelText: tr('Contact Info (email, phone, etc.)'),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? tr('Required')
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -314,7 +323,9 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           onPressed: _saving ? null : _choosePhoto,
                           icon: const Icon(Icons.add_photo_alternate_outlined),
                           label: Text(
-                            _picked == null ? 'Choose photo' : 'Change photo',
+                            tr(
+                              _picked == null ? 'Choose photo' : 'Change photo',
+                            ),
                           ),
                         ),
                         if (_picked != null)

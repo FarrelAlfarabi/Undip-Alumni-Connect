@@ -1,5 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 
+import 'app_language.dart';
+
 const int kMaxUrlLength = 500;
 
 /// Limit for a link the app made itself, such as a signed link to a CV in
@@ -48,9 +50,10 @@ Uri? parseInstagram(String? raw) {
 /// Form validator for a link field. Empty is fine unless [required].
 String? validateHttpUrl(String? value, {bool required = false}) {
   final v = (value ?? '').trim();
-  if (v.isEmpty) return required ? 'Required by this job' : null;
+  if (v.isEmpty) return required ? tr('Required by this job') : null;
+  if (v.length > 500) return tr('Link must be 500 characters or fewer');
   return parseHttpUrl(v) == null
-      ? 'Enter a link that starts with http:// or https://'
+      ? tr('Enter a link that starts with http:// or https://')
       : null;
 }
 

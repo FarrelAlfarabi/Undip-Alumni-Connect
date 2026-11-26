@@ -1,4 +1,5 @@
 import '../models/business.dart';
+import '../util/app_language.dart';
 
 const _months = [
   'Jan',
@@ -36,15 +37,23 @@ String postingSummary(
   if (usage.unlimitedActive && business.unlimitedUntil != null) {
     final left = daysLeft(business.unlimitedUntil!, today ?? DateTime.now());
     final days = left <= 0
-        ? 'last day'
-        : (left == 1 ? '1 day left' : '$left days left');
-    return 'Products posted: ${usage.used}, unlimited posting until '
-        '${formatDay(business.unlimitedUntil!)} ($days)';
+        ? tr('last day')
+        : (left == 1 ? tr('1 day left') : trf('{0} days left', [left]));
+    return trf('Products posted: {0}, unlimited posting until {1} ({2})', [
+      usage.used,
+      formatDay(business.unlimitedUntil!),
+      days,
+    ]);
   }
   if (usage.overLimit) {
-    return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed. '
-        'You are over the limit. Your products stay visible, but new ones are '
-        'blocked.';
+    return trf(
+      'Products posted: {0} of {1} allowed. You are over the limit. Your '
+      'products stay visible, but new ones are blocked.',
+      [usage.used, usage.freeLimit],
+    );
   }
-  return 'Products posted: ${usage.used} of ${usage.freeLimit} allowed';
+  return trf('Products posted: {0} of {1} allowed', [
+    usage.used,
+    usage.freeLimit,
+  ]);
 }
