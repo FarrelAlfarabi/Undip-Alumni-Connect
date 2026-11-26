@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import '../widgets/feedback_sheet.dart';
@@ -17,40 +19,41 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Bantuan'))),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            MenuList(
-              items: [
-                MenuItem(
-                  key: const Key('profile-contact-admin'),
-                  icon: Icons.support_agent_outlined,
-                  title: tr('Contact admin'),
-                  subtitle: tr('Email the admin team'),
-                  onTap: () => Navigator.of(
-                    context,
-                  ).push(AppRoute(builder: (_) => const ContactAdminScreen())),
-                ),
-                MenuItem(
-                  key: const Key('profile-feedback'),
-                  icon: Icons.feedback_outlined,
-                  title: tr('Send feedback'),
-                  subtitle: tr('Something broken or confusing?'),
-                  onTap: () =>
-                      showFeedbackSheet(context, error: null, screen: 'Help'),
-                ),
-                MenuItem(
-                  key: const Key('profile-about'),
-                  icon: Icons.info_outline,
-                  title: tr('About'),
-                  onTap: () =>
-                      Navigator.of(context)
-                          .push(AppRoute(builder: (_) => const AboutScreen())),
-                ),
-              ],
-            ),
-          ],
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              MenuList(
+                items: [
+                  MenuItem(
+                    key: const Key('profile-contact-admin'),
+                    icon: Icons.support_agent_outlined,
+                    title: tr('Contact admin'),
+                    subtitle: tr('Email the admin team'),
+                    onTap: () => Navigator.of(context).push(
+                      AppRoute(builder: (_) => const ContactAdminScreen()),
+                    ),
+                  ),
+                  MenuItem(
+                    key: const Key('profile-feedback'),
+                    icon: Icons.feedback_outlined,
+                    title: tr('Send feedback'),
+                    subtitle: tr('Something broken or confusing?'),
+                    onTap: () =>
+                        showFeedbackSheet(context, error: null, screen: 'Help'),
+                  ),
+                  MenuItem(
+                    key: const Key('profile-about'),
+                    icon: Icons.info_outline,
+                    title: tr('About'),
+                    onTap: () => Navigator.of(context)
+                        .push(AppRoute(builder: (_) => const AboutScreen())),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
