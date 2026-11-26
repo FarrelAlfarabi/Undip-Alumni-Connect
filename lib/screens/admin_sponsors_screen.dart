@@ -40,7 +40,10 @@ class _AdminSponsorsScreenState extends State<AdminSponsorsScreen> {
   Future<List<Sponsor>> _load() =>
       widget.repository.sponsors(widget.adminId).then((list) {
         if (mounted) {
-          setState(() => _activeCount = list.where((s) => s.active).length);
+          final now = DateTime.now();
+          setState(
+            () => _activeCount = list.where((s) => s.isLive(now)).length,
+          );
         }
         return list;
       });
@@ -55,7 +58,8 @@ class _AdminSponsorsScreenState extends State<AdminSponsorsScreen> {
     _future = _load();
   });
 
-  /// Home shows at most [kMaxSponsorSlides]; a new one would never appear.
+  /// Home shows at most [kMaxSponsorSlides] sponsors that are live today; a new
+  /// one would never appear. Hidden and out-of-date sponsors do not count.
   Future<void> _add() async {
     if (_activeCount >= kMaxSponsorSlides) {
       await showDialog<void>(
