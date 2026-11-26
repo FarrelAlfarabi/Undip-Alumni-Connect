@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,6 +13,7 @@ import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import 'job_applicants_screen.dart';
 import 'post_job_screen.dart';
+import '../data/profile_fields.dart';
 
 /// The jobs I posted, newest first, with how many people applied. Tap one to
 /// see its applicants.
@@ -168,33 +171,70 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
     final contact = TextEditingController(
       text: j['contact_info'] as String? ?? '',
     );
+    final require = <String, bool>{
+      'cv': j['require_cv'] == true,
+      'linkedin': j['require_linkedin'] == true,
+      'portfolio': j['require_portfolio'] == true,
+      'cover_note': j['require_cover_note'] == true,
+    };
     final save = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('Ubah lowongan')),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final (key, label, c, lines) in [
-                ('edit-title', 'Judul', title, 1),
-                ('edit-company', 'Perusahaan', company, 1),
-                ('edit-description', 'Deskripsi', desc, 5),
-                ('edit-contact', 'Kontak', contact, 1),
-              ])
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TextField(
-                    key: Key(key),
-                    controller: c,
-                    maxLines: lines,
-                    decoration: InputDecoration(
-                      labelText: label,
-                      border: const OutlineInputBorder(),
+        content: StatefulBuilder(
+          builder: (ctx, setInner) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (key, label, c, lines) in [
+                  ('edit-title', 'Judul', title, 1),
+                  ('edit-company', 'Perusahaan', company, 1),
+                  ('edit-description', 'Deskripsi', desc, 5),
+                  ('edit-contact', 'Kontak', contact, 1),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      key: Key(key),
+                      controller: c,
+                      inputFormatters: [
+                        CodePointLimit(
+                          (key == 'edit-description'
+                              ? 10000
+                              : key == 'edit-contact'
+                              ? 500
+                              : 200),
+                        ),
+                      ],
+                      maxLines: lines,
+                      decoration: InputDecoration(
+                        labelText: label,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
                   ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    tr('Require applicants to provide'),
+                    style: Theme.of(ctx).textTheme.labelLarge,
+                  ),
                 ),
-            ],
+                for (final (k, label) in [
+                  ('cv', 'CV'),
+                  ('linkedin', tr('LinkedIn URL')),
+                  ('portfolio', tr('Portfolio / other link')),
+                  ('cover_note', tr('Cover note')),
+                ])
+                  CheckboxListTile(
+                    key: Key('edit-require-${k.replaceAll('_', '-')}'),
+                    contentPadding: EdgeInsets.zero,
+                    value: require[k],
+                    onChanged: (v) => setInner(() => require[k] = v ?? false),
+                    title: Text(label),
+                  ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -219,6 +259,10 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
         'p_company': company.text,
         'p_description': desc.text,
         'p_contact': contact.text,
+        'p_require_cv': require['cv'],
+        'p_require_linkedin': require['linkedin'],
+        'p_require_portfolio': require['portfolio'],
+        'p_require_cover_note': require['cover_note'],
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -252,112 +296,116 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
         icon: const Icon(Icons.add),
         label: Text(tr('Post a Job')),
       ),
-      body: SafeArea(
-        top: false,
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return ErrorView(
-                message: friendlyLoadError('your job postings', snap.error),
-                screen: 'My job postings',
-                error: snap.error,
-                onRetry: _reload,
-              );
-            }
-            final jobs = snap.data ?? const [];
-            if (jobs.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    tr(
-                      'You have not posted a job yet. Jobs you post show up here '
-                      'with the people who applied.',
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          top: false,
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snap.hasError) {
+                return ErrorView(
+                  message: friendlyLoadError('your job postings', snap.error),
+                  screen: 'My job postings',
+                  error: snap.error,
+                  onRetry: _reload,
+                );
+              }
+              final jobs = snap.data ?? const [];
+              if (jobs.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      tr(
+                        'You have not posted a job yet. Jobs you post show up here '
+                        'with the people who applied.',
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _reload();
+                  try {
+                    await _future;
+                  } catch (_) {}
+                },
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                  itemCount: jobs.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final j = jobs[i];
+                    final hidden = j['hidden_at'] != null;
+                    final n = j['applicant_count'] as int?;
+                    return Card(
+                      key: Key('my-job-${j['id']}'),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: theme.colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: ListTile(
+                        title: Text(j['title'] as String? ?? ''),
+                        subtitle: Text(
+                          [
+                            j['company'] as String? ?? '',
+                            if (n != null)
+                              '$n ${n == 1 ? 'applicant' : 'applicants'}',
+                            if (hidden) 'Hidden by an admin',
+                            if (j['closed_at'] != null) 'Ditutup',
+                          ].where((s) => s.isNotEmpty).join(' · '),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: Key('edit-job-${j['id']}'),
+                              tooltip: tr('Ubah lowongan'),
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => _edit(j),
+                            ),
+                            IconButton(
+                              key: Key('close-job-${j['id']}'),
+                              tooltip: j['closed_at'] == null
+                                  ? 'Tutup lowongan'
+                                  : 'Buka lagi',
+                              icon: Icon(
+                                j['closed_at'] == null
+                                    ? Icons.lock_outline
+                                    : Icons.lock_open_outlined,
+                              ),
+                              onPressed: () => _toggleClosed(j),
+                            ),
+                            IconButton(
+                              key: Key('delete-job-${j['id']}'),
+                              tooltip: tr('Hapus lowongan'),
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.error,
+                              ),
+                              onPressed: () => _delete(j),
+                            ),
+                          ],
+                        ),
+                        onTap: () => Navigator.of(context).push(
+                          AppRoute(builder: (_) => JobApplicantsScreen(job: j)),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               );
-            }
-            return RefreshIndicator(
-              onRefresh: () async {
-                _reload();
-                try {
-                  await _future;
-                } catch (_) {}
-              },
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                itemCount: jobs.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) {
-                  final j = jobs[i];
-                  final hidden = j['hidden_at'] != null;
-                  final n = j['applicant_count'] as int?;
-                  return Card(
-                    key: Key('my-job-${j['id']}'),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: theme.colorScheme.outlineVariant),
-                    ),
-                    child: ListTile(
-                      title: Text(j['title'] as String? ?? ''),
-                      subtitle: Text(
-                        [
-                          j['company'] as String? ?? '',
-                          if (n != null)
-                            '$n ${n == 1 ? 'applicant' : 'applicants'}',
-                          if (hidden) 'Hidden by an admin',
-                          if (j['closed_at'] != null) 'Ditutup',
-                        ].where((s) => s.isNotEmpty).join(' · '),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            key: Key('edit-job-${j['id']}'),
-                            tooltip: tr('Ubah lowongan'),
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => _edit(j),
-                          ),
-                          IconButton(
-                            key: Key('close-job-${j['id']}'),
-                            tooltip: j['closed_at'] == null
-                                ? 'Tutup lowongan'
-                                : 'Buka lagi',
-                            icon: Icon(
-                              j['closed_at'] == null
-                                  ? Icons.lock_outline
-                                  : Icons.lock_open_outlined,
-                            ),
-                            onPressed: () => _toggleClosed(j),
-                          ),
-                          IconButton(
-                            key: Key('delete-job-${j['id']}'),
-                            tooltip: tr('Hapus lowongan'),
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: theme.colorScheme.error,
-                            ),
-                            onPressed: () => _delete(j),
-                          ),
-                        ],
-                      ),
-                      onTap: () => Navigator.of(context).push(
-                        AppRoute(builder: (_) => JobApplicantsScreen(job: j)),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

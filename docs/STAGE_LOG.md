@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Phone Back button map and first-run fix (26 Nov 2026)
+- docs/BACK_MAP.md lists what Back does on every screen; test/back_map_test.dart fails when a screen is missing from it.
+- Bug fixed: Consent, PIN offer and first profile left a stale Welcome under them, so Back walked to Welcome. They are now the first screen (Back asks to exit). Tests: test/back_first_run_test.dart.
+- test/back_android_test.dart checks the app tells Android "I handle Back" on every first screen (Android closed the app before asking otherwise). No migration.
+
 ## Fewer email codes at login (24 Nov 2026)
 - Live logs: a correct code made the sign in (session kept) but the app was not entered (Back, reload), then the email box asked for a second code.
 - VerificationScreen now resumes a stored sign in (claim_alumni_profile again, no code). Network slips keep the sign in; no stored sign in changes nothing.
@@ -363,3 +368,49 @@ Everything test first. Dart: analyze clean, all tests pass (2 skipped, the relea
 ## Central Back rule (17 Nov 2026)
 - One rule for Back: every screen uses `AppRoute` (`lib/nav/back_guard.dart`), which tells Android the app handles Back when the screen is the first route, so no screen exits on the first press. Back pops sheet, screen, previous tab, Home; only the first screen exits, on a second press within 2 seconds after "Tekan sekali lagi untuk keluar". Browser Back never leaves the app. Lock overlay blocks Back to the hidden screens. The old "Exit the app?" dialog is gone.
 - Tests: `back_guard_test` (source rules, first Back on 8 first screens, web, pushed screens, lock overlay), `home_shell_test`. No migration.
+## Migration Action for the new database (25 Nov 2026)
+- `supabase-deploy.yml` now has two jobs: `deploy` (old project, secret `SUPABASE_DB_URL`) and `deploy-new` (new project `hotbjigrocdofykrlsef`, secret `SUPABASE_DB_URL_NEW`). They run apart, so one failing does not stop the other.
+- `supabase/deploy/repair_history_new.sh` swaps the 8 `demo_m*` history rows for the 95 file versions up to 20261125100000; later files are pushed normally. Check: `supabase/tests/check_new_db_baseline.sh`.
+- Do NOT merge before the secret `SUPABASE_DB_URL_NEW` exists (the job would fail on every main push).
+
+
+## 2026-11-25 Test sheet fixes
+A02 carousel drag with mouse, C25 sponsor cap dialog at 10 active, B18 edit required documents, A19 zoom slider in photo adjuster, A09 sender sees Dibatalkan. Migration 20261125100000 (rollback file added). A12 waits for wording.
+
+## 2026-11-25 Explore note (A12)
+Closable note under the Explore segments (Marketplace and Businesses): deals are direct between alumni, Lingkaran handles no payment or delivery. Closed for the app session only. No migration.
+
+## 2026-11-25 Sheet leftovers
+U14: PIN pad takes the keyboard back on click. C16: Home refetches after 20 s away (was 2 min). C06 is by design (products of an approved business are approved at creation). C29 and C30 not reproduced. No migration.
+
+## 2026-11-26 UI test fixes (C30, member list)
+C30 reproduced: admin delete of a member failed with 403 not_signed_in because account_files() checks the caller. Delete core now uses internal account_files_core(); migration 20261126100000 (rollback file, SQL test 34). Members list reads all pages (was cut at 500 of 1.9k).
+
+## 2026-11-26 UI text fixes
+Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Typing lag in member search
+Member list (1.9k) and Admin Anggota followed every key press, so typing lagged. The list now follows the search box 250 ms after the last key (kSearchDelay); the box itself, the filters and their option lists no longer redraw per key. Browser test, 15 keys: slow frames 14 down to 1. No migration.
+## 2026-11-26 Edit business with admin approval
+Owner of an approved business sends a change request (name, description, category, links, personal, NIB, photo). Old version stays live until an admin approves in Admin > Perubahan bisnis (old vs new, reject needs a reason); owner can cancel, gets notices. Changed NIB loses its blue tick. Migration 20261126130000 (rollback file, SQL test 35).
+## 2026-11-26 Lamaran saya + job status
+Profile menu "Lamaran saya": my applied jobs with date and Masih dibuka / Ditutup / Tidak tersedia (admin hidden); deleted jobs drop out with their applications. Jobs list: Dibuka/Ditutup mark on cards and detail, Status filter (default Dibuka), no Apply on closed jobs. Closed = closed_at only (no expiry date). Migration 20261126120000 (rollback file).
+
+## 2026-11-26 Job info save + link fields
+- Home card "Lengkapi profil" now asks for city after job info (card stayed, looked unsaved); saved row merged so photo is kept.
+- Link fields (LinkedIn, business website, product, admin, sponsor, Ikafe) use text keyboard on web; LinkedIn lost maxLength: Android web repeated characters.
+
+## 2026-11-26 Kontak Ikafe YouTube + admin demo data
+New "youtube" contact kind (app, admin picker, migration 20261126110000, rollback file). Demo DB: Kontak Ikafe = alumni@ikafeundip.com, @ikafeundip, YouTube @IkafeTV (examples removed). [DUMMY] reports, masukan, pending/rejected businesses and products, contact requests added; SQL + rollback in project demo-data folder.
+
+## 2026-11-26 Sponsor view counting
+DB side checked on the demo project: counts and the 10 cap work (home_sponsors only sees live rows). App over-counted: a slide counted when it auto-slid off screen, below the fold or on another tab. Now a view counts only when the carousel is in view and on top. No migration.
+
+## 2026-11-26 Wrong remembered profile
+- Browser remembered "[DUMMY] Admin Demo" while signed in as Farrel: every profile save hit a row the sign in cannot edit (200, no rows, "Tautan belum tersimpan"). AppEntry now checks the sign in's own profile on unlock and switches to it.
+
+## 2026-11-26 Bug hunt: length limits and English wording
+Found on the live site with a test login. Text boxes had no limit, so a 260 character job title only said "Gagal memasang"; now plain text boxes stop at the database limit (link and email boxes check on save, because limits there made Android repeat characters). English left on Indonesian screens fixed (Laporan buttons, business form and cards, Pasang lowongan, Lamar, sort, status). Admin count badge no longer covers the arrow; business status chip shows in full. No migration.
+
+## 2026-11-26 Admin member list reads all members
+Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones after about M could not be found, edited or suspended in the app. Migration 20261126140000 adds p_offset (500 per call); the app asks again until a page is short. Rollback file included.

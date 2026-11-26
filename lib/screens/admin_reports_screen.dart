@@ -318,7 +318,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_hidden ? 'Hidden items' : 'Reports'),
+        title: Text(tr(_hidden ? 'Hidden items' : 'Reports')),
         actions: [
           if (!_hidden)
             IconButton(
@@ -435,7 +435,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   if (all.isEmpty) {
                     return Center(
                       child: Text(
-                        _hidden ? 'Nothing is hidden.' : 'No open reports.',
+                        tr(_hidden ? 'Nothing is hidden.' : 'No open reports.'),
                       ),
                     );
                   }
@@ -596,14 +596,14 @@ class _ReportCard extends StatelessWidget {
       child: FilledButton(
         key: key,
         onPressed: busy ? null : onTap,
-        child: Text(label),
+        child: Text(tr(label)),
       ),
     );
     Widget quiet(Key key, String label, VoidCallback onTap) => Expanded(
       child: OutlinedButton(
         key: key,
         onPressed: busy ? null : onTap,
-        child: Text(label),
+        child: Text(tr(label)),
       ),
     );
 

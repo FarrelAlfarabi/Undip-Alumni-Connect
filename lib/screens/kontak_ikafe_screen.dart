@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import 'package:flutter/services.dart';
@@ -74,6 +76,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
     IkafeContactKind.instagram => Icons.camera_alt_outlined,
     IkafeContactKind.linkedin => Icons.work_outline,
     IkafeContactKind.website => Icons.language,
+    IkafeContactKind.youtube => Icons.smart_display_outlined,
   };
 
   Widget _section(
@@ -150,64 +153,66 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
         title: Text(tr('Kontak Ikafe')),
         automaticallyImplyLeading: widget.showBack,
       ),
-      body: SafeArea(
-        top: false,
-        child: FutureBuilder<IkafeContactList>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return ErrorView(
-                message: tr('Kontak belum bisa dimuat.'),
-                screen: 'Kontak Ikafe',
-                error: snap.error,
-                onRetry: _reload,
-              );
-            }
-            final data = snap.data!;
-            final hubungi = [
-              for (final c in data.contacts)
-                if (!c.kind.isSocial) c,
-            ];
-            final media = [
-              for (final c in data.contacts)
-                if (c.kind.isSocial) c,
-            ];
-            if (data.contacts.isEmpty) {
-              return Center(child: Text(tr('Belum ada kontak.')));
-            }
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (data.isPlaceholder)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      tr('Contoh data. Kontak resmi Ikafe menyusul.'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          top: false,
+          child: FutureBuilder<IkafeContactList>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snap.hasError) {
+                return ErrorView(
+                  message: tr('Kontak belum bisa dimuat.'),
+                  screen: 'Kontak Ikafe',
+                  error: snap.error,
+                  onRetry: _reload,
+                );
+              }
+              final data = snap.data!;
+              final hubungi = [
+                for (final c in data.contacts)
+                  if (!c.kind.isSocial) c,
+              ];
+              final media = [
+                for (final c in data.contacts)
+                  if (c.kind.isSocial) c,
+              ];
+              if (data.contacts.isEmpty) {
+                return Center(child: Text(tr('Belum ada kontak.')));
+              }
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (data.isPlaceholder)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        tr('Contoh data. Kontak resmi Ikafe menyusul.'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                if (hubungi.isNotEmpty)
-                  _section(
-                    theme,
-                    const Key('ikafe-section-hubungi'),
-                    'Hubungi',
-                    hubungi,
-                  ),
-                if (media.isNotEmpty)
-                  _section(
-                    theme,
-                    const Key('ikafe-section-media'),
-                    'Media sosial',
-                    media,
-                  ),
-              ],
-            );
-          },
+                  if (hubungi.isNotEmpty)
+                    _section(
+                      theme,
+                      const Key('ikafe-section-hubungi'),
+                      'Hubungi',
+                      hubungi,
+                    ),
+                  if (media.isNotEmpty)
+                    _section(
+                      theme,
+                      const Key('ikafe-section-media'),
+                      'Media sosial',
+                      media,
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

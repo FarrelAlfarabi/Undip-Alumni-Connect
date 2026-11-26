@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/profile_fields.dart';
+
 import '../util/app_language.dart';
 
 import 'package:flutter/services.dart';
@@ -381,8 +383,10 @@ class _MarketplaceFormScreenState extends State<MarketplaceFormScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _shop,
+                            // No length formatter on link and email fields: it made Android browsers
+                            // repeat typed characters. Length is checked on save.
                             enabled: !_saving,
-                            keyboardType: TextInputType.url,
+                            keyboardType: kUrlKeyboard,
                             decoration: InputDecoration(
                               labelText: tr('Online shop link (optional)'),
                               hintText: 'https://...',
@@ -551,7 +555,7 @@ class _PhotoPicker extends StatelessWidget {
           onPressed: enabled ? onTap : null,
           icon: const Icon(Icons.photo_outlined),
           label: Text(
-            picked != null || hasExisting ? 'Change photo' : 'Choose photo',
+            tr(picked != null || hasExisting ? 'Change photo' : 'Choose photo'),
           ),
         ),
         if (error == null)

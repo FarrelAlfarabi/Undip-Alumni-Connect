@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/job_status_chip.dart';
+
 import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
@@ -57,6 +59,8 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   final _searchController = TextEditingController();
   String _industry = kAllFilter;
   String _company = kAllFilter;
+  // Default shows only open jobs; closed ones are one tap away.
+  String _status = 'Dibuka';
 
   @override
   void initState() {
@@ -80,7 +84,6 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
     final rows = await Supabase.instance.client
         .from('job_posts')
         .select('*, poster:alumni_profiles(name)')
-        .isFilter('closed_at', null)
         .order('created_at', ascending: false);
     await BlockList.shared.ensureLoaded();
     return BlockList.shared.filter(
@@ -97,6 +100,8 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
         return false;
       }
       if (_company != kAllFilter && j['company'] != _company) return false;
+      if (_status == 'Dibuka' && jobIsClosed(j)) return false;
+      if (_status == 'Ditutup' && !jobIsClosed(j)) return false;
       if (query.isNotEmpty) {
         final title = (j['title'] as String? ?? '').toLowerCase();
         final company = (j['company'] as String? ?? '').toLowerCase();
@@ -114,13 +119,15 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   bool get _hasActiveFilters =>
       _searchController.text.isNotEmpty ||
       _industry != kAllFilter ||
-      _company != kAllFilter;
+      _company != kAllFilter ||
+      _status != 'Dibuka';
 
   void _clearFilters() {
     setState(() {
       _searchController.clear();
       _industry = kAllFilter;
       _company = kAllFilter;
+      _status = 'Dibuka';
     });
   }
 
@@ -235,6 +242,16 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: FilterDropdown(
+                    key: const Key('job-status-filter'),
+                    label: 'Status',
+                    value: _status,
+                    options: const ['Dibuka', 'Ditutup', 'Semua'],
+                    onChanged: (v) => setState(() => _status = v),
+                  ),
+                ),
                 if (_hasActiveFilters)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
@@ -320,11 +337,19 @@ class _JobCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
               ],
-              Text(
-                job['title'] as String? ?? '',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      job['title'] as String? ?? '',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  JobStatusChip(job: job),
+                ],
               ),
               const SizedBox(height: 2),
               Text(

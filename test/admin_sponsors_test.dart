@@ -166,6 +166,43 @@ void main() {
       expect(find.textContaining('7 diketuk'), findsNWidgets(2));
     });
 
+    testWidgets('with 10 active sponsors the add button explains the limit', (
+      tester,
+    ) async {
+      await pump(tester, [
+        for (var i = 0; i < 10; i++) row('s$i', 'Sponsor $i'),
+      ]);
+      await tester.tap(find.byKey(const Key('sponsor-new')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('maksimal 10'), findsOneWidget);
+      // The form did not open.
+      expect(find.byType(SponsorFormScreen), findsNothing);
+    });
+
+    testWidgets('hidden sponsors do not count towards the limit of 10', (
+      tester,
+    ) async {
+      await pump(tester, [
+        for (var i = 0; i < 9; i++) row('s$i', 'Sponsor $i'),
+        for (var i = 0; i < 3; i++) row('h$i', 'Tersembunyi $i', active: false),
+      ]);
+      await tester.tap(find.byKey(const Key('sponsor-new')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SponsorFormScreen), findsOneWidget);
+    });
+
+    testWidgets('sponsors past their end date do not count towards 10', (
+      tester,
+    ) async {
+      await pump(tester, [
+        for (var i = 0; i < 9; i++) row('s$i', 'Sponsor $i'),
+        for (var i = 0; i < 3; i++) row('e$i', 'Lewat $i', ends: '2020-01-01'),
+      ]);
+      await tester.tap(find.byKey(const Key('sponsor-new')));
+      await tester.pumpAndSettle();
+      expect(find.byType(SponsorFormScreen), findsOneWidget);
+    });
+
     testWidgets('empty form is refused without a call', (tester) async {
       final api = await pump(tester, []);
       await tester.tap(find.byKey(const Key('sponsor-new')));

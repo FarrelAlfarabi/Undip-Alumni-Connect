@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
@@ -51,12 +53,33 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
+    _search.addListener(_onSearchTyped);
     _load();
+  }
+
+  Timer? _searchTimer;
+  String _lastSearch = '';
+
+  /// The list follows the search box a moment after the last key (see
+  /// [kSearchDelay]), so typing is not held up by redrawing it.
+  void _onSearchTyped() {
+    final now = _search.text;
+    if (now == _lastSearch) return;
+    _lastSearch = now;
+    _searchTimer?.cancel();
+    if (now.trim().isEmpty) {
+      setState(() {});
+      return;
+    }
+    _searchTimer = Timer(kSearchDelay, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchTimer?.cancel();
+    _search.removeListener(_onSearchTyped);
     _search.dispose();
     _industryText.dispose();
     super.dispose();
@@ -633,6 +656,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-name'),
                     controller: _name,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
@@ -644,6 +668,8 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-email'),
                     controller: _email,
+                    // No length formatter on link and email fields: it made Android browsers
+                    // repeat typed characters. Length is checked on save.
                     enabled: !_saving && _canEditEmail,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
@@ -662,6 +688,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-role'),
                     controller: _role,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Jabatan'),
@@ -672,6 +699,7 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-company'),
                     controller: _company,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Perusahaan'),
@@ -718,8 +746,10 @@ class _AdminMemberEditScreenState extends State<AdminMemberEditScreen> {
                   TextField(
                     key: const Key('member-linkedin'),
                     controller: _linkedin,
+                    // No length formatter on link and email fields: it made Android browsers
+                    // repeat typed characters. Length is checked on save.
                     enabled: !_saving,
-                    keyboardType: TextInputType.url,
+                    keyboardType: kUrlKeyboard,
                     decoration: InputDecoration(
                       labelText: 'LinkedIn',
                       helperMaxLines: 2,

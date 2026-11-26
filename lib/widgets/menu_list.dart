@@ -54,10 +54,16 @@ class MenuList extends StatelessWidget {
               subtitle: items[i].subtitle == null
                   ? null
                   : Text(items[i].subtitle!),
-              trailing: Badge(
-                isLabelVisible: items[i].badge > 0,
-                label: Text('${items[i].badge}'),
-                child: const Icon(Icons.chevron_right),
+              // The count sits beside the arrow, not on top of it.
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (items[i].badge > 0) ...[
+                    Badge(label: Text('${items[i].badge}')),
+                    const SizedBox(width: 8),
+                  ],
+                  const Icon(Icons.chevron_right),
+                ],
               ),
               onTap: items[i].onTap,
             ),

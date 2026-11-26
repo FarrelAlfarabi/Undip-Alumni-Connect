@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../data/profile_fields.dart';
+
 import '../util/app_language.dart';
 
 import '../data/admin_repository.dart';
@@ -327,9 +329,11 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
               TextFormField(
                 key: const Key('ikafe-value'),
                 controller: _value,
+                // No length formatter on link and email fields: it made Android browsers
+                // repeat typed characters. Length is checked on save.
                 enabled: !_busy,
                 autocorrect: false,
-                keyboardType: TextInputType.url,
+                keyboardType: kUrlKeyboard,
                 decoration: InputDecoration(
                   labelText: tr('Nomor, email, @akun atau link'),
                   border: OutlineInputBorder(),
@@ -340,6 +344,7 @@ class _IkafeContactFormScreenState extends State<IkafeContactFormScreen> {
               TextFormField(
                 key: const Key('ikafe-sort'),
                 controller: _sort,
+                inputFormatters: const [CodePointLimit(4)],
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(

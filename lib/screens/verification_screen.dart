@@ -357,7 +357,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
     if (!mounted) return;
     // First run: Welcome, verify, consent, PIN offer, app.
     if (needsConsent(profile)) {
-      Navigator.of(context).pushReplacement(
+      // Past Welcome for good: nothing may stay under Consent, or Back would
+      // walk to a stale Welcome screen.
+      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
         AppRoute(
           builder: (_) => ConsentScreen(
             profile: profile,
@@ -367,6 +369,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 _continueAfterConsent(ctx, accepted, lock, offerPin),
           ),
         ),
+        (_) => false,
       );
       return;
     }
@@ -389,7 +392,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       );
       return;
     }
-    Navigator.of(ctx).pushReplacement(
+    Navigator.of(ctx, rootNavigator: true).pushAndRemoveUntil(
       AppRoute(
         builder: (_) => PinSetupScreen(
           lock: lock,
@@ -403,6 +406,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
           ),
         ),
       ),
+      (_) => false,
     );
   }
 
@@ -633,6 +637,8 @@ class _VerificationForm extends StatelessWidget {
             TextFormField(
               key: const Key('login-email'),
               controller: controller,
+              // No length formatter on link and email fields: it made Android browsers
+              // repeat typed characters. Length is checked on save.
               autofocus: true,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,

@@ -254,6 +254,9 @@ final Map<String, String> kIndonesian = {
   'Reason (kept for admins)': 'Alasan (hanya untuk admin)',
   'Suspend': 'Tangguhkan',
   'Hidden items': 'Item tersembunyi',
+  'Graduation Year': 'Tahun lulus',
+  'No open reports.': 'Belum ada laporan terbuka.',
+  'Nothing is hidden.': 'Tidak ada yang disembunyikan.',
   'Search title, owner, note or reason...':
       'Cari judul, pemilik, catatan atau alasan...',
   'Clear search': 'Hapus pencarian',
@@ -316,6 +319,12 @@ final Map<String, String> kIndonesian = {
   'Something broken or confusing?': 'Ada yang rusak atau membingungkan?',
   'Exit the app?': 'Keluar dari aplikasi?',
   'No applications yet.': 'Belum ada lamaran.',
+  'Applicant notifications are off for this job.':
+      'Notifikasi pelamar untuk lowongan ini mati.',
+  'Loading applicants…': 'Memuat pelamar…',
+  '1 application received.': '1 lamaran diterima.',
+  '{0} applications received.': '{0} lamaran diterima.',
+  'No contact info provided.': 'Kontak tidak tersedia.',
   'Job Board': 'Daftar lowongan',
   'My job postings': 'Lowongan saya',
   'Post a Job': 'Pasang lowongan',
@@ -390,4 +399,70 @@ final Map<String, String> kIndonesian = {
           '$kContactEmail.':
       'Kamu bisa memiliki sampai $kMaxBusinesses bisnis. Untuk menambah, '
       'kirim email ke $kContactEmail.',
+  'Dismiss': 'Abaikan',
+  'Suspend user': 'Tangguhkan pengguna',
+  'Mark as handled': 'Tandai sudah ditangani',
+  'Lift suspension': 'Cabut penangguhan',
+  'Required': 'Wajib diisi',
+  'Name must be at least 2 characters': 'Nama minimal 2 karakter',
+  'Name must be 100 characters or fewer': 'Nama maksimal 100 karakter',
+  'Description must be 500 characters or fewer':
+      'Deskripsi maksimal 500 karakter',
+  'Enter @username or a link like https://instagram.com/yourshop':
+      'Isi @username atau tautan seperti https://instagram.com/tokomu',
+  'Enter a link like https://yourshop.com':
+      'Isi tautan seperti https://tokomu.com',
+  'Change photo': 'Ganti foto',
+  'Add photo': 'Tambah foto',
+  'Choose photo': 'Pilih foto',
+  'Edit business': 'Ubah bisnis',
+  'The band was chosen when you registered and cannot be changed.':
+      'Band dipilih saat mendaftar dan tidak bisa diubah.',
+  'Choose honestly. You cannot change it after you submit. An admin checks it.': 'Pilih dengan jujur. Setelah dikirim tidak bisa diubah. Admin akan mengeceknya.',
+  'Save and send again': 'Simpan dan kirim lagi',
+  'Submit for review': 'Kirim untuk ditinjau',
+  'Title must be at least 3 characters': 'Judul minimal 3 karakter',
+  'Title must be 100 characters or fewer': 'Judul maksimal 100 karakter',
+  'Description must be 2000 characters or fewer':
+      'Deskripsi maksimal 2000 karakter',
+  'Enter a whole number, 0 or more': 'Isi bilangan bulat, 0 atau lebih',
+  'Price is too large': 'Harga terlalu besar',
+  'City must be 60 characters or fewer': 'Kota maksimal 60 karakter',
+  'Newest': 'Terbaru',
+  'Price: low to high': 'Harga: rendah ke tinggi',
+  'Price: high to low': 'Harga: tinggi ke rendah',
+  'new': 'baru',
+  'seen': 'sudah dilihat',
+  'done': 'selesai',
+  'Pending': 'Menunggu',
+  'Rejected': 'Ditolak',
+  'Approved band: {0}': 'Band yang disetujui: {0}',
+  'Band you chose: {0} (an admin sets the approved band)':
+      'Band pilihanmu: {0} (admin yang menetapkan band yang disetujui)',
+  'last day': 'hari terakhir',
+  '1 day left': 'sisa 1 hari',
+  '{0} days left': 'sisa {0} hari',
+  'Products posted: {0}, unlimited posting until {1} ({2})':
+      'Produk tayang: {0}, boleh posting tanpa batas sampai {1} ({2})',
+  'Products posted: {0} of {1} allowed. You are over the limit. Your products stay visible, but new ones are blocked.': 'Produk tayang: {0} dari {1} yang boleh. Kamu melewati batas. Produkmu tetap tampil, tetapi produk baru diblokir.',
+  'Products posted: {0} of {1} allowed':
+      'Produk tayang: {0} dari {1} yang boleh',
+  "Link must be 300 characters or fewer": "Tautan maksimal 300 karakter",
+  "Link must be 500 characters or fewer": "Tautan maksimal 500 karakter",
+  "Required by this job": "Wajib untuk lowongan ini",
+  "Enter a link that starts with http:// or https://":
+      "Isi tautan yang diawali http:// atau https://",
+  "Enter a valid link starting with http:// or https://":
+      "Isi tautan yang benar, diawali http:// atau https://",
+  "LinkedIn URL (required by this job)":
+      "Tautan LinkedIn (wajib untuk lowongan ini)",
+  "LinkedIn URL (optional)": "Tautan LinkedIn (opsional)",
+  "Portfolio / other link (required by this job)":
+      "Portofolio / tautan lain (wajib untuk lowongan ini)",
+  "Portfolio / other link (optional)": "Portofolio / tautan lain (opsional)",
+  "Cover note (required by this job)":
+      "Surat pengantar (wajib untuk lowongan ini)",
+  "Cover note (optional)": "Surat pengantar (opsional)",
+  "Attach CV (required by this job)": "Lampirkan CV (wajib untuk lowongan ini)",
+  "Attach CV (optional, PDF/DOC)": "Lampirkan CV (opsional, PDF/DOC)",
 };

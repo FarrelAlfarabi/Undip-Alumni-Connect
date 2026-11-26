@@ -65,6 +65,10 @@ select jt.assert((select count(*) from admin_actions where action = 'member_fix_
 set role anon;
 select jt.assert((select count(*) from admin_members_search((select v from t_ids where k = 'clara'), 'ahmad')) = 1, 'old search still works');
 select jt.assert((select count(*) from admin_members_list((select v from t_ids where k = 'clara'), '%')) = 0, 'LIKE wildcards are literal');
+-- Paging: a far offset is empty, a negative or null offset acts like 0.
+select jt.assert((select count(*) from admin_members_list((select v from t_ids where k = 'clara'), null, 100000)) = 0, 'far offset is empty');
+select jt.assert((select count(*) from admin_members_list((select v from t_ids where k = 'clara'), null, -5)) = (select count(*) from admin_members_list((select v from t_ids where k = 'clara'), null, 0)), 'negative offset acts like 0');
+select jt.assert((select count(*) from admin_members_list((select v from t_ids where k = 'clara'), null, null)) = (select count(*) from admin_members_list((select v from t_ids where k = 'clara'), null, 0)), 'null offset acts like 0');
 reset role;
 update alumni_profiles set deleted_at = now() where id = (select v from t_ids where k = 'siti');
 set role anon;

@@ -5,7 +5,7 @@ import '../util/app_language.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/industries.dart';
-import '../data/profile_columns.dart';
+import '../data/profile_fields.dart';
 import '../lock/session.dart';
 import '../widgets/searchable_choice.dart';
 import 'verification_screen.dart';
@@ -14,9 +14,12 @@ import 'verification_screen.dart';
 /// (name, faculty, major, graduation year) came from verification and
 /// aren't editable here.
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key, required this.profile});
+  const ProfileSetupScreen({super.key, required this.profile, this.save});
 
   final Map<String, dynamic> profile;
+
+  /// Replaces the database save in tests.
+  final ProfileFieldSaver? save;
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -74,20 +77,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   // .select() (a list) instead of .select().single() lets us detect that
   // as "empty list" rather than a thrown PostgrestException.
   Future<Map<String, dynamic>?> _updateById(String id) async {
-    final rows = await Supabase.instance.client
-        .from('alumni_profiles')
-        .update({
-          'current_role': _roleController.text.trim(),
-          'industry': _industry ?? '',
-          'company': _companyController.text.trim(),
-          // The old Current Employer column is no longer shown. Keep it equal
-          // to Company so nothing stale is left behind until it is dropped.
-          'current_employer': _companyController.text.trim(),
-        })
-        .eq('id', id)
-        .select(kProfileColumns);
-    final list = rows as List;
-    return list.isEmpty ? null : list.first as Map<String, dynamic>;
+    return (widget.save ?? saveProfileFields)(id, {
+      'current_role': _roleController.text.trim(),
+      'industry': _industry ?? '',
+      'company': _companyController.text.trim(),
+      // The old Current Employer column is no longer shown. Keep it equal
+      // to Company so nothing stale is left behind until it is dropped.
+      'current_employer': _companyController.text.trim(),
+    });
   }
 
   Future<void> _save() async {
@@ -160,6 +157,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 children: [
                   TextField(
                     controller: _roleController,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Current Role'),
@@ -170,6 +168,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   TextField(
                     key: const Key('profile-company'),
                     controller: _companyController,
+                    inputFormatters: const [CodePointLimit(100)],
                     enabled: !_saving,
                     decoration: InputDecoration(
                       labelText: tr('Company'),

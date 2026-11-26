@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/job_status_chip.dart';
+
 import '../util/app_language.dart';
 
 import '../widgets/app_photo.dart';
@@ -197,6 +199,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: JobStatusChip(job: widget.job),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     [
@@ -222,7 +229,25 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  if (_isOwnJob)
+                  if (_isOwnJob) ...[
+                    Row(
+                      key: const Key('owner-contact'),
+                      children: [
+                        Icon(
+                          Icons.mail_outline,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.job['contact_info'] as String? ??
+                                tr('No contact info provided.'),
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     FutureBuilder<int>(
                       future: _applicantCountFuture,
                       builder: (context, snapshot) {
@@ -253,12 +278,18 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               Expanded(
                                 child: Text(
                                   !notify
-                                      ? 'Applicant notifications are off for this job.'
+                                      ? tr(
+                                          'Applicant notifications are off for this job.',
+                                        )
                                       : count == null
-                                      ? 'Loading applicants…'
+                                      ? tr('Loading applicants…')
                                       : count == 0
-                                      ? 'No applications yet.'
-                                      : '$count application${count == 1 ? '' : 's'} received.',
+                                      ? tr('No applications yet.')
+                                      : count == 1
+                                      ? tr('1 application received.')
+                                      : trf('{0} applications received.', [
+                                          count,
+                                        ]),
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: notify
                                         ? theme.colorScheme.onSecondaryContainer
@@ -284,8 +315,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           ),
                         );
                       },
-                    )
-                  else
+                    ),
+                  ] else
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -305,7 +336,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                               Expanded(
                                 child: Text(
                                   widget.job['contact_info'] as String? ??
-                                      'No contact info provided.',
+                                      tr('No contact info provided.'),
                                   style: theme.textTheme.bodyMedium,
                                 ),
                               ),
@@ -333,6 +364,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                     child: Text(tr('Tarik lamaran')),
                                   ),
                                 ],
+                              );
+                            }
+                            if (jobIsClosed(widget.job)) {
+                              return FilledButton.icon(
+                                key: const Key('apply-closed'),
+                                onPressed: null,
+                                icon: const Icon(Icons.lock_outline),
+                                label: Text(tr('Lowongan ditutup')),
                               );
                             }
                             return FilledButton.icon(

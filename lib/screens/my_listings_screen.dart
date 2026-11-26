@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import '../data/marketplace_format.dart';
@@ -142,66 +144,68 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Produk saya'))),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            const MarketplaceDemoNotice(),
-            Expanded(
-              child: FutureBuilder<List<MarketplaceListing>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return ErrorView(
-                      message: tr('Could not load your listings. Try again.'),
-                      screen: 'Produk saya',
-                      error: snapshot.error,
-                      onRetry: _reload,
-                      retryLabel: 'Retry',
-                    );
-                  }
-                  final items = snapshot.data ?? [];
-                  if (items.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text(
-                          tr(
-                            'Kamu belum punya produk. Gunakan "Tambah produk" di '
-                            'Marketplace untuk memasangnya.',
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              const MarketplaceDemoNotice(),
+              Expanded(
+                child: FutureBuilder<List<MarketplaceListing>>(
+                  future: _future,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return ErrorView(
+                        message: tr('Could not load your listings. Try again.'),
+                        screen: 'Produk saya',
+                        error: snapshot.error,
+                        onRetry: _reload,
+                        retryLabel: 'Retry',
+                      );
+                    }
+                    final items = snapshot.data ?? [];
+                    if (items.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text(
+                            tr(
+                              'Kamu belum punya produk. Gunakan "Tambah produk" di '
+                              'Marketplace untuk memasangnya.',
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _reload();
+                        try {
+                          await _future;
+                        } catch (_) {}
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _MyListingCard(
+                          listing: items[i],
+                          onEdit: () => _edit(items[i]),
+                          onSold: () => _markSold(items[i]),
+                          onDelete: () => _delete(items[i]),
                         ),
                       ),
                     );
-                  }
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      _reload();
-                      try {
-                        await _future;
-                      } catch (_) {}
-                    },
-                    child: ListView.separated(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _MyListingCard(
-                        listing: items[i],
-                        onEdit: () => _edit(items[i]),
-                        onSold: () => _markSold(items[i]),
-                        onDelete: () => _delete(items[i]),
-                      ),
-                    ),
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

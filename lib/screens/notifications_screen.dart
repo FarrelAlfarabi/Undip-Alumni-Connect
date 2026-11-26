@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import '../data/admin_repository.dart';
@@ -12,6 +14,7 @@ import '../util/friendly_error.dart';
 import '../widgets/confirm_delete.dart';
 import 'admin_reports_screen.dart';
 import 'admin_screen.dart';
+import 'admin_business_edits_screen.dart';
 import 'job_applicants_screen.dart';
 import 'my_businesses_screen.dart';
 import 'my_listings_screen.dart';
@@ -30,6 +33,7 @@ enum NotificationDestination {
   hiddenJobInfo,
   adminReports,
   adminBusinesses,
+  adminBusinessEdits,
   jobApplicants,
   none,
 }
@@ -44,7 +48,10 @@ NotificationDestination destinationOf(AppNotification n) {
         'business_approved' ||
         'business_rejected' ||
         'business_suspended' ||
-        'business_restored':
+        'business_restored' ||
+        'business_edit_received' ||
+        'business_edit_approved' ||
+        'business_edit_rejected':
       return NotificationDestination.myBusinesses;
     case 'content_hidden':
       return switch (n.targetType) {
@@ -56,6 +63,8 @@ NotificationDestination destinationOf(AppNotification n) {
       return NotificationDestination.adminReports;
     case 'business_pending':
       return NotificationDestination.adminBusinesses;
+    case 'business_edit_pending':
+      return NotificationDestination.adminBusinessEdits;
     default:
       // Job applications, and old rows that only carry a job id.
       final jobId = n.type == 'job_application'
@@ -99,6 +108,10 @@ Widget defaultNotificationPage(
       repository: AdminRepository(),
     ),
     NotificationDestination.adminBusinesses => AdminBusinessesScreen(
+      adminId: me,
+      repository: AdminRepository(),
+    ),
+    NotificationDestination.adminBusinessEdits => AdminBusinessEditsScreen(
       adminId: me,
       repository: AdminRepository(),
     ),
@@ -270,104 +283,106 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        top: false,
-        child: FutureBuilder<List<AppNotification>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return ErrorView(
-                message: friendlyLoadError('notifications', snap.error),
-                screen: 'Notifications',
-                error: snap.error,
-                onRetry: _reload,
-              );
-            }
-            final items = snap.data ?? const [];
-            if (items.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    tr(
-                      'No notifications yet. Things like new requests and '
-                      'decisions on your business show up here.',
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          top: false,
+          child: FutureBuilder<List<AppNotification>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snap.hasError) {
+                return ErrorView(
+                  message: friendlyLoadError('notifications', snap.error),
+                  screen: 'Notifications',
+                  error: snap.error,
+                  onRetry: _reload,
+                );
+              }
+              final items = snap.data ?? const [];
+              if (items.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      tr(
+                        'No notifications yet. Things like new requests and '
+                        'decisions on your business show up here.',
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _reload();
+                  try {
+                    await _future;
+                  } catch (_) {}
+                },
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final n = items[i];
+                    final fresh = n.isUnread;
+                    return Dismissible(
+                      key: Key('dismiss-${n.id}'),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: theme.colorScheme.errorContainer,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: theme.colorScheme.onErrorContainer,
+                        ),
+                      ),
+                      onDismissed: (_) async {
+                        try {
+                          await _repo.deleteOne(_myId, n.id);
+                        } catch (_) {}
+                        if (mounted) _reload();
+                      },
+                      child: ListTile(
+                        key: Key('notification-${n.id}'),
+                        tileColor: fresh
+                            ? theme.colorScheme.secondaryContainer.withValues(
+                                alpha: 0.35,
+                              )
+                            : null,
+                        leading: Icon(
+                          _icon(n),
+                          color: fresh
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        title: Text(
+                          n.title,
+                          style: TextStyle(
+                            fontWeight: fresh
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Text(n.body),
+                        trailing: Text(
+                          _timeAgo(n.createdAt),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        onTap: () => _open(n),
+                      ),
+                    );
+                  },
                 ),
               );
-            }
-            return RefreshIndicator(
-              onRefresh: () async {
-                _reload();
-                try {
-                  await _future;
-                } catch (_) {}
-              },
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: items.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  final n = items[i];
-                  final fresh = n.isUnread;
-                  return Dismissible(
-                    key: Key('dismiss-${n.id}'),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      color: theme.colorScheme.errorContainer,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 16),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: theme.colorScheme.onErrorContainer,
-                      ),
-                    ),
-                    onDismissed: (_) async {
-                      try {
-                        await _repo.deleteOne(_myId, n.id);
-                      } catch (_) {}
-                      if (mounted) _reload();
-                    },
-                    child: ListTile(
-                      key: Key('notification-${n.id}'),
-                      tileColor: fresh
-                          ? theme.colorScheme.secondaryContainer.withValues(
-                              alpha: 0.35,
-                            )
-                          : null,
-                      leading: Icon(
-                        _icon(n),
-                        color: fresh
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      title: Text(
-                        n.title,
-                        style: TextStyle(
-                          fontWeight: fresh
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      subtitle: Text(n.body),
-                      trailing: Text(
-                        _timeAgo(n.createdAt),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      onTap: () => _open(n),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

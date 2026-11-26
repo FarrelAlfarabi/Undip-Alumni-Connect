@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/widgets/sponsor_banner.dart';
@@ -35,6 +36,80 @@ const complete = {
 };
 
 void main() {
+  group('SponsorBanner views only when really seen', () {
+    Widget app(List<String> shown, ScrollController c, {double gap = 1500}) =>
+        MaterialApp(
+          home: Scaffold(
+            body: ListView(
+              controller: c,
+              children: [
+                SizedBox(height: gap),
+                SponsorBanner(
+                  items: [sponsorMap(1), sponsorMap(2)],
+                  onOpen: (_) {},
+                  onShown: (s) => shown.add(s['id'] as String),
+                  autoAdvance: const Duration(seconds: 3),
+                ),
+                const SizedBox(height: 1500),
+              ],
+            ),
+          ),
+        );
+
+    testWidgets('below the fold: nothing counted, no sliding', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final shown = <String>[];
+      final c = ScrollController();
+      await tester.pumpWidget(app(shown, c));
+      await tester.pump(const Duration(seconds: 20));
+      expect(shown, isEmpty);
+    });
+
+    testWidgets('counted once it is scrolled into view', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final shown = <String>[];
+      final c = ScrollController();
+      await tester.pumpWidget(app(shown, c));
+      c.jumpTo(1200);
+      await tester.pump(const Duration(seconds: 1));
+      expect(shown, ['sp1']);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(shown, ['sp1', 'sp2']);
+    });
+
+    testWidgets('on another tab (offstage): nothing counted', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final shown = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: IndexedStack(
+              index: 1,
+              children: [
+                SponsorBanner(
+                  items: [sponsorMap(1), sponsorMap(2)],
+                  onOpen: (_) {},
+                  onShown: (s) => shown.add(s['id'] as String),
+                  autoAdvance: const Duration(seconds: 3),
+                ),
+                const SizedBox(),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 20));
+      expect(shown, isEmpty);
+    });
+  });
+
   group('SponsorBanner', () {
     testWidgets('shows nothing when there are no sponsors', (tester) async {
       await pumpBanner(tester, []);
@@ -76,6 +151,25 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.textContaining('Sponsor 3'), findsOneWidget);
+    });
+  });
+
+  group('mouse', () {
+    testWidgets('a mouse drag moves the carousel (laptop)', (tester) async {
+      await pumpBanner(tester, [sponsorMap(1), sponsorMap(2), sponsorMap(3)]);
+      expect(find.textContaining('Sponsor 1'), findsOneWidget);
+      final centre = tester.getCenter(find.byKey(const Key('sponsor-pages')));
+      final mouse = await tester.startGesture(
+        centre,
+        kind: PointerDeviceKind.mouse,
+      );
+      await mouse.moveBy(const Offset(-100, 0));
+      await tester.pump();
+      await mouse.moveBy(const Offset(-200, 0));
+      await tester.pump();
+      await mouse.up();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
     });
   });
 

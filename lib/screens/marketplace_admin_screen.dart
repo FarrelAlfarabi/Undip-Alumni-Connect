@@ -13,6 +13,7 @@ import 'admin_detail_screens.dart';
 import 'marketplace_screen.dart' show ListingImage;
 import '../widgets/error_view.dart';
 import '../widgets/undo_snackbar.dart';
+import '../data/profile_fields.dart';
 
 /// Admin: review queue for pending listings (the old seed listings), plus
 /// report counts per listing. Reached from Profile > Admin, which shows only
@@ -189,6 +190,7 @@ class _ReviewQueueState extends State<_ReviewQueue> {
             title: Text(tr('Reject listing')),
             content: TextField(
               controller: controller,
+              inputFormatters: const [CodePointLimit(300)],
               autofocus: true,
               maxLines: 3,
               decoration: InputDecoration(

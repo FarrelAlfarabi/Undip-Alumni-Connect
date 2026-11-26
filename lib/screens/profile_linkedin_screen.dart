@@ -79,11 +79,10 @@ class _ProfileLinkedInScreenState extends State<ProfileLinkedInScreen> {
               TextField(
                 key: const Key('linkedin-field'),
                 controller: _text,
+                // No length formatter on link and email fields: it made Android browsers
+                // repeat typed characters. Length is checked on save.
                 enabled: !_saving,
-                maxLength: kLinkedInMax,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                enableSuggestions: false,
+                keyboardType: kUrlKeyboard,
                 decoration: InputDecoration(
                   labelText: tr('LinkedIn (opsional)'),
                   hintText: 'linkedin.com/in/namamu',

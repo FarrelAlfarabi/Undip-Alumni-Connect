@@ -173,6 +173,40 @@ void main() {
       expect(api.sent, isEmpty);
     });
 
+    testWidgets(
+      'remembered person is not the signed in one: open the signed in '
+      'person and remember them',
+      (t) async {
+        // The browser remembered p1, but the stored sign in belongs to p2. The
+        // app used to open p1, so every save hit a row the sign in cannot edit.
+        final api = FakeLoginApi()
+          ..resumeProfile = {
+            ...testProfile(),
+            'id': 'p2',
+            'name': 'Budi Santoso',
+          };
+        final lock = await makeRememberedLock(withPin: false);
+        await _pumpEntry(
+          t,
+          lock,
+          web: true,
+          api: api,
+          fetch: (id) async => {
+            ...testProfile(),
+            'id': id,
+            'name': id == 'p2' ? 'Budi Santoso' : 'Ahmad Ramadhan',
+          },
+        );
+        await t.pump();
+        await enterPin(t, testPin);
+        await enterPin(t, testPin);
+        await t.pump();
+        await t.pump();
+        expect(find.text('APP for Budi Santoso'), findsOneWidget);
+        expect((await lock.load())!.profileId, 'p2');
+      },
+    );
+
     testWidgets('phone without a PIN still asks to verify (unchanged)', (
       t,
     ) async {

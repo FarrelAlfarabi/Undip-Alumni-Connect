@@ -2,18 +2,22 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import '../config/policy_config.dart';
 import '../data/business_repository.dart';
 import '../data/posting_text.dart';
 import '../models/business.dart';
+import '../models/business_edit_request.dart';
 import '../util/friendly_error.dart';
 import 'business_form_screen.dart';
 import '../widgets/business_photo.dart';
 import '../widgets/confirm_delete.dart';
 import '../widgets/error_view.dart';
 import '../widgets/verified_badge.dart';
+import '../data/profile_fields.dart';
 
 const String _limitNote =
     'You can own up to $kMaxBusinesses businesses. To add more, email '
@@ -41,6 +45,9 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
       widget.repository ?? BusinessRepository();
   late Future<(List<Business>, List<BusinessUsage>)> _future;
 
+  /// Open (or recently rejected) change requests, by business id.
+  Map<String, BusinessEditRequest> _edits = {};
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +57,8 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
   Future<(List<Business>, List<BusinessUsage>)> _load() async {
     final mine = await _repo.mine(widget.ownerId);
     final usage = await _repo.usage(widget.ownerId);
+    final edits = await _repo.myEdits(widget.ownerId);
+    _edits = {for (final r in edits) r.businessId: r};
     _activeCount = mine
         .where((b) => b.status != BusinessStatus.rejected)
         .length;
@@ -114,6 +123,7 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
               TextFormField(
                 key: const Key('nib-dialog-field'),
                 controller: text,
+                inputFormatters: const [CodePointLimit(13)],
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: tr('NIB (opsional)'),
@@ -161,6 +171,44 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
     }
   }
 
+  Future<void> _cancelEdit(BusinessEditRequest r) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Batalkan permintaan perubahan?')),
+        content: Text(tr('Data bisnismu tidak berubah.')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Tidak')),
+          ),
+          FilledButton(
+            key: const Key('cancel-edit-yes'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('Batalkan')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await _repo.cancelEdit(widget.ownerId, r.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Permintaan dibatalkan.'))));
+      _reload();
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          message: businessErrorMessage(e),
+          screen: 'My businesses',
+          error: e,
+        );
+      }
+    }
+  }
+
   Future<void> _openForm([Business? existing]) async {
     if (existing == null && _activeCount >= kMaxBusinesses) {
       ScaffoldMessenger.of(context)
@@ -173,6 +221,11 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
           ownerId: widget.ownerId,
           repository: _repo,
           existing: existing,
+          pendingEdit: existing == null
+              ? null
+              : _edits[existing.id]?.isPending == true
+              ? _edits[existing.id]
+              : null,
         ),
       ),
     );
@@ -188,75 +241,81 @@ class _MyBusinessesScreenState extends State<MyBusinessesScreen> {
         icon: const Icon(Icons.add_business_outlined),
         label: Text(tr('Register a business')),
       ),
-      body: SafeArea(
-        top: false,
-        child: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return ErrorView(
-                message: friendlyLoadError('your businesses', snap.error),
-                screen: 'My businesses',
-                error: snap.error,
-                onRetry: _reload,
-              );
-            }
-            final items = snap.data?.$1 ?? const <Business>[];
-            final usage = {
-              for (final u in snap.data?.$2 ?? const <BusinessUsage>[])
-                u.businessId: u,
-            };
-            if (items.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    trf(
-                      'You have not registered a business yet. Register one so other alumni can find it.\n\n{0}',
-                      [tr(_limitNote)],
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          top: false,
+          child: FutureBuilder<(List<Business>, List<BusinessUsage>)>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snap.hasError) {
+                return ErrorView(
+                  message: friendlyLoadError('your businesses', snap.error),
+                  screen: 'My businesses',
+                  error: snap.error,
+                  onRetry: _reload,
+                );
+              }
+              final items = snap.data?.$1 ?? const <Business>[];
+              final usage = {
+                for (final u in snap.data?.$2 ?? const <BusinessUsage>[])
+                  u.businessId: u,
+              };
+              if (items.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      trf(
+                        'You have not registered a business yet. Register one so other alumni can find it.\n\n{0}',
+                        [tr(_limitNote)],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _reload();
+                  try {
+                    await _future;
+                  } catch (_) {}
+                },
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                  itemCount: items.length + 1,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    if (i == 0) {
+                      return Text(
+                        tr(_limitNote),
+                        key: const Key('business-limit-note'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      );
+                    }
+                    final b = items[i - 1];
+                    return BusinessOwnerCard(
+                      business: b,
+                      usage: usage[b.id],
+                      onEdit: () => _openForm(b),
+                      onEditNib: () => _editNib(b),
+                      edit: _edits[b.id],
+                      onCancelEdit: _edits[b.id] == null
+                          ? null
+                          : () => _cancelEdit(_edits[b.id]!),
+                      onDelete: () => _delete(b),
+                    );
+                  },
                 ),
               );
-            }
-            return RefreshIndicator(
-              onRefresh: () async {
-                _reload();
-                try {
-                  await _future;
-                } catch (_) {}
-              },
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                itemCount: items.length + 1,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) {
-                  if (i == 0) {
-                    return Text(
-                      tr(_limitNote),
-                      key: const Key('business-limit-note'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    );
-                  }
-                  final b = items[i - 1];
-                  return BusinessOwnerCard(
-                    business: b,
-                    usage: usage[b.id],
-                    onEdit: () => _openForm(b),
-                    onEditNib: () => _editNib(b),
-                    onDelete: () => _delete(b),
-                  );
-                },
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );
@@ -272,6 +331,8 @@ class BusinessOwnerCard extends StatelessWidget {
     this.onEdit,
     this.onEditNib,
     this.onDelete,
+    this.edit,
+    this.onCancelEdit,
   });
 
   final Business business;
@@ -279,6 +340,10 @@ class BusinessOwnerCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onEditNib;
   final VoidCallback? onDelete;
+
+  /// The open or recently rejected change request of this business.
+  final BusinessEditRequest? edit;
+  final VoidCallback? onCancelEdit;
 
   bool get _canEdit =>
       business.status == BusinessStatus.pending ||
@@ -314,15 +379,11 @@ class BusinessOwnerCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Flexible(
-                  child: Chip(
-                    key: Key('status-${b.id}'),
-                    label: Text(
-                      b.status.label,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    visualDensity: VisualDensity.compact,
-                  ),
+                // Not squeezed by the name: the whole status shows.
+                Chip(
+                  key: Key('status-${b.id}'),
+                  label: Text(b.status.label),
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -337,9 +398,11 @@ class BusinessOwnerCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               b.approvedBand != null
-                  ? 'Approved band: ${b.approvedBand!.label}'
-                  : 'Band you chose: ${b.requestedBand?.label ?? '-'} '
-                        '(an admin sets the approved band)',
+                  ? trf('Approved band: {0}', [b.approvedBand!.label])
+                  : trf(
+                      'Band you chose: {0} (an admin sets the approved band)',
+                      [b.requestedBand?.label ?? '-'],
+                    ),
               style: theme.textTheme.bodyMedium,
             ),
             if (b.nib != null) ...[
@@ -416,6 +479,56 @@ class BusinessOwnerCard extends StatelessWidget {
                   key: Key('nib-edit-${b.id}'),
                   onPressed: onEditNib,
                   child: Text(tr(b.nib == null ? 'Tambah NIB' : 'Ubah NIB')),
+                ),
+              ),
+            ],
+            if (b.status == BusinessStatus.approved && edit != null) ...[
+              const SizedBox(height: 8),
+              if (edit!.isPending)
+                Text(
+                  tr(
+                    'Perubahan menunggu persetujuan admin. Data lama tetap '
+                    'tampil sampai disetujui.',
+                  ),
+                  key: Key('edit-pending-${b.id}'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else
+                Text(
+                  trf('Perubahan ditolak: {0}', [
+                    edit!.rejectReason ?? tr('tanpa alasan'),
+                  ]),
+                  key: Key('edit-rejected-${b.id}'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+            ],
+            if (b.status == BusinessStatus.approved && onEdit != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    if (edit?.isPending == true && onCancelEdit != null)
+                      TextButton(
+                        key: Key('edit-cancel-${b.id}'),
+                        onPressed: onCancelEdit,
+                        child: Text(tr('Batalkan permintaan')),
+                      ),
+                    OutlinedButton(
+                      key: Key('request-edit-${b.id}'),
+                      onPressed: onEdit,
+                      child: Text(
+                        tr(
+                          edit?.isPending == true
+                              ? 'Ubah permintaan'
+                              : 'Ajukan perubahan',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

@@ -22,6 +22,7 @@ import '../widgets/avatar.dart';
 import '../widgets/content_actions_menu.dart';
 import 'admin_screen.dart';
 import 'my_businesses_screen.dart';
+import 'my_applications_screen.dart';
 import 'my_job_postings_screen.dart';
 import 'help_screen.dart';
 import 'settings_screen.dart';
@@ -671,6 +672,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ),
                         ),
                       ),
+                      onApplications: () => Navigator.of(context).push(
+                        AppRoute(
+                          builder: (_) => MyApplicationsScreen(
+                            currentUser: widget.currentUser,
+                          ),
+                        ),
+                      ),
                       onSettings: () => Navigator.of(context).push(
                         AppRoute(
                           builder: (_) => SettingsScreen(
@@ -819,7 +827,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            tr(label),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -843,6 +851,7 @@ class _ProfileMenu extends StatelessWidget {
     required this.adminBadge,
     required this.onBusiness,
     required this.onJobs,
+    required this.onApplications,
     required this.onSettings,
     required this.onPolicy,
     required this.onHelp,
@@ -856,6 +865,7 @@ class _ProfileMenu extends StatelessWidget {
   final int adminBadge;
   final VoidCallback onBusiness;
   final VoidCallback onJobs;
+  final VoidCallback onApplications;
   final VoidCallback onSettings;
   final VoidCallback onPolicy;
   final VoidCallback onHelp;
@@ -904,6 +914,12 @@ class _ProfileMenu extends StatelessWidget {
               icon: Icons.work_outline,
               title: tr('My job postings'),
               onTap: onJobs,
+            ),
+            MenuItem(
+              key: const Key('profile-applications'),
+              icon: Icons.assignment_turned_in_outlined,
+              title: tr('Lamaran saya'),
+              onTap: onApplications,
             ),
           ],
         ),
