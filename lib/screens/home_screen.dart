@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/press_feedback.dart';
+
 import '../util/app_language.dart';
 
 import '../data/home_repository.dart';
@@ -663,33 +665,36 @@ class _RequestsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      key: const Key('home-requests-card'),
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Icon(Icons.handshake_outlined, color: scheme.onSurface),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  trf('{0} alumni ingin terhubung denganmu. Lihat permintaan', [
-                    count,
-                  ]),
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: scheme.onSurface),
+    return PressFeedback(
+      child: Material(
+        key: const Key('home-requests-card'),
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Icon(Icons.handshake_outlined, color: scheme.onSurface),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    trf(
+                      '{0} alumni ingin terhubung denganmu. Lihat permintaan',
+                      [count],
+                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: scheme.onSurface),
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right, color: scheme.onSurface),
-            ],
+                Icon(Icons.chevron_right, color: scheme.onSurface),
+              ],
+            ),
           ),
         ),
       ),
@@ -728,43 +733,45 @@ class _Tile extends StatelessWidget {
         label: '$label. $hint',
         excludeSemantics: true,
         onTap: onTap,
-        child: Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: scheme.outlineVariant),
-          ),
-          child: InkWell(
-            customBorder: RoundedRectangleBorder(
+        child: PressFeedback(
+          child: Material(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: scheme.outlineVariant),
             ),
-            onTap: onTap,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 64),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: iconBackground,
-                        borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              customBorder: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              onTap: onTap,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 64),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: iconBackground,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, size: 20, color: iconColor),
                       ),
-                      child: Icon(icon, size: 20, color: iconColor),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -968,65 +975,67 @@ class _ProductCard extends StatelessWidget {
         button: true,
         label: '${l.title}, ${priceLabel(l.priceIdr, l.priceNegotiable)}',
         excludeSemantics: true,
-        child: Material(
-          key: const ValueKey('home-product-card'),
-          color: AppTheme.paperRaised,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppTheme.hairline),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListingImage(
-                  url: l.imageUrl,
-                  aspectRatio: 3 / 2,
-                  semanticLabel: l.title,
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        ),
-                      ),
-                      Text(
-                        l.category,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: muted,
-                      ),
-                      if (l.city.isNotEmpty)
+        child: PressFeedback(
+          child: Material(
+            key: const ValueKey('home-product-card'),
+            color: AppTheme.paperRaised,
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppTheme.hairline),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListingImage(
+                    url: l.imageUrl,
+                    aspectRatio: 3 / 2,
+                    semanticLabel: l.title,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          l.city,
+                          l.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            height: 1.3,
+                          ),
+                        ),
+                        Text(
+                          l.category,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: muted,
                         ),
-                      Text(
-                        priceLabel(l.priceIdr, l.priceNegotiable),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                        if (l.city.isNotEmpty)
+                          Text(
+                            l.city,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: muted,
+                          ),
+                        Text(
+                          priceLabel(l.priceIdr, l.priceNegotiable),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1068,72 +1077,74 @@ class _JobRow extends StatelessWidget {
       button: true,
       label: subtitle.isEmpty ? title : '$title, $subtitle',
       excludeSemantics: true,
-      child: Material(
-        key: const ValueKey('home-job-row'),
-        color: AppTheme.paperRaised,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppTheme.hairline),
-        ),
-        child: InkWell(
-          customBorder: RoundedRectangleBorder(
+      child: PressFeedback(
+        child: Material(
+          key: const ValueKey('home-job-row'),
+          color: AppTheme.paperRaised,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppTheme.hairline),
           ),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: even
-                          ? theme.colorScheme.primaryContainer
-                          : AppTheme.black,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      companyInitials(company),
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: even ? AppTheme.blue : AppTheme.yellow,
+          child: InkWell(
+            customBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: even
+                            ? theme.colorScheme.primaryContainer
+                            : AppTheme.black,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        companyInitials(company),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: even ? AppTheme.blue : AppTheme.yellow,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        if (subtitle.isNotEmpty)
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            subtitle,
+                            title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                      ],
+                          if (subtitle.isNotEmpty)
+                            Text(
+                              subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ],
+                    Icon(
+                      Icons.chevron_right,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1323,54 +1334,59 @@ class _BusinessEntry extends StatelessWidget {
             'Alasan: ${b.rejectionReason}',
           if (all.length > 1) '+ ${all.length - 1} more',
         ];
-        return Card(
-          key: const Key('business-owner-card'),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: onOpenMine,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: NameWithBadge(
-                            name: b.name,
-                            verified: b.nibVerified,
-                            maxLines: 1,
-                            badgeSize: 16,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
+        return PressFeedback(
+          child: Card(
+            key: const Key('business-owner-card'),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.colorScheme.outlineVariant),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: onOpenMine,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: NameWithBadge(
+                              name: b.name,
+                              verified: b.nibVerified,
+                              maxLines: 1,
+                              badgeSize: 16,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Chip(
-                        key: const Key('business-status-chip'),
-                        label: Text(b.status.label),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                  for (final l in lines)
-                    Text(
-                      l,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                        Chip(
+                          key: const Key('business-status-chip'),
+                          label: Text(b.status.label),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
                     ),
-                ],
+                    for (final l in lines)
+                      Text(
+                        l,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

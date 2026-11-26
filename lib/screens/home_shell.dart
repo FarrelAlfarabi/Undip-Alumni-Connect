@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show setEquals;
+import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
 
 import '../nav/back_guard.dart';
 
@@ -16,6 +16,7 @@ import '../theme.dart';
 import 'home_pages.dart';
 import 'home_screen.dart';
 import '../widgets/brand_lockup.dart';
+import '../widgets/press_feedback.dart';
 
 /// App shell with a bottom navigation: Home, Directory, Market, Profile (and
 /// Chat when [chatEnabled] is on). Lands on Home after verification. Market
@@ -111,6 +112,11 @@ class _HomeShellState extends State<HomeShell> {
   final Map<int, DateTime> _leftAt = {};
   Set<String> _lastBlocked = const {};
 
+  /// The bottom tab a finger is on right now (null when none). Drives the
+  /// instant shrink of its icon, see [_NavIcon].
+  final ValueNotifier<int?> _pressedTab = ValueNotifier(null);
+  Offset _pressStart = Offset.zero;
+
   /// Which Market segment is showing: 0 Products, 1 Businesses.
   final ValueNotifier<int> _marketSegment = ValueNotifier(0);
 
@@ -168,6 +174,7 @@ class _HomeShellState extends State<HomeShell> {
     StaleCache.clear();
     _currentUser.dispose();
     _marketSegment.dispose();
+    _pressedTab.dispose();
     super.dispose();
   }
 
@@ -389,26 +396,88 @@ class _HomeShellState extends State<HomeShell> {
           }
           return Scaffold(
             body: content,
-            bottomNavigationBar: DecoratedBox(
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: AppTheme.hairline)),
-              ),
-              child: NavigationBar(
-                selectedIndex: _index,
-                onDestinationSelected: _select,
-                destinations: [
-                  for (final d in destinations)
-                    NavigationDestination(
-                      icon: Icon(d.icon),
-                      selectedIcon: Icon(d.selectedIcon),
-                      label: d.label,
-                    ),
-                ],
+            bottomNavigationBar: Listener(
+              // The tab a finger is on shrinks at once, before the tap is
+              // confirmed. It lets go if the finger slides away.
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (e) {
+                _pressStart = e.localPosition;
+                final slot = constraints.maxWidth / destinations.length;
+                _pressedTab.value = (e.localPosition.dx / slot).floor().clamp(
+                  0,
+                  destinations.length - 1,
+                );
+              },
+              onPointerMove: (e) {
+                if ((e.localPosition - _pressStart).distance > 16) {
+                  _pressedTab.value = null;
+                }
+              },
+              onPointerUp: (_) => _pressedTab.value = null,
+              onPointerCancel: (_) => _pressedTab.value = null,
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: AppTheme.hairline)),
+                ),
+                child: NavigationBar(
+                  selectedIndex: _index,
+                  onDestinationSelected: _select,
+                  destinations: [
+                    for (var i = 0; i < destinations.length; i++)
+                      NavigationDestination(
+                        icon: _NavIcon(
+                          index: i,
+                          pressed: _pressedTab,
+                          icon: destinations[i].icon,
+                        ),
+                        selectedIcon: _NavIcon(
+                          index: i,
+                          pressed: _pressedTab,
+                          icon: destinations[i].selectedIcon,
+                        ),
+                        label: destinations[i].label,
+                        // No pop-up name over the page: the label is
+                        // already under the icon.
+                        tooltip: '',
+                      ),
+                  ],
+                ),
               ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+/// A bottom tab icon that shrinks while its tab is pressed.
+class _NavIcon extends StatelessWidget {
+  const _NavIcon({
+    required this.index,
+    required this.pressed,
+    required this.icon,
+  });
+
+  final int index;
+  final ValueListenable<int?> pressed;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    return ValueListenableBuilder<int?>(
+      valueListenable: pressed,
+      child: Icon(icon),
+      builder: (context, tab, child) {
+        final down = !reduce && tab == index;
+        return AnimatedScale(
+          scale: down ? 0.82 : 1.0,
+          duration: down ? kPressDownDuration : kPressUpDuration,
+          curve: Curves.easeOut,
+          child: child,
+        );
+      },
     );
   }
 }
@@ -466,46 +535,48 @@ class _SideNav extends StatelessWidget {
                     child: Semantics(
                       selected: i == selected,
                       button: true,
-                      child: Material(
-                        color: i == selected
-                            ? scheme.secondaryContainer
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          key: Key('side-nav-${places[i].label}'),
+                      child: PressFeedback(
+                        child: Material(
+                          color: i == selected
+                              ? scheme.secondaryContainer
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          onTap: () => onSelect(i),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  i == selected
-                                      ? places[i].selectedIcon
-                                      : places[i].icon,
-                                  color: i == selected
-                                      ? scheme.onSecondaryContainer
-                                      : scheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    places[i].label,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: i == selected
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
-                                      color: i == selected
-                                          ? scheme.onSecondaryContainer
-                                          : scheme.onSurface,
+                          child: InkWell(
+                            key: Key('side-nav-${places[i].label}'),
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => onSelect(i),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    i == selected
+                                        ? places[i].selectedIcon
+                                        : places[i].icon,
+                                    color: i == selected
+                                        ? scheme.onSecondaryContainer
+                                        : scheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      places[i].label,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: i == selected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        color: i == selected
+                                            ? scheme.onSecondaryContainer
+                                            : scheme.onSurface,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

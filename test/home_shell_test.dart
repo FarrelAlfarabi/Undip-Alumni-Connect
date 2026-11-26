@@ -114,6 +114,37 @@ void main() {
     expect(find.text('PAGE Profile'), findsOneWidget);
   });
 
+  testWidgets('the tab under a finger shrinks at once, the others do not', (
+    tester,
+  ) async {
+    await pumpShell(tester, chat: false);
+    double scaleOfTab(String label) {
+      final scales = find.descendant(
+        of: find.ancestor(
+          of: find.text(label),
+          matching: find.byType(NavigationDestination),
+        ),
+        matching: find.byType(AnimatedScale),
+      );
+      return tester.widget<AnimatedScale>(scales.first).scale;
+    }
+
+    final g = await tester.startGesture(
+      tester.getCenter(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text('Members'),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(scaleOfTab('Members'), lessThan(1.0));
+    expect(scaleOfTab('Explore'), 1.0);
+    await g.up();
+    await tester.pumpAndSettle();
+    expect(scaleOfTab('Members'), 1.0);
+  });
+
   testWidgets('switch on: Chat comes back between Market and Profile', (
     tester,
   ) async {
