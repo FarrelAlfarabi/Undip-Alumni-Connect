@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../widgets/responsive_page.dart';
+
 import 'package:flutter/services.dart';
 
 import '../data/contact_repository.dart';
@@ -65,47 +68,49 @@ class _RequestsScreenState extends State<RequestsScreen> {
             ],
           ),
         ),
-        body: SafeArea(
-          top: false,
-          child: TabBarView(
-            children: [
-              _ListTab<IncomingRequest>(
-                future: _incoming,
-                what: 'permintaan',
-                emptyText:
-                    'Belum ada permintaan. Saat alumni lain ingin '
-                    'menghubungimu, permintaannya muncul di sini.',
-                onRetry: _refresh,
-                itemBuilder: (r) => _IncomingCard(
-                  request: r,
+        body: ResponsivePage(
+          builder: (_, _) => SafeArea(
+            top: false,
+            child: TabBarView(
+              children: [
+                _ListTab<IncomingRequest>(
+                  future: _incoming,
+                  what: 'permintaan',
+                  emptyText:
+                      'Belum ada permintaan. Saat alumni lain ingin '
+                      'menghubungimu, permintaannya muncul di sini.',
+                  onRetry: _refresh,
+                  itemBuilder: (r) => _IncomingCard(
+                    request: r,
+                    repository: _repo,
+                    myId: _myId,
+                    defaultContact:
+                        (widget.currentUser.value['email'] as String?)?.trim(),
+                    onChanged: _refresh,
+                  ),
+                ),
+                _ListTab<OutgoingRequest>(
+                  future: _outgoing,
+                  what: 'permintaanmu',
+                  emptyText:
+                      'Kamu belum meminta kontak siapa pun. Buka profil alumni '
+                      'dan ketuk "Minta kontak".',
+                  onRetry: _refresh,
+                  itemBuilder: (r) => _OutgoingCard(
+                    request: r,
+                    repository: _repo,
+                    myId: _myId,
+                    onChanged: _refresh,
+                  ),
+                ),
+                _ContactsTab(
+                  future: _outgoing,
                   repository: _repo,
                   myId: _myId,
-                  defaultContact: (widget.currentUser.value['email'] as String?)
-                      ?.trim(),
-                  onChanged: _refresh,
+                  onRetry: _refresh,
                 ),
-              ),
-              _ListTab<OutgoingRequest>(
-                future: _outgoing,
-                what: 'permintaanmu',
-                emptyText:
-                    'Kamu belum meminta kontak siapa pun. Buka profil alumni '
-                    'dan ketuk "Minta kontak".',
-                onRetry: _refresh,
-                itemBuilder: (r) => _OutgoingCard(
-                  request: r,
-                  repository: _repo,
-                  myId: _myId,
-                  onChanged: _refresh,
-                ),
-              ),
-              _ContactsTab(
-                future: _outgoing,
-                repository: _repo,
-                myId: _myId,
-                onRetry: _refresh,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

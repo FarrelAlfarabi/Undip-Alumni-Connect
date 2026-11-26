@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_page.dart';
+
 import '../util/app_language.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -284,112 +286,116 @@ class _MyJobPostingsScreenState extends State<MyJobPostingsScreen> {
         icon: const Icon(Icons.add),
         label: Text(tr('Post a Job')),
       ),
-      body: SafeArea(
-        top: false,
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return ErrorView(
-                message: friendlyLoadError('your job postings', snap.error),
-                screen: 'My job postings',
-                error: snap.error,
-                onRetry: _reload,
-              );
-            }
-            final jobs = snap.data ?? const [];
-            if (jobs.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text(
-                    tr(
-                      'You have not posted a job yet. Jobs you post show up here '
-                      'with the people who applied.',
+      body: ResponsivePage(
+        builder: (_, _) => SafeArea(
+          top: false,
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snap.hasError) {
+                return ErrorView(
+                  message: friendlyLoadError('your job postings', snap.error),
+                  screen: 'My job postings',
+                  error: snap.error,
+                  onRetry: _reload,
+                );
+              }
+              final jobs = snap.data ?? const [];
+              if (jobs.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      tr(
+                        'You have not posted a job yet. Jobs you post show up here '
+                        'with the people who applied.',
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _reload();
+                  try {
+                    await _future;
+                  } catch (_) {}
+                },
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                  itemCount: jobs.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final j = jobs[i];
+                    final hidden = j['hidden_at'] != null;
+                    final n = j['applicant_count'] as int?;
+                    return Card(
+                      key: Key('my-job-${j['id']}'),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: theme.colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: ListTile(
+                        title: Text(j['title'] as String? ?? ''),
+                        subtitle: Text(
+                          [
+                            j['company'] as String? ?? '',
+                            if (n != null)
+                              '$n ${n == 1 ? 'applicant' : 'applicants'}',
+                            if (hidden) 'Hidden by an admin',
+                            if (j['closed_at'] != null) 'Ditutup',
+                          ].where((s) => s.isNotEmpty).join(' · '),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: Key('edit-job-${j['id']}'),
+                              tooltip: tr('Ubah lowongan'),
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => _edit(j),
+                            ),
+                            IconButton(
+                              key: Key('close-job-${j['id']}'),
+                              tooltip: j['closed_at'] == null
+                                  ? 'Tutup lowongan'
+                                  : 'Buka lagi',
+                              icon: Icon(
+                                j['closed_at'] == null
+                                    ? Icons.lock_outline
+                                    : Icons.lock_open_outlined,
+                              ),
+                              onPressed: () => _toggleClosed(j),
+                            ),
+                            IconButton(
+                              key: Key('delete-job-${j['id']}'),
+                              tooltip: tr('Hapus lowongan'),
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.error,
+                              ),
+                              onPressed: () => _delete(j),
+                            ),
+                          ],
+                        ),
+                        onTap: () => Navigator.of(context).push(
+                          AppRoute(builder: (_) => JobApplicantsScreen(job: j)),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               );
-            }
-            return RefreshIndicator(
-              onRefresh: () async {
-                _reload();
-                try {
-                  await _future;
-                } catch (_) {}
-              },
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                itemCount: jobs.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, i) {
-                  final j = jobs[i];
-                  final hidden = j['hidden_at'] != null;
-                  final n = j['applicant_count'] as int?;
-                  return Card(
-                    key: Key('my-job-${j['id']}'),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: theme.colorScheme.outlineVariant),
-                    ),
-                    child: ListTile(
-                      title: Text(j['title'] as String? ?? ''),
-                      subtitle: Text(
-                        [
-                          j['company'] as String? ?? '',
-                          if (n != null)
-                            '$n ${n == 1 ? 'applicant' : 'applicants'}',
-                          if (hidden) 'Hidden by an admin',
-                          if (j['closed_at'] != null) 'Ditutup',
-                        ].where((s) => s.isNotEmpty).join(' · '),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            key: Key('edit-job-${j['id']}'),
-                            tooltip: tr('Ubah lowongan'),
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => _edit(j),
-                          ),
-                          IconButton(
-                            key: Key('close-job-${j['id']}'),
-                            tooltip: j['closed_at'] == null
-                                ? 'Tutup lowongan'
-                                : 'Buka lagi',
-                            icon: Icon(
-                              j['closed_at'] == null
-                                  ? Icons.lock_outline
-                                  : Icons.lock_open_outlined,
-                            ),
-                            onPressed: () => _toggleClosed(j),
-                          ),
-                          IconButton(
-                            key: Key('delete-job-${j['id']}'),
-                            tooltip: tr('Hapus lowongan'),
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: theme.colorScheme.error,
-                            ),
-                            onPressed: () => _delete(j),
-                          ),
-                        ],
-                      ),
-                      onTap: () => Navigator.of(context).push(
-                        AppRoute(builder: (_) => JobApplicantsScreen(job: j)),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );
