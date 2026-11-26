@@ -52,6 +52,7 @@ class SponsorBanner extends StatelessWidget {
       items: items.take(kMaxSponsorSlides).toList(),
       onOpen: onOpen,
       onShown: onShown,
+      requireVisible: true,
       autoAdvance: autoAdvance,
       keyPrefix: 'sponsor',
       aspectRatio: kSponsorCardAspectRatio,

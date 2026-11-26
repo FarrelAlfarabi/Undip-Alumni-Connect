@@ -30,6 +30,7 @@ final Map<String, String> kEnglish = {
   'Kirim email': 'Send email',
   'Buka Instagram': 'Open Instagram',
   'Buka website': 'Open website',
+  'Buka YouTube': 'Open YouTube',
   'Akunmu sudah punya PIN. Buka dengan PIN itu dulu, atau pilih Lupa PIN lalu masuk lagi dengan kode email.': 'Your account already has a PIN. Open with that PIN first, or choose Forgot PIN and sign in again with an email code.',
   'Mikro': 'Micro',
   'Kecil': 'Small',

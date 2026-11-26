@@ -32,11 +32,17 @@ class BannerCarousel extends StatefulWidget {
     this.aspectRatio,
     this.keyPrefix = 'banner',
     this.onShown,
+    this.requireVisible = false,
   });
 
   /// Called with an item each time it comes on screen: the first one after
   /// the first frame, then on every slide.
   final void Function(Map<String, dynamic> item)? onShown;
+
+  /// When true, [onShown] and the auto-advance only run while the carousel is
+  /// really in view: at least half of it inside the window, its tab and page
+  /// on top. Sponsor views use this so a slide that nobody saw is not counted.
+  final bool requireVisible;
 
   /// Builds a card other than the announcement card (the sponsor carousel
   /// uses this). [onTap] opens the item.
@@ -68,17 +74,55 @@ class BannerCarousel extends StatefulWidget {
 class _BannerCarouselState extends State<BannerCarousel> {
   final _controller = PageController();
   Timer? _timer;
+  Timer? _visTimer;
   int _page = 0;
+  int? _reportedPage;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && widget.items.isNotEmpty) {
-        widget.onShown?.call(widget.items[0]);
-      }
+      if (mounted) _reportShown();
     });
+    if (widget.requireVisible && widget.onShown != null) {
+      _visTimer = Timer.periodic(
+        const Duration(milliseconds: 500),
+        (_) => _reportShown(),
+      );
+    }
+  }
+
+  /// True when at least half of the carousel is inside the window and nothing
+  /// covers it (other tab, pushed page).
+  bool get _inView {
+    if (!widget.requireVisible) return true;
+    if (!mounted) return false;
+    if (!TickerMode.valuesOf(context).enabled) return false;
+    if (ModalRoute.of(context)?.isCurrent == false) return false;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return false;
+    final view = View.of(context);
+    final window = view.physicalSize / view.devicePixelRatio;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    final seen = rect.intersect(Offset.zero & window);
+    if (seen.isEmpty) return false;
+    if (seen.height < rect.height / 2 || seen.width < rect.width / 2) {
+      return false;
+    }
+    // A tab kept alive by an IndexedStack, or a page pushed on top, does not
+    // take hits at the carousel's centre.
+    final result = HitTestResult();
+    WidgetsBinding.instance.hitTestInView(result, seen.center, view.viewId);
+    return result.path.any((e) => e.target == box);
+  }
+
+  void _reportShown() {
+    final items = widget.items;
+    if (items.isEmpty || _page >= items.length) return;
+    if (_reportedPage == _page || !_inView) return;
+    _reportedPage = _page;
+    widget.onShown?.call(items[_page]);
   }
 
   @override
@@ -87,6 +131,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
     if (old.items.length != widget.items.length ||
         old.autoAdvance != widget.autoAdvance) {
       _page = 0;
+      _reportedPage = null;
       if (_controller.hasClients) _controller.jumpToPage(0);
       _startTimer();
     }
@@ -95,6 +140,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
   @override
   void dispose() {
     _timer?.cancel();
+    _visTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -106,6 +152,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
     _timer = Timer.periodic(widget.autoAdvance, (_) {
       if (!mounted || !_controller.hasClients) return;
       if (MediaQuery.disableAnimationsOf(context)) return;
+      if (!_inView) return;
       final next = (_page + 1) % widget.items.length;
       _controller.animateToPage(
         next,
@@ -141,7 +188,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
           itemCount: items.length,
           onPageChanged: (i) {
             setState(() => _page = i);
-            widget.onShown?.call(items[i]);
+            _reportShown();
           },
           itemBuilder: (context, i) {
             void open() => widget.onOpen(items[i]);
