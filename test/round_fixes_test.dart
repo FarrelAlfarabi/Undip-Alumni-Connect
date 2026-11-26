@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/widgets/filter_dropdown.dart' show kSearchDelay;
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/data/business_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_feedback_screen.dart';
@@ -169,16 +170,19 @@ void main() {
 
       final search = find.byKey(const Key('admin-business-search'));
       await tester.enterText(search, 'siti');
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('Kopi Ahmad'), findsNothing);
       expect(find.text('Batik Siti'), findsOneWidget);
 
       await tester.enterText(search, 'kopi_ahmad');
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('Kopi Ahmad'), findsOneWidget);
       expect(find.text('Batik Siti'), findsNothing);
 
       await tester.enterText(search, 'zzz');
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('Nothing matches.'), findsOneWidget);
     });

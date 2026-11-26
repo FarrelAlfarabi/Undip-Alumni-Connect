@@ -8,6 +8,8 @@ import '../util/app_language.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/press_feedback.dart';
+
 import '../data/business_repository.dart';
 import '../data/category_repository.dart';
 import '../data/marketplace_format.dart';
@@ -104,17 +106,22 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   String _category = kAllFilter;
   MarketplaceSort _sort = MarketplaceSort.newest;
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _repo = widget.repository ?? MarketplaceRepository();
     _future = _fetchListings();
-    _searchController.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_searchController, () {
+      if (mounted) setState(() {});
+    });
     CategoryRepository.shared.load();
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _searchController.dispose();
     _categoryText.dispose();
     super.dispose();
@@ -502,62 +509,64 @@ class _ListingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListingImage(
-              url: listing.imageUrl,
-              size: 104,
-              semanticLabel: trf('Photo of {0}', [listing.title]),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      listing.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+    return PressFeedback(
+      child: Card(
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListingImage(
+                url: listing.imageUrl,
+                size: 104,
+                semanticLabel: trf('Photo of {0}', [listing.title]),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        listing.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      priceLabel(listing.priceIdr, listing.priceNegotiable),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.primary,
+                      const SizedBox(height: 4),
+                      Text(
+                        priceLabel(listing.priceIdr, listing.priceNegotiable),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      [
-                        listing.category,
-                        if (listing.city.isNotEmpty) listing.city,
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 4),
+                      Text(
+                        [
+                          listing.category,
+                          if (listing.city.isNotEmpty) listing.city,
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

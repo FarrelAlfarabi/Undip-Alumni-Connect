@@ -58,15 +58,20 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   late Future<List<AdminReport>> _future;
   final _busy = <String>{};
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = _fetch();
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     super.dispose();
   }

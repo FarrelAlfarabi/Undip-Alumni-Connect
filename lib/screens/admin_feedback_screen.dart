@@ -35,15 +35,20 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
 
   static const _statuses = [kAllFilter, 'new', 'seen', 'done'];
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = widget.repository.feedback(widget.adminId);
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     super.dispose();
   }

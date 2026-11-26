@@ -388,16 +388,19 @@ void main() {
       expect(find.text('Batik Siti'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).first, 'batik');
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('Kopi Ahmad'), findsNothing);
       expect(find.text('Batik Siti'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField).first, 'food');
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('Kopi Ahmad'), findsOneWidget);
       expect(find.text('Batik Siti'), findsNothing);
 
       await tester.enterText(find.byType(TextField).first, 'zzz');
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('No businesses match this search.'), findsOneWidget);
     });

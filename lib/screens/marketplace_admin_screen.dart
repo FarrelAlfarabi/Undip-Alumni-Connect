@@ -6,6 +6,7 @@ import '../data/marketplace_format.dart';
 import '../data/marketplace_messages.dart';
 import '../data/marketplace_repository.dart';
 import '../models/marketplace_listing.dart';
+import '../widgets/filter_dropdown.dart';
 import '../widgets/admin_reason_dialog.dart';
 import '../widgets/marketplace_demo_notice.dart';
 import '../nav/back_guard.dart';
@@ -794,14 +795,19 @@ class _ProductsTabState extends State<_ProductsTab> {
       .fetchAllLive();
   final _busy = <String>{};
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     super.dispose();
   }

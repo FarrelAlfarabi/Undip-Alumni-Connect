@@ -2,6 +2,8 @@ import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/press_feedback.dart';
+
 import '../data/stale_cache.dart';
 import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
@@ -85,16 +87,21 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
   Future<List<Business>> _fetchBusinesses() =>
       StaleCache.remember(_cacheKey, _repo.directory(_myId));
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = _fetchBusinesses();
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
     CategoryRepository.shared.load();
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     _categoryText.dispose();
     super.dispose();
@@ -307,70 +314,72 @@ class _BusinessCard extends StatelessWidget {
     final theme = Theme.of(context);
     // Same layout as the Marketplace list card: square photo on the left,
     // title and details on the right.
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListingImage(
-              url: business.photoUrl ?? '',
-              size: 104,
-              semanticLabel: trf('Photo of {0}', [business.name]),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    NameWithBadge(
-                      name: business.name,
-                      verified: business.nibVerified,
-                      maxLines: 2,
-                      badgeSize: 16,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+    return PressFeedback(
+      child: Card(
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListingImage(
+                url: business.photoUrl ?? '',
+                size: 104,
+                semanticLabel: trf('Photo of {0}', [business.name]),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      NameWithBadge(
+                        name: business.name,
+                        verified: business.nibVerified,
+                        maxLines: 2,
+                        badgeSize: 16,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      [
-                        business.category,
-                        if (business.ownerName != null)
-                          'by ${business.ownerName}',
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 4),
+                      Text(
+                        [
+                          business.category,
+                          if (business.ownerName != null)
+                            'by ${business.ownerName}',
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    if (business.approvedBand != null) ...[
-                      const SizedBox(height: 6),
-                      BusinessSizeChip(
-                        key: Key('business-size-${business.id}'),
-                        band: business.approvedBand!,
+                      if (business.approvedBand != null) ...[
+                        const SizedBox(height: 6),
+                        BusinessSizeChip(
+                          key: Key('business-size-${business.id}'),
+                          band: business.approvedBand!,
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        business.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
                       ),
                     ],
-                    const SizedBox(height: 4),
-                    Text(
-                      business.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

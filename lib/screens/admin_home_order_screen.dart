@@ -45,15 +45,20 @@ class _AdminHomeOrderScreenState extends State<AdminHomeOrderScreen> {
     _ => kHomeJobLimit,
   };
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
     _load();
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     super.dispose();
   }

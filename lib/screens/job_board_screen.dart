@@ -4,6 +4,8 @@ import '../data/stale_cache.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/press_feedback.dart';
+
 import '../widgets/job_status_chip.dart';
 
 import '../widgets/responsive_list.dart';
@@ -64,15 +66,20 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   // Default shows only open jobs; closed ones are one tap away.
   String _status = 'Dibuka';
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
-    _searchController.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_searchController, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -325,69 +332,71 @@ class _JobCard extends StatelessWidget {
     final poster = job['poster'] as Map<String, dynamic>?;
     final posterName = poster?['name'] as String? ?? 'Alumni';
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if ((job['image_url'] as String?)?.isNotEmpty == true) ...[
-                AppPhoto(
-                  url: job['image_url'] as String,
-                  semanticLabel: job['title'] as String?,
-                ),
-                const SizedBox(height: 12),
-              ],
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      job['title'] as String? ?? '',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+    return PressFeedback(
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if ((job['image_url'] as String?)?.isNotEmpty == true) ...[
+                  AppPhoto(
+                    url: job['image_url'] as String,
+                    semanticLabel: job['title'] as String?,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        job['title'] as String? ?? '',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  JobStatusChip(job: job),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                [
-                  job['company'] as String? ?? '',
-                  if ((job['industry'] as String?)?.isNotEmpty == true)
-                    job['industry'] as String,
-                ].join(' · '),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 8),
+                    JobStatusChip(job: job),
+                  ],
                 ),
-              ),
-              if ((job['description'] as String?)?.isNotEmpty == true) ...[
+                const SizedBox(height: 2),
+                Text(
+                  [
+                    job['company'] as String? ?? '',
+                    if ((job['industry'] as String?)?.isNotEmpty == true)
+                      job['industry'] as String,
+                  ].join(' · '),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if ((job['description'] as String?)?.isNotEmpty == true) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    job['description'] as String,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
                 const SizedBox(height: 10),
                 Text(
-                  job['description'] as String,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
+                  trf('Posted by {0}', [posterName]),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
-              const SizedBox(height: 10),
-              Text(
-                trf('Posted by {0}', [posterName]),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
