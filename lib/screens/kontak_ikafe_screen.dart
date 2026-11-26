@@ -76,6 +76,7 @@ class _KontakIkafeScreenState extends State<KontakIkafeScreen> {
     IkafeContactKind.instagram => Icons.camera_alt_outlined,
     IkafeContactKind.linkedin => Icons.work_outline,
     IkafeContactKind.website => Icons.language,
+    IkafeContactKind.youtube => Icons.smart_display_outlined,
   };
 
   Widget _section(
