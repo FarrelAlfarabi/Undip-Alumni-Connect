@@ -12,6 +12,7 @@ import '../models/business.dart';
 import '../util/friendly_error.dart';
 import '../util/period_filter.dart';
 import 'admin_admins_screen.dart';
+import 'admin_business_edits_screen.dart';
 import 'admin_detail_screens.dart';
 import 'admin_announcements_screen.dart';
 import 'admin_sponsors_screen.dart';
@@ -158,6 +159,18 @@ class _AdminScreenState extends State<AdminScreen> {
             AdminBusinessesScreen(adminId: adminId, repository: _admin),
       ),
       AdminSection(
+        key: 'admin-business-edits',
+        group: tr('Perlu ditinjau'),
+        badge: _counts.businessEdits,
+        icon: Icons.edit_note_outlined,
+        title: tr('Perubahan bisnis'),
+        subtitle: tr(
+          'Pemilik minta ubah data bisnis. Lihat data lama dan baru, lalu setujui atau tolak',
+        ),
+        builder: (_) =>
+            AdminBusinessEditsScreen(adminId: adminId, repository: _admin),
+      ),
+      AdminSection(
         key: 'admin-jobs',
         group: tr('Konten dan tampilan'),
         icon: Icons.work_outline,
@@ -291,6 +304,8 @@ class _PendingBanner extends StatelessWidget {
     final theme = Theme.of(context);
     final parts = [
       if (counts.businesses > 0) '${counts.businesses} bisnis perlu disetujui',
+      if (counts.businessEdits > 0)
+        '${counts.businessEdits} perubahan bisnis perlu ditinjau',
       if (counts.listings > 0) '${counts.listings} produk lama perlu ditinjau',
       if (counts.reports > 0) '${counts.reports} laporan baru',
       if (counts.feedback > 0) '${counts.feedback} masukan baru',

@@ -14,6 +14,7 @@ import '../util/friendly_error.dart';
 import '../widgets/confirm_delete.dart';
 import 'admin_reports_screen.dart';
 import 'admin_screen.dart';
+import 'admin_business_edits_screen.dart';
 import 'job_applicants_screen.dart';
 import 'my_businesses_screen.dart';
 import 'my_listings_screen.dart';
@@ -32,6 +33,7 @@ enum NotificationDestination {
   hiddenJobInfo,
   adminReports,
   adminBusinesses,
+  adminBusinessEdits,
   jobApplicants,
   none,
 }
@@ -46,7 +48,10 @@ NotificationDestination destinationOf(AppNotification n) {
         'business_approved' ||
         'business_rejected' ||
         'business_suspended' ||
-        'business_restored':
+        'business_restored' ||
+        'business_edit_received' ||
+        'business_edit_approved' ||
+        'business_edit_rejected':
       return NotificationDestination.myBusinesses;
     case 'content_hidden':
       return switch (n.targetType) {
@@ -58,6 +63,8 @@ NotificationDestination destinationOf(AppNotification n) {
       return NotificationDestination.adminReports;
     case 'business_pending':
       return NotificationDestination.adminBusinesses;
+    case 'business_edit_pending':
+      return NotificationDestination.adminBusinessEdits;
     default:
       // Job applications, and old rows that only carry a job id.
       final jobId = n.type == 'job_application'
@@ -101,6 +108,10 @@ Widget defaultNotificationPage(
       repository: AdminRepository(),
     ),
     NotificationDestination.adminBusinesses => AdminBusinessesScreen(
+      adminId: me,
+      repository: AdminRepository(),
+    ),
+    NotificationDestination.adminBusinessEdits => AdminBusinessEditsScreen(
       adminId: me,
       repository: AdminRepository(),
     ),
