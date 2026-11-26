@@ -2,6 +2,7 @@ import '../nav/back_guard.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../data/stale_cache.dart';
 import '../widgets/responsive_list.dart';
 import '../util/app_language.dart';
 
@@ -107,7 +108,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   void initState() {
     super.initState();
     _repo = widget.repository ?? MarketplaceRepository();
-    _future = _repo.fetchApproved(limit: kMarketplaceMaxRows);
+    _future = _fetchListings();
     _searchController.addListener(() => setState(() {}));
     CategoryRepository.shared.load();
   }
@@ -121,7 +122,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   void _reload() {
     setState(() {
-      _future = _repo.fetchApproved(limit: kMarketplaceMaxRows);
+      _future = _fetchListings();
     });
   }
 
@@ -140,6 +141,13 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   }
 
   String get _myId => widget.currentUser.value['id'] as String;
+
+  String get _cacheKey => 'marketplace:$_myId';
+
+  Future<List<MarketplaceListing>> _fetchListings() => StaleCache.remember(
+    _cacheKey,
+    _repo.fetchApproved(limit: kMarketplaceMaxRows),
+  );
 
   late final BusinessRepository _bizRepo =
       widget.businessRepository ?? BusinessRepository();
@@ -315,8 +323,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           Expanded(
             child: FutureBuilder<List<MarketplaceListing>>(
               future: _future,
+              initialData: StaleCache.peek<List<MarketplaceListing>>(_cacheKey),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
