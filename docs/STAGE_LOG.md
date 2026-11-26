@@ -377,3 +377,6 @@ Closable note under the Explore segments (Marketplace and Businesses): deals are
 
 ## 2026-11-25 Sheet leftovers
 U14: PIN pad takes the keyboard back on click. C16: Home refetches after 20 s away (was 2 min). C06 is by design (products of an approved business are approved at creation). C29 and C30 not reproduced. No migration.
+
+## 2026-11-26 UI test fixes (C30, member list)
+C30 reproduced: admin delete of a member failed with 403 not_signed_in because account_files() checks the caller. Delete core now uses internal account_files_core(); migration 20261126100000 (rollback file, SQL test 34). Members list reads all pages (was cut at 500 of 1.9k).
