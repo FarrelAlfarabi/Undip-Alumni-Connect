@@ -1,6 +1,7 @@
 import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
+import '../widgets/job_status_chip.dart';
 
 import '../util/app_language.dart';
 
@@ -197,6 +198,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: JobStatusChip(job: widget.job),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     [
@@ -357,6 +363,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                                     child: Text(tr('Tarik lamaran')),
                                   ),
                                 ],
+                              );
+                            }
+                            if (jobIsClosed(widget.job)) {
+                              return FilledButton.icon(
+                                key: const Key('apply-closed'),
+                                onPressed: null,
+                                icon: const Icon(Icons.lock_outline),
+                                label: Text(tr('Lowongan ditutup')),
                               );
                             }
                             return FilledButton.icon(

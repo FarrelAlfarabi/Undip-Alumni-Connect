@@ -383,3 +383,6 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 
 ## 2026-11-26 UI text fixes
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Lamaran saya + job status
+Profile menu "Lamaran saya": my applied jobs with date and Masih dibuka / Ditutup / Tidak tersedia (admin hidden); deleted jobs drop out with their applications. Jobs list: Dibuka/Ditutup mark on cards and detail, Status filter (default Dibuka), no Apply on closed jobs. Closed = closed_at only (no expiry date). Migration 20261126120000 (rollback file).
