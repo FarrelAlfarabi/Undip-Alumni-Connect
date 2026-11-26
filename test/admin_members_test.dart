@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_members_screen.dart';
 
+import 'package:undip_alumni_connect/widgets/filter_dropdown.dart';
 import 'support/fake_admin_api.dart';
 
 Map<String, dynamic> member({String bio = 'Bio lama'}) => {
@@ -88,6 +89,7 @@ void main() {
     // Name, company and email all match the search.
     for (final q in ['siti', 'nusa', 'siti@example']) {
       await tester.enterText(find.byKey(const Key('members-search')), q);
+      await tester.pump(kSearchDelay);
       await tester.pumpAndSettle();
       expect(find.text('Ahmad Ramadhan'), findsNothing, reason: q);
       expect(find.text('Siti Azizah'), findsOneWidget, reason: q);
@@ -98,6 +100,7 @@ void main() {
     expect(find.byKey(const Key('members-industry')), findsOneWidget);
     expect(find.text('City'), findsWidgets);
     await tester.enterText(find.byKey(const Key('members-search')), 'zzz');
+    await tester.pump(kSearchDelay);
     await tester.pumpAndSettle();
     expect(find.text('Tidak ada anggota yang cocok.'), findsOneWidget);
     await tester.tap(find.text('Hapus filter'));

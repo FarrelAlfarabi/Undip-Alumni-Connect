@@ -2,6 +2,7 @@ import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/screens/directory_screen.dart';
+import 'package:undip_alumni_connect/widgets/filter_dropdown.dart';
 
 Map<String, dynamic> person(String id, String name, String city) => {
   'id': id,
@@ -55,11 +56,32 @@ void main() {
   testWidgets('an empty result offers a way back', (tester) async {
     await pumpDirectory(tester);
     await tester.enterText(find.byType(TextField).first, 'zzzz');
+    await tester.pump(kSearchDelay);
     await tester.pumpAndSettle();
     expect(find.text('Tidak ada alumni yang cocok.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('directory-empty-clear')));
     await tester.pumpAndSettle();
     expect(find.text('Ayu Lestari'), findsOneWidget);
+    expect(find.text('3 alumni'), findsOneWidget);
+  });
+
+  testWidgets('the list waits for a pause in typing, the box does not', (
+    tester,
+  ) async {
+    await pumpDirectory(tester);
+    await tester.enterText(find.byType(TextField).first, 'bud');
+    await tester.pump(const Duration(milliseconds: 50));
+    // Still all three: the list has not followed yet.
+    expect(find.text('Ayu Lestari'), findsOneWidget);
+    expect(find.text('bud'), findsOneWidget);
+    await tester.pump(kSearchDelay);
+    await tester.pumpAndSettle();
+    expect(find.text('Ayu Lestari'), findsNothing);
+    expect(find.text('Budi Santoso'), findsOneWidget);
+    expect(find.text('1 dari 3 alumni'), findsOneWidget);
+    // Clearing shows everyone at once.
+    await tester.enterText(find.byType(TextField).first, '');
+    await tester.pump();
     expect(find.text('3 alumni'), findsOneWidget);
   });
 }

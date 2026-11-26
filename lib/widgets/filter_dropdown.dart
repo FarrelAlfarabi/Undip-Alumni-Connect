@@ -6,6 +6,10 @@ import '../util/app_language.dart';
 /// always the first entry in its options list.
 const kAllFilter = 'All';
 
+/// How long typing must pause before a long list (members) follows its search
+/// box. Redrawing hundreds of rows on every key made typing lag.
+const kSearchDelay = Duration(milliseconds: 250);
+
 /// One look for every search box and filter in a search+filter bar: rounded,
 /// softly filled, same height. [FilterDropdown], [ClearableSearchField] and
 /// the dense [SearchableChoice] all use it, so they line up.
