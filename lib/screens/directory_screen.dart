@@ -162,10 +162,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
     return _withDefaultYear(
       await withoutBlockedProfiles(
-        AvatarRepository.withAvatars(
-          rows,
-          await AvatarRepository().urlsById(),
-        ),
+        AvatarRepository.withAvatars(rows, await AvatarRepository().urlsById()),
       ),
     );
   }
