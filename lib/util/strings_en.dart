@@ -461,6 +461,10 @@ final Map<String, String> kEnglish = {
   'Urutan Home disimpan.': 'Home order saved.',
   'Riwayat admin': 'Admin history',
   'Tarik lamaran?': 'Withdraw application?',
+  'Lamaran saya': 'My applications',
+  'Lowongan ditutup': 'Job closed',
+  'Kamu belum melamar lowongan apa pun. Lowongan yang kamu lamar akan muncul di sini.':
+      'You have not applied to any job yet. Jobs you apply to show up here.',
   'Abaikan laporan': 'Dismiss reports',
   'Ceritakan singkat tentang dirimu': 'Tell us a little about yourself',
   'Permintaan terkirim': 'Request sent',
