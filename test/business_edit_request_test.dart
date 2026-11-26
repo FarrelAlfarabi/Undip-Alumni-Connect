@@ -103,7 +103,10 @@ void main() {
       expect(p['p_nib'], '1234567890123');
       expect(r.isPending, isTrue);
       // Nothing that could change the band, status or the tick.
-      expect(p.keys.any((k) => k.contains('band') || k.contains('status')), isFalse);
+      expect(
+        p.keys.any((k) => k.contains('band') || k.contains('status')),
+        isFalse,
+      );
       expect(api.calls, isNot(contains('business_update')));
     });
 
@@ -218,7 +221,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(api.calls, contains('business_edit_request_submit'));
       expect(api.calls, isNot(contains('business_update')));
-      expect(api.params['business_edit_request_submit']!['p_name'], 'Kopi Baru');
+      expect(
+        api.params['business_edit_request_submit']!['p_name'],
+        'Kopi Baru',
+      );
     });
   });
 
