@@ -674,7 +674,8 @@ final Map<String, String> kEnglish = {
   'Hari ini': 'Today',
   '7 hari': '7 days',
   '30 hari': '30 days',
-  'Perubahan ditolak. Data lama tetap tampil.': 'Change declined. The old details stay visible.',
+  'Perubahan ditolak. Data lama tetap tampil.':
+      'Change declined. The old details stay visible.',
   'Tolak perubahan': 'Decline change',
   'Alasan wajib diisi': 'A reason is required',
   'Perubahan bisnis': 'Business changes',
@@ -683,7 +684,8 @@ final Map<String, String> kEnglish = {
   'Sekarang': 'Now',
   'Diajukan': 'Requested',
   'NIB berubah: tanda centang biru dicabut sampai NIB baru dicek lagi di Businesses.': 'NIB changed: the blue tick is removed until the new NIB is checked again in Businesses.',
-  'NIB berubah: cek NIB baru di Businesses.': 'NIB changed: check the new NIB in Businesses.',
+  'NIB berubah: cek NIB baru di Businesses.':
+      'NIB changed: check the new NIB in Businesses.',
   'Setujui': 'Approve',
   '(kosong)': '(empty)',
   'Foto bisnis': 'Business photo',

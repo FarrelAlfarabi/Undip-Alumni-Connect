@@ -233,6 +233,26 @@ class _AppEntryState extends State<AppEntry> {
       );
       return false;
     }
+    if (login != null && profile != null) {
+      // The sign in decides who this is. A browser can still remember another
+      // person (shared computer, demo account). Opening that person's profile
+      // makes every save fail, because the database only lets a sign in edit
+      // its own row.
+      try {
+        final mine = await login.resumeSession();
+        if (mine != null && mine['id'] != profile['id']) {
+          final id = mine['id'] as String;
+          await _lock.remember(
+            profileId: id,
+            displayName: (mine['name'] as String?) ?? '',
+            email: (mine['email'] as String?) ?? '',
+          );
+          profile = await widget.fetchProfile(id) ?? mine;
+        }
+      } catch (_) {
+        // A network error here is not proof of a mix-up; carry on.
+      }
+    }
     if (profile == null || profile['verification_status'] != 'verified') {
       // The profile is really gone or no longer verified: forget this device.
       await _lock.clear();

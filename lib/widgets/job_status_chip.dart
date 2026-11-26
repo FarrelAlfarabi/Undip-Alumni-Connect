@@ -23,10 +23,8 @@ class JobStatusChip extends StatelessWidget {
       ),
       child: Text(
         closed ? 'Ditutup' : 'Dibuka',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }

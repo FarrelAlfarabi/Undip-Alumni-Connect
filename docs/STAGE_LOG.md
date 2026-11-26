@@ -405,3 +405,6 @@ New "youtube" contact kind (app, admin picker, migration 20261126110000, rollbac
 
 ## 2026-11-26 Sponsor view counting
 DB side checked on the demo project: counts and the 10 cap work (home_sponsors only sees live rows). App over-counted: a slide counted when it auto-slid off screen, below the fold or on another tab. Now a view counts only when the carousel is in view and on top. No migration.
+
+## 2026-11-26 Wrong remembered profile
+- Browser remembered "[DUMMY] Admin Demo" while signed in as Farrel: every profile save hit a row the sign in cannot edit (200, no rows, "Tautan belum tersimpan"). AppEntry now checks the sign in's own profile on unlock and switches to it.
