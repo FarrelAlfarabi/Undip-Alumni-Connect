@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
@@ -107,11 +109,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void initState() {
     super.initState();
     _future = _fetchAlumni();
-    _searchController.addListener(() => setState(() {}));
+    _searchController.addListener(_onSearchTyped);
+  }
+
+  /// What the list is filtered by. It follows the search box a moment after
+  /// the last key, so fast typing is not held up by redrawing the list on
+  /// every letter.
+  final _query = ValueNotifier<String>('');
+  Timer? _searchTimer;
+
+  void _onSearchTyped() {
+    final next = _searchController.text.trim().toLowerCase();
+    if (next == _query.value) return;
+    _searchTimer?.cancel();
+    // Clearing the box shows everyone at once.
+    if (next.isEmpty) {
+      _query.value = next;
+      return;
+    }
+    _searchTimer = Timer(kSearchDelay, () => _query.value = next);
   }
 
   @override
   void dispose() {
+    _searchTimer?.cancel();
+    _query.dispose();
+    _searchController.removeListener(_onSearchTyped);
     _searchController.dispose();
     _industryController.dispose();
     super.dispose();
@@ -162,10 +185,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
     return _withDefaultYear(
       await withoutBlockedProfiles(
-        AvatarRepository.withAvatars(
-          rows,
-          await AvatarRepository().urlsById(),
-        ),
+        AvatarRepository.withAvatars(rows, await AvatarRepository().urlsById()),
       ),
     );
   }
@@ -192,7 +212,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   List<Map<String, dynamic>> _applyFilters(List<Map<String, dynamic>> all) {
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _query.value;
 
     return all.where((p) {
       if (_major != kAllFilter && p['major'] != _major) return false;
@@ -215,7 +235,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   bool get _hasActiveFilters =>
-      _searchController.text.isNotEmpty ||
+      _query.value.isNotEmpty ||
       _major != kAllFilter ||
       _year != kAllFilter ||
       _industry != kAllFilter ||
@@ -223,13 +243,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   void _clearFilters() {
     setState(() {
+      _searchTimer?.cancel();
       _searchController.clear();
+      _query.value = '';
       _major = kAllFilter;
       _year = kAllFilter;
       _industry = kAllFilter;
       _city = kAllFilter;
       _industryController.text = kAllFilter;
     });
+  }
+
+  // The filter lists (majors, years, industries, cities) only change when the
+  // member list is fetched again, not on every keystroke. Computing them scans
+  // and sorts all members, so they are kept until a new list arrives.
+  List<Map<String, dynamic>>? _facetsSource;
+  _Facets? _facetsCache;
+  _Facets _facetsFor(List<Map<String, dynamic>> all) {
+    if (!identical(_facetsSource, all) || _facetsCache == null) {
+      _facetsSource = all;
+      _facetsCache = _Facets.of(all);
+    }
+    return _facetsCache!;
   }
 
   @override
@@ -252,22 +287,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
 
         final all = snapshot.data ?? [];
-        final filtered = _applyFilters(all);
-        final majors = distinctSortedValues(all, 'major');
-        final years = [
-          kAllFilter,
-          ...all
-              .map((p) => p['graduation_year']?.toString())
-              .whereType<String>()
-              .toSet()
-              .toList()
-            ..sort((a, b) => b.compareTo(a)),
-        ];
-        final industries = distinctSortedValues(all, 'industry');
-        final cities = distinctSortedValues(
-          all.map((p) => {'city': (p['city'] as String?)?.trim()}).toList(),
-          'city',
-        );
+        final facets = _facetsFor(all);
+        final majors = facets.majors;
+        final years = facets.years;
+        final industries = facets.industries;
+        final cities = facets.cities;
 
         return Column(
           children: [
@@ -332,107 +356,167 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _hasActiveFilters
-                          ? '${filtered.length} dari ${all.length} alumni'
-                          : '${all.length} alumni',
-                      key: const Key('directory-count'),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  ClearFiltersButton(
-                    active: _hasActiveFilters,
-                    onPressed: _clearFilters,
-                  ),
-                ],
-              ),
-            ),
+            // Only the count and the list follow the search box, so a key
+            // press does not rebuild the search field and the four filters.
             Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(tr('Tidak ada alumni yang cocok.')),
-                          if (_hasActiveFilters)
-                            TextButton(
-                              key: const Key('directory-empty-clear'),
-                              onPressed: _clearFilters,
-                              child: Text(tr('Hapus filter')),
-                            ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        setState(() => _future = _fetchAlumni());
-                        try {
-                          await _future;
-                        } catch (_) {}
-                      },
-                      child: ResponsiveListView(
-                        minTileWidth: 300,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) {
-                          final p = filtered[i];
-                          return ListTile(
-                            leading: Avatar(
-                              url: p['avatar_url'] as String?,
-                              name: p['name'] as String? ?? '',
-                            ),
-                            title: Text(p['name'] as String? ?? ''),
-                            subtitle: Text(
-                              [
-                                if ((p['current_role'] as String?)
-                                        ?.isNotEmpty ==
-                                    true)
-                                  '${p['current_role']}'
-                                      '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
-                                '${p['major']} · Angkatan ${p['graduation_year']}',
-                              ].join('\n'),
-                            ),
-                            isThreeLine: true,
-                            trailing:
-                                ((p['linkedin_url'] as String?)?.trim() ?? '')
-                                    .isEmpty
-                                ? null
-                                : IconButton(
-                                    key: Key('member-linkedin-${p['id']}'),
-                                    tooltip: tr('Buka LinkedIn'),
-                                    icon: const LinkedInLogo(),
-                                    onPressed: () => _confirmOpenLinkedIn(
-                                      p['linkedin_url'] as String?,
+              child: ListenableBuilder(
+                listenable: _query,
+                builder: (context, _) {
+                  final filtered = _applyFilters(all);
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _hasActiveFilters
+                                    ? '${filtered.length} dari ${all.length} alumni'
+                                    : '${all.length} alumni',
+                                key: const Key('directory-count'),
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
-                                  ),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                AppRoute(
-                                  builder: (_) => ProfileDetailScreen(
-                                    profile: p,
-                                    showEditButton: false,
-                                    currentUser: widget.currentUser,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
+                              ),
+                            ),
+                            ClearFiltersButton(
+                              active: _hasActiveFilters,
+                              onPressed: _clearFilters,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(tr('Tidak ada alumni yang cocok.')),
+                                    if (_hasActiveFilters)
+                                      TextButton(
+                                        key: const Key('directory-empty-clear'),
+                                        onPressed: _clearFilters,
+                                        child: Text(tr('Hapus filter')),
+                                      ),
+                                  ],
+                                ),
+                              )
+                            : RefreshIndicator(
+                                onRefresh: () async {
+                                  setState(() => _future = _fetchAlumni());
+                                  try {
+                                    await _future;
+                                  } catch (_) {}
+                                },
+                                child: ResponsiveListView(
+                                  minTileWidth: 300,
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  itemCount: filtered.length,
+                                  separatorBuilder: (_, _) =>
+                                      const Divider(height: 1),
+                                  itemBuilder: (context, i) {
+                                    final p = filtered[i];
+                                    return ListTile(
+                                      leading: Avatar(
+                                        url: p['avatar_url'] as String?,
+                                        name: p['name'] as String? ?? '',
+                                      ),
+                                      title: Text(p['name'] as String? ?? ''),
+                                      subtitle: Text(
+                                        [
+                                          if ((p['current_role'] as String?)
+                                                  ?.isNotEmpty ==
+                                              true)
+                                            '${p['current_role']}'
+                                                '${_employerOf(p) != null ? ' @ ${_employerOf(p)}' : ''}',
+                                          '${p['major']} · Angkatan ${p['graduation_year']}',
+                                        ].join('\n'),
+                                      ),
+                                      isThreeLine: true,
+                                      trailing:
+                                          ((p['linkedin_url'] as String?)
+                                                      ?.trim() ??
+                                                  '')
+                                              .isEmpty
+                                          ? null
+                                          : IconButton(
+                                              key: Key(
+                                                'member-linkedin-${p['id']}',
+                                              ),
+                                              tooltip: tr('Buka LinkedIn'),
+                                              icon: const LinkedInLogo(),
+                                              onPressed: () =>
+                                                  _confirmOpenLinkedIn(
+                                                    p['linkedin_url']
+                                                        as String?,
+                                                  ),
+                                            ),
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          AppRoute(
+                                            builder: (_) => ProfileDetailScreen(
+                                              profile: p,
+                                              showEditButton: false,
+                                              currentUser: widget.currentUser,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         );
       },
     );
   }
+}
+
+/// Options for the four filter dropdowns, worked out once per member list.
+class _Facets {
+  _Facets({
+    required this.majors,
+    required this.years,
+    required this.industries,
+    required this.cities,
+  });
+
+  factory _Facets.of(List<Map<String, dynamic>> all) => _Facets(
+    majors: distinctSortedValues(all, 'major'),
+    years: [
+      kAllFilter,
+      ...all
+          .map((p) => p['graduation_year']?.toString())
+          .whereType<String>()
+          .toSet()
+          .toList()
+        ..sort((a, b) => b.compareTo(a)),
+    ],
+    industries: distinctSortedValues(all, 'industry'),
+    cities: distinctSortedValues(
+      all.map((p) => {'city': (p['city'] as String?)?.trim()}).toList(),
+      'city',
+    ),
+  );
+
+  final List<String> majors;
+  final List<String> years;
+  final List<String> industries;
+  final List<String> cities;
 }

@@ -383,3 +383,6 @@ C30 reproduced: admin delete of a member failed with 403 not_signed_in because a
 
 ## 2026-11-26 UI text fixes
 Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
+
+## 2026-11-26 Typing lag in member search
+Member list (1.9k) and Admin Anggota followed every key press, so typing lagged. The list now follows the search box 250 ms after the last key (kSearchDelay); the box itself, the filters and their option lists no longer redraw per key. Browser test, 15 keys: slow frames 14 down to 1. No migration.

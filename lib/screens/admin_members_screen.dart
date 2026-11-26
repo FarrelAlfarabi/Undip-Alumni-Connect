@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../nav/back_guard.dart';
 
 import 'package:flutter/material.dart';
@@ -51,12 +52,33 @@ class _AdminMembersScreenState extends State<AdminMembersScreen> {
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
+    _search.addListener(_onSearchTyped);
     _load();
+  }
+
+  Timer? _searchTimer;
+  String _lastSearch = '';
+
+  /// The list follows the search box a moment after the last key (see
+  /// [kSearchDelay]), so typing is not held up by redrawing it.
+  void _onSearchTyped() {
+    final now = _search.text;
+    if (now == _lastSearch) return;
+    _lastSearch = now;
+    _searchTimer?.cancel();
+    if (now.trim().isEmpty) {
+      setState(() {});
+      return;
+    }
+    _searchTimer = Timer(kSearchDelay, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchTimer?.cancel();
+    _search.removeListener(_onSearchTyped);
     _search.dispose();
     _industryText.dispose();
     super.dispose();
