@@ -57,6 +57,7 @@ Wrong before this change: in the first-run chain (Welcome, Verification, Consent
 | BusinessFormScreen | MyBusinessesScreen, BusinessDirectoryScreen, Home | the screen that opened it |
 | MyBusinessesScreen | Home, ProfileDetailScreen, BusinessDirectoryScreen, notifications | the screen that opened it |
 | MyJobPostingsScreen | ProfileDetailScreen, JobBoardScreen | the screen that opened it |
+| MyApplicationsScreen | ProfileDetailScreen | the screen that opened it |
 | FeatureIntroScreen | SettingsScreen | SettingsScreen |
 
 ## Profile
@@ -80,6 +81,7 @@ Wrong before this change: in the first-run chain (Welcome, Verification, Consent
 | AdminAdminsScreen, _PickMemberScreen | AdminScreen | the screen that opened it |
 | AdminAnnouncementsScreen, AnnouncementFormScreen | AdminScreen | the screen that opened it |
 | AdminBusinessesScreen, AdminBusinessDetailScreen | AdminScreen, notifications | the screen that opened it |
+| AdminBusinessEditsScreen | AdminScreen, notifications | the screen that opened it |
 | MarketplaceAdminScreen, AdminProductDetailScreen | AdminScreen | the screen that opened it |
 | AdminJobsScreen | AdminScreen | AdminScreen |
 | AdminReportsScreen | AdminScreen, notifications | the screen that opened it |
