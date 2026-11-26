@@ -7,6 +7,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/feature_flags.dart';
 import 'lock/app_entry.dart';
 import 'lock/lock_overlay.dart';
 import 'lock/lock_service.dart';
@@ -18,8 +19,11 @@ import 'widgets/marketplace_demo_notice.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Flutter web draws on a canvas. Without this, screen readers see an empty
-  // page until a hidden "Enable accessibility" button is activated.
-  if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
+  // page until a hidden "Enable accessibility" button is activated (a screen
+  // reader presses it by itself). Always-on costs 35 to 45% of
+  // scrolling and loading time, so it is off by default for now, see
+  // [kAlwaysOnSemantics] in feature_flags.dart.
+  if (kIsWeb && kAlwaysOnSemantics) SemanticsBinding.instance.ensureSemantics();
   if (kIsWeb) {
     // Clean addresses (/members, not /#/members). Vercel sends every path to
     // index.html (vercel.json), so a refresh on any of them loads the app.

@@ -17,11 +17,8 @@ const kSearchDelay = Duration(milliseconds: 250);
 /// `controller.addListener(() => setState(() {}))`, which redrew the whole
 /// screen, filters and list included, on every key and every caret move.
 class SearchDebounce {
-  SearchDebounce(
-    this.controller,
-    this.onSettled, {
-    this.delay = kSearchDelay,
-  }) : _last = controller.text {
+  SearchDebounce(this.controller, this.onSettled, {this.delay = kSearchDelay})
+    : _last = controller.text {
     controller.addListener(_onChange);
   }
 

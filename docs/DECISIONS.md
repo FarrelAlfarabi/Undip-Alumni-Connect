@@ -34,3 +34,6 @@ One line of reason for each. Newest at the bottom.
 - **Consent screen position.** Welcome, verify, consent, PIN offer, app. After unlocking, the consent screen only shows when the accepted version differs from `kPolicyVersion`. It never shows on every launch.
 - **Policy text is a draft I wrote from what the code stores and does** (see the audit). It includes the honest gap that the database still sends email and NIM to every client, and that fonts load from Google Fonts. Operator name and contact email are placeholders in `lib/config/policy_config.dart`.
 - **Dark mode for Nearby is the map only.** The audit found no map package and no app dark theme: `nearby_map_view.dart` is a hand-painted `CustomPaint`. So only the map follows the system brightness (`MapPalette.light` and `MapPalette.dark`). The page around the map (search, buttons, popups, cards) stays light because the whole app has no dark theme. Reason: a full dark theme is a bigger change than asked and would touch every screen.
+
+## 2026-11-26 Always-on accessibility tree is off (temporary)
+Decided by Farrel for speed. Flag: `kAlwaysOnSemantics`, env `ALWAYS_ON_SEMANTICS=true` brings it back. Risk: automated accessibility audits that do not press Flutter's "Enable accessibility" button see an empty page. Re-check against docs/LEGAL_AUDIT.md before launch.
