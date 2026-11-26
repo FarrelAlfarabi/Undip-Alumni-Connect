@@ -64,15 +64,20 @@ class _JobBoardScreenState extends State<JobBoardScreen> {
   // Default shows only open jobs; closed ones are one tap away.
   String _status = 'Dibuka';
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = _fetchJobs();
-    _searchController.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_searchController, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _searchController.dispose();
     super.dispose();
   }

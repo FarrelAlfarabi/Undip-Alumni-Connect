@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/widgets/filter_dropdown.dart' show kSearchDelay;
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/screens/admin_reports_screen.dart';
 
@@ -77,20 +78,24 @@ void main() {
     expect(search, findsOneWidget);
 
     await tester.enterText(search, 'kopi');
+    await tester.pump(kSearchDelay);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('report-product-p1')), findsOneWidget);
     expect(find.byKey(const Key('report-job-j1')), findsNothing);
 
     await tester.enterText(search, 'palsu');
+    await tester.pump(kSearchDelay);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('report-job-j1')), findsOneWidget);
     expect(find.byKey(const Key('report-product-p1')), findsNothing);
 
     await tester.enterText(search, 'budi');
+    await tester.pump(kSearchDelay);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('report-profile-u1')), findsOneWidget);
 
     await tester.enterText(search, 'zzz');
+    await tester.pump(kSearchDelay);
     await tester.pumpAndSettle();
     expect(find.text('Nothing matches.'), findsOneWidget);
     expect(api.calls.where((c) => c == 'admin_reports_list'), hasLength(1));

@@ -85,16 +85,21 @@ class _BusinessDirectoryScreenState extends State<BusinessDirectoryScreen> {
   Future<List<Business>> _fetchBusinesses() =>
       StaleCache.remember(_cacheKey, _repo.directory(_myId));
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = _fetchBusinesses();
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
     CategoryRepository.shared.load();
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     _categoryText.dispose();
     super.dispose();

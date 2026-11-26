@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:undip_alumni_connect/widgets/filter_dropdown.dart' show kSearchDelay;
 import 'package:undip_alumni_connect/data/admin_repository.dart';
 import 'package:undip_alumni_connect/data/home_repository.dart';
 import 'package:undip_alumni_connect/data/marketplace_repository.dart';
@@ -405,7 +406,7 @@ void main() {
         products: [orderRow('a', 'Kopi'), orderRow('b', 'Batik')],
       );
       await tester.enterText(find.byKey(const Key('home-order-search')), 'bat');
-      await tester.pump();
+      await tester.pump(kSearchDelay);
       expect(find.text('Batik'), findsOneWidget);
       expect(find.text('Kopi'), findsNothing);
     });

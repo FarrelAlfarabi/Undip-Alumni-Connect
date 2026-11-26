@@ -406,15 +406,20 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   late Future<List<Business>> _future;
   final _busy = <String>{};
 
+  late final SearchDebounce _searchDebounce;
+
   @override
   void initState() {
     super.initState();
     _future = widget.repository.businesses(widget.adminId, status: _status);
-    _search.addListener(() => setState(() {}));
+    _searchDebounce = SearchDebounce(_search, () {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce.dispose();
     _search.dispose();
     _categoryText.dispose();
     super.dispose();
