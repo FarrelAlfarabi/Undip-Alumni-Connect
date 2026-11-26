@@ -380,3 +380,6 @@ U14: PIN pad takes the keyboard back on click. C16: Home refetches after 20 s aw
 
 ## 2026-11-26 UI test fixes (C30, member list)
 C30 reproduced: admin delete of a member failed with 403 not_signed_in because account_files() checks the caller. Delete core now uses internal account_files_core(); migration 20261126100000 (rollback file, SQL test 34). Members list reads all pages (was cut at 500 of 1.9k).
+
+## 2026-11-26 UI text fixes
+Profile field labels and Admin Reports texts now go through tr() (Indonesian copy added). "Lihat semua pengumuman" shrinks to fit instead of ending in "...". Marketplace note keeps its 3-line cap (a longer note overflows at 320 px). No migration.
