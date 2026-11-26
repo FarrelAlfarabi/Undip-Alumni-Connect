@@ -48,6 +48,12 @@ fi
 if [ "${REAL_LOGIN:-}" = "true" ]; then
   EXTRA_DEFINES+=(--dart-define=REAL_LOGIN=true)
 fi
+# Always-on screen-reader tree (web). Off by default (it costs 35 to 45% of
+# scrolling time); set the Vercel variable ALWAYS_ON_SEMANTICS to "true" to
+# bring it back. See kAlwaysOnSemantics in lib/config/feature_flags.dart.
+if [ "${ALWAYS_ON_SEMANTICS:-}" = "true" ]; then
+  EXTRA_DEFINES+=(--dart-define=ALWAYS_ON_SEMANTICS=true)
+fi
 # An array, so a value with spaces stays one argument.
 flutter build web --release ${EXTRA_DEFINES[@]+"${EXTRA_DEFINES[@]}"}
 

@@ -425,3 +425,7 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 ## 2026-11-26 Instant press feedback
 - New PressFeedback widget (lib/widgets/press_feedback.dart): shrinks 3% in 80 ms the moment a finger or mouse goes down, returns in 140 ms, lets go when the finger starts to scroll, and does nothing when reduce motion is on. Flutter only shows the ink ripple after about 100 ms inside lists (it waits to see if it is a scroll), so taps felt late.
 - Used on the bottom tabs (icon shrinks, pop-up name tooltip removed), the desktop side nav, Home tiles and cards, and the Explore, Jobs and Businesses cards. No tab fade: it adds delay and an extra paint layer. No migration.
+
+## 2026-11-26 Screen-reader tree off by default (temporary)
+- Farrel: "Disable it for now". Measured with the CPU slowed 4x, the always-on accessibility tree used 44% of main-thread time while scrolling Members, 43% on Home idle, 35% on the first Explore visit. Now `kAlwaysOnSemantics` (lib/config/feature_flags.dart) is false. Flutter's hidden "Enable accessibility" button still turns the tree on for a screen reader (or Tab to it, then Enter).
+- Back on with `--dart-define=ALWAYS_ON_SEMANTICS=true` or the Vercel variable ALWAYS_ON_SEMANTICS=true. TEMPORARY: legal accessibility risk, re-check with the audit (docs/LEGAL_AUDIT.md) before launch. No migration.
