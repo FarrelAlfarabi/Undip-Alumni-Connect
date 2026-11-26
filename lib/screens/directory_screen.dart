@@ -22,9 +22,28 @@ import '../widgets/searchable_choice.dart';
 import 'profile_detail_screen.dart';
 
 /// Most alumni rows one load brings in, so the list does not grow without
-/// bound as people join. Rows are ordered by name, so past this many the last
-/// names are cut off until search is done on the server.
-const int kDirectoryMaxRows = 500;
+/// bound as people join. Rows are ordered by name and read in pages (the
+/// server returns at most 1000 rows a request), so the whole member list is
+/// searchable, not only the first names of the alphabet.
+const int kDirectoryMaxRows = 5000;
+
+/// Reads rows page by page with [page] (inclusive `from` and `to` row
+/// numbers) until a short page comes back or [maxRows] is reached.
+Future<List<Map<String, dynamic>>> fetchAllPages(
+  Future<List<Map<String, dynamic>>> Function(int from, int to) page, {
+  int pageSize = 1000,
+  int maxRows = kDirectoryMaxRows,
+}) async {
+  final all = <Map<String, dynamic>>[];
+  while (all.length < maxRows) {
+    final from = all.length;
+    final to = from + pageSize - 1;
+    final rows = await page(from, to);
+    all.addAll(rows);
+    if (rows.length < pageSize) break;
+  }
+  return all.length > maxRows ? all.sublist(0, maxRows) : all;
+}
 
 /// Where this person works. `company` is the field people edit now; rows
 /// saved before the two fields were merged may only have `current_employer`.
@@ -129,16 +148,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         await withoutBlockedProfiles(await widget.fetchAlumni!()),
       );
     }
-    final rows = await Supabase.instance.client
-        .from('alumni_profiles')
-        .select(kProfileColumns)
-        .eq('verification_status', 'verified')
-        .order('name', ascending: true)
-        .limit(kDirectoryMaxRows);
+    final rows = await fetchAllPages(
+      (from, to) async => List<Map<String, dynamic>>.from(
+        await Supabase.instance.client
+                .from('alumni_profiles')
+                .select(kProfileColumns)
+                .eq('verification_status', 'verified')
+                .order('name', ascending: true)
+                .order('id', ascending: true)
+                .range(from, to)
+            as List,
+      ),
+    );
     return _withDefaultYear(
       await withoutBlockedProfiles(
         AvatarRepository.withAvatars(
-          List<Map<String, dynamic>>.from(rows as List),
+          rows,
           await AvatarRepository().urlsById(),
         ),
       ),
