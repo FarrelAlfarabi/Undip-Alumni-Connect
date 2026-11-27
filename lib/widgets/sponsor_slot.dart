@@ -9,7 +9,7 @@ import 'sponsor_banner.dart';
 /// Widest the sponsor card gets on the start screens (Welcome and PIN lock),
 /// so it sits neatly above the form on a phone and inside the card on a
 /// wide screen.
-const double kSponsorSlotMaxWidth = 240;
+const double kSponsorSlotMaxWidth = 216;
 
 /// Loads the live sponsors. The database function `home_sponsors()` is open
 /// to signed-out visitors, so this works before login.
@@ -36,6 +36,7 @@ class SponsorSlot extends StatefulWidget {
     this.openLink,
     this.maxWidth = kSponsorSlotMaxWidth,
     this.autoAdvance = const Duration(seconds: 5),
+    this.dark = false,
   });
 
   final SponsorLoader? loader;
@@ -43,6 +44,9 @@ class SponsorSlot extends StatefulWidget {
   final Future<bool> Function(String? url)? openLink;
   final double maxWidth;
   final Duration autoAdvance;
+
+  /// On the black PIN lock screen: light caption.
+  final bool dark;
 
   @override
   State<SponsorSlot> createState() => _SponsorSlotState();
@@ -114,6 +118,8 @@ class _SponsorSlotState extends State<SponsorSlot> {
       onShown: _shown,
       autoAdvance: widget.autoAdvance,
       maxWidth: widget.maxWidth,
+      seamless: true,
+      captionColor: widget.dark ? const Color(0xB3FFFFFF) : null,
     );
   }
 }
@@ -124,10 +130,16 @@ class _SponsorSlotState extends State<SponsorSlot> {
 /// and desktop the carousel sits inside the centred card instead (see
 /// [SponsorInCard]), so it is not left alone on a wide empty strip.
 class SponsorFooterFrame extends StatelessWidget {
-  const SponsorFooterFrame({super.key, required this.child, this.loader});
+  const SponsorFooterFrame({
+    super.key,
+    required this.child,
+    this.loader,
+    this.dark = false,
+  });
 
   final Widget child;
   final SponsorLoader? loader;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -148,10 +160,11 @@ class SponsorFooterFrame extends StatelessWidget {
             SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                 child: SponsorSlot(
                   key: const Key('start-sponsors'),
                   loader: loader,
+                  dark: dark,
                 ),
               ),
             ),
@@ -165,9 +178,10 @@ class SponsorFooterFrame extends StatelessWidget {
 /// The carousel at the bottom of the card on tablet and desktop. Nothing on a
 /// phone (there [SponsorFooterFrame] pins it to the screen bottom).
 class SponsorInCard extends StatelessWidget {
-  const SponsorInCard({super.key, this.loader});
+  const SponsorInCard({super.key, this.loader, this.dark = false});
 
   final SponsorLoader? loader;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -175,8 +189,12 @@ class SponsorInCard extends StatelessWidget {
         stepForWidth(MediaQuery.sizeOf(context).width) != ScreenStep.phone;
     if (!wide) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: SponsorSlot(key: const Key('card-sponsors'), loader: loader),
+      padding: const EdgeInsets.only(top: 32),
+      child: SponsorSlot(
+        key: const Key('card-sponsors'),
+        loader: loader,
+        dark: dark,
+      ),
     );
   }
 }

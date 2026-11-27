@@ -6,7 +6,6 @@ import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
 import 'package:undip_alumni_connect/widgets/sponsor_banner.dart';
 import 'package:undip_alumni_connect/widgets/sponsor_slot.dart';
 
-import 'home_screen_test.dart' show pumpHome;
 import 'support/fake_home.dart';
 import 'support/fake_lock.dart';
 
@@ -138,21 +137,14 @@ void main() {
     expect(opened.single, startsWith('https://sponsor'));
   });
 
-  testWidgets('Home: the sponsor carousel is the first thing shown', (t) async {
-    await pumpHome(
-      t,
-      api: FakeHomeApi(sponsors: [sponsorMap(1), sponsorMap(2)]),
-      profile: const {
-        'id': 'me',
-        'name': 'Ahmad Ramadhan',
-        'city': 'Semarang',
-        'current_role': 'Analis',
-      },
+  testWidgets('lock screen on a normal phone: both links stay above the card', (
+    t,
+  ) async {
+    await pumpAt(t, const Size(390, 844), await lockScreen(two));
+    final card = t.getRect(find.byType(BannerCarousel));
+    expect(
+      t.getRect(find.byKey(const Key('lock-switch'))).bottom,
+      lessThanOrEqualTo(card.top),
     );
-    await t.pump(const Duration(milliseconds: 400));
-    final sponsor = t.getRect(find.byType(SponsorBanner));
-    final tiles = t.getRect(find.text('Lihat semua pengumuman'));
-    expect(sponsor.top, lessThan(tiles.top));
-    expect(sponsor.top, lessThan(260));
   });
 }

@@ -63,7 +63,7 @@ class WelcomeScreen extends StatelessWidget {
               ],
               const SizedBox(height: 0),
               const KawungMark(size: 48, color: AppTheme.black),
-              const SizedBox(height: 12),
+              const SizedBox(height: 6),
               Text(
                 'Lingkaran',
                 textAlign: TextAlign.center,
@@ -80,7 +80,7 @@ class WelcomeScreen extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(
                 tr(
                   'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama',
@@ -99,7 +99,7 @@ class WelcomeScreen extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -114,7 +114,7 @@ class WelcomeScreen extends StatelessWidget {
                   child: Text(tr('Mulai')),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               const ClosedTestNotice(),
               const SizedBox(height: 12),
               FutureBuilder<AppInfo>(
@@ -129,7 +129,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               Text(
                 tr(
                   'Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.',

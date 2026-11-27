@@ -431,7 +431,7 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 - Back on with `--dart-define=ALWAYS_ON_SEMANTICS=true` or the Vercel variable ALWAYS_ON_SEMANTICS=true. TEMPORARY: legal accessibility risk, re-check with the audit (docs/LEGAL_AUDIT.md) before launch. No migration.
 
 ## 2026-11-27 Sponsors on landing, lock screen and Home top (PREVIEW, not merged)
-- New `SponsorSlot` (lib/widgets/sponsor_slot.dart): the sponsor carousel for signed-out screens. Welcome and PIN lock pin it to the bottom on phones and put it at the bottom of the centred card on tablet and desktop. Home now shows it first, above announcements and tiles.
+- New `SponsorSlot` (lib/widgets/sponsor_slot.dart): the sponsor carousel for signed-out screens. Welcome and PIN lock pin it to the bottom on phones and put it at the bottom of the centred card on tablet and desktop. Home keeps its old place under the tiles (Farrel, 27 Nov). On the start screens the box is seamless: no border, no yellow bar, small "Disponsori" caption, with extra space around it.
 - No migration: `home_sponsors()` and `sponsor_event()` were already open to signed-out visitors. Same rules: view counted once while visible, tap only after "Buka", cap 10, anonymous counts. Nothing shows when there is no sponsor or the load fails. Welcome spacing tightened so "Mulai" stays on screen above the card. Screenshots: /mnt/project-files/previews/sponsors-2026-11-27/.
 
 ## 2026-11-27 Sponsor carousel slides again after a touch

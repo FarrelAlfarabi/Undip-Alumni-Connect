@@ -199,12 +199,16 @@ class _LockScreenState extends State<LockScreen> {
     final waiting = _waitUntil != null;
     // Short phones (about 568 px tall): drop the big mark, shrink the avatar.
     final compact = MediaQuery.sizeOf(context).height < 640;
+    // Phones up to about 900 px tall: no big mark and tighter gaps, so the
+    // PIN pad, both links and the sponsor card fit without scrolling.
+    final tight = MediaQuery.sizeOf(context).height < 900;
 
     return Scaffold(
       key: const Key('lock-screen'),
       backgroundColor: AppTheme.black,
       body: SponsorFooterFrame(
         loader: widget.sponsorLoader,
+        dark: true,
         child: AuthFrame(
           maxWidth: 380,
           cardColor: AppTheme.black,
@@ -215,7 +219,7 @@ class _LockScreenState extends State<LockScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!compact) ...[
+              if (!compact && !tight) ...[
                 const KawungMark(size: 32, color: AppTheme.yellow),
                 const SizedBox(height: 6),
               ],
@@ -229,9 +233,9 @@ class _LockScreenState extends State<LockScreen> {
               ),
               const SizedBox(height: 8),
               IkafeLogo(height: compact ? 16 : 22),
-              SizedBox(height: compact ? 10 : 20),
+              SizedBox(height: compact ? 10 : (tight ? 14 : 20)),
               CircleAvatar(
-                radius: compact ? 22 : 30,
+                radius: compact ? 22 : (tight ? 24 : 30),
                 backgroundColor: AppTheme.yellow,
                 child: Text(
                   initialsOf(widget.user.displayName),
@@ -257,7 +261,7 @@ class _LockScreenState extends State<LockScreen> {
                     color: fg.withValues(alpha: 0.75),
                   ),
                 ),
-              const SizedBox(height: 24),
+              SizedBox(height: tight ? 10 : 24),
               if (!_loaded)
                 const CircularProgressIndicator(color: fg)
               else if (!_hasPin)
@@ -275,7 +279,7 @@ class _LockScreenState extends State<LockScreen> {
                 const SizedBox(height: 12),
                 _status(theme),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               if (_pendingLeave != null)
                 ..._confirmLeave(theme, fg)
               else ...[
@@ -299,7 +303,7 @@ class _LockScreenState extends State<LockScreen> {
                   child: Text(tr('Bukan kamu? Ganti akun')),
                 ),
               ],
-              SponsorInCard(loader: widget.sponsorLoader),
+              SponsorInCard(loader: widget.sponsorLoader, dark: true),
             ],
           ),
         ),
