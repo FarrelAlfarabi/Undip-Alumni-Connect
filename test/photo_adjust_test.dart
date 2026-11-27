@@ -1,4 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart';
+import 'package:image/image.dart' as img;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -47,6 +52,47 @@ void main() {
     expect(find.text('Batal'), findsOneWidget);
     expect(find.textContaining('Geser'), findsOneWidget);
   });
+
+  testWidgets(
+    'everything outside the circle is dimmed, also under the buttons',
+    (tester) async {
+      // Tall white photo: it spills far below the frame, under the controls.
+      final white = img.Image(width: 400, height: 1600);
+      img.fill(white, color: img.ColorRgb8(255, 255, 255));
+      tester.view.physicalSize = const Size(360, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PhotoAdjustScreen(
+            image: PickedImage(
+              name: 'a.png',
+              bytes: Uint8List.fromList(img.encodePng(white)),
+            ),
+            aspectRatio: 1,
+            circle: true,
+          ),
+        ),
+      );
+      await load(tester);
+      final boundary = tester.renderObject<RenderRepaintBoundary>(
+        find.byType(RepaintBoundary).first,
+      );
+      final image = (await tester.runAsync(() => boundary.toImage()))!;
+      final data = (await tester.runAsync(
+        () => image.toByteData(format: ui.ImageByteFormat.rawRgba),
+      ))!;
+      int red(double x, double y) =>
+          data.getUint8(((y.toInt() * image.width) + x.toInt()) * 4);
+      // Centre of the circle: the photo, bright.
+      expect(red(180, 280), greaterThan(240));
+      // Below the buttons and beside the hint: dim, not bright.
+      expect(red(180, 697), lessThan(120));
+      expect(red(2, 600), lessThan(120));
+      // Right edge of the area.
+      expect(red(358, 300), lessThan(120));
+    },
+  );
 
   group('crop math', () {
     const photo = Size(4000, 3000); // landscape 4:3

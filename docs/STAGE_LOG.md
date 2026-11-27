@@ -436,3 +436,7 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 
 ## 2026-11-27 Sponsor carousel slides again after a touch
 - Farrel: the carousel must move again 5 s after being selected or touched. It only restarted on the finger-up event, so a lost up event (dialog, new tab) stopped it for good. Now every touch event restarts a 5 s wait, then it slides again. Counting logic untouched. No migration.
+
+## 2026-11-27 Photo crop dimming and lock screen PIN position
+- Farrel: crop screen was dark only above, bright under the hint, slider and buttons. The dim layer stopped at the edge of the photo area; it now reaches past the whole screen, so only the circle is bright. Test reads real pixels.
+- Lock screen on phones: header floats in the free space, PIN pad and both links sit right above the sponsor card. Under 760 px tall: no avatar, smaller keys, so it fits without scrolling from 700 px. No migration.

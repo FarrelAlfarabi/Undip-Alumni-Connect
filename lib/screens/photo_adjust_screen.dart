@@ -511,9 +511,11 @@ class _CropPainter extends CustomPainter {
         : (Path()..addRRect(
             RRect.fromRectAndRadius(frame, const Radius.circular(4)),
           ));
+    // The dim layer reaches far past this widget, so the photo that spills
+    // under the hint, slider and buttons is dimmed as evenly as the rest.
     final shade = Path.combine(
       PathOperation.difference,
-      Path()..addRect(Offset.zero & size),
+      Path()..addRect(shadeRect),
       hole,
     );
     canvas.drawPath(shade, Paint()..color = const Color(0xB3000000));
@@ -537,6 +539,9 @@ class _CropPainter extends CustomPainter {
       }
     }
   }
+
+  /// Area dimmed outside the frame. Larger than any screen.
+  static const shadeRect = Rect.fromLTRB(-10000, -10000, 10000, 10000);
 
   @override
   bool shouldRepaint(_CropPainter old) =>
