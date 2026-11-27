@@ -5,6 +5,7 @@ import '../util/app_language.dart';
 import 'package:flutter/material.dart';
 
 import '../kawung_mark.dart';
+import '../platform/breakpoints.dart';
 import '../theme.dart';
 import '../widgets/auth_frame.dart';
 import '../widgets/brand_lockup.dart';
@@ -202,6 +203,11 @@ class _LockScreenState extends State<LockScreen> {
     // Phones up to about 900 px tall: no big mark and tighter gaps, so the
     // PIN pad, both links and the sponsor card fit without scrolling.
     final tight = MediaQuery.sizeOf(context).height < 900;
+    // Phones under about 760 px (usual with the browser bar showing): no
+    // avatar and smaller keys, so everything fits above the sponsor card.
+    final short = MediaQuery.sizeOf(context).height < 760;
+    final phone =
+        stepForWidth(MediaQuery.sizeOf(context).width) == ScreenStep.phone;
 
     return Scaffold(
       key: const Key('lock-screen'),
@@ -213,10 +219,13 @@ class _LockScreenState extends State<LockScreen> {
             horizontal: 24,
             vertical: 16,
           ),
-          phoneAlignment: const Alignment(0, 0.9),
+          phoneFill: true,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: phone ? MainAxisSize.max : MainAxisSize.min,
             children: [
+              // Phone: the header sits in the middle of the free space and the
+              // PIN pad with the links sits low, near the thumb.
+              if (phone) const Spacer(),
               if (!compact && !tight) ...[
                 const KawungMark(size: 32, color: AppTheme.black),
                 const SizedBox(height: 6),
@@ -232,16 +241,18 @@ class _LockScreenState extends State<LockScreen> {
               const SizedBox(height: 8),
               IkafeLogo(height: compact ? 16 : 22),
               SizedBox(height: compact ? 10 : (tight ? 14 : 20)),
-              CircleAvatar(
-                radius: compact ? 22 : (tight ? 24 : 30),
-                backgroundColor: AppTheme.yellow,
-                child: Text(
-                  initialsOf(widget.user.displayName),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: AppTheme.black,
+              if (!short) ...[
+                CircleAvatar(
+                  radius: compact ? 22 : (tight ? 24 : 30),
+                  backgroundColor: AppTheme.yellow,
+                  child: Text(
+                    initialsOf(widget.user.displayName),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: AppTheme.black,
+                    ),
                   ),
                 ),
-              ),
+              ],
               const SizedBox(height: 12),
               Text(
                 trf('Selamat datang kembali, {0}', [
@@ -259,6 +270,7 @@ class _LockScreenState extends State<LockScreen> {
                     color: fg.withValues(alpha: 0.75),
                   ),
                 ),
+              if (phone) const Spacer(flex: 2),
               SizedBox(height: tight ? 10 : 24),
               if (!_loaded)
                 const CircularProgressIndicator(color: fg)
@@ -269,6 +281,7 @@ class _LockScreenState extends State<LockScreen> {
                   ignoring: _busy,
                   child: PinPad(
                     foreground: fg,
+                    keyHeight: short ? 52 : 64,
                     enabled: !waiting && !_busy,
                     onCompleted: _submit,
                     onBiometric: _bio ? _tryBiometric : null,
