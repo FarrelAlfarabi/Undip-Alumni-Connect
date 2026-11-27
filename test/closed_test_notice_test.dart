@@ -8,10 +8,11 @@ import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 /// stop other people with the app key from reading that data (see
 /// docs/AUTH_MIGRATION_PLAN.md), so the rule is part of the product for now.
 void main() {
-  testWidgets('Welcome shows the notice', (tester) async {
+  // Farrel, 27 Nov 2026: removed from Welcome (it stays on the consent screen).
+  testWidgets('Welcome does not show the notice', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: WelcomeScreen()));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('closed-test-notice')), findsOneWidget);
+    expect(find.byKey(const Key('closed-test-notice')), findsNothing);
   });
 
   testWidgets('the consent screen shows the notice', (tester) async {
