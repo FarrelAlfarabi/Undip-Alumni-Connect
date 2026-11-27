@@ -1,10 +1,10 @@
 # Privacy policy and community rules
-Lingkaran (closed beta) for FEB UNDIP alumni, through Ikafe.
+Lingkaran (beta version) for FEB UNDIP alumni, through Ikafe.
 Version {{VERSION}}. Last updated {{UPDATED}}.
 Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 
 ## 1. What this app is
-- A closed beta for a small group of FEB UNDIP alumni (Ikafe).
+- A network for FEB UNDIP alumni (Ikafe). The app is still a beta, so features can change and bugs may remain.
 - Only verified alumni can use it.
 
 ## 2. What we collect, and why
@@ -35,9 +35,9 @@ Run by {{OPERATOR}}. Contact: {{CONTACT_EMAIL}}.
 - Your NIB is seen only by Ikafe admins, to check it. Other alumni see only the blue verified badge on your business, not the NIB number.
 - The Ikafe admins (a small named group) can see reports, feedback and businesses waiting for review.
 - Service providers who store or deliver the app for us: Supabase (database and file storage, server region Singapore), Vercel (web hosting, mainly the United States), GitHub (code and test builds, no user data) and Google Fonts (fonts for the web and app). Your data is therefore processed outside Indonesia, the EU and India. We have a contract or the standard terms of each provider, and we share only what each one needs to do its job.
-- Product photos and CV files are kept in public storage. Anyone who has the exact link can open them.
+- Product photos are kept in public storage. Anyone who has the exact link can open them. CV files are kept private and can only be opened, through a temporary link, by the poster of the job you applied to.
 - Sponsors: the app shows paid sponsor banners on Home, always with the label "Disponsori" (Sponsored). Tapping a banner opens a website outside the app that we do not control and that has its own privacy policy. We only count how many times each banner is shown and tapped, as a number per sponsor per day, with no name, device or personal data about you.
-- Honest limit of this beta: the app does not use real sign in yet. The database still sends full profile rows, including email, to the app, so someone with technical skill and the app's public key could read them. This is a known gap. It must be fixed before the app is opened to more people.
+- You sign in with a code sent to your email. Honest limit of this beta version: the profile data of other verified members, including email, can still be read by fellow members through the app. This is a known gap and we are fixing it.
 
 ## 5. What stays only on your device
 - A PIN (stored only as a salted hash), your remembered profile id, your name, a masked email, and your fingerprint choice. They are kept in the phone's secure storage.

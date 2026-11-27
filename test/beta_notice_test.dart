@@ -3,16 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/policy/consent_screen.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 
-/// Testers must be told, before they type anything, that this is a closed test:
-/// use test contact details and do not upload real CVs. The database cannot yet
-/// stop other people with the app key from reading that data (see
-/// docs/AUTH_MIGRATION_PLAN.md), so the rule is part of the product for now.
+/// The app is released as a beta: the consent screen carries a light beta note
+/// (it may have bugs, send feedback). It must not tell people to avoid real data.
 void main() {
-  // Farrel, 27 Nov 2026: removed from Welcome (it stays on the consent screen).
   testWidgets('Welcome does not show the notice', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: WelcomeScreen()));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('closed-test-notice')), findsNothing);
+    expect(find.byKey(const Key('beta-notice')), findsNothing);
   });
 
   testWidgets('the consent screen shows the notice', (tester) async {
@@ -28,6 +25,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('closed-test-notice')), findsOneWidget);
+    expect(find.byKey(const Key('beta-notice')), findsOneWidget);
+    expect(find.textContaining('CV asli'), findsNothing);
+    expect(find.textContaining('data kontak percobaan'), findsNothing);
   });
 }

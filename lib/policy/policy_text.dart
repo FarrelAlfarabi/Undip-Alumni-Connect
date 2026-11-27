@@ -98,7 +98,7 @@ class PolicyBody extends StatelessWidget {
   }
 }
 
-/// "Draft for the beta. The text may change."
+/// "Beta version. The text may change."
 class PolicyDraftBanner extends StatelessWidget {
   const PolicyDraftBanner({super.key, this.language = PolicyLanguage.id});
 
@@ -114,8 +114,8 @@ class PolicyDraftBanner extends StatelessWidget {
       color: theme.colorScheme.secondaryContainer,
       child: Text(
         language == PolicyLanguage.id
-            ? 'Draft for the beta. The text may change. (Draf untuk beta. Teks dapat berubah.)'
-            : 'Draft for the beta. The text may change.',
+            ? 'Beta version. The text may change. (Versi beta. Teks dapat berubah.)'
+            : 'Beta version. The text may change.',
         style: theme.textTheme.labelMedium?.copyWith(
           color: theme.colorScheme.onSecondaryContainer,
         ),

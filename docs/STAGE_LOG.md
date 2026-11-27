@@ -440,3 +440,8 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 ## 2026-11-27 Photo crop dimming and lock screen PIN position
 - Farrel: crop screen was dark only above, bright under the hint, slider and buttons. The dim layer stopped at the edge of the photo area; it now reaches past the whole screen, so only the circle is bright. Test reads real pixels.
 - Lock screen on phones: header floats in the free space, PIN pad and both links sit right above the sponsor card. Under 760 px tall: no avatar, smaller keys, so it fits without scrolling from 700 px. No migration.
+
+## 2026-11-28 Beta release prep (prod only)
+- Removed "closed test / use test data / no real CV" notes (consent screen, About, policy banner, docs). Added a light beta note ("masih versi beta, kirim masukan").
+- Privacy text (ID and EN) fixed: CVs are private, real email-code login, honest remaining limit. Policy version 2026-11-28 (users accept again).
+- Welcome line now "Beta. Bukan layanan resmi Universitas Diponegoro." No data or migration changes. `old-database` untouched.

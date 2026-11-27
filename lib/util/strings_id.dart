@@ -83,8 +83,8 @@ final Map<String, String> kIndonesian = {
   'Hide {0} options': 'Sembunyikan pilihan {0}',
   'Show {0} options': 'Tampilkan pilihan {0}',
   // Screen sweep (5 Nov)
-  'This is a closed beta for a small group of FEB UNDIP alumni. Things can change or break. Use "Send feedback" when something looks wrong.': 'Ini beta tertutup untuk sekelompok kecil alumni FEB UNDIP. Hal-hal bisa berubah atau rusak. Pakai "Kirim masukan" kalau ada yang terlihat salah.',
   'About': 'Tentang',
+  'Lingkaran is still in beta. Things can change and bugs may appear. Use "Send feedback" when something looks wrong.': 'Lingkaran masih versi beta. Hal-hal bisa berubah dan mungkin ada bug. Pakai "Kirim masukan" kalau ada yang terlihat salah.',
   'Every member sees this in Announcements right away. It cannot be edited or removed from the app.': 'Semua anggota langsung melihat ini di Announcements. Tidak bisa diubah atau dihapus dari aplikasi.',
   'Message': 'Pesan',
   'Title': 'Judul',
@@ -152,7 +152,6 @@ final Map<String, String> kIndonesian = {
   'News from Ikafe will show up here.':
       'Berita dari Ikafe akan muncul di sini.',
   'Welcome to Lingkaran': 'Selamat datang di Lingkaran',
-  'This is a closed test. Please use test contact details. Do not upload a real CV or enter a real phone number yet. (Ini uji coba tertutup. Gunakan data kontak percobaan, jangan unggah CV asli atau isi nomor telepon asli.)': 'Ini uji coba tertutup. Gunakan data kontak percobaan, jangan unggah CV asli atau isi nomor telepon asli.',
   'Preview': 'Pratinjau',
   'Upcoming': 'Akan datang',
   "This link isn't valid or can't be opened.":

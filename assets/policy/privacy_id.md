@@ -1,10 +1,10 @@
 # Kebijakan privasi dan aturan komunitas
-Lingkaran (beta tertutup) untuk alumni FEB UNDIP, melalui Ikafe.
+Lingkaran (versi beta) untuk alumni FEB UNDIP, melalui Ikafe.
 Versi {{VERSION}}. Terakhir diubah {{UPDATED}}.
 Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 
 ## 1. Aplikasi apa ini
-- Beta tertutup untuk sekelompok kecil alumni FEB UNDIP (Ikafe).
+- Jaringan alumni FEB UNDIP (Ikafe). Aplikasi ini masih versi beta, jadi fiturnya bisa berubah dan mungkin masih ada bug.
 - Hanya alumni yang sudah terverifikasi yang bisa memakainya.
 
 ## 2. Data yang kami kumpulkan, dan alasannya
@@ -35,9 +35,9 @@ Dikelola oleh {{OPERATOR}}. Kontak: {{CONTACT_EMAIL}}.
 - NIB Anda hanya dilihat oleh admin Ikafe untuk pemeriksaan. Alumni lain hanya melihat tanda terverifikasi biru di usaha Anda, bukan nomor NIB-nya.
 - Admin Ikafe (sekelompok kecil orang yang disebutkan namanya) bisa melihat laporan, masukan, dan bisnis yang menunggu ditinjau.
 - Penyedia layanan yang menyimpan atau mengantarkan aplikasi untuk kami: Supabase (database dan penyimpanan file, server di Singapura), Vercel (hosting web, terutama Amerika Serikat), GitHub (kode dan build uji, tanpa data pengguna), dan Google Fonts (huruf untuk web dan aplikasi). Karena itu data Anda diproses di luar Indonesia, Uni Eropa, dan India. Kami memakai kontrak atau ketentuan standar tiap penyedia, dan hanya membagikan yang dibutuhkan untuk tugasnya.
-- Foto produk dan file CV disimpan di penyimpanan publik. Siapa pun yang punya tautan persisnya bisa membukanya.
+- Foto produk disimpan di penyimpanan publik. Siapa pun yang punya tautan persisnya bisa membukanya. File CV disimpan privat dan hanya bisa dibuka lewat tautan sementara oleh pemasang lowongan yang Anda lamar.
 - Sponsor: aplikasi menampilkan spanduk sponsor berbayar di Beranda, selalu dengan label "Disponsori". Mengetuk spanduk membuka situs di luar aplikasi yang tidak kami kelola dan punya kebijakan privasinya sendiri. Kami hanya menghitung berapa kali tiap spanduk tampil dan diketuk, sebagai angka per sponsor per hari, tanpa nama, perangkat, atau data pribadi Anda.
-- Batasan jujur beta ini: aplikasi belum memakai login sungguhan. Basis data masih mengirim baris profil lengkap, termasuk email, ke aplikasi, jadi orang yang paham teknis dan memiliki kunci publik aplikasi bisa membacanya. Ini kekurangan yang diketahui dan harus diperbaiki sebelum aplikasi dibuka untuk lebih banyak orang.
+- Masuk ke aplikasi memakai kode yang dikirim ke email Anda. Batasan jujur versi beta ini: data profil anggota terverifikasi lain, termasuk email, masih bisa terbaca oleh sesama anggota lewat aplikasi. Ini kekurangan yang diketahui dan sedang kami perbaiki.
 
 ## 5. Data yang hanya ada di perangkat Anda
 - PIN (hanya disimpan sebagai hash dengan salt), id profil yang diingat, nama Anda, email yang disamarkan, dan pilihan sidik jari. Semuanya disimpan di penyimpanan aman ponsel.
