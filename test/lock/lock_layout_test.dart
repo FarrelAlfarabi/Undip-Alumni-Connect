@@ -91,7 +91,6 @@ void main() {
         textScale: 1,
       );
       expect(tester.takeException(), isNull);
-      final pad = tester.getRect(find.byType(PinPad));
       final switchLink = tester.getRect(find.byKey(const Key('lock-switch')));
       final card = tester.getRect(find.byType(BannerCarousel));
       // From 700 px tall, both links end above the sponsor card (no scroll)
