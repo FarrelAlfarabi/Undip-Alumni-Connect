@@ -8,6 +8,7 @@ import '../kawung_mark.dart';
 import '../theme.dart';
 import '../widgets/auth_frame.dart';
 import '../widgets/brand_lockup.dart';
+import '../widgets/sponsor_slot.dart';
 import 'biometrics.dart';
 import 'lock_config.dart';
 import 'lock_service.dart';
@@ -41,7 +42,11 @@ class LockScreen extends StatefulWidget {
     this.onResetElsewhere,
     this.autoBiometric = true,
     this.clock = DateTime.now,
+    this.sponsorLoader,
   });
+
+  /// Tests replace how sponsors load.
+  final SponsorLoader? sponsorLoader;
 
   final LockService lock;
   final RememberedUser user;
@@ -190,105 +195,115 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const fg = AppTheme.paper;
+    const fg = AppTheme.black;
     final waiting = _waitUntil != null;
     // Short phones (about 568 px tall): drop the big mark, shrink the avatar.
     final compact = MediaQuery.sizeOf(context).height < 640;
+    // Phones up to about 900 px tall: no big mark and tighter gaps, so the
+    // PIN pad, both links and the sponsor card fit without scrolling.
+    final tight = MediaQuery.sizeOf(context).height < 900;
 
     return Scaffold(
       key: const Key('lock-screen'),
-      backgroundColor: AppTheme.black,
-      body: AuthFrame(
-        maxWidth: 380,
-        cardColor: AppTheme.black,
-        phonePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!compact) ...[
-              const KawungMark(size: 32, color: AppTheme.yellow),
-              const SizedBox(height: 6),
-            ],
-            Text(
-              'LINGKARAN',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: fg,
-                letterSpacing: 2,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            IkafeLogo(height: compact ? 16 : 22),
-            SizedBox(height: compact ? 10 : 20),
-            CircleAvatar(
-              radius: compact ? 22 : 30,
-              backgroundColor: AppTheme.yellow,
-              child: Text(
-                initialsOf(widget.user.displayName),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: AppTheme.black,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              trf('Selamat datang kembali, {0}', [
-                _first(widget.user.displayName),
-              ]),
-              key: const Key('lock-welcome'),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge?.copyWith(color: fg),
-            ),
-            if (widget.user.maskedEmail.isNotEmpty)
+      body: SponsorFooterFrame(
+        loader: widget.sponsorLoader,
+        child: AuthFrame(
+          maxWidth: 380,
+          phonePadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 16,
+          ),
+          phoneAlignment: const Alignment(0, 0.9),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!compact && !tight) ...[
+                const KawungMark(size: 32, color: AppTheme.black),
+                const SizedBox(height: 6),
+              ],
               Text(
-                widget.user.maskedEmail,
-                key: const Key('lock-masked-email'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: fg.withValues(alpha: 0.75),
+                'LINGKARAN',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: fg,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            const SizedBox(height: 24),
-            if (!_loaded)
-              const CircularProgressIndicator(color: fg)
-            else if (!_hasPin)
-              ..._noPin(theme)
-            else ...[
-              IgnorePointer(
-                ignoring: _busy,
-                child: PinPad(
-                  foreground: fg,
-                  enabled: !waiting && !_busy,
-                  onCompleted: _submit,
-                  onBiometric: _bio ? _tryBiometric : null,
+              const SizedBox(height: 8),
+              IkafeLogo(height: compact ? 16 : 22),
+              SizedBox(height: compact ? 10 : (tight ? 14 : 20)),
+              CircleAvatar(
+                radius: compact ? 22 : (tight ? 24 : 30),
+                backgroundColor: AppTheme.yellow,
+                child: Text(
+                  initialsOf(widget.user.displayName),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: AppTheme.black,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
-              _status(theme),
-            ],
-            const SizedBox(height: 16),
-            if (_pendingLeave != null)
-              ..._confirmLeave(theme, fg)
-            else ...[
-              TextButton(
-                key: const Key('lock-forgot'),
-                onPressed: _busy
-                    ? null
-                    : () => setState(() => _pendingLeave = widget.onForgotPin),
-                style: TextButton.styleFrom(foregroundColor: fg),
-                child: Text(tr('Lupa PIN? Verifikasi ulang')),
+              Text(
+                trf('Selamat datang kembali, {0}', [
+                  _first(widget.user.displayName),
+                ]),
+                key: const Key('lock-welcome'),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge?.copyWith(color: fg),
               ),
-              TextButton(
-                key: const Key('lock-switch'),
-                onPressed: _busy
-                    ? null
-                    : () => setState(
-                        () => _pendingLeave = widget.onSwitchAccount,
-                      ),
-                style: TextButton.styleFrom(foregroundColor: fg),
-                child: Text(tr('Bukan kamu? Ganti akun')),
-              ),
+              if (widget.user.maskedEmail.isNotEmpty)
+                Text(
+                  widget.user.maskedEmail,
+                  key: const Key('lock-masked-email'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: fg.withValues(alpha: 0.75),
+                  ),
+                ),
+              SizedBox(height: tight ? 10 : 24),
+              if (!_loaded)
+                const CircularProgressIndicator(color: fg)
+              else if (!_hasPin)
+                ..._noPin(theme)
+              else ...[
+                IgnorePointer(
+                  ignoring: _busy,
+                  child: PinPad(
+                    foreground: fg,
+                    enabled: !waiting && !_busy,
+                    onCompleted: _submit,
+                    onBiometric: _bio ? _tryBiometric : null,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _status(theme),
+              ],
+              const SizedBox(height: 8),
+              if (_pendingLeave != null)
+                ..._confirmLeave(theme, fg)
+              else ...[
+                TextButton(
+                  key: const Key('lock-forgot'),
+                  onPressed: _busy
+                      ? null
+                      : () =>
+                            setState(() => _pendingLeave = widget.onForgotPin),
+                  style: TextButton.styleFrom(foregroundColor: fg),
+                  child: Text(tr('Lupa PIN? Verifikasi ulang')),
+                ),
+                TextButton(
+                  key: const Key('lock-switch'),
+                  onPressed: _busy
+                      ? null
+                      : () => setState(
+                          () => _pendingLeave = widget.onSwitchAccount,
+                        ),
+                  style: TextButton.styleFrom(foregroundColor: fg),
+                  child: Text(tr('Bukan kamu? Ganti akun')),
+                ),
+              ],
+              SponsorInCard(loader: widget.sponsorLoader),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -330,7 +345,7 @@ class _LockScreenState extends State<LockScreen> {
       tr('Verifikasi emailmu untuk melanjutkan.'),
       textAlign: TextAlign.center,
       style: theme.textTheme.bodyMedium?.copyWith(
-        color: AppTheme.paper.withValues(alpha: 0.85),
+        color: AppTheme.black.withValues(alpha: 0.85),
       ),
     ),
     const SizedBox(height: 16),
@@ -350,7 +365,7 @@ class _LockScreenState extends State<LockScreen> {
 
   Widget _status(ThemeData theme) {
     final style = theme.textTheme.bodyMedium?.copyWith(
-      color: AppTheme.paper.withValues(alpha: 0.85),
+      color: AppTheme.black.withValues(alpha: 0.85),
     );
     final lines = <String>[];
     if (_waitUntil != null) {
