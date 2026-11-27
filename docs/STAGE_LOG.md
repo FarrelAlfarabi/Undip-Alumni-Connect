@@ -430,5 +430,10 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 - Farrel: "Disable it for now". Measured with the CPU slowed 4x, the always-on accessibility tree used 44% of main-thread time while scrolling Members, 43% on Home idle, 35% on the first Explore visit. Now `kAlwaysOnSemantics` (lib/config/feature_flags.dart) is false. Flutter's hidden "Enable accessibility" button still turns the tree on for a screen reader (or Tab to it, then Enter).
 - Back on with `--dart-define=ALWAYS_ON_SEMANTICS=true` or the Vercel variable ALWAYS_ON_SEMANTICS=true. TEMPORARY: legal accessibility risk, re-check with the audit (docs/LEGAL_AUDIT.md) before launch. No migration.
 
+
+## 2026-11-27 Sponsors on landing, lock screen and Home top (PREVIEW, not merged)
+- New `SponsorSlot` (lib/widgets/sponsor_slot.dart): the sponsor carousel for signed-out screens. Welcome and PIN lock pin it to the bottom on phones and put it at the bottom of the centred card on tablet and desktop. Home keeps its old place under the tiles (Farrel, 27 Nov). On the start screens the sponsor is seamless (no border, bar or background, picture shown whole, small and low). Lock screen uses the normal page colour. Welcome lost the "uji coba" box.
+- No migration: `home_sponsors()` and `sponsor_event()` were already open to signed-out visitors. Same rules: view counted once while visible, tap only after "Buka", cap 10, anonymous counts. Nothing shows when there is no sponsor or the load fails. Welcome spacing tightened so "Mulai" stays on screen above the card. Screenshots: /mnt/project-files/previews/sponsors-2026-11-27/.
+
 ## 2026-11-27 Sponsor carousel slides again after a touch
 - Farrel: the carousel must move again 5 s after being selected or touched. It only restarted on the finger-up event, so a lost up event (dialog, new tab) stopped it for good. Now every touch event restarts a 5 s wait, then it slides again. Counting logic untouched. No migration.

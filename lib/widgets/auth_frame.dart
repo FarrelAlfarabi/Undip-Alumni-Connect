@@ -16,6 +16,7 @@ class AuthFrame extends StatelessWidget {
     this.phoneColor,
     this.cardColor = AppTheme.paperRaised,
     this.phonePadding = const EdgeInsets.all(24),
+    this.phoneAlignment = Alignment.center,
   });
 
   final Widget child;
@@ -31,6 +32,10 @@ class AuthFrame extends StatelessWidget {
 
   final EdgeInsets phonePadding;
 
+  /// Where the content sits on a phone. A little below centre puts the main
+  /// button or the PIN pad within easier thumb reach.
+  final Alignment phoneAlignment;
+
   static const double _cardPadding = 36;
 
   @override
@@ -44,7 +49,8 @@ class AuthFrame extends StatelessWidget {
         );
         if (!wide) {
           final body = SafeArea(
-            child: Center(
+            child: Align(
+              alignment: phoneAlignment,
               child: SingleChildScrollView(
                 padding: phonePadding,
                 child: content,
