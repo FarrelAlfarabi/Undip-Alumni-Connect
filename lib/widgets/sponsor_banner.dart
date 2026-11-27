@@ -37,6 +37,7 @@ class SponsorBanner extends StatelessWidget {
     required this.onOpen,
     this.onShown,
     this.autoAdvance = const Duration(seconds: 5),
+    this.maxWidth = kSponsorMaxWidth,
   });
 
   /// Rows from `home_sponsors()`: id, name, image_url, link_url.
@@ -44,6 +45,9 @@ class SponsorBanner extends StatelessWidget {
   final void Function(Map<String, dynamic> sponsor) onOpen;
   final void Function(Map<String, dynamic> sponsor)? onShown;
   final Duration autoAdvance;
+
+  /// Widest the card gets (Home uses the default; start screens go smaller).
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +65,7 @@ class SponsorBanner extends StatelessWidget {
     );
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: kSponsorMaxWidth),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: carousel,
       ),
     );

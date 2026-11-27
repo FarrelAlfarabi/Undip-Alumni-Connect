@@ -355,6 +355,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 8),
+                      // First thing on Home (Farrel, 27 Nov 2026). Hidden while the profile
+                      // is incomplete (first login) and when there is no sponsor or
+                      // the load failed.
+                      if (!_profileIncomplete)
+                        FutureBuilder<List<Map<String, dynamic>>>(
+                          future: _sponsors,
+                          builder: (context, snap) {
+                            final items = snap.data ?? const [];
+                            if (items.isEmpty) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: SponsorBanner(
+                                items: items,
+                                autoAdvance: widget.autoAdvance,
+                                onOpen: _openSponsor,
+                                onShown: _sponsorShown,
+                              ),
+                            );
+                          },
+                        ),
                       FutureBuilder<int>(
                         future: _pendingRequests,
                         builder: (context, snap) {
@@ -428,25 +448,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         onKontakIkafe: () =>
                             _push(widget.pages.kontakIkafe(_user)),
                       ),
-                      // Hidden while the profile is incomplete (first login) and
-                      // when there is no sponsor or the load failed.
-                      if (!_profileIncomplete)
-                        FutureBuilder<List<Map<String, dynamic>>>(
-                          future: _sponsors,
-                          builder: (context, snap) {
-                            final items = snap.data ?? const [];
-                            if (items.isEmpty) return const SizedBox.shrink();
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: SponsorBanner(
-                                items: items,
-                                autoAdvance: widget.autoAdvance,
-                                onOpen: _openSponsor,
-                                onShown: _sponsorShown,
-                              ),
-                            );
-                          },
-                        ),
                       const SizedBox(height: 12),
                       _BusinessEntry(
                         future: _business,

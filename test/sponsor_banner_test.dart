@@ -174,21 +174,24 @@ void main() {
   });
 
   group('Home', () {
-    testWidgets('sponsor carousel sits right under the four tiles', (
-      tester,
-    ) async {
-      await pumpHome(
-        tester,
-        api: FakeHomeApi(sponsors: [sponsorMap(1), sponsorMap(2)]),
-        profile: complete,
-      );
-      final tiles = tester.getBottomLeft(
-        find.byKey(const Key('tile-kontak-ikafe')),
-      );
-      final banner = tester.getTopLeft(find.byKey(const Key('sponsor-pages')));
-      expect(banner.dy, greaterThan(tiles.dy));
-      expect(banner.dy - tiles.dy, lessThan(40));
-    });
+    testWidgets(
+      'sponsor carousel is the first thing on Home, above the four tiles',
+      (tester) async {
+        await pumpHome(
+          tester,
+          api: FakeHomeApi(sponsors: [sponsorMap(1), sponsorMap(2)]),
+          profile: complete,
+        );
+        final tiles = tester.getTopLeft(
+          find.byKey(const Key('tile-kontak-ikafe')),
+        );
+        final banner = tester.getTopLeft(
+          find.byKey(const Key('sponsor-pages')),
+        );
+        expect(banner.dy, lessThan(tiles.dy));
+        expect(banner.dy, lessThan(260));
+      },
+    );
 
     testWidgets('no sponsors or a failed load: nothing shown', (tester) async {
       await pumpHome(tester, api: FakeHomeApi(), profile: complete);
