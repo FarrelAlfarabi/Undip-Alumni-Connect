@@ -18,8 +18,10 @@ const kSponsorCardAspectRatio = 1.6;
 /// banner and does not take the whole first screen.
 const double kSponsorMaxWidth = 480;
 
-/// Picture (16:9) plus the small caption above it.
-const kSeamlessAspectRatio = 1.5;
+/// Wide, low strip: the small caption above a picture shown whole (not
+/// cropped), on no background, so a logo with a transparent background sits
+/// straight on the page.
+const kSeamlessAspectRatio = 2.2;
 
 const _softYellow = Color(0xFFFFF6D6);
 
@@ -218,19 +220,16 @@ class _SeamlessSponsor extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: url.isEmpty
-                    ? const SizedBox.shrink()
-                    : CachedNetworkImage(
-                        imageUrl: url,
-                        fit: BoxFit.cover,
-                        memCacheWidth: (800 * dpr).round(),
-                        fadeInDuration: Duration.zero,
-                        placeholder: (_, _) => const SizedBox.shrink(),
-                        errorWidget: (_, _, _) => const SizedBox.shrink(),
-                      ),
-              ),
+              child: url.isEmpty
+                  ? const SizedBox.shrink()
+                  : CachedNetworkImage(
+                      imageUrl: url,
+                      fit: BoxFit.contain,
+                      memCacheWidth: (800 * dpr).round(),
+                      fadeInDuration: Duration.zero,
+                      placeholder: (_, _) => const SizedBox.shrink(),
+                      errorWidget: (_, _, _) => const SizedBox.shrink(),
+                    ),
             ),
           ],
         ),

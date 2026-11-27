@@ -195,7 +195,7 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const fg = AppTheme.paper;
+    const fg = AppTheme.black;
     final waiting = _waitUntil != null;
     // Short phones (about 568 px tall): drop the big mark, shrink the avatar.
     final compact = MediaQuery.sizeOf(context).height < 640;
@@ -205,13 +205,10 @@ class _LockScreenState extends State<LockScreen> {
 
     return Scaffold(
       key: const Key('lock-screen'),
-      backgroundColor: AppTheme.black,
       body: SponsorFooterFrame(
         loader: widget.sponsorLoader,
-        dark: true,
         child: AuthFrame(
           maxWidth: 380,
-          cardColor: AppTheme.black,
           phonePadding: const EdgeInsets.symmetric(
             horizontal: 24,
             vertical: 16,
@@ -220,7 +217,7 @@ class _LockScreenState extends State<LockScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (!compact && !tight) ...[
-                const KawungMark(size: 32, color: AppTheme.yellow),
+                const KawungMark(size: 32, color: AppTheme.black),
                 const SizedBox(height: 6),
               ],
               Text(
@@ -303,7 +300,7 @@ class _LockScreenState extends State<LockScreen> {
                   child: Text(tr('Bukan kamu? Ganti akun')),
                 ),
               ],
-              SponsorInCard(loader: widget.sponsorLoader, dark: true),
+              SponsorInCard(loader: widget.sponsorLoader),
             ],
           ),
         ),
@@ -347,7 +344,7 @@ class _LockScreenState extends State<LockScreen> {
       tr('Verifikasi emailmu untuk melanjutkan.'),
       textAlign: TextAlign.center,
       style: theme.textTheme.bodyMedium?.copyWith(
-        color: AppTheme.paper.withValues(alpha: 0.85),
+        color: AppTheme.black.withValues(alpha: 0.85),
       ),
     ),
     const SizedBox(height: 16),
@@ -367,7 +364,7 @@ class _LockScreenState extends State<LockScreen> {
 
   Widget _status(ThemeData theme) {
     final style = theme.textTheme.bodyMedium?.copyWith(
-      color: AppTheme.paper.withValues(alpha: 0.85),
+      color: AppTheme.black.withValues(alpha: 0.85),
     );
     final lines = <String>[];
     if (_waitUntil != null) {

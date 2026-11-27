@@ -9,7 +9,7 @@ import 'sponsor_banner.dart';
 /// Widest the sponsor card gets on the start screens (Welcome and PIN lock),
 /// so it sits neatly above the form on a phone and inside the card on a
 /// wide screen.
-const double kSponsorSlotMaxWidth = 216;
+const double kSponsorSlotMaxWidth = 200;
 
 /// Loads the live sponsors. The database function `home_sponsors()` is open
 /// to signed-out visitors, so this works before login.
@@ -160,7 +160,7 @@ class SponsorFooterFrame extends StatelessWidget {
             SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
                 child: SponsorSlot(
                   key: const Key('start-sponsors'),
                   loader: loader,

@@ -147,4 +147,30 @@ void main() {
       lessThanOrEqualTo(card.top),
     );
   });
+
+  testWidgets('Welcome: Mulai stays centred across and easy to press', (
+    t,
+  ) async {
+    await pumpAt(t, const Size(390, 844), WelcomeScreen(sponsorLoader: two));
+    final r = t.getRect(find.widgetWithText(FilledButton, 'Mulai'));
+    expect(r.center.dx, closeTo(195, 1));
+    expect(r.height, greaterThanOrEqualTo(48));
+    expect(r.bottom, lessThan(844 * 0.85));
+    // The seamless sponsor is small: well under 130 px tall with its dots.
+    expect(t.getRect(find.byType(BannerCarousel)).height, lessThan(110));
+  });
+
+  testWidgets('Welcome has no "uji coba" notice', (t) async {
+    await pumpAt(t, const Size(390, 844), WelcomeScreen(sponsorLoader: two));
+    expect(find.textContaining('uji coba'), findsNothing);
+  });
+
+  testWidgets('lock screen uses the same page colour as the other pages', (
+    t,
+  ) async {
+    await pumpAt(t, const Size(390, 844), await lockScreen(two));
+    final scaffold = t.widget<Scaffold>(find.byKey(const Key('lock-screen')));
+    expect(scaffold.backgroundColor, isNull); // theme page colour
+    expect(find.textContaining('uji coba'), findsNothing);
+  });
 }

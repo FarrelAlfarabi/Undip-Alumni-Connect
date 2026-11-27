@@ -1,5 +1,4 @@
 import '../nav/back_guard.dart';
-import '../widgets/closed_test_notice.dart';
 import '../util/app_language.dart';
 
 import 'package:flutter/material.dart';
@@ -114,8 +113,6 @@ class WelcomeScreen extends StatelessWidget {
                   child: Text(tr('Mulai')),
                 ),
               ),
-              const SizedBox(height: 12),
-              const ClosedTestNotice(),
               const SizedBox(height: 12),
               FutureBuilder<AppInfo>(
                 future: AppInfo.load(),
