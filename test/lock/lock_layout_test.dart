@@ -6,12 +6,19 @@ import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:undip_alumni_connect/lock/pin_setup_screen.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 import 'package:undip_alumni_connect/theme.dart';
+import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
 
+import '../support/fake_home.dart';
 import '../support/fake_lock.dart';
 
 /// Phone-width layout checks: no overflow at small sizes and large text.
 void main() {
-  const sizes = [Size(320, 568), Size(360, 640), Size(390, 844)];
+  const sizes = [
+    Size(320, 568),
+    Size(360, 640),
+    Size(360, 700),
+    Size(390, 844),
+  ];
 
   Future<void> pumpAt(
     WidgetTester tester,
@@ -60,6 +67,40 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(find.byKey(const Key('pin-biometric')), findsOneWidget);
+    });
+
+    testWidgets('lock screen: PIN pad sits low, links stay on screen, $label', (
+      tester,
+    ) async {
+      final lock = await makeRememberedLock();
+      await pumpAt(
+        tester,
+        size,
+        LockScreen(
+          lock: lock,
+          user: (await lock.load())!,
+          autoBiometric: false,
+          sponsorLoader: () async => [sponsorMap(1), sponsorMap(2)],
+          onUnlocked: () async {},
+          onSwitchAccount: () async {},
+          onForgotPin: () async {},
+          onLockedOut: () async {},
+          onContinue: () async {},
+        ),
+        textScale: 1,
+      );
+      expect(tester.takeException(), isNull);
+      final switchLink = tester.getRect(find.byKey(const Key('lock-switch')));
+      final card = tester.getRect(find.byType(BannerCarousel));
+      // From 700 px tall, both links end above the sponsor card (no scroll)
+      // and the PIN block sits right above the card, not high on the screen.
+      // Shorter phones scroll, as before.
+      if (size.height >= 700) {
+        expect(switchLink.bottom, lessThanOrEqualTo(card.top));
+        expect(card.top - switchLink.bottom, lessThan(40));
+      }
+      // PIN block hugs the links (nothing but a short gap between).
+      expect(find.byKey(const Key('lock-forgot')), findsOneWidget);
     });
 
     testWidgets('lock screen during a wrong-PIN wait, $label', (tester) async {

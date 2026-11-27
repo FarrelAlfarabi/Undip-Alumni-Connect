@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../platform/breakpoints.dart';
@@ -17,6 +19,7 @@ class AuthFrame extends StatelessWidget {
     this.cardColor = AppTheme.paperRaised,
     this.phonePadding = const EdgeInsets.all(24),
     this.phoneAlignment = Alignment.center,
+    this.phoneFill = false,
   });
 
   final Widget child;
@@ -36,6 +39,11 @@ class AuthFrame extends StatelessWidget {
   /// button or the PIN pad within easier thumb reach.
   final Alignment phoneAlignment;
 
+  /// Phone only: the content is at least as tall as the screen, so a Column
+  /// with Spacers can push part of it to the bottom. Still scrolls when the
+  /// content is taller than the screen.
+  final bool phoneFill;
+
   static const double _cardPadding = 36;
 
   @override
@@ -49,13 +57,28 @@ class AuthFrame extends StatelessWidget {
         );
         if (!wide) {
           final body = SafeArea(
-            child: Align(
-              alignment: phoneAlignment,
-              child: SingleChildScrollView(
-                padding: phonePadding,
-                child: content,
-              ),
-            ),
+            child: phoneFill
+                ? LayoutBuilder(
+                    builder: (context, box) => SingleChildScrollView(
+                      padding: phonePadding,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: math.max(
+                            0,
+                            box.maxHeight - phonePadding.vertical,
+                          ),
+                        ),
+                        child: IntrinsicHeight(child: Center(child: content)),
+                      ),
+                    ),
+                  )
+                : Align(
+                    alignment: phoneAlignment,
+                    child: SingleChildScrollView(
+                      padding: phonePadding,
+                      child: content,
+                    ),
+                  ),
           );
           return phoneColor == null
               ? body

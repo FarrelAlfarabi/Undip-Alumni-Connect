@@ -13,6 +13,7 @@ class PinPad extends StatefulWidget {
     this.enabled = true,
     this.onBiometric,
     this.foreground,
+    this.keyHeight = 64,
   });
 
   final Future<void> Function(String pin) onCompleted;
@@ -21,6 +22,9 @@ class PinPad extends StatefulWidget {
 
   /// Colour of dots and digits; defaults to the theme's `onSurface`.
   final Color? foreground;
+
+  /// Height of one key row. Short phones use a smaller value.
+  final double keyHeight;
 
   @override
   State<PinPad> createState() => _PinPadState();
@@ -174,7 +178,7 @@ class _PinPadState extends State<PinPad> {
                 widget.enabled ? widget.onBiometric : null,
               )
             else
-              const SizedBox(width: 76, height: 64),
+              SizedBox(width: 76, height: widget.keyHeight),
             _key('0', dim),
             _iconKey(
               const Key('pin-back'),
@@ -192,7 +196,7 @@ class _PinPadState extends State<PinPad> {
   Widget _key(String d, Color color) {
     return SizedBox(
       width: 76,
-      height: 64,
+      height: widget.keyHeight,
       child: TextButton(
         key: Key('pin-$d'),
         onPressed: () => _digit(d),
@@ -221,7 +225,7 @@ class _PinPadState extends State<PinPad> {
     // tooltips need one.
     return SizedBox(
       width: 76,
-      height: 64,
+      height: widget.keyHeight,
       child: Semantics(
         label: label,
         button: true,
