@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/lock/lock_config.dart';
 import 'package:undip_alumni_connect/lock/lock_screen.dart';
 import 'package:undip_alumni_connect/lock/lock_store.dart';
-import 'package:undip_alumni_connect/lock/pin_pad.dart';
 import 'package:undip_alumni_connect/lock/pin_setup_screen.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 import 'package:undip_alumni_connect/theme.dart';
