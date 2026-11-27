@@ -173,4 +173,14 @@ void main() {
     expect(scaffold.backgroundColor, isNull); // theme page colour
     expect(find.textContaining('uji coba'), findsNothing);
   });
+
+  testWidgets('phone: Mulai and the PIN pad sit in the lower half', (t) async {
+    await pumpAt(t, const Size(390, 844), WelcomeScreen(sponsorLoader: two));
+    expect(t.getCenter(find.text('Mulai')).dy, greaterThan(844 * 0.7));
+    await pumpAt(t, const Size(390, 844), await lockScreen(two));
+    expect(
+      t.getCenter(find.byKey(const Key('pin-5'))).dy,
+      greaterThan(844 * 0.45),
+    );
+  });
 }

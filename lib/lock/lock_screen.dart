@@ -213,6 +213,7 @@ class _LockScreenState extends State<LockScreen> {
             horizontal: 24,
             vertical: 16,
           ),
+          phoneAlignment: const Alignment(0, 0.9),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

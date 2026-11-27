@@ -37,6 +37,7 @@ class WelcomeScreen extends StatelessWidget {
             horizontal: 28,
             vertical: 12,
           ),
+          phoneAlignment: const Alignment(0, 0.9),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
