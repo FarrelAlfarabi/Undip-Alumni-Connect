@@ -433,3 +433,6 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 ## 2026-11-27 Sponsors on landing, lock screen and Home top (PREVIEW, not merged)
 - New `SponsorSlot` (lib/widgets/sponsor_slot.dart): the sponsor carousel for signed-out screens. Welcome and PIN lock pin it to the bottom on phones and put it at the bottom of the centred card on tablet and desktop. Home now shows it first, above announcements and tiles.
 - No migration: `home_sponsors()` and `sponsor_event()` were already open to signed-out visitors. Same rules: view counted once while visible, tap only after "Buka", cap 10, anonymous counts. Nothing shows when there is no sponsor or the load fails. Welcome spacing tightened so "Mulai" stays on screen above the card. Screenshots: /mnt/project-files/previews/sponsors-2026-11-27/.
+
+## 2026-11-27 Sponsor carousel slides again after a touch
+- Farrel: the carousel must move again 5 s after being selected or touched. It only restarted on the finger-up event, so a lost up event (dialog, new tab) stopped it for good. Now every touch event restarts a 5 s wait, then it slides again. Counting logic untouched. No migration.

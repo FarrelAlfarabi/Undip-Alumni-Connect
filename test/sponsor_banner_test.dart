@@ -154,6 +154,81 @@ void main() {
     });
   });
 
+  group('resumes after the user touches it', () {
+    Future<void> pump5(WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SponsorBanner(
+              items: [sponsorMap(1), sponsorMap(2), sponsorMap(3)],
+              onOpen: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    Future<void> after(WidgetTester tester, int ms) async {
+      await tester.pump(Duration(milliseconds: ms));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('after a swipe it slides again 5 s later', (tester) async {
+      await pump5(tester);
+      await tester.drag(
+        find.byKey(const Key('sponsor-pages')),
+        const Offset(-300, 0),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
+      await after(tester, 4000);
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
+      await after(tester, 1000);
+      expect(find.textContaining('Sponsor 3'), findsOneWidget);
+    });
+
+    testWidgets('a press held for 5 s does not stop it for good', (
+      tester,
+    ) async {
+      await pump5(tester);
+      final g = await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('sponsor-pages'))),
+      );
+      await after(tester, 4000);
+      expect(find.textContaining('Sponsor 1'), findsOneWidget);
+      await after(tester, 1500);
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
+      await g.up();
+    });
+
+    testWidgets('a new touch restarts the 5 s wait', (tester) async {
+      await pump5(tester);
+      await after(tester, 3000);
+      await tester.tapAt(
+        tester.getCenter(find.byKey(const Key('sponsor-pages'))),
+      );
+      await after(tester, 4000);
+      expect(find.textContaining('Sponsor 1'), findsOneWidget);
+      await after(tester, 1000);
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
+    });
+
+    testWidgets('a press that never gets its up event still resumes', (
+      tester,
+    ) async {
+      await pump5(tester);
+      await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('sponsor-pages'))),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      // Pointer lost: no up, no cancel. Resume 5 s after the last touch
+      // activity still has to happen, not wait for ever.
+      await after(tester, 4200);
+      expect(find.textContaining('Sponsor 2'), findsOneWidget);
+    });
+  });
+
   group('mouse', () {
     testWidgets('a mouse drag moves the carousel (laptop)', (tester) async {
       await pumpBanner(tester, [sponsorMap(1), sponsorMap(2), sponsorMap(3)]);
