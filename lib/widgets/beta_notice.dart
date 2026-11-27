@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../util/app_language.dart';
 
-/// Shown on Welcome and on the consent screen. This is a closed test: the
-/// database cannot yet keep other people with the app key away from what
-/// testers type in, so testers are asked to use test details only.
-class ClosedTestNotice extends StatelessWidget {
-  const ClosedTestNotice({super.key});
+/// Light beta note, shown on the consent screen: the app is a beta, it may
+/// have bugs, and feedback goes through "Kirim masukan".
+class BetaNotice extends StatelessWidget {
+  const BetaNotice({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      key: const Key('closed-test-notice'),
+      key: const Key('beta-notice'),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.secondaryContainer,
@@ -30,12 +29,10 @@ class ClosedTestNotice extends StatelessWidget {
           Expanded(
             child: Text(
               tr(
-                'This is a closed test. Please use test contact details. Do not '
-                'upload a real CV or enter a real phone number yet. '
-                '(Ini uji coba tertutup. Gunakan data kontak percobaan, jangan '
-                'unggah CV asli atau isi nomor telepon asli.)',
+                'Lingkaran masih versi beta dan mungkin masih ada bug. Kalau ada '
+                'yang terlihat salah, kirim masukan lewat tombol "Kirim masukan".',
               ),
-              key: const Key('closed-test-text'),
+              key: const Key('beta-text'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSecondaryContainer,
               ),

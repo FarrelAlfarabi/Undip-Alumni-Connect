@@ -332,15 +332,12 @@ final Map<String, String> kEnglish = {
   'Kode tidak masuk atau email berubah?':
       'Code did not arrive or email changed?',
   'Belum masuk? Cek folder spam atau junk. Kode berlaku untuk waktu terbatas.': 'Not arrived? Check your spam or junk folder. The code is valid for a limited time.',
-  'Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.':
-      'Temporary look, not an official UNDIP or Ikafe identity.',
-  'Beta tertutup. Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.':
-      'Closed beta. Temporary look, not an official UNDIP or Ikafe identity.',
-  'Beta tertutup · data awal dari anggota Ikafe':
-      'Closed beta · starting data from Ikafe members',
+  'Beta. Bukan layanan resmi Universitas Diponegoro.':
+      'Beta. Not an official service of Universitas Diponegoro.',
+  'Lingkaran masih versi beta dan mungkin masih ada bug. Kalau ada yang terlihat salah, kirim masukan lewat tombol "Kirim masukan".':
+      'Lingkaran is still in beta and may have bugs. If something looks wrong, send feedback with the "Send feedback" button.',
   'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, dukung usaha alumni, dan rekomendasikan lowongan kerja.': 'Verify yourself, find alumni by major and year, support alumni businesses, and recommend jobs.',
   'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama': 'The FEB Undip alumni network to connect, share opportunities, and grow together',
-  'This is a closed test. Please use test contact details. Do not upload a real CV or enter a real phone number yet. (Ini uji coba tertutup. Gunakan data kontak percobaan, jangan unggah CV asli atau isi nomor telepon asli.)': 'This is a closed test. Please use test contact details. Do not upload a real CV or enter a real phone number yet.',
   'Laporkan': 'Report',
   'Blokir': 'Block',
   'Kamu tidak akan melihat profil, lowongan, produk atau usahanya, dan dia tidak bisa mengirim permintaan kontak kepadamu. Dia tidak diberi tahu. Kamu bisa membuka blokirnya lagi di Profile > Pengguna terblokir.': 'You will not see their profile, jobs, products or business, and they cannot send you contact requests. They are not told. You can unblock them in Profile > Blocked users.',

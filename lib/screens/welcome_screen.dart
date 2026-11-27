@@ -130,7 +130,7 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 tr(
-                  'Tampilan sementara, bukan identitas resmi UNDIP atau Ikafe.',
+                  'Beta. Bukan layanan resmi Universitas Diponegoro.',
                 ),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(

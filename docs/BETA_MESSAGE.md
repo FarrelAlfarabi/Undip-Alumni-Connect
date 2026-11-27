@@ -1,3 +1,5 @@
+> Superseded 28 Nov 2026: real login is live and the beta is released. Kept as history. Do not tell users to use test data.
+
 # Messages for the beta
 
 Two drafts. Fill the brackets. Plain words, no jargon.

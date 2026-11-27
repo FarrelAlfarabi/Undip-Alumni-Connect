@@ -33,9 +33,8 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     tr(
-                      'This is a closed beta for a small group of FEB UNDIP '
-                      'alumni. Things can change or break. Use "Send feedback" '
-                      'when something looks wrong.',
+                      'Lingkaran is still in beta. Things can change and bugs may '
+                      'appear. Use "Send feedback" when something looks wrong.',
                     ),
                     style: theme.textTheme.bodyMedium,
                   ),
