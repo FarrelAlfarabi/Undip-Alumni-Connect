@@ -75,6 +75,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
   final _controller = PageController();
   Timer? _timer;
   Timer? _visTimer;
+  Timer? _resumeTimer;
   int _page = 0;
   int? _reportedPage;
 
@@ -140,26 +141,46 @@ class _BannerCarouselState extends State<BannerCarousel> {
   @override
   void dispose() {
     _timer?.cancel();
+    _resumeTimer?.cancel();
     _visTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
+  /// The user touched the carousel: stop sliding, and slide again
+  /// [BannerCarousel.autoAdvance] after the last touch event. The up event can
+  /// get lost (a dialog or a new tab takes it), so a lone press must never
+  /// stop the carousel for good.
+  void _userTouched() {
+    _timer?.cancel();
+    _timer = null;
+    _resumeTimer?.cancel();
+    _resumeTimer = Timer(widget.autoAdvance, () {
+      _advance();
+      _startTimer();
+    });
+  }
+
   void _startTimer() {
     _timer?.cancel();
     _timer = null;
+    _resumeTimer?.cancel();
+    _resumeTimer = null;
     if (widget.items.length < 2) return;
-    _timer = Timer.periodic(widget.autoAdvance, (_) {
-      if (!mounted || !_controller.hasClients) return;
-      if (MediaQuery.disableAnimationsOf(context)) return;
-      if (!_inView) return;
-      final next = (_page + 1) % widget.items.length;
-      _controller.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOut,
-      );
-    });
+    _timer = Timer.periodic(widget.autoAdvance, (_) => _advance());
+  }
+
+  void _advance() {
+    if (!mounted || !_controller.hasClients) return;
+    if (widget.items.length < 2) return;
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    if (!_inView) return;
+    final next = (_page + 1) % widget.items.length;
+    _controller.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -168,9 +189,10 @@ class _BannerCarouselState extends State<BannerCarousel> {
     final scheme = Theme.of(context).colorScheme;
     final prefix = widget.keyPrefix;
     final pages = Listener(
-      onPointerDown: (_) => _timer?.cancel(),
-      onPointerUp: (_) => _startTimer(),
-      onPointerCancel: (_) => _startTimer(),
+      onPointerDown: (_) => _userTouched(),
+      onPointerMove: (_) => _userTouched(),
+      onPointerUp: (_) => _userTouched(),
+      onPointerCancel: (_) => _userTouched(),
       // A mouse can drag too (laptop). Flutter only lets touch drag a
       // PageView by default.
       child: ScrollConfiguration(
