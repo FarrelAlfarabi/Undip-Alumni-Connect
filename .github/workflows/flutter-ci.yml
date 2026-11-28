@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      real_login:
+        description: "Build the APK with REAL_LOGIN=true (email code login). Default off."
+        type: boolean
+        default: false
 
 concurrency:
   group: flutter-ci-${{ github.ref }}
@@ -170,17 +175,24 @@ jobs:
           # and MAP_ATTRIBUTION. Without them the map uses OpenStreetMap.
           MAP_TILE_URL: ${{ secrets.MAP_TILE_URL }}
           MAP_ATTRIBUTION: ${{ secrets.MAP_ATTRIBUTION }}
+          # Email code login. Off unless the run input or the repo variable
+          # REAL_LOGIN says true, so normal builds keep the old login.
+          REAL_LOGIN: ${{ inputs.real_login || vars.REAL_LOGIN || 'false' }}
         run: |
           DEFINES=(--dart-define=REAL_MAP=true)
+          if [ "$REAL_LOGIN" = "true" ]; then DEFINES+=("--dart-define=REAL_LOGIN=true"); echo "Building with REAL_LOGIN=true"; fi
           if [ -n "$MAP_TILE_URL" ]; then DEFINES+=("--dart-define=MAP_TILE_URL=$MAP_TILE_URL"); fi
           if [ -n "$MAP_ATTRIBUTION" ]; then DEFINES+=("--dart-define=MAP_ATTRIBUTION=$MAP_ATTRIBUTION"); fi
           flutter build apk --release --build-number "${{ github.run_number }}" "${DEFINES[@]}"
 
       - name: Name the APK
         id: name
+        env:
+          REAL_LOGIN: ${{ inputs.real_login || vars.REAL_LOGIN || 'false' }}
         run: |
+          SUFFIX=""; if [ "$REAL_LOGIN" = "true" ]; then SUFFIX="-reallogin"; fi
           VERSION="$(grep -m1 '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9.]+).*/\1/')"
-          NAME="lingkaran-${VERSION}+${{ github.run_number }}-release"
+          NAME="lingkaran-${VERSION}+${{ github.run_number }}-release${SUFFIX}"
           cp build/app/outputs/flutter-apk/app-release.apk "${NAME}.apk"
           echo "name=${NAME}" >> "$GITHUB_OUTPUT"
 
