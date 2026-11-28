@@ -162,7 +162,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('policy-draft-banner')), findsOneWidget);
       expect(
-        find.textContaining('Draft for the beta. The text may change.'),
+        find.textContaining('Beta version. The text may change.'),
         findsOneWidget,
       );
       expect(

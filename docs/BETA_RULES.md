@@ -1,4 +1,6 @@
-# Closed beta rules
+# Beta rules
+
+> Updated 28 Nov 2026: the app is released as a beta. Users are no longer told to avoid real data (real CV, phone number). The notes below about test data are history.
 
 Read this before you send the app to anyone. Two parts: what the operator does,
 and what testers are told.
@@ -41,9 +43,7 @@ understand that this opens every chat message to anyone with the key again.
 
 Copy this into the message that comes with the APK:
 
-- This is a closed test. Please use test contact details.
-- Do not upload a real CV. Use a dummy file.
-- Do not enter a real phone number. Use a made up one.
+- This is the beta version of Lingkaran. It may have bugs and things can change.
 - When you accept a request to contact, share only what you would put on a public profile.
 - Do not share the app file or the link with anyone.
 - If something fails, tap "Send feedback" on the error. If that does not work, send a screenshot to the contact email.

@@ -5,17 +5,17 @@
 Flutter + Supabase app for FEB UNDIP alumni (via Ikafe): a verified alumni
 directory, a job board, a business directory with UMKM bands, a marketplace
 for products from approved businesses, requests to contact, and an Ikafe
-announcements feed. **Closed beta (about 15 testers).** It is free: there is
+announcements feed. **Released as a beta (28 Nov 2026).** It is free: there is
 no subscription and no payment in the app. Chat is hidden and replaced by
-"request to contact". There is no real login yet, so read "Closed beta
-warning" below before inviting anyone. `PROJECT_NOTES.md` is a one-page summary (full log: `docs/archive/PROJECT_NOTES_FULL.md`),
+"request to contact". Sign in uses an emailed code (REAL_LOGIN). Read "Beta
+notes" below. `PROJECT_NOTES.md` is a one-page summary (full log: `docs/archive/PROJECT_NOTES_FULL.md`),
 `docs/STAGE_LOG.md` and `docs/DECISIONS.md` cover the free-launch work, and
 `DEMO_SCRIPT.md` is the walkthrough.
 
-## Closed beta warning
+## Beta notes
 
-Read `docs/BETA_RULES.md` before inviting anyone (operator checklist and what
-testers are told). The plan for real login is `docs/AUTH_MIGRATION_PLAN.md`.
+The notes below are partly history from the pre-login beta; see `docs/REAL_LOGIN.md`.
+Read `docs/BETA_RULES.md` (operator checklist). The plan for real login is `docs/AUTH_MIGRATION_PLAN.md`.
 After the beta hardening migrations (`20261005*`), `verification_status` can no
 longer be set by the app, and `email_log`, the chat tables and the notifications
 table are closed to the public key. Everything below that is still true stays

@@ -1,4 +1,4 @@
-import '../widgets/closed_test_notice.dart';
+import '../widgets/beta_notice.dart';
 import '../util/app_language.dart';
 
 import 'package:flutter/material.dart';
@@ -113,7 +113,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const ClosedTestNotice(),
+                    const BetaNotice(),
                     const SizedBox(height: 8),
                     if (!_readToEnd)
                       Padding(

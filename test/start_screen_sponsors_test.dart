@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/lock/lock_screen.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
-import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
-import 'package:undip_alumni_connect/widgets/sponsor_banner.dart';
+import 'package:undip_alumni_connect/widgets/sponsor_grid.dart';
 import 'package:undip_alumni_connect/widgets/sponsor_slot.dart';
 
 import 'support/fake_home.dart';
@@ -41,6 +40,15 @@ Future<Widget> lockScreen(SponsorLoader loader) async {
 }
 
 void main() {
+  test('grid columns: few sponsors in one row, at most 4 per row', () {
+    expect(sponsorGridColumns(1), 1);
+    expect(sponsorGridColumns(3), 3);
+    expect(sponsorGridColumns(4), 4);
+    expect(sponsorGridColumns(6), 3);
+    expect(sponsorGridColumns(7), 4);
+    expect(sponsorGridColumns(10), 4);
+  });
+
   const sizes = {
     'phone': Size(390, 844),
     'small phone': Size(360, 640),
@@ -49,8 +57,8 @@ void main() {
   for (final e in sizes.entries) {
     testWidgets('Welcome shows sponsors at the bottom, ${e.key}', (t) async {
       await pumpAt(t, e.value, WelcomeScreen(sponsorLoader: two));
-      expect(find.byType(SponsorBanner), findsOneWidget);
-      final banner = t.getRect(find.byType(BannerCarousel));
+      expect(find.byType(SponsorGrid), findsOneWidget);
+      final banner = t.getRect(find.byType(SponsorGrid));
       if (e.value.width < 1000) {
         expect(banner.bottom, greaterThan(e.value.height * 0.6));
       } else {
@@ -60,7 +68,10 @@ void main() {
           greaterThanOrEqualTo(banner.bottom),
         );
       }
-      expect(banner.width, lessThanOrEqualTo(kSponsorSlotMaxWidth));
+      expect(
+        t.getRect(find.byType(Wrap)).width,
+        lessThanOrEqualTo(kSponsorSlotMaxWidth),
+      );
       expect(find.text('Mulai'), findsOneWidget);
       // The button stays on screen, above the sponsor card (no scrolling
       // needed on a normal phone).
@@ -77,8 +88,8 @@ void main() {
       t,
     ) async {
       await pumpAt(t, e.value, await lockScreen(two));
-      expect(find.byType(SponsorBanner), findsOneWidget);
-      final banner = t.getRect(find.byType(BannerCarousel));
+      expect(find.byType(SponsorGrid), findsOneWidget);
+      final banner = t.getRect(find.byType(SponsorGrid));
       if (e.value.width < 1000) {
         expect(banner.bottom, greaterThan(e.value.height * 0.6));
       } else {
@@ -93,12 +104,12 @@ void main() {
 
   testWidgets('no sponsors or a failed load: screens are unchanged', (t) async {
     await pumpAt(t, const Size(390, 844), WelcomeScreen(sponsorLoader: none));
-    expect(find.byType(SponsorBanner), findsNothing);
+    expect(find.byType(SponsorGrid), findsNothing);
     await pumpAt(t, const Size(390, 844), WelcomeScreen(sponsorLoader: boom));
-    expect(find.byType(SponsorBanner), findsNothing);
+    expect(find.byType(SponsorGrid), findsNothing);
     expect(find.text('Mulai'), findsOneWidget);
     await pumpAt(t, const Size(390, 844), await lockScreen(boom));
-    expect(find.byType(SponsorBanner), findsNothing);
+    expect(find.byType(SponsorGrid), findsNothing);
     expect(t.takeException(), isNull);
   });
 
@@ -122,14 +133,14 @@ void main() {
       ),
     );
     await t.pump(const Duration(milliseconds: 400));
-    expect(events.where((e) => e.startsWith('view:')).length, 1);
-    await t.tap(find.byType(SponsorBanner));
+    expect(events.where((e) => e.startsWith('view:')).length, 2);
+    await t.tap(find.byType(InkWell).first);
     await t.pumpAndSettle();
     await t.tap(find.text('Batal'));
     await t.pumpAndSettle();
     expect(events.any((e) => e.startsWith('tap:')), isFalse);
     expect(opened, isEmpty);
-    await t.tap(find.byType(SponsorBanner));
+    await t.tap(find.byType(InkWell).first);
     await t.pumpAndSettle();
     await t.tap(find.text('Buka'));
     await t.pumpAndSettle();
@@ -141,7 +152,7 @@ void main() {
     t,
   ) async {
     await pumpAt(t, const Size(390, 844), await lockScreen(two));
-    final card = t.getRect(find.byType(BannerCarousel));
+    final card = t.getRect(find.byType(SponsorGrid));
     expect(
       t.getRect(find.byKey(const Key('lock-switch'))).bottom,
       lessThanOrEqualTo(card.top),
@@ -156,8 +167,8 @@ void main() {
     expect(r.center.dx, closeTo(195, 1));
     expect(r.height, greaterThanOrEqualTo(48));
     expect(r.bottom, lessThan(844 * 0.85));
-    // The seamless sponsor is small: well under 130 px tall with its dots.
-    expect(t.getRect(find.byType(BannerCarousel)).height, lessThan(110));
+    // Two sponsors: one short row (caption plus tiles of at most 110 px).
+    expect(t.getRect(find.byType(SponsorGrid)).height, lessThan(110));
   });
 
   testWidgets('Welcome has no "uji coba" notice', (t) async {

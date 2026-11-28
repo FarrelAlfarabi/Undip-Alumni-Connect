@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Sponsor grid on Welcome and PIN lock (28 Nov 2026)
+- SponsorSlot shows all sponsors at once as a still grid (SponsorGrid, white tiles, 4 per row, tiles at most 110 px for 1 to 3). Home keeps the carousel. Flag kStartScreensUseGrid.
+- Views: every sponsor counted once when half the grid is on screen; taps still ask first. On 360x640 the "Ganti akun" link needs a scroll.
+- Black-background demo logos made white (web/sponsors/*-white.jpg); PROD rows switched after deploy, rollback in /mnt/project-files/rollback/. No migration.
+
 ## Phone Back button map and first-run fix (26 Nov 2026)
 - docs/BACK_MAP.md lists what Back does on every screen; test/back_map_test.dart fails when a screen is missing from it.
 - Bug fixed: Consent, PIN offer and first profile left a stale Welcome under them, so Back walked to Welcome. They are now the first screen (Back asks to exit). Tests: test/back_first_run_test.dart.
@@ -441,3 +446,8 @@ Bug hunt: admin_members_list stopped at 1000 rows, so with 1885 members the ones
 ## 2026-11-27 Photo crop dimming and lock screen PIN position
 - Farrel: crop screen was dark only above, bright under the hint, slider and buttons. The dim layer stopped at the edge of the photo area; it now reaches past the whole screen, so only the circle is bright. Test reads real pixels.
 - Lock screen on phones: header floats in the free space, PIN pad and both links sit right above the sponsor card. Under 760 px tall: no avatar, smaller keys, so it fits without scrolling from 700 px. No migration.
+
+## 2026-11-28 Beta release prep (prod only)
+- Removed "closed test / use test data / no real CV" notes (consent screen, About, policy banner, docs). Added a light beta note ("masih versi beta, kirim masukan").
+- Privacy text (ID and EN) fixed: CVs are private, real email-code login, honest remaining limit. Policy version 2026-11-28 (users accept again).
+- Welcome line now "Beta. Bukan layanan resmi Universitas Diponegoro." No data or migration changes. `old-database` untouched.

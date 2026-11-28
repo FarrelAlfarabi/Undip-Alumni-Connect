@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -242,6 +243,19 @@ void main() {
       final src = File('vercel.json').readAsStringSync();
       expect(src, contains('"rewrites"'));
       expect(src, contains('"destination": "/index.html"'));
+    });
+
+    test('old Vercel host redirects to lingkaran-ikafe, keeping the path', () {
+      final json = jsonDecode(File('vercel.json').readAsStringSync()) as Map;
+      final redirects = (json['redirects'] as List).cast<Map>();
+      expect(redirects, hasLength(1));
+      final r = redirects.single;
+      expect(r['source'], '/(.*)');
+      expect(r['destination'], 'https://lingkaran-ikafe.vercel.app/\$1');
+      expect(r['permanent'], isFalse);
+      final has = (r['has'] as List).single as Map;
+      expect(has['type'], 'host');
+      expect(has['value'], 'undip-alumni-connect.vercel.app');
     });
   });
 }
