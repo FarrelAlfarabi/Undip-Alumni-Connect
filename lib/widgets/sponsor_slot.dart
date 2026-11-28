@@ -5,11 +5,16 @@ import '../platform/breakpoints.dart';
 import '../util/app_language.dart';
 import '../util/safe_url.dart';
 import 'sponsor_banner.dart';
+import 'sponsor_grid.dart';
+
+/// PREVIEW: Welcome and PIN lock show every sponsor at once as a still grid.
+/// Set to false to get the sliding carousel back.
+const bool kStartScreensUseGrid = true;
 
 /// Widest the sponsor card gets on the start screens (Welcome and PIN lock),
 /// so it sits neatly above the form on a phone and inside the card on a
 /// wide screen.
-const double kSponsorSlotMaxWidth = 200;
+const double kSponsorSlotMaxWidth = 320;
 
 /// Loads the live sponsors. The database function `home_sponsors()` is open
 /// to signed-out visitors, so this works before login.
@@ -112,6 +117,15 @@ class _SponsorSlotState extends State<SponsorSlot> {
   @override
   Widget build(BuildContext context) {
     if (_items.isEmpty) return const SizedBox.shrink();
+    if (kStartScreensUseGrid) {
+      return SponsorGrid(
+        items: _items,
+        onOpen: _open,
+        onShown: _shown,
+        maxWidth: widget.maxWidth,
+        captionColor: widget.dark ? const Color(0xB3FFFFFF) : null,
+      );
+    }
     return SponsorBanner(
       items: _items,
       onOpen: _open,
