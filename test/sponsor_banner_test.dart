@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:undip_alumni_connect/widgets/sponsor_banner.dart';
+import 'package:undip_alumni_connect/widgets/sponsor_grid.dart';
 
 import 'home_screen_test.dart' show pumpHome;
 import 'support/fake_home.dart';
@@ -249,9 +250,7 @@ void main() {
   });
 
   group('Home', () {
-    testWidgets('sponsor carousel sits right under the four tiles', (
-      tester,
-    ) async {
+    testWidgets('sponsor grid sits right under the four tiles', (tester) async {
       await pumpHome(
         tester,
         api: FakeHomeApi(sponsors: [sponsorMap(1), sponsorMap(2)]),
@@ -260,20 +259,35 @@ void main() {
       final tiles = tester.getBottomLeft(
         find.byKey(const Key('tile-kontak-ikafe')),
       );
-      final banner = tester.getTopLeft(find.byKey(const Key('sponsor-pages')));
+      final banner = tester.getTopLeft(find.byType(SponsorGrid));
       expect(banner.dy, greaterThan(tiles.dy));
       expect(banner.dy - tiles.dy, lessThan(40));
     });
 
+    testWidgets('shows every sponsor at once, no carousel', (tester) async {
+      await pumpHome(
+        tester,
+        api: FakeHomeApi(
+          sponsors: [sponsorMap(1), sponsorMap(2), sponsorMap(3)],
+        ),
+        profile: complete,
+      );
+      expect(find.text('DISPONSORI'), findsOneWidget);
+      expect(find.byKey(const Key('sponsor-pages')), findsNothing);
+      for (var i = 0; i < 3; i++) {
+        expect(find.byKey(Key('sponsor-tile-$i')), findsOneWidget);
+      }
+    });
+
     testWidgets('no sponsors or a failed load: nothing shown', (tester) async {
       await pumpHome(tester, api: FakeHomeApi(), profile: complete);
-      expect(find.byKey(const Key('sponsor-pages')), findsNothing);
+      expect(find.byType(SponsorGrid), findsNothing);
       await pumpHome(
         tester,
         api: FakeHomeApi(sponsorsError: Exception('x')),
         profile: complete,
       );
-      expect(find.byKey(const Key('sponsor-pages')), findsNothing);
+      expect(find.byType(SponsorGrid), findsNothing);
       expect(find.byKey(const Key('home-list')), findsOneWidget);
     });
 
@@ -290,13 +304,13 @@ void main() {
           return true;
         },
       );
-      await tester.tap(find.byKey(const Key('sponsor-hero-0')));
+      await tester.tap(find.byKey(const Key('sponsor-tile-0')));
       await tester.pumpAndSettle();
       expect(find.text('Buka tautan sponsor ini?'), findsOneWidget);
       await tester.tap(find.text('Batal'));
       await tester.pumpAndSettle();
       expect(opened, isEmpty);
-      await tester.tap(find.byKey(const Key('sponsor-hero-0')));
+      await tester.tap(find.byKey(const Key('sponsor-tile-0')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Buka'));
       await tester.pumpAndSettle();
@@ -314,20 +328,17 @@ void main() {
         openLink: (_) async => true,
         autoAdvance: const Duration(seconds: 3),
       );
-      expect(api.sponsorEvents, ['view:sp1']);
-      await tester.pump(const Duration(seconds: 3));
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 600));
+      // Every sponsor is counted once, at the same time, and not again later.
       expect(api.sponsorEvents, ['view:sp1', 'view:sp2']);
-      // Around to the first one again: not counted a second time.
-      await tester.pump(const Duration(seconds: 3));
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 6));
       expect(api.sponsorEvents, ['view:sp1', 'view:sp2']);
-      await tester.tap(find.byKey(const Key('sponsor-pages')));
+      await tester.tap(find.byKey(const Key('sponsor-tile-0')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Batal'));
       await tester.pumpAndSettle();
       expect(api.sponsorEvents.where((e) => e.startsWith('tap')), isEmpty);
-      await tester.tap(find.byKey(const Key('sponsor-pages')));
+      await tester.tap(find.byKey(const Key('sponsor-tile-0')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Buka'));
       await tester.pumpAndSettle();
@@ -349,7 +360,7 @@ void main() {
           return true;
         },
       );
-      await tester.tap(find.byKey(const Key('sponsor-hero-0')));
+      await tester.tap(find.byKey(const Key('sponsor-tile-0')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Buka'));
       await tester.pumpAndSettle();
@@ -362,7 +373,7 @@ void main() {
         api: FakeHomeApi(sponsors: [sponsorMap(1)]),
         profile: {'id': 'me', 'name': 'Ahmad Ramadhan'},
       );
-      expect(find.byKey(const Key('sponsor-pages')), findsNothing);
+      expect(find.byType(SponsorGrid), findsNothing);
     });
   });
 }
