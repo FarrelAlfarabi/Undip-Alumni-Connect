@@ -334,7 +334,8 @@ final Map<String, String> kEnglish = {
   'Belum masuk? Cek folder spam atau junk. Kode berlaku untuk waktu terbatas.': 'Not arrived? Check your spam or junk folder. The code is valid for a limited time.',
   'Beta. Bukan layanan resmi Universitas Diponegoro.':
       'Beta. Not an official service of Universitas Diponegoro.',
-  'Lingkaran masih versi beta dan mungkin masih ada bug. Kalau ada yang terlihat salah, kirim masukan lewat tombol "Kirim masukan".': 'Lingkaran is still in beta and may have bugs. If something looks wrong, send feedback with the "Send feedback" button.',
+  'Lingkaran masih versi beta dan mungkin masih ada bug. Kalau ada yang terlihat salah, kirim masukan lewat tombol "Kirim masukan".':
+      'Lingkaran is still in beta and may have bugs. If something looks wrong, send feedback with the "Send feedback" button.',
   'Verifikasi dirimu, cari alumni berdasarkan jurusan dan angkatan, dukung usaha alumni, dan rekomendasikan lowongan kerja.': 'Verify yourself, find alumni by major and year, support alumni businesses, and recommend jobs.',
   'Jejaring alumni FEB Undip untuk saling terhubung, berbagi peluang, dan tumbuh bersama': 'The FEB Undip alumni network to connect, share opportunities, and grow together',
   'Laporkan': 'Report',

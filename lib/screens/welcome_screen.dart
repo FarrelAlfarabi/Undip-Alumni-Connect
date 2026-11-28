@@ -129,7 +129,9 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                tr('Beta. Bukan layanan resmi Universitas Diponegoro.'),
+                tr(
+                  'Beta. Bukan layanan resmi Universitas Diponegoro.',
+                ),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant.withValues(
