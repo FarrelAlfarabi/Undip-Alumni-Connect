@@ -137,11 +137,15 @@ class _SponsorGridState extends State<SponsorGrid> {
                     spacing: _gap,
                     runSpacing: _gap,
                     children: [
-                      for (final s in items)
+                      for (var i = 0; i < items.length; i++)
                         SizedBox(
+                          key: Key('sponsor-tile-$i'),
                           width: tileW,
                           height: tileW * 9 / 16,
-                          child: _Tile(item: s, onTap: () => widget.onOpen(s)),
+                          child: _Tile(
+                            item: items[i],
+                            onTap: () => widget.onOpen(items[i]),
+                          ),
                         ),
                     ],
                   ),
