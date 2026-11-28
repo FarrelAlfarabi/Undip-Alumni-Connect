@@ -3,6 +3,14 @@
   "outputDirectory": "build/web",
   "installCommand": "echo 'no install step needed'",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "undip-alumni-connect.vercel.app" }],
+      "destination": "https://lingkaran-ikafe.vercel.app/$1",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
