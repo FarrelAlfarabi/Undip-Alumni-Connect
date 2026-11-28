@@ -6,7 +6,7 @@ import 'package:undip_alumni_connect/lock/lock_store.dart';
 import 'package:undip_alumni_connect/lock/pin_setup_screen.dart';
 import 'package:undip_alumni_connect/screens/welcome_screen.dart';
 import 'package:undip_alumni_connect/theme.dart';
-import 'package:undip_alumni_connect/widgets/banner_carousel.dart';
+import 'package:undip_alumni_connect/widgets/sponsor_grid.dart';
 
 import '../support/fake_home.dart';
 import '../support/fake_lock.dart';
@@ -91,7 +91,7 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       final switchLink = tester.getRect(find.byKey(const Key('lock-switch')));
-      final card = tester.getRect(find.byType(BannerCarousel));
+      final card = tester.getRect(find.byType(SponsorGrid));
       // From 700 px tall, both links end above the sponsor card (no scroll)
       // and the PIN block sits right above the card, not high on the screen.
       // Shorter phones scroll, as before.

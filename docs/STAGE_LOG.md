@@ -4,6 +4,11 @@ Older stages (0 to 9): docs/archive/STAGE_LOG_ARCHIVE.md
 
 If a session ends early, continue from the last entry here.
 
+## Sponsor grid on Welcome and PIN lock (28 Nov 2026)
+- SponsorSlot shows all sponsors at once as a still grid (SponsorGrid, white tiles, 4 per row, tiles at most 110 px for 1 to 3). Home keeps the carousel. Flag kStartScreensUseGrid.
+- Views: every sponsor counted once when half the grid is on screen; taps still ask first. On 360x640 the "Ganti akun" link needs a scroll.
+- Black-background demo logos made white (web/sponsors/*-white.jpg); PROD rows switched after deploy, rollback in /mnt/project-files/rollback/. No migration.
+
 ## Phone Back button map and first-run fix (26 Nov 2026)
 - docs/BACK_MAP.md lists what Back does on every screen; test/back_map_test.dart fails when a screen is missing from it.
 - Bug fixed: Consent, PIN offer and first profile left a stale Welcome under them, so Back walked to Welcome. They are now the first screen (Back asks to exit). Tests: test/back_first_run_test.dart.
