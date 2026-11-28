@@ -19,7 +19,7 @@ import '../widgets/banner_carousel.dart';
 import '../widgets/brand_lockup.dart';
 import '../util/safe_url.dart';
 import '../widgets/feedback_sheet.dart';
-import '../widgets/sponsor_banner.dart';
+import '../widgets/sponsor_grid.dart';
 import '../widgets/verified_badge.dart';
 import '../widgets/upcoming_section.dart';
 import 'home_pages.dart';
@@ -438,9 +438,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (items.isEmpty) return const SizedBox.shrink();
                             return Padding(
                               padding: const EdgeInsets.only(top: 12),
-                              child: SponsorBanner(
+                              child: SponsorGrid(
                                 items: items,
-                                autoAdvance: widget.autoAdvance,
+                                maxWidth: 480,
                                 onOpen: _openSponsor,
                                 onShown: _sponsorShown,
                               ),

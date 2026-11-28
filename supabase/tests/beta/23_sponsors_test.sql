@@ -40,6 +40,20 @@ select jt.expect_error(format($q$select admin_sponsor_save(%L, null, 'A', 'https
 select jt.expect_error(format($q$select admin_sponsor_save(%L, null, 'A', 'https://x.supabase.co/storage/v1/object/public/sponsor-images/a.jpg', 'https://a.b', null, null, -1, true)$q$, (select v from t_ids where k = 'clara')), 'invalid_input');
 select jt.expect_error(format($q$select admin_sponsor_save(%L, null, 'A', 'https://x.supabase.co/storage/v1/object/public/sponsor-images/a.jpg', %L, null, null, 1, true)$q$, (select v from t_ids where k = 'clara'), 'https://a.b/' || repeat('x', 500)), 'invalid_input');
 
+-- Temporary allow-list (20261128100000): the five white-logo addresses pass
+-- (saved and removed again so the counts below stay the same), near misses do not.
+select admin_sponsor_delete((select v from t_ids where k = 'clara'), admin_sponsor_save((select v from t_ids where k = 'clara'), null, 'W', 'https://lingkaran-ikafe.vercel.app/sponsors/' || n || '-white.jpg', 'https://a.b', null, null, 1, true)) from unnest(array['jamkrindo','jamkrindo-syariah','nindya-karya','dw-makeup','streetcaxx']) as n;
+select jt.assert((select count(*) from admin_sponsor_list((select v from t_ids where k = 'clara'))) = 0, 'the five white-logo addresses were accepted and removed');
+select jt.expect_error(format($q$select admin_sponsor_save(%L, null, 'A', %L, 'https://a.b', null, null, 1, true)$q$, (select v from t_ids where k = 'clara'), u), 'invalid_input')
+  from unnest(array[
+    'https://lingkaran-ikafe.vercel.app/sponsors/jamkrindo-white.jpg?x=1',
+    'https://lingkaran-ikafe.vercel.app/sponsors/other-white.jpg',
+    'https://lingkaran-ikafe.vercel.app/sponsors/jamkrindo-white.jpg/x',
+    'http://lingkaran-ikafe.vercel.app/sponsors/jamkrindo-white.jpg',
+    'https://evil.vercel.app/sponsors/jamkrindo-white.jpg',
+    'https://lingkaran-ikafe.vercel.app/other/jamkrindo-white.jpg'
+  ]) as u;
+
 -- Admin adds three sponsors: two live now (one with no dates, one with a
 -- window around today), one hidden, one not started, one ended.
 select admin_sponsor_save((select v from t_ids where k = 'clara'), null, '  Bank A ', 'https://x.supabase.co/storage/v1/object/public/sponsor-images/a.jpg', ' https://a.example.com ', null, null, 2, true);
